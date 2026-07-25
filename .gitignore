@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+.venv/
+.env
+*.sqlite3
+agent-guard-report-*.html
+.DS_Store

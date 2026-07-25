@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agent-guard"
+version = "0.1.0"
+description = "Stress-test your AI agent. Get a production-readiness scorecard in 30 seconds."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [
+    { name = "Sarosh Hussain", email = "sarosh@pendoah.ai" },
+]
+keywords = ["ai-agents", "guardrails", "evaluation", "llm", "safety", "governance", "production"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "rich>=13.0",
+    "click>=8.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+adversarial = [
+    "anthropic>=0.40",
+    "openai>=1.60",
+    "google-generativeai>=0.8",
+]
+langgraph = ["langgraph>=0.4", "langchain-core>=0.3"]
+crewai = ["crewai>=0.100"]
+all = ["agent-guard[adversarial,langgraph,crewai]"]
+
+[project.scripts]
+agent-guard = "agent_guard.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/shmindmaster/ai-agent-guardrails"
+Issues = "https://github.com/shmindmaster/ai-agent-guardrails/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["agent_guard"]
