@@ -1,29 +1,21 @@
-﻿"""agent-guard CLI - stress-test your AI agent in 30 seconds."""
+"""agent-guard CLI — structural production-readiness scoring for AI agents."""
 
-import click
+from __future__ import annotations
+
+import json
 import sys
 from pathlib import Path
+
+import click
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
-from rich.text import Text
 
 from agent_guard import __version__
+from agent_guard.scoring import DIMENSIONS, build_result, tier_color
 from agent_guard.scorers import structural_analysis
 from agent_guard.vendor_scorecard import assess_vendor
 
 console = Console()
-
-DIMENSIONS = [
-    ("Prompt Injection Resistance", "injection"),
-    ("Hallucination Guardrails", "hallucination"),
-    ("Source Citation Requirements", "citation"),
-    ("Cost Runaway Protection", "cost"),
-    ("Human-in-the-Loop Gates", "human_gate"),
-    ("Safe-Stop Behavior", "safe_stop"),
-    ("Audit Trail & Provenance", "audit"),
-    ("Compliance Readiness", "compliance"),
-]
 
 
 def render_score_bar(score: int) -> str:
@@ -47,106 +39,161 @@ def render_score_bar(score: int) -> str:
     return f"[{color}][{bar}] {score:>3}/100[/{color}]  {status}"
 
 
-def score_tier(overall: int) -> tuple[str, str]:
-    if overall >= 90:
-        return "green", "PRODUCTION READY"
-    elif overall >= 70:
-        return "yellow", "SHIP WITH MONITORING"
-    elif overall >= 50:
-        return "dark_orange", "NEEDS WORK"
-    else:
-        return "red", "NOT PRODUCTION READY"
-
-
 @click.group()
 @click.version_option(version=__version__, prog_name="agent-guard")
 def main():
-    """agent-guard - Stress-test your AI agent."""
+    """agent-guard — structural production-readiness scorecard for AI agents."""
     pass
+
 
 main.add_command(assess_vendor)
 
 
 @main.command()
 @click.option("--prompt", "-p", help="System prompt string to test")
-@click.option("--prompt-file", "-f", type=click.Path(exists=True), help="Path to system prompt file")
-@click.option("--mode", type=click.Choice(["structural", "adversarial"]), default="structural",
-              help="structural = offline (free), adversarial = live LLM (~$0.50)")
-@click.option("--langgraph", type=click.Path(exists=True), help="Path to LangGraph agent definition")
-@click.option("--crewai", type=click.Path(exists=True), help="Path to CrewAI crew definition")
-def test(prompt, prompt_file, mode, langgraph, crewai):
-    """Run production-readiness tests against an AI agent."""
+@click.option(
+    "--prompt-file",
+    "-f",
+    type=click.Path(exists=True),
+    help="Path to system prompt file",
+)
+@click.option(
+    "--json",
+    "as_json",
+    is_flag=True,
+    help="Emit machine-readable JSON (for CI)",
+)
+@click.option(
+    "--threshold",
+    type=click.IntRange(0, 100),
+    default=None,
+    help="Exit non-zero if overall score is below this threshold",
+)
+def test(prompt, prompt_file, as_json, threshold):
+    """Run structural production-readiness analysis on an agent system prompt.
 
+    This mode is offline and free: it scans the prompt text for guardrail
+    signals. It does not run live LLM adversarial attacks.
+    """
     system_prompt = None
+    source = "prompt"
+
     if prompt:
         system_prompt = prompt
+        source = "prompt"
     elif prompt_file:
-        system_prompt = Path(prompt_file).read_text()
-    elif langgraph:
-        system_prompt = f"[LANGGRAPH AGENT: {langgraph}]"
-        console.print(f"[dim]Loading LangGraph agent from {langgraph}...[/dim]")
-    elif crewai:
-        system_prompt = f"[CREWAI CREW: {crewai}]"
-        console.print(f"[dim]Loading CrewAI crew from {crewai}...[/dim]")
+        system_prompt = Path(prompt_file).read_text(encoding="utf-8")
+        source = str(prompt_file)
     else:
-        console.print("[red]Error: Provide --prompt, --prompt-file, --langgraph, or --crewai[/red]")
-        console.print("[dim]Example: agent-guard test --prompt \"You are a helpful assistant...\"[/dim]")
+        console.print(
+            "[red]Error: Provide --prompt or --prompt-file[/red]",
+            err=True,
+        )
+        console.print(
+            '[dim]Example: agent-guard test --prompt "You are a helpful assistant..."[/dim]',
+            err=True,
+        )
         sys.exit(1)
 
-    if mode == "adversarial":
-        console.print("[yellow]Adversarial mode requires an API key and costs ~$0.50 in tokens.[/yellow]")
-        console.print("[yellow]  Set ANTHROPIC_API_KEY or OPENAI_API_KEY. Falling back to structural mode.[/yellow]\n")
+    dimensions = structural_analysis.analyze(system_prompt)
+    result = build_result(dimensions, mode="structural", source=source)
 
-    console.print()
-
-    results = structural_analysis.analyze(system_prompt)
-
-    console.print(Panel(
-        "[bold]AGENT GUARD - Production Readiness Report[/bold]",
-        border_style="blue",
-        expand=False,
-    ))
-    console.print()
-
-    for label, key in DIMENSIONS:
-        score = results.get(key, 0)
-        bar = render_score_bar(score)
-        console.print(f"  {label:<32} {bar}")
-
-    overall = sum(results.values()) // len(results)
-    color, tier = score_tier(overall)
-    console.print()
-    console.print(f"  {'-' * 54}")
-    console.print(f"  [{color}]OVERALL SCORE:  {overall}/100  {tier}[/{color}]")
-    console.print(f"  {'-' * 54}")
-
-    critical = [(label, key) for label, key in DIMENSIONS if results.get(key, 0) < 50]
-    if critical:
+    if as_json:
+        click.echo(json.dumps(result.to_dict(), indent=2, sort_keys=True))
+    else:
+        color = tier_color(result.overall)
         console.print()
-        for label, key in critical:
-            score = results[key]
-            if score == 0:
-                console.print(f"  [red]CRITICAL:[/red] No {label.lower()} detected in your agent.")
-            else:
-                console.print(f"  [dark_orange]WEAK:[/dark_orange] {label} is below production threshold ({score}/100).")
+        console.print(
+            Panel(
+                "[bold]AGENT GUARD — Structural Production Readiness Report[/bold]",
+                border_style="blue",
+                expand=False,
+            )
+        )
+        console.print()
+        console.print(
+            "[dim]Mode: structural (offline prompt scan). "
+            "Not a substitute for live behavioral red-teaming.[/dim]"
+        )
+        console.print()
 
-    console.print()
-    console.print(f"  -> Run [bold]agent-guard fix[/bold] to apply recommended guardrail patterns.")
-    console.print(f"  -> Report: [blue]https://agent-guard.dev/r/demo-001[/blue]")
-    console.print()
-    console.print(f"  [dim]Built by the team that operates 7 regulated AI systems -> [link=https://pendoah.ai]pendoah.ai[/link][/dim]")
-    console.print()
+        for label, key in DIMENSIONS:
+            score = result.dimensions.get(key, 0)
+            console.print(f"  {label:<32} {render_score_bar(score)}")
+
+        console.print()
+        console.print(f"  {'-' * 54}")
+        console.print(
+            f"  [{color}]OVERALL SCORE:  {result.overall}/100  {result.tier}[/{color}]"
+        )
+        console.print(f"  {'-' * 54}")
+
+        critical = [
+            (label, key)
+            for label, key in DIMENSIONS
+            if result.dimensions.get(key, 0) < 50
+        ]
+        if critical:
+            console.print()
+            for label, key in critical:
+                score = result.dimensions[key]
+                if score == 0:
+                    console.print(
+                        f"  [red]CRITICAL:[/red] No {label.lower()} detected in your agent."
+                    )
+                else:
+                    console.print(
+                        f"  [dark_orange]WEAK:[/dark_orange] {label} is below "
+                        f"production threshold ({score}/100)."
+                    )
+
+        console.print()
+        console.print(
+            "  -> Run [bold]agent-guard fix[/bold] to apply recommended guardrail patterns."
+        )
+        console.print(
+            "  -> Re-run with [bold]--json[/bold] for CI. "
+            "Use [bold]--threshold N[/bold] to fail builds below N."
+        )
+        console.print()
+
+    if threshold is not None and result.overall < threshold:
+        if not as_json:
+            console.print(
+                f"  [red]Threshold failure: {result.overall} < {threshold}[/red]",
+                err=True,
+            )
+        sys.exit(2)
 
 
 @main.command()
 @click.option("--prompt", "-p", help="System prompt string to fix")
-@click.option("--prompt-file", "-f", type=click.Path(exists=True), help="Path to system prompt file")
-@click.option("--apply", is_flag=True, help="Write the fixed prompt back to the file (in-place)")
-@click.option("--output", "-o", type=click.Path(), help="Write enhanced prompt to a new file")
-def fix(prompt, prompt_file, apply, output):
-    """Apply recommended guardrail patterns to your agent's system prompt."""
-
-    from agent_guard.scorers.fix_patterns import generate_fixes, apply_fixes, explain_fixes
+@click.option(
+    "--prompt-file",
+    "-f",
+    type=click.Path(exists=True),
+    help="Path to system prompt file",
+)
+@click.option(
+    "--apply",
+    is_flag=True,
+    help="Write the fixed prompt back to the file (in-place)",
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(),
+    help="Write enhanced prompt to a new file",
+)
+@click.option(
+    "--json",
+    "as_json",
+    is_flag=True,
+    help="Emit JSON summary of applied dimensions and score delta",
+)
+def fix(prompt, prompt_file, apply, output, as_json):
+    """Append recommended guardrail patterns to a system prompt."""
+    from agent_guard.scorers.fix_patterns import apply_fixes, explain_fixes, generate_fixes
 
     system_prompt = None
     source_path = None
@@ -155,49 +202,101 @@ def fix(prompt, prompt_file, apply, output):
         system_prompt = prompt
     elif prompt_file:
         source_path = Path(prompt_file)
-        system_prompt = source_path.read_text()
+        system_prompt = source_path.read_text(encoding="utf-8")
     else:
-        console.print("[red]Error: Provide --prompt or --prompt-file[/red]")
-        console.print("[dim]Example: agent-guard fix --prompt-file ./system-prompt.md --apply[/dim]")
+        console.print(
+            "[red]Error: Provide --prompt or --prompt-file[/red]",
+            err=True,
+        )
+        console.print(
+            "[dim]Example: agent-guard fix --prompt-file ./system-prompt.md --apply[/dim]",
+            err=True,
+        )
         sys.exit(1)
 
-    console.print()
-    console.print(Panel(
-        "[bold]AGENT GUARD - Applying Fixes[/bold]",
-        border_style="green",
-        expand=False,
-    ))
-    console.print()
-
-    results = structural_analysis.analyze(system_prompt)
-    fixes = generate_fixes(results)
+    before = structural_analysis.analyze(system_prompt)
+    before_result = build_result(before)
+    fixes = generate_fixes(before)
 
     if not fixes:
-        console.print("  [green]No fixes needed - your agent is production-ready.[/green]")
-        console.print()
+        if as_json:
+            click.echo(
+                json.dumps(
+                    {
+                        "fixes_applied": [],
+                        "before": before_result.to_dict(),
+                        "after": before_result.to_dict(),
+                        "message": "No fixes needed",
+                    },
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
+        else:
+            console.print()
+            console.print(
+                "  [green]No fixes needed — structural score is already strong.[/green]"
+            )
+            console.print()
         return
 
+    enhanced = apply_fixes(system_prompt, fixes)
+    after = structural_analysis.analyze(enhanced)
+    after_result = build_result(after)
+
+    if apply and source_path:
+        source_path.write_text(enhanced, encoding="utf-8")
+    elif output:
+        Path(output).write_text(enhanced, encoding="utf-8")
+
+    if as_json:
+        click.echo(
+            json.dumps(
+                {
+                    "fixes_applied": list(fixes.keys()),
+                    "before": before_result.to_dict(),
+                    "after": after_result.to_dict(),
+                    "written": bool(apply and source_path) or bool(output),
+                    "path": str(source_path)
+                    if apply and source_path
+                    else (output or None),
+                },
+                indent=2,
+                sort_keys=True,
+            )
+        )
+        return
+
+    console.print()
+    console.print(
+        Panel(
+            "[bold]AGENT GUARD — Applying Fixes[/bold]",
+            border_style="green",
+            expand=False,
+        )
+    )
+    console.print()
     console.print(explain_fixes(fixes))
     console.print()
 
-    enhanced = apply_fixes(system_prompt, fixes)
-
     if apply and source_path:
-        source_path.write_text(enhanced)
         console.print(f"  [green]Fixes applied in-place to {source_path}[/green]")
         console.print()
-
-        new_results = structural_analysis.analyze(enhanced)
-        old_overall = sum(results.values()) // len(results)
-        new_overall = sum(new_results.values()) // len(new_results)
-        console.print(f"  Score: [red]{old_overall}/100[/red] -> [green]{new_overall}/100[/green] (+{new_overall - old_overall})")
+        console.print(
+            f"  Score: [red]{before_result.overall}/100[/red] -> "
+            f"[green]{after_result.overall}/100[/green] "
+            f"(+{after_result.overall - before_result.overall})"
+        )
         console.print()
-
     elif output:
-        Path(output).write_text(enhanced)
         console.print(f"  [green]Enhanced prompt written to {output}[/green]")
         console.print()
-
+        console.print(
+            f"  Score: [red]{before_result.overall}/100[/red] -> "
+            f"[green]{after_result.overall}/100[/green] "
+            f"(+{after_result.overall - before_result.overall})"
+        )
+        console.print()
     else:
         console.print("[dim]--- Enhanced System Prompt ---[/dim]")
         console.print()
@@ -205,5 +304,11 @@ def fix(prompt, prompt_file, apply, output):
         console.print()
         console.print("[dim]--- End ---[/dim]")
         console.print()
-        console.print("[dim]Use --apply to write in-place, or --output <file> to save to a new file.[/dim]")
+        console.print(
+            "[dim]Use --apply to write in-place, or --output <file> to save to a new file.[/dim]"
+        )
         console.print()
+
+
+if __name__ == "__main__":
+    main()

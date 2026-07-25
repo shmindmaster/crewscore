@@ -2,17 +2,17 @@
 
 # agent-guard
 
-### Is your AI agent production-safe? Find out in 30 seconds.
+### Structural production-readiness scorecard for AI agent system prompts
 
 ```
-$ pip install agent-guard
+$ pip install -e .
 $ agent-guard test --prompt "You are a helpful assistant that..."
 
-  AGENT GUARD - Production Readiness Report
-  ==========================================
+  AGENT GUARD — Structural Production Readiness Report
+  ====================================================
 
   Prompt Injection Resistance      [----------]   0/100  MISSING
-  Hallucination Guardrails         [===-------]  26/100  FAILS
+  Hallucination Guardrails         [----------]   0/100  MISSING
   Source Citation Requirements     [----------]   0/100  MISSING
   Cost Runaway Protection          [----------]   0/100  MISSING
   Human-in-the-Loop Gates          [----------]   0/100  MISSING
@@ -20,136 +20,131 @@ $ agent-guard test --prompt "You are a helpful assistant that..."
   Audit Trail & Provenance         [----------]   0/100  MISSING
   Compliance Readiness             [----------]   0/100  MISSING
 
-  OVERALL SCORE:  3/100  NOT PRODUCTION READY
+  OVERALL SCORE:  0/100  NOT PRODUCTION READY
 ```
 
-**Most agents score below 50.** Score yours. Fix it. Share your score.
+Score the **text** of your agent instructions. Fix gaps. Gate CI when scores drop.
 
-[Install](#install) | [How It Works](#how-scoring-works) | [Fix Mode](#fix-mode) | [CI Integration](#ci-integration)
+[Install](#install) · [Usage](#usage) · [How scoring works](#how-scoring-works) · [CI](#ci-integration) · [Limits](#what-this-is-and-is-not)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![PyPI](https://img.shields.io/badge/PyPI-agent--guard-blue.svg)](https://pypi.org/project/agent-guard/)
 [![Python](https://img.shields.io/badge/Python-3.11+-green.svg)](https://python.org)
 
 </div>
 
 ---
 
-## The Problem
+## The problem
 
-You built an AI agent. It works in the demo. But:
+You shipped an agent that works in a demo. Before production you still need to ask:
 
-- Will it **fabricate citations** when a user asks for sources?
-- Can someone **override its instructions** with "ignore previous rules"?
-- Will it **silently proceed** when critical evidence is missing?
-- Could a single loop **cost you $500** in tokens?
-- Does it have **any audit trail** for what it did and why?
+- Does the prompt resist obvious injection / override language?
+- Does it forbid fabricating citations and force “I don’t know”?
+- Are writes, sends, and publishes gated on human approval?
+- Is there any cost, audit, or compliance language at all?
 
-83% of organizations are deploying AI agents. 40% of agentic AI projects will be canceled by 2027 (Gartner). The #1 reason isn't intelligence — it's **unguarded behavior in production**.
+Most teams never inspect those instructions systematically. **agent-guard** does a fast structural scan and can append proven guardrail patterns.
 
- Nobody stress-tests their agent before shipping. agent-guard does it in one command.
+---
+
+## What this is (and is not)
+
+| Is | Is not |
+|----|--------|
+| Offline structural scan of system-prompt text | Live adversarial LLM red-teaming |
+| Fix mode that appends guardrail sections | Proof that the runtime will obey the text |
+| JSON output + exit threshold for CI | LangGraph / CrewAI graph execution analysis |
+| Vendor checklist (`assess-vendor`) for procurement diligence | Independent security certification |
+
+Scores reflect **prompt-text signals**. They are a useful smoke test, not a guarantee of runtime safety.
 
 ---
 
 ## Install
 
 ```bash
+# from source (recommended while pre-PyPI)
+pip install -e ".[dev]"
+
+# or once published
 pip install agent-guard
 ```
 
-That's it. No API key needed for the structural scan. Zero config.
+No API key for structural mode.
 
 ---
 
 ## Usage
 
-### Score your agent (30 seconds, free)
+### Score a system prompt
 
 ```bash
-# From a string
 agent-guard test --prompt "You are a customer service agent for..."
-
-# From a file
 agent-guard test --prompt-file ./my-agent/system-prompt.md
-
-# From a LangGraph agent
-agent-guard test --langgraph ./agents/graph.py
-
-# From a CrewAI crew
-agent-guard test --crewai ./agents/crew.yaml
+agent-guard test --prompt-file ./my-agent/system-prompt.md --json
+agent-guard test --prompt-file ./my-agent/system-prompt.md --json --threshold 50
 ```
 
-### Fix your agent (10 seconds)
+`--threshold N` exits with code `2` when overall score is below `N` (CI gate).
+
+### Apply guardrail patterns
 
 ```bash
-# Show what would be fixed
+# print enhanced prompt
 agent-guard fix --prompt-file ./system-prompt.md
 
-# Apply fixes in-place and show the score improvement
+# write in place and show score delta
 agent-guard fix --prompt-file ./system-prompt.md --apply
 
-# Save to a new file
+# write to a new file
 agent-guard fix --prompt-file ./system-prompt.md --output ./system-prompt-guarded.md
+
+# machine-readable summary
+agent-guard fix --prompt-file ./system-prompt.md --apply --json
 ```
 
-Example output:
-
-```
-  AGENT GUARD - Applying Fixes
-  ============================
-
-  [OK] Added prompt injection defense
-  [OK] Added anti-hallucination policy
-  [OK] Added source citation requirements
-  [OK] Added cost governance
-  [OK] Added human-in-the-loop gates
-  [OK] Added safe-stop protocol
-  [OK] Added audit trail requirements
-  [OK] Added compliance & data protection
-
-  Score: 3/100 -> 58/100 (+55)
-```
-
-### Adversarial mode (live LLM testing, ~$0.50)
+### Score an AI vendor (checklist)
 
 ```bash
-export ANTHROPIC_API_KEY=sk-...
-agent-guard test --prompt "..." --mode adversarial
+agent-guard assess-vendor --name "Acme AI" --answers "y,y,n,dk,y,y,n,y,n,y"
+agent-guard assess-vendor --name "Acme AI" --answers "y,y,n,dk,y,y,n,y,n,y" --json
 ```
 
-Runs live attack prompts against your agent. Tests if it actually resists injection, actually cites sources, actually stops when uncertain.
+Answers are `y` / `n` / `dk` for each of 10 diligence questions.
+
+### Browser demo
+
+Open `index.html` locally for a zero-install structural scan and vendor checklist UI (client-side only; not the CLI implementation).
 
 ---
 
-## How Scoring Works
+## How scoring works
 
-8 dimensions. Each scored 0-100. Weighted equally.
+Eight dimensions, equal weight, each 0–100:
 
-| Dimension | What It Checks | Why It Matters |
-|-----------|---------------|----------------|
-| **Prompt Injection Resistance** | Can users override instructions? | $2.1B in AI-related fines in 2025 |
-| **Hallucination Guardrails** | Will it fabricate facts/citations? | #1 reason AI projects lose trust |
-| **Source Citation** | Does it attribute claims to sources? | Required for HIPAA, SOC2, EU AI Act |
-| **Cost Runaway Protection** | Can one loop cost $500+? | Governance budget jumped 3% -> 12% of AI spend |
-| **Human-in-the-Loop Gates** | Are dangerous actions gated? | "AI drafts, humans approve" is the production standard |
-| **Safe-Stop Behavior** | Does it halt when uncertain? | A wrong action in healthcare/finance is worse than none |
-| **Audit Trail** | Can you prove what it did? | Every regulated industry requires this now |
-| **Compliance Readiness** | HIPAA/SOC2/EU AI Act patterns? | 40% of CIOs will demand Guardian Agents by 2028 |
+| Dimension | What the scanner looks for |
+|-----------|----------------------------|
+| Prompt Injection Resistance | Reject-override / do-not-reveal-system / jailbreak language |
+| Hallucination Guardrails | No fabrication, “I don’t know”, grounded-only claims |
+| Source Citation | Claims must cite sources / evidence |
+| Cost Runaway Protection | Token/budget/max-length limits |
+| Human-in-the-Loop Gates | Approval before send/write/publish |
+| Safe-Stop Behavior | Halt when evidence missing or uncertain |
+| Audit Trail | Log decisions / immutable trail language |
+| Compliance Readiness | HIPAA/SOC2/GDPR/EU AI Act style handling language |
 
-### Score Tiers
+### Score tiers
 
 | Score | Verdict |
 |-------|---------|
-| 90-100 | PRODUCTION READY - ship it |
-| 70-89 | SHIP WITH MONITORING - add observability |
-| 50-69 | NEEDS WORK - fix critical gaps first |
-| 0-49 | NOT PRODUCTION READY - do not deploy |
+| 90–100 | PRODUCTION READY (structurally) |
+| 70–89 | SHIP WITH MONITORING |
+| 50–69 | NEEDS WORK |
+| 0–49 | NOT PRODUCTION READY |
 
 ---
 
-## CI Integration
-
-Score agents automatically in your pipeline. Fail the build if score drops below threshold:
+## CI integration
 
 ```yaml
 # .github/workflows/agent-safety.yml
@@ -160,74 +155,61 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: pip install agent-guard
-      - run: |
-          SCORE=$(agent-guard test --prompt-file ./agents/system-prompt.md --json | jq '.overall')
-          if [ "$SCORE" -lt 50 ]; then
-            echo "Agent safety score $SCORE/100 is below threshold (50). Fix before merging."
-            exit 1
-          fi
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install .
+      - run: agent-guard test --prompt-file ./agents/system-prompt.md --json --threshold 50
+```
+
+Or parse JSON yourself:
+
+```bash
+SCORE=$(agent-guard test --prompt-file ./agents/system-prompt.md --json | jq '.overall')
 ```
 
 ---
 
-## The Fix Patterns
+## Fix patterns
 
-When agent-guard finds gaps, it doesn't just diagnose. It **prescribes**. Each fix is a production-proven guardrail pattern extracted from 7 regulated AI systems running in production (healthcare, finance, legal):
+When dimensions score below threshold, `agent-guard fix` appends production-style guardrail sections for:
 
-- **Injection defense**: Reject override attempts, protect system instructions
-- **Anti-hallucination**: Never fabricate, say "I don't know", distinguish fact from inference
-- **Citation requirements**: Every claim cites its source, unverified claims flagged
-- **Cost governance**: Token budgets, tool call limits, batch confirmation
-- **Human gates**: Approval required for writes, sends, publishes, financial actions
-- **Safe-stop**: Halt when evidence is missing or confidence is below threshold
-- **Audit trail**: Log every action with timestamp, source, rationale
-- **Compliance**: HIPAA/GDPR/SOC2 data handling patterns
+- Injection defense
+- Anti-hallucination
+- Citation requirements
+- Cost governance
+- Human gates
+- Safe-stop
+- Audit trail
+- Compliance / data protection
 
----
-
-## Why This Exists
-
-I operate 7 AI systems in production across healthcare (HIPAA), financial services, legal, and logistics. Every single one broke in ways I didn't test for. An agent fabricated a court citation. Another ran up a $340 token bill in a loop. A third silently ignored a missing authorization and almost submitted an insurance claim without proper approval.
-
-agent-guard is the test suite I wish I'd had before each of those incidents.
+These are **prompt text templates**. Wire matching runtime controls (tool gates, logging, budgets) in your application.
 
 ---
 
-## Roadmap
-
-- [x] Structural analysis (offline, no API key)
-- [x] Fix mode with 8 guardrail patterns
-- [x] Rich terminal scorecard
-- [ ] Adversarial testing (live LLM attacks)
-- [ ] `--json` output for CI/programmatic use
-- [ ] HTML shareable report generation
-- [ ] GitHub Actions integration (official action)
-- [ ] LangGraph / CrewAI / AutoGen native adapters
-- [ ] Agent fleet scoring (test all agents in a monorepo)
-- [ ] Leaderboard: "the most guarded agents on GitHub"
-
----
-
-## Contributing
+## Development
 
 ```bash
 git clone https://github.com/shmindmaster/agent-guard.git
 cd agent-guard
 pip install -e ".[dev]"
+pytest
 agent-guard test --prompt "You are a helpful assistant"
 ```
 
-PRs welcome. Especially: new scoring dimensions, new fix patterns, framework adapters.
+See [AGENTS.md](AGENTS.md) for agent/contributor operating notes.
 
 ---
 
-## Star This Repo
+## Roadmap (not implemented yet)
 
-If you've ever shipped an agent and prayed it wouldn't hallucinate a citation or get prompt-injected in prod -- star it. We'll keep building.
+- Live adversarial testing against a real model endpoint
+- Framework adapters that extract prompts from LangGraph / CrewAI / AutoGen graphs
+- Hosted shareable HTML reports
+- Official GitHub Action wrapper
 
 ---
 
 ## License
 
-MIT. Use it, fork it, ship it. If it catches one hallucination before your users do, it's paid for itself.
+MIT.

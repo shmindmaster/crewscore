@@ -1,11 +1,16 @@
 """
-AI Vendor Scorecard - assess any AI vendor's production credibility in 2 minutes.
-Non-technical. No API key. Shareable on LinkedIn/X.
+AI Vendor Scorecard — assess an AI vendor's production credibility via a checklist.
+
+Non-technical. No API key. Produces a score and optional shareable copy.
 """
+
+from __future__ import annotations
+
+import json
+from typing import Literal
 
 import click
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
 
 console = Console()
@@ -34,19 +39,6 @@ TIERS = [
     (0, "RED FLAG", "red", "Walk Away"),
 ]
 
-REASONS = {
-    "vapor_demo": "Vapor demos fail on real data",
-    "benchmark": "'99.9% accurate' means nothing without third-party proof",
-    "certification": "Compliance theater vs. actual certification",
-    "audit": "If you can't explain it to your board, you can't deploy it",
-    "human_override": "No human gate = no enterprise deployment",
-    "portability": "Trapped data = trapped budget",
-    "pricing": "Token billing surprises are the #1 complaint in 2026",
-    "security_audit": "'We take security seriously' is not proof",
-    "production_refs": "Pilot != production. Everyone has pilots.",
-    "incident": "It WILL fail. What happens next?",
-}
-
 
 def get_tier(score: int) -> tuple[str, str, str]:
     for threshold, name, color, label in TIERS:
@@ -56,15 +48,20 @@ def get_tier(score: int) -> tuple[str, str, str]:
 
 
 def render_answer(ans: str) -> tuple[int, str]:
-    if ans.lower() in ("y", "yes"):
+    normalized = ans.lower().strip()
+    if normalized in ("y", "yes"):
         return SCORE_YES, "YES"
-    elif ans.lower() in ("dk", "dont know", "don't know", "unsure"):
+    if normalized in ("dk", "dont know", "don't know", "unsure"):
         return SCORE_DK, "DON'T KNOW"
-    else:
-        return SCORE_NO, "NO"
+    return SCORE_NO, "NO"
 
 
-def generate_linkedin_post(vendor: str, score: int, tier: str, answers: list[tuple[str, str, int]]) -> str:
+def generate_linkedin_post(
+    vendor: str,
+    score: int,
+    tier: str,
+    answers: list[tuple[str, str, int]],
+) -> str:
     red_flags = [q for q, ans, pts in answers if pts == SCORE_NO]
     cautions = [q for q, ans, pts in answers if pts == SCORE_DK]
 
@@ -87,7 +84,7 @@ def generate_linkedin_post(vendor: str, score: int, tier: str, answers: list[tup
             lines.append(f"- {q.rstrip('?')}")
         lines.append("")
 
-    lines.append(f"Before signing that contract, ask these 10 questions.")
+    lines.append("Before signing that contract, ask these 10 questions.")
     lines.append("")
     lines.append("Score yours: pip install agent-guard && agent-guard assess-vendor")
     lines.append("")
@@ -98,35 +95,58 @@ def generate_linkedin_post(vendor: str, score: int, tier: str, answers: list[tup
 
 @click.command("assess-vendor")
 @click.option("--name", "-n", required=True, help="Vendor/product name to assess")
-@click.option("--answers", "-a", help="Comma-separated answers (y/n/dk x10): 'y,y,n,dk,y,y,n,y,n,y'")
-@click.option("--report", is_flag=True, help="Generate HTML report")
-def assess_vendor(name: str, answers: str | None, report: bool):
-    """Score an AI vendor's production credibility. 10 questions. 2 minutes. Zero technical knowledge needed."""
+@click.option(
+    "--answers",
+    "-a",
+    help="Comma-separated answers (y/n/dk x10): 'y,y,n,dk,y,y,n,y,n,y'",
+)
+@click.option(
+    "--json",
+    "as_json",
+    is_flag=True,
+    help="Emit machine-readable JSON",
+)
+def assess_vendor(name: str, answers: str | None, as_json: bool):
+    """Score an AI vendor's production credibility. 10 questions. No API key."""
 
-    console.print()
-    console.print(Panel(
-        f"[bold]AGENT GUARD - AI Vendor Scorecard[/bold]\n"
-        f"Assessing: [bold]{name}[/bold]",
-        border_style="blue",
-        expand=False,
-    ))
-    console.print()
-
-    results = []
+    results: list[tuple[str, str, int, str]] = []
 
     if answers:
-        # Quick mode: batch answers
         parts = [p.strip() for p in answers.split(",")]
         if len(parts) != 10:
-            console.print(f"[red]Error: Expected 10 answers (y/n/dk), got {len(parts)}[/red]")
-            console.print("[dim]Example: agent-guard assess-vendor --name 'Acme AI' --answers 'y,y,n,dk,y,y,n,y,n,y'[/dim]")
-            return
+            console.print(
+                f"[red]Error: Expected 10 answers (y/n/dk), got {len(parts)}[/red]",
+                err=True,
+            )
+            console.print(
+                "[dim]Example: agent-guard assess-vendor --name 'Acme AI' "
+                "--answers 'y,y,n,dk,y,y,n,y,n,y'[/dim]",
+                err=True,
+            )
+            raise SystemExit(1)
         for (question, key), ans in zip(QUESTIONS, parts):
             pts, label = render_answer(ans)
             results.append((question, label, pts, key))
+    elif as_json:
+        console.print(
+            "[red]Error: --json requires --answers (non-interactive).[/red]",
+            err=True,
+        )
+        raise SystemExit(1)
     else:
-        # Interactive mode
-        console.print("[bold]Answer each question with y (yes), n (no), or dk (don't know)[/bold]")
+        console.print()
+        console.print(
+            Panel(
+                f"[bold]AGENT GUARD — AI Vendor Scorecard[/bold]\n"
+                f"Assessing: [bold]{name}[/bold]",
+                border_style="blue",
+                expand=False,
+            )
+        )
+        console.print()
+        console.print(
+            "[bold]Answer each question with y (yes), n (no), or dk (don't know)[/bold]"
+        )
         console.print()
         for i, (question, key) in enumerate(QUESTIONS, 1):
             console.print(f"  {i}. {question}")
@@ -135,49 +155,84 @@ def assess_vendor(name: str, answers: str | None, report: bool):
             results.append((question, label, pts, key))
             console.print()
 
-    # Calculate score
     total = sum(pts for _, _, pts, _ in results)
+    tier_name, tier_color, tier_label = get_tier(total)
 
-    # Render scorecard
+    if as_json:
+        payload = {
+            "vendor": name,
+            "score": total,
+            "tier": tier_name,
+            "tier_label": tier_label,
+            "answers": [
+                {
+                    "question": q,
+                    "key": key,
+                    "answer": label,
+                    "points": pts,
+                }
+                for q, label, pts, key in results
+            ],
+        }
+        click.echo(json.dumps(payload, indent=2, sort_keys=True))
+        return
+
     console.print()
-    console.print(Panel(f"[bold]AI VENDOR SCORECARD[/bold]", border_style="blue", expand=False))
+    console.print(
+        Panel(
+            f"[bold]AGENT GUARD — AI Vendor Scorecard[/bold]\n"
+            f"Assessing: [bold]{name}[/bold]",
+            border_style="blue",
+            expand=False,
+        )
+    )
+    console.print()
+    console.print(Panel("[bold]AI VENDOR SCORECARD[/bold]", border_style="blue", expand=False))
     console.print(f"  Vendor: [bold]{name}[/bold]")
     console.print()
 
-    tier_name, tier_color, tier_label = get_tier(total)
-
     for question, label, pts, key in results:
-        filled = pts // 10 * 10 // 10  # 0 or 1 for bar
         bar_full = min(10, pts)
         bar_empty = 10 - bar_full
         bar = "=" * bar_full + "-" * bar_empty
-
-        status_color = "green" if pts == SCORE_YES else ("yellow" if pts == SCORE_DK else "red")
+        status_color = (
+            "green" if pts == SCORE_YES else ("yellow" if pts == SCORE_DK else "red")
+        )
         flag = "  <-- RED FLAG" if pts == SCORE_NO else ""
-
-        console.print(f"  [{status_color}][{bar}] {label:<12}[/{status_color}] {question}{flag}")
+        console.print(
+            f"  [{status_color}][{bar}] {label:<12}[/{status_color}] {question}{flag}"
+        )
 
     console.print()
     console.print(f"  [{'=' * 54}]")
-    console.print(f"  [{tier_color}]SCORE: {total}/100 -- {tier_name} ({tier_label})[/{tier_color}]")
+    console.print(
+        f"  [{tier_color}]SCORE: {total}/100 -- {tier_name} ({tier_label})[/{tier_color}]"
+    )
     console.print(f"  [{'=' * 54}]")
 
     red_flag_count = sum(1 for _, _, pts, _ in results if pts == SCORE_NO)
     if red_flag_count > 0:
         console.print()
-        console.print(f"  [red]{red_flag_count} RED FLAG(S) detected.[/red] Request evidence before signing.")
+        console.print(
+            f"  [red]{red_flag_count} RED FLAG(S) detected.[/red] "
+            "Request evidence before signing."
+        )
 
     console.print()
     console.print("  Scored with agent-guard | pip install agent-guard")
     console.print("  https://github.com/shmindmaster/agent-guard")
     console.print()
 
-    # Generate LinkedIn post
     console.print(f"  [{'=' * 54}]")
     console.print("  [bold]Ready-to-post LinkedIn copy:[/bold]")
     console.print(f"  [{'=' * 54}]")
     console.print()
-    post = generate_linkedin_post(name, total, tier_name, [(q, a, p) for q, a, p, _ in results])
+    post = generate_linkedin_post(
+        name,
+        total,
+        tier_name,
+        [(q, a, p) for q, a, p, _ in results],
+    )
     console.print(post)
     console.print()
     console.print("  [dim]Copy the text above and post it on LinkedIn.[/dim]")

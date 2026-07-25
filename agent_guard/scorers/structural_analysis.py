@@ -4,14 +4,12 @@ Structural analysis of an AI agent's system prompt.
 Runs entirely offline — no LLM calls, no API key, no cost.
 Analyzes the system prompt text for guardrail patterns, safety
 instructions, and production-readiness signals.
-
-This is the 'free tier' that makes agent-guard viral:
-paste a prompt, get a scorecard, in 30 seconds.
 """
+
+from __future__ import annotations
 
 import re
 from typing import Dict
-
 
 # Keywords and patterns that signal guardrail presence
 INJECTION_DEFENSE_PATTERNS = [
@@ -57,7 +55,7 @@ HUMAN_GATE_PATTERNS = [
     r"(?:human|human-in-the-loop|hitl|manual)\s*(?:review|approval|gate|checkpoint|oversight)",
     r"(?:before|prior\s+to)\s*(?:execut|send|submit|releas|publish|deploy)",
     r"do\s+not\s+(?:auto|automatic).*(?:execute|send|submit|approve|publish)",
-    r"(?:require|require|mandate).*(?:human|manual)\s*(?:approval|review|confirmation)",
+    r"(?:require|mandate).*(?:human|manual)\s*(?:approval|review|confirmation)",
     r"(?:staff|clinician|doctor|nurse|analyst|officer)\s*(?:review|approve|sign)",
 ]
 
@@ -104,10 +102,7 @@ SCORER_MAP = {
 
 
 def _score_dimension(prompt_lower: str, patterns: list[str]) -> int:
-    """Score a single dimension based on pattern matches.
-
-    Returns 0-100 based on how many guardrail patterns are detected.
-    """
+    """Score a single dimension based on pattern matches (0-100)."""
     matches = 0
     for pattern in patterns:
         try:
@@ -117,18 +112,11 @@ def _score_dimension(prompt_lower: str, patterns: list[str]) -> int:
             continue
 
     total_patterns = len(patterns)
-    if total_patterns == 0:
+    if total_patterns == 0 or matches == 0:
         return 0
 
-    # Scale: 0 matches = 0, all matches = 100
-    # But weight early matches more heavily (first match is worth more than the 5th)
-    if matches == 0:
-        return 0
-
-    # Logarithmic-ish scaling: diminishing returns for additional matches
+    # First match shows awareness; additional matches raise the score with diminishing returns
     raw = matches / total_patterns
-    # Boost: if you have at least 1 match, you get a base of 15
-    # (shows awareness even if implementation is thin)
     score = 15 + (raw * 85)
     return min(100, round(score))
 
@@ -136,20 +124,19 @@ def _score_dimension(prompt_lower: str, patterns: list[str]) -> int:
 def analyze(system_prompt: str) -> Dict[str, int]:
     """Run structural analysis on a system prompt.
 
-    Args:
-        system_prompt: The system prompt text to analyze.
-
     Returns:
         Dict mapping dimension name → score (0-100).
     """
+    if not system_prompt or not system_prompt.strip():
+        return {key: 0 for key in SCORER_MAP}
+
     prompt_lower = system_prompt.lower()
-    results = {}
+    results: Dict[str, int] = {}
 
     for dimension, patterns in SCORER_MAP.items():
         results[dimension] = _score_dimension(prompt_lower, patterns)
 
-    # Bonus: longer, more detailed prompts tend to have more guardrails
-    # (but cap the bonus to prevent gaming)
+    # Modest bonus for long, detailed prompts (capped to reduce gaming)
     word_count = len(prompt_lower.split())
     if word_count > 500:
         length_bonus = min(10, (word_count - 500) // 200)

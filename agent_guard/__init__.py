@@ -1,3 +1,3 @@
-"""agent-guard: Stress-test your AI agent. Get a production-readiness scorecard."""
+"""agent-guard: Structural production-readiness scorecard for AI agent prompts."""
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
