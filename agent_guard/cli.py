@@ -10,6 +10,7 @@ from rich.text import Text
 
 from agent_guard import __version__
 from agent_guard.scorers import structural_analysis
+from agent_guard.vendor_scorecard import assess_vendor
 
 console = Console()
 
@@ -62,6 +63,8 @@ def score_tier(overall: int) -> tuple[str, str]:
 def main():
     """agent-guard - Stress-test your AI agent."""
     pass
+
+main.add_command(assess_vendor)
 
 
 @main.command()
