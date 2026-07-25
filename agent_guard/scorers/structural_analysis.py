@@ -26,13 +26,14 @@ INJECTION_DEFENSE_PATTERNS = [
 ]
 
 HALLUCINATION_PATTERNS = [
-    r"do\s+not\s+(fabricat|invent|make\s+up|generat).*(?:fact|data|citation|source|number)",
+    r"do\s+not\s+(?:fabricat|invent|make\s+up|generat).*(?:fact|data|citation|source|number)",
     r"if\s+you\s+(?:do\s+not\s+know|are\s+unsure|lack\s+(?:the|enough)\s+(?:data|information|evidence))",
     r"only\s+(?:use|cite|reference)\s+(?:provided|given|available|verified)\s+(?:data|information|sources|context)",
     r"(?:hallucin|fabricat|confabulat)",
-    r"say\s+(?:["\']I\s+don.t\s+know|I\s+cannot|I\s+do\s+not\s+have)",
+    r"say\s+(?:I\s+dont\s+know|I\s+cannot|I\s+do\s+not\s+have)",
     r"ground(?:ed|ing)\s+in\s+(?:the|provided|given)",
     r"do\s+not\s+guess|never\s+guess|avoid\s+guess",
+    r"recommend.*(?:consult|doctor|professional|specialist|expert)",
 ]
 
 CITATION_PATTERNS = [
