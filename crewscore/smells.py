@@ -110,13 +110,18 @@ _LINTER_CONFIG_GLOBS: list[str] = [
     ".eslintrc", ".eslintrc.*", "eslint.config.*",
     ".prettierrc", ".prettierrc.*", "prettier.config.*",
     ".editorconfig", "biome.json", "biome.jsonc",
-    "ruff.toml", ".ruff.toml", ".flake8", "setup.cfg", "tox.ini",
+    "ruff.toml", ".ruff.toml", ".flake8",
     ".rubocop.yml", "rustfmt.toml", ".rustfmt.toml", ".golangci.yml",
     ".golangci.yaml", ".stylelintrc", ".stylelintrc.*",
 ]
 
-# pyproject.toml only counts when it actually configures a formatter/linter.
+# pyproject.toml, setup.cfg, and tox.ini are multi-purpose files: they only
+# count as a linter config when they actually carry a linter/formatter
+# section, not just because the file exists. [pytest] in tox.ini is a
+# test-runner section, not a linter, and is deliberately excluded.
 _PYPROJECT_TOOL_SECTIONS = ("[tool.ruff", "[tool.black", "[tool.isort", "[tool.flake8")
+_SETUP_CFG_TOOL_SECTIONS = ("[flake8", "[pycodestyle", "[isort", "[mypy", "[pylint")
+_TOX_INI_TOOL_SECTIONS = ("[flake8", "[pycodestyle", "[isort", "[mypy", "[pylint")
 
 
 def find_repo_root(path: str | Path | None) -> Path | None:
@@ -233,20 +238,28 @@ def detect_init_fossilization(path: str | Path | None) -> dict | None:
     )
 
 
+def _has_tool_section(path: Path, sections: tuple[str, ...]) -> bool:
+    if not path.is_file():
+        return False
+    try:
+        content = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return False
+    return any(section in content for section in sections)
+
+
 def _find_linter_configs(repo_root: Path) -> list[str]:
     found: list[str] = []
     for pattern in _LINTER_CONFIG_GLOBS:
         for match in repo_root.glob(pattern):
             if match.is_file():
                 found.append(match.name)
-    pyproject = repo_root / "pyproject.toml"
-    if pyproject.is_file():
-        try:
-            content = pyproject.read_text(encoding="utf-8", errors="replace")
-        except OSError:
-            content = ""
-        if any(section in content for section in _PYPROJECT_TOOL_SECTIONS):
-            found.append("pyproject.toml")
+    if _has_tool_section(repo_root / "pyproject.toml", _PYPROJECT_TOOL_SECTIONS):
+        found.append("pyproject.toml")
+    if _has_tool_section(repo_root / "setup.cfg", _SETUP_CFG_TOOL_SECTIONS):
+        found.append("setup.cfg")
+    if _has_tool_section(repo_root / "tox.ini", _TOX_INI_TOOL_SECTIONS):
+        found.append("tox.ini")
     return sorted(set(found))
 
 
