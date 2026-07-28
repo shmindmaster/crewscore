@@ -15,6 +15,7 @@ from rich.console import Console
 from rich.panel import Panel
 
 console = Console()
+err_console = Console(stderr=True)
 
 HOMEPAGE = "https://crewscore.ai"
 REPO = "https://github.com/shmindmaster/crewscore"
@@ -259,29 +260,25 @@ def assess_vendor(name: str, answers: str | None, as_json: bool, report: str | N
     if answers:
         parts = [p.strip() for p in answers.split(",")]
         if len(parts) != 10:
-            console.print(
-                f"[red]Error: Expected 10 answers (y/n/dk), got {len(parts)}[/red]",
-                err=True,
+            err_console.print(
+                f"[red]Error: Expected 10 answers (y/n/dk), got {len(parts)}[/red]"
             )
-            console.print(
+            err_console.print(
                 "[dim]Example: crewscore assess-vendor --name 'Acme AI' "
-                "--answers 'y,y,n,dk,y,y,n,y,n,y'[/dim]",
-                err=True,
+                "--answers 'y,y,n,dk,y,y,n,y,n,y'[/dim]"
             )
             raise SystemExit(1)
         payload = build_vendor_result(name, answers)
         for a in payload["answers"]:
             results.append((a["question"], a["answer"], a["points"], a["key"]))
     elif as_json:
-        console.print(
-            "[red]Error: --json requires --answers (non-interactive).[/red]",
-            err=True,
+        err_console.print(
+            "[red]Error: --json requires --answers (non-interactive).[/red]"
         )
         raise SystemExit(1)
     elif report is not None:
-        console.print(
-            "[red]Error: --report requires --answers (non-interactive).[/red]",
-            err=True,
+        err_console.print(
+            "[red]Error: --report requires --answers (non-interactive).[/red]"
         )
         raise SystemExit(1)
     else:

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 
+from crewscore import __version__
 from crewscore.scoring import DIMENSIONS
 from crewscore.scorers.fix_patterns import FIX_TEMPLATES
 from crewscore.scorers.structural_analysis import DIMENSION_SIGNAL_LABELS, SCORER_MAP
@@ -222,7 +223,7 @@ JS_RUNTIME = r"""
 def build_payload() -> dict:
     dim_order = [key for _, key in DIMENSIONS]
     return {
-        "version": "0.2.0",
+        "version": __version__,
         "dimensions": [{"key": key, "label": label} for label, key in DIMENSIONS],
         "patterns": {key: list(SCORER_MAP[key]) for key in dim_order},
         "signal_labels": {

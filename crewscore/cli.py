@@ -17,6 +17,7 @@ from crewscore.scorers import structural_analysis
 from crewscore.vendor_scorecard import assess_vendor
 
 console = Console()
+err_console = Console(stderr=True)
 
 BRAND = "CrewScore"
 HOMEPAGE = "https://crewscore.ai"
@@ -107,13 +108,9 @@ def test(prompt, prompt_file, as_json, threshold, explain, report, badge):
         system_prompt = Path(prompt_file).read_text(encoding="utf-8")
         source = str(prompt_file)
     else:
-        console.print(
-            "[red]Error: Provide --prompt or --prompt-file[/red]",
-            err=True,
-        )
-        console.print(
-            '[dim]Example: crewscore test --prompt "You are a helpful assistant..."[/dim]',
-            err=True,
+        err_console.print("[red]Error: Provide --prompt or --prompt-file[/red]")
+        err_console.print(
+            '[dim]Example: crewscore test --prompt "You are a helpful assistant..."[/dim]'
         )
         sys.exit(1)
 
@@ -207,9 +204,8 @@ def test(prompt, prompt_file, as_json, threshold, explain, report, badge):
 
     if threshold is not None and result.overall < threshold:
         if not as_json:
-            console.print(
-                f"  [red]Threshold failure: {result.overall} < {threshold}[/red]",
-                err=True,
+            err_console.print(
+                f"  [red]Threshold failure: {result.overall} < {threshold}[/red]"
             )
         sys.exit(2)
 
@@ -280,13 +276,9 @@ def fix(prompt, prompt_file, apply, output, as_json):
         source_path = Path(prompt_file)
         system_prompt = source_path.read_text(encoding="utf-8")
     else:
-        console.print(
-            "[red]Error: Provide --prompt or --prompt-file[/red]",
-            err=True,
-        )
-        console.print(
-            "[dim]Example: crewscore fix --prompt-file ./system-prompt.md --apply[/dim]",
-            err=True,
+        err_console.print("[red]Error: Provide --prompt or --prompt-file[/red]")
+        err_console.print(
+            "[dim]Example: crewscore fix --prompt-file ./system-prompt.md --apply[/dim]"
         )
         sys.exit(1)
 

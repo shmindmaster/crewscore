@@ -31,10 +31,41 @@ def test_test_threshold_fails():
     assert payload["overall"] < 50
 
 
+def test_test_threshold_human_mode_no_crash():
+    """Human-mode threshold must exit 2 cleanly (no Rich Console TypeError)."""
+    runner = CliRunner()
+    result = runner.invoke(main, ["test", "--prompt", BARE, "--threshold", "50"])
+    assert result.exit_code == 2
+    assert not isinstance(result.exception, TypeError)
+    assert "Threshold failure" in result.output
+    assert "TypeError" not in result.output
+
+
 def test_test_requires_input():
     runner = CliRunner()
     result = runner.invoke(main, ["test"])
     assert result.exit_code == 1
+    assert not isinstance(result.exception, TypeError)
+    assert "Provide --prompt" in result.output
+    assert "TypeError" not in result.output
+
+
+def test_fix_requires_input():
+    runner = CliRunner()
+    result = runner.invoke(main, ["fix"])
+    assert result.exit_code == 1
+    assert not isinstance(result.exception, TypeError)
+    assert "Provide --prompt" in result.output
+
+
+def test_assess_vendor_bad_answer_count():
+    runner = CliRunner()
+    result = runner.invoke(
+        main, ["assess-vendor", "--name", "Acme", "--answers", "y,n"]
+    )
+    assert result.exit_code == 1
+    assert not isinstance(result.exception, TypeError)
+    assert "Expected 10 answers" in result.output
 
 
 def test_fix_json_raises_score(tmp_path: Path):
@@ -95,4 +126,4 @@ def test_version():
     result = runner.invoke(main, ["--version"])
     assert result.exit_code == 0
     assert "crewscore" in result.output.lower()
-    assert "0.2.0" in result.output
+    assert "0.2.1" in result.output
