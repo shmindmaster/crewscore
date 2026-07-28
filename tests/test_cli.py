@@ -159,6 +159,64 @@ def test_fix_json_includes_honesty_note():
     assert "template" in note.lower() or "Templates" in note
 
 
+def test_test_max_smells_gates_system_prompts_too(tmp_path: Path):
+    """--max-smells must gate both profiles in `test`, as it already does in `scan`.
+
+    The flag sat inside the not-governance-applicable branch, so a bloated
+    system prompt reported smells in JSON and still exited 0 — a silent no-op
+    for the CI job that asked to be gated on them.
+    """
+    prompt_file = tmp_path / "system-prompt.md"
+    prompt_file.write_text(
+        "You are an agent.\n" + "\n".join(f"- rule {i}" for i in range(250)),
+        encoding="utf-8",
+    )
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        ["test", "--prompt-file", str(prompt_file), "--json", "--max-smells", "0"],
+    )
+    payload = json.loads(result.output)
+    assert payload["governance_applicable"] is True
+    assert any(s["smell_id"] == "smell.context_bloat" for s in payload["smells"])
+    assert result.exit_code == 2
+
+
+def test_test_max_smells_passes_when_under_limit(tmp_path: Path):
+    prompt_file = tmp_path / "system-prompt.md"
+    prompt_file.write_text(BARE, encoding="utf-8")
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        ["test", "--prompt-file", str(prompt_file), "--json", "--max-smells", "0"],
+    )
+    assert result.exit_code == 0, result.output
+
+
+def test_test_json_warns_when_threshold_ignored_for_config(tmp_path: Path):
+    """CI runs with --json, so the ignored-threshold notice must reach the payload."""
+    config = tmp_path / "AGENTS.md"
+    config.write_text("# Guide\n\nBuild with `make`.\n", encoding="utf-8")
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        ["test", "--prompt-file", str(config), "--json", "--threshold", "90"],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["governance_applicable"] is False
+    assert "threshold_ignored_for_config" in payload["warnings"]
+
+
+def test_test_json_has_no_threshold_warning_without_threshold(tmp_path: Path):
+    config = tmp_path / "AGENTS.md"
+    config.write_text("# Guide\n\nBuild with `make`.\n", encoding="utf-8")
+    runner = CliRunner()
+    result = runner.invoke(main, ["test", "--prompt-file", str(config), "--json"])
+    assert result.exit_code == 0, result.output
+    assert "threshold_ignored_for_config" not in json.loads(result.output)["warnings"]
+
+
 def test_version():
     runner = CliRunner()
     result = runner.invoke(main, ["--version"])
