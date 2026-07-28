@@ -356,6 +356,53 @@ def test_scan_summary_markdown_reports_the_ignored_threshold(tmp_path: Path):
     assert "--max-smells" in text
 
 
+def test_scan_human_mode_notes_the_ignored_threshold(tmp_path: Path):
+    """The human terminal path must say the gate did nothing, not exit clean.
+
+    `scan --json` already carries `threshold_ignored_for_config`, and `test`
+    (non-JSON) prints a notice when --threshold is a no-op on config. `scan`
+    (non-JSON) printed nothing at all — a user running
+    `crewscore scan . --threshold 90` on a config-only directory saw a clean
+    exit with no indication their gate did nothing.
+    """
+    _write(tmp_path / "AGENTS.md", BARE)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        main, ["scan", str(tmp_path), "--threshold", "90"]
+    )
+    assert result.exit_code == 0, result.output
+    lower = " ".join(result.output.split()).lower()
+    assert "threshold" in lower
+    assert "ignored" in lower
+    assert "configuration smells" in lower
+    assert "--max-smells" in result.output
+    # The new notice itself must stay cp1252-encodable (ASCII only) — the
+    # rest of the output includes rich's own box-drawing chrome, which this
+    # concern is not about.
+    ignored_lines = [
+        line for line in result.output.splitlines() if "ignored" in line.lower()
+    ]
+    assert ignored_lines
+    for line in ignored_lines:
+        line.encode("cp1252")
+
+
+def test_scan_human_mode_has_no_ignored_threshold_note_for_governed_files(
+    tmp_path: Path,
+):
+    """A system-prompt-only scan must not print the config no-op notice."""
+    _write(tmp_path / "system-prompt.md", BARE)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        main, ["scan", str(tmp_path), "--threshold", "0"]
+    )
+    assert result.exit_code == 0, result.output
+    lower = " ".join(result.output.split()).lower()
+    assert "ignored" not in lower
+
+
 def test_scan_max_smells_gates_config_files(tmp_path: Path):
     """--max-smells is the CI gate that does apply to coding-agent config."""
     bloated = "# Guide\n" + "\n".join(f"- rule {i}" for i in range(250))

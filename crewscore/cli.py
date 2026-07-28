@@ -1122,6 +1122,24 @@ def scan(path, as_json, threshold, max_smells, explain, summary, profile):
         if any_config or any_smells:
             console.print()
 
+        # `--json` already carries `threshold_ignored_for_config` per file, and
+        # `test` prints the same notice on its console path. `scan` printed
+        # nothing here, so a config-only directory looked like a clean pass
+        # with a --threshold gate that silently did nothing.
+        ignored_paths = [
+            item["path"]
+            for item in scored
+            if "threshold_ignored_for_config" in item.get("warnings", [])
+        ]
+        if ignored_paths:
+            console.print(
+                f"  [yellow]--threshold ignored[/yellow] on "
+                f"{len(ignored_paths)} file(s): coding-agent config is judged "
+                "on configuration smells, not the governance score. Use "
+                "[bold]--max-smells[/bold] to gate CI on them."
+            )
+            console.print()
+
         # Explain only makes sense where a governance score is a verdict.
         governed = [i for i in scored if i.get("governance_applicable", True)]
         if explain and governed:
