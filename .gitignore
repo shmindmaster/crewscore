@@ -9,6 +9,15 @@ build/
 agent-guard-report-*.html
 .DS_Store
 
+# Local / agent-only (never publish)
 .superpowers/
 .worktrees/
+_product-experience/
+docs/superpowers/
+docs/research/
+docs/launch/
+docs/pmf-research-*.md
+docs/viral-product-spec-*.md
+docs/publish-checklist.md
+docs/ui-*.png
 
