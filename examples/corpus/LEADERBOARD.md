@@ -2,7 +2,9 @@
 
 Synthetic fixtures representing common agent-prompt shapes (bare demo → partial hygiene → hardened ops). **Structural scores only** — not red-team results, not runtime proof.
 
-- **Ruleset:** `crewscore-hygiene@0.3.1`
+> **These are fixtures, not evidence.** They were written to exercise the rules, which is why the top one scores well. Across 1,368 real system prompts, nothing scored above 50/100 and the score did not separate production prompts from amateur ones once length was controlled. Read [`docs/validation.md`](../../docs/validation.md) before reading anything into a number here.
+
+- **Ruleset:** `crewscore-hygiene@0.4.0`
 - **Generated:** 2026-07-28
 - **Command:** `crewscore scan examples/corpus`
 - **Regenerate:** `python scripts/score_corpus.py`

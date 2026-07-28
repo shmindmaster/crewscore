@@ -3,7 +3,7 @@ Structural analysis of an AI agent's system prompt.
 
 Runs entirely offline — no LLM calls, no API key, no cost.
 Analyzes the system prompt text for guardrail patterns, safety
-instructions, and production-readiness signals.
+instructions, and governance guardrail signals.
 """
 
 from __future__ import annotations

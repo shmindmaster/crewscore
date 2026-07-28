@@ -50,6 +50,13 @@ def main() -> int:
         "(bare demo → partial hygiene → hardened ops). "
         "**Structural scores only** — not red-team results, not runtime proof.",
         "",
+        "> **These are fixtures, not evidence.** They were written to exercise "
+        "the rules, which is why the top one scores well. Across 1,368 real "
+        "system prompts, nothing scored above 50/100 and the score did not "
+        "separate production prompts from amateur ones once length was "
+        "controlled. Read [`docs/validation.md`](../../docs/validation.md) "
+        "before reading anything into a number here.",
+        "",
         f"- **Ruleset:** `{RULESET_ID}`",
         f"- **Generated:** {date.today().isoformat()}",
         f"- **Command:** `crewscore scan examples/corpus`",
