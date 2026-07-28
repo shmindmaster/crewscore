@@ -1106,15 +1106,16 @@ body.sheet-open{overflow:hidden}
   /** Export for coding-agent config: smell verdict, never a score or a tier. */
   function renderConfigExport() {
     const result = lastAgent.result;
-    const smells = result.smells || [];
     const label = E.profileLabel ? E.profileLabel(result.profile) : "coding-agent config";
     const st = `CrewScore checked my ${label} — ${result.tier}. Configuration smells (dos Santos et al., arXiv:2606.15828), not a 0-100 governance grade: that number is meaningless for this artifact. The browser runs ${result.detectors_run} of ${result.detectors_total} detectors; the CLI runs all three. ${location.origin}`;
     const ci = `# Gate coding-agent config on configuration smells (not a score)
+# This browser ran ${result.detectors_run} of ${result.detectors_total} detectors; the full CLI
+# may find more. max-smells is a fixed gate, not the count this scan found.
 - uses: shmindmaster/crewscore@v1
   with:
     scan-path: "."
-    max-smells: "${smells.length}"
-# or: crewscore scan . --max-smells ${smells.length}`;
+    max-smells: "0"
+# or: crewscore scan . --max-smells 0`;
 
     let html = `<p class="help">Take the verdict with you. No 0-100 number is exported — this artifact is not graded.</p>
       <ul class="export-checklist" aria-label="Export completion checklist">
