@@ -27,7 +27,7 @@ $ crewscore test --prompt "You are a helpful assistant that..."
 
 Score the **text** of your agent instructions. Fix gaps. Gate CI when scores drop.
 
-[Install](#install) · [Usage](#usage) · [How scoring works](#how-scoring-works) · [CI](#ci-integration) · [Limits](#what-this-is-and-is-not)
+[Install](#install) · [Usage](#usage) · [Share](#share-your-score) · [How scoring works](#how-scoring-works) · [CI](#ci-integration) · [Limits](#what-this-is-and-is-not)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11+-green.svg)](https://python.org)
@@ -91,6 +91,28 @@ crewscore test --prompt-file ./my-agent/system-prompt.md --json --threshold 50
 
 `--threshold N` exits with code `2` when overall score is below `N` (CI gate).
 
+### Share your score
+
+Export a self-contained HTML report and an SVG badge after scoring:
+
+```bash
+crewscore test --prompt-file ./system-prompt.md --report report.html --badge crewscore.svg
+```
+
+Embed the badge in a README or PR description (path relative to your repo):
+
+```markdown
+![CrewScore](./crewscore.svg)
+```
+
+Or point CI at a committed badge path after generating it in a workflow step:
+
+```markdown
+![CrewScore](./badges/crewscore.svg)
+```
+
+Human mode also prints a one-line share blurb with your overall score and [crewscore.ai](https://crewscore.ai). Reports are structural-scan artifacts only — not runtime proof of safety.
+
 ### Apply guardrail patterns
 
 ```bash
@@ -150,9 +172,54 @@ Eight dimensions, equal weight, each 0–100:
 
 ## CI integration
 
+### Official GitHub Action (recommended)
+
+One YAML step — no manual pip ritual:
+
 ```yaml
-# .github/workflows/agent-safety.yml
-name: Agent Safety Check
+# .github/workflows/crewscore.yml
+name: CrewScore
+on: [pull_request]
+jobs:
+  score:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: CrewScore
+        id: crewscore
+        uses: shmindmaster/crewscore@v1
+        with:
+          prompt-file: ./agents/system-prompt.md
+          threshold: "50"
+          # explain: "true"   # optional: matched vs missing signals
+      - name: Report
+        if: always()
+        run: |
+          echo "score=${{ steps.crewscore.outputs.score }}"
+          echo "tier=${{ steps.crewscore.outputs.tier }}"
+```
+
+**Inputs**
+
+| Input | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `prompt-file` | yes | — | Path to the system prompt file |
+| `threshold` | no | `50` | Fail the step (exit 2) when overall score is below this |
+| `explain` | no | `false` | Pass `true` to include matched/missing signals |
+
+**Outputs:** `score` (0–100), `tier` (label string).
+
+The composite action installs CrewScore from the action path (`pip install "${{ github.action_path }}"`), so monorepo / pre-PyPI self-tests work with `uses: ./`.
+
+`uses: shmindmaster/crewscore@v1` requires a floating major tag `v1` on the release commit (in addition to the immutable `vX.Y.Z` tag). Maintainers create or move `v1` after each compatible release — see [docs/publish-checklist.md](docs/publish-checklist.md).
+
+See [`.github/workflows/example-ci.yml`](.github/workflows/example-ci.yml) for a documented consumer template and [`.github/workflows/crewscore-selftest.yml`](.github/workflows/crewscore-selftest.yml) for this repo’s smoke self-test.
+
+### CLI in CI
+
+```yaml
+# .github/workflows/crewscore-cli.yml
+name: CrewScore CLI
 on: [pull_request]
 jobs:
   score:
@@ -207,9 +274,6 @@ See [AGENTS.md](AGENTS.md) for agent/contributor operating notes.
 
 ## Roadmap (not implemented yet)
 
-- Explainable findings (which signals matched / missing)
-- Shareable HTML report for PRs and reviews
-- Official GitHub Action wrapper
 - Framework adapters that extract prompts from LangGraph / CrewAI / AutoGen graphs
 - Optional live adversarial testing (post-traction; not the default path)
 

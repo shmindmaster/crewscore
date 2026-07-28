@@ -1,0 +1,62 @@
+name: CrewScore
+description: Structural production-readiness scorecard for AI agent system prompts
+author: shmindmaster
+branding:
+  icon: shield
+  color: blue
+
+inputs:
+  prompt-file:
+    description: Path to the system prompt file to score
+    required: true
+  threshold:
+    description: Exit non-zero (code 2) if overall score is below this value (0-100)
+    required: false
+    default: "50"
+  explain:
+    description: Include matched vs missing guardrail signals (pass "true" to enable)
+    required: false
+    default: "false"
+
+outputs:
+  score:
+    description: Overall structural score (0-100)
+    value: ${{ steps.run.outputs.score }}
+  tier:
+    description: Score tier label
+    value: ${{ steps.run.outputs.tier }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Install CrewScore from action path
+      shell: bash
+      run: pip install "${{ github.action_path }}"
+
+    - name: Run CrewScore
+      id: run
+      shell: bash
+      run: |
+        set -euo pipefail
+        ARGS=(test --prompt-file "${{ inputs.prompt-file }}" --json --threshold "${{ inputs.threshold }}")
+        if [ "${{ inputs.explain }}" = "true" ]; then
+          ARGS+=(--explain)
+        fi
+        set +e
+        OUTPUT=$(crewscore "${ARGS[@]}")
+        EXIT=$?
+        set -e
+        echo "$OUTPUT"
+        echo "$OUTPUT" | python -c "
+        import json, os, sys
+        data = json.load(sys.stdin)
+        with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as f:
+            f.write(f\"score={data['overall']}\n\")
+            f.write(f\"tier={data['tier']}\n\")
+        "
+        exit "$EXIT"

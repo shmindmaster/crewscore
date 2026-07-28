@@ -7,6 +7,8 @@ Non-technical. No API key. Produces a score and optional shareable copy.
 from __future__ import annotations
 
 import json
+from html import escape
+from pathlib import Path
 
 import click
 from rich.console import Console
@@ -29,6 +31,17 @@ QUESTIONS = [
     ("Can show 3+ customers in YOUR industry running in production (not pilots)?", "production_refs"),
     ("Documented incident/escalation process when the AI fails?", "incident"),
 ]
+
+# Critical diligence keys: NO or DK → explicit red-flag bullets
+CRITICAL_KEYS = frozenset(
+    {
+        "certification",
+        "audit",
+        "human_override",
+        "security_audit",
+        "incident",
+    }
+)
 
 SCORE_YES = 10
 SCORE_DK = 3
@@ -58,13 +71,132 @@ def render_answer(ans: str) -> tuple[int, str]:
     return SCORE_NO, "NO"
 
 
+def _flag_label(question: str) -> str:
+    return question.rstrip("?")
+
+
+def collect_red_flags(results: list[tuple[str, str, int, str]]) -> list[str]:
+    """Build red-flag bullets: all NOs, plus DK on critical keys."""
+    flags: list[str] = []
+    seen: set[str] = set()
+    for question, label, pts, key in results:
+        is_no = pts == SCORE_NO
+        is_critical_dk = key in CRITICAL_KEYS and pts == SCORE_DK
+        if is_no or is_critical_dk:
+            text = _flag_label(question)
+            if text not in seen:
+                seen.add(text)
+                flags.append(text)
+    return flags
+
+
+def build_vendor_result(name: str, answers_csv: str) -> dict:
+    """Pure vendor scorecard from comma-separated y/n/dk answers."""
+    parts = [p.strip() for p in answers_csv.split(",")]
+    if len(parts) != 10:
+        raise ValueError(f"Expected 10 answers (y/n/dk), got {len(parts)}")
+
+    results: list[tuple[str, str, int, str]] = []
+    for (question, key), ans in zip(QUESTIONS, parts):
+        pts, label = render_answer(ans)
+        results.append((question, label, pts, key))
+
+    total = sum(pts for _, _, pts, _ in results)
+    tier_name, _tier_color, tier_label = get_tier(total)
+    red_flags = collect_red_flags(results)
+
+    return {
+        "vendor": name,
+        "score": total,
+        "tier": tier_name,
+        "tier_label": tier_label,
+        "answers": [
+            {
+                "question": q,
+                "key": key,
+                "answer": label,
+                "points": pts,
+            }
+            for q, label, pts, key in results
+        ],
+        "red_flags": red_flags,
+    }
+
+
+def render_vendor_html(payload: dict) -> str:
+    """Simple self-contained HTML scorecard for a vendor assessment."""
+    vendor = escape(str(payload.get("vendor", "")))
+    score = payload.get("score", 0)
+    tier = escape(str(payload.get("tier", "")))
+    tier_label = escape(str(payload.get("tier_label", "")))
+    red_flags = payload.get("red_flags") or []
+    answers = payload.get("answers") or []
+
+    flag_items = "".join(f"<li>{escape(f)}</li>" for f in red_flags)
+    flags_block = (
+        f'<div class="flags"><strong>Red flags</strong><ul>{flag_items}</ul></div>'
+        if red_flags
+        else ""
+    )
+
+    rows = []
+    for a in answers:
+        q = escape(str(a.get("question", "")))
+        ans = escape(str(a.get("answer", "")))
+        pts = a.get("points", 0)
+        rows.append(f"<tr><td>{q}</td><td>{ans}</td><td>{pts}</td></tr>")
+    rows_html = "\n".join(rows)
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CrewScore — {vendor} Vendor Scorecard</title>
+<style>
+body{{font-family:system-ui,sans-serif;background:#0f0f1a;color:#e2e8f0;padding:2rem;max-width:720px;margin:0 auto}}
+h1{{color:#fff}}
+.score{{font-size:2.5rem;font-weight:bold;margin:0.5rem 0}}
+.tier{{color:#94a3b8;margin-bottom:1rem}}
+table{{width:100%;border-collapse:collapse;font-size:0.85rem}}
+td,th{{border:1px solid #334155;padding:0.5rem;text-align:left}}
+.flags{{margin-top:1rem;color:#ef4444}}
+.flags ul{{margin:0.5rem 0 0 1.25rem}}
+.disclaimer{{margin-top:1.5rem;font-size:0.8rem;color:#64748b}}
+a{{color:#3b82f6}}
+</style>
+</head>
+<body>
+<h1>CrewScore — AI Vendor Scorecard</h1>
+<p>Vendor: <strong>{vendor}</strong></p>
+<div class="score">{score}/100</div>
+<div class="tier">{tier} — {tier_label}</div>
+{flags_block}
+<table>
+<thead><tr><th>Question</th><th>Answer</th><th>Pts</th></tr></thead>
+<tbody>
+{rows_html}
+</tbody>
+</table>
+<p class="disclaimer">
+Self-attested answers — not an independent audit.
+Structural / checklist diligence only.
+<a href="{HOMEPAGE}">{HOMEPAGE}</a>
+</p>
+</body>
+</html>
+"""
+
+
 def generate_linkedin_post(
     vendor: str,
     score: int,
     tier: str,
     answers: list[tuple[str, str, int]],
+    red_flags: list[str] | None = None,
 ) -> str:
-    red_flags = [q for q, ans, pts in answers if pts == SCORE_NO]
+    if red_flags is None:
+        red_flags = [q for q, ans, pts in answers if pts == SCORE_NO]
     cautions = [q for q, ans, pts in answers if pts == SCORE_DK]
 
     lines = [
@@ -81,10 +213,14 @@ def generate_linkedin_post(
         lines.append("")
 
     if cautions:
-        lines.append("Couldn't verify:")
-        for q in cautions:
-            lines.append(f"- {q.rstrip('?')}")
-        lines.append("")
+        # Avoid double-listing critical DKs already in red_flags
+        flag_set = {f.rstrip("?") for f in red_flags}
+        remaining = [q for q in cautions if q.rstrip("?") not in flag_set]
+        if remaining:
+            lines.append("Couldn't verify:")
+            for q in remaining:
+                lines.append(f"- {q.rstrip('?')}")
+            lines.append("")
 
     lines.append("Before signing that contract, ask these 10 questions.")
     lines.append("")
@@ -109,7 +245,13 @@ def generate_linkedin_post(
     is_flag=True,
     help="Emit machine-readable JSON",
 )
-def assess_vendor(name: str, answers: str | None, as_json: bool):
+@click.option(
+    "--report",
+    type=click.Path(),
+    default=None,
+    help="Write a simple HTML vendor scorecard to this path",
+)
+def assess_vendor(name: str, answers: str | None, as_json: bool, report: str | None):
     """Score an AI vendor's production credibility. 10 questions. No API key."""
 
     results: list[tuple[str, str, int, str]] = []
@@ -127,12 +269,18 @@ def assess_vendor(name: str, answers: str | None, as_json: bool):
                 err=True,
             )
             raise SystemExit(1)
-        for (question, key), ans in zip(QUESTIONS, parts):
-            pts, label = render_answer(ans)
-            results.append((question, label, pts, key))
+        payload = build_vendor_result(name, answers)
+        for a in payload["answers"]:
+            results.append((a["question"], a["answer"], a["points"], a["key"]))
     elif as_json:
         console.print(
             "[red]Error: --json requires --answers (non-interactive).[/red]",
+            err=True,
+        )
+        raise SystemExit(1)
+    elif report is not None:
+        console.print(
+            "[red]Error: --report requires --answers (non-interactive).[/red]",
             err=True,
         )
         raise SystemExit(1)
@@ -158,10 +306,9 @@ def assess_vendor(name: str, answers: str | None, as_json: bool):
             results.append((question, label, pts, key))
             console.print()
 
-    total = sum(pts for _, _, pts, _ in results)
-    tier_name, tier_color, tier_label = get_tier(total)
-
-    if as_json:
+        total = sum(pts for _, _, pts, _ in results)
+        tier_name, _tc, tier_label = get_tier(total)
+        red_flags = collect_red_flags(results)
         payload = {
             "vendor": name,
             "score": total,
@@ -176,7 +323,21 @@ def assess_vendor(name: str, answers: str | None, as_json: bool):
                 }
                 for q, label, pts, key in results
             ],
+            "red_flags": red_flags,
         }
+
+    total = payload["score"]
+    tier_name = payload["tier"]
+    tier_label = payload["tier_label"]
+    red_flags = payload["red_flags"]
+    _, tier_color, _ = get_tier(total)
+
+    if report:
+        report_path = Path(report)
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        report_path.write_text(render_vendor_html(payload), encoding="utf-8")
+
+    if as_json:
         click.echo(json.dumps(payload, indent=2, sort_keys=True))
         return
 
@@ -201,7 +362,9 @@ def assess_vendor(name: str, answers: str | None, as_json: bool):
         status_color = (
             "green" if pts == SCORE_YES else ("yellow" if pts == SCORE_DK else "red")
         )
-        flag = "  <-- RED FLAG" if pts == SCORE_NO else ""
+        flag = "  <-- RED FLAG" if pts == SCORE_NO or (
+            key in CRITICAL_KEYS and pts == SCORE_DK
+        ) else ""
         console.print(
             f"  [{status_color}][{bar}] {label:<12}[/{status_color}] {question}{flag}"
         )
@@ -213,15 +376,19 @@ def assess_vendor(name: str, answers: str | None, as_json: bool):
     )
     console.print(f"  [{'=' * 54}]")
 
-    red_flag_count = sum(1 for _, _, pts, _ in results if pts == SCORE_NO)
-    if red_flag_count > 0:
+    if red_flags:
         console.print()
         console.print(
-            f"  [red]{red_flag_count} RED FLAG(S) detected.[/red] "
+            f"  [red]{len(red_flags)} RED FLAG(S) detected.[/red] "
             "Request evidence before signing."
         )
+        for flag in red_flags:
+            console.print(f"  [red]•[/red] {flag}")
 
     console.print()
+    console.print(
+        "  [dim]Self-attested answers — not an independent audit.[/dim]"
+    )
     console.print("  Scored with CrewScore | pip install crewscore")
     console.print(f"  {HOMEPAGE} · {REPO}")
     console.print()
@@ -235,8 +402,11 @@ def assess_vendor(name: str, answers: str | None, as_json: bool):
         total,
         tier_name,
         [(q, a, p) for q, a, p, _ in results],
+        red_flags=red_flags,
     )
     console.print(post)
     console.print()
     console.print("  [dim]Copy the text above and post it on LinkedIn.[/dim]")
+    if report:
+        console.print(f"  -> HTML report written to [bold]{report}[/bold]")
     console.print()

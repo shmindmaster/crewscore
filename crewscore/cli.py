@@ -11,6 +11,7 @@ from rich.console import Console
 from rich.panel import Panel
 
 from crewscore import __version__
+from crewscore.report import render_badge_svg, render_html_report, share_text
 from crewscore.scoring import DIMENSIONS, build_result, tier_color
 from crewscore.scorers import structural_analysis
 from crewscore.vendor_scorecard import assess_vendor
@@ -73,7 +74,24 @@ main.add_command(assess_vendor)
     default=None,
     help="Exit non-zero if overall score is below this threshold",
 )
-def test(prompt, prompt_file, as_json, threshold):
+@click.option(
+    "--explain",
+    is_flag=True,
+    help="Show matched vs missing guardrail signals per dimension",
+)
+@click.option(
+    "--report",
+    type=click.Path(),
+    default=None,
+    help="Write a self-contained HTML scorecard to this path",
+)
+@click.option(
+    "--badge",
+    type=click.Path(),
+    default=None,
+    help="Write an SVG badge to this path",
+)
+def test(prompt, prompt_file, as_json, threshold, explain, report, badge):
     """Run structural production-readiness analysis on an agent system prompt.
 
     This mode is offline and free: it scans the prompt text for guardrail
@@ -99,11 +117,27 @@ def test(prompt, prompt_file, as_json, threshold):
         )
         sys.exit(1)
 
-    dimensions = structural_analysis.analyze(system_prompt)
+    findings = None
+    if explain:
+        dimensions, findings = structural_analysis.analyze_with_findings(system_prompt)
+    else:
+        dimensions = structural_analysis.analyze(system_prompt)
     result = build_result(dimensions, mode="structural", source=source)
 
+    if report:
+        report_path = Path(report)
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        report_path.write_text(render_html_report(result), encoding="utf-8")
+    if badge:
+        badge_path = Path(badge)
+        badge_path.parent.mkdir(parents=True, exist_ok=True)
+        badge_path.write_text(render_badge_svg(result), encoding="utf-8")
+
     if as_json:
-        click.echo(json.dumps(result.to_dict(), indent=2, sort_keys=True))
+        payload = result.to_dict()
+        if findings is not None:
+            payload["findings"] = findings
+        click.echo(json.dumps(payload, indent=2, sort_keys=True))
     else:
         color = tier_color(result.overall)
         console.print()
@@ -151,6 +185,11 @@ def test(prompt, prompt_file, as_json, threshold):
                         f"production threshold ({score}/100)."
                     )
 
+        if findings is not None:
+            _render_findings(findings)
+
+        console.print()
+        console.print(f"  Share: {share_text(result)}")
         console.print()
         console.print(
             f"  -> Run [bold]crewscore fix[/bold] to apply recommended guardrail patterns."
@@ -159,6 +198,10 @@ def test(prompt, prompt_file, as_json, threshold):
             "  -> Re-run with [bold]--json[/bold] for CI. "
             "Use [bold]--threshold N[/bold] to fail builds below N."
         )
+        if report:
+            console.print(f"  -> HTML report written to [bold]{report}[/bold]")
+        if badge:
+            console.print(f"  -> SVG badge written to [bold]{badge}[/bold]")
         console.print(f"  -> {HOMEPAGE}")
         console.print()
 
@@ -169,6 +212,34 @@ def test(prompt, prompt_file, as_json, threshold):
                 err=True,
             )
         sys.exit(2)
+
+
+def _render_findings(findings: list[dict]) -> None:
+    """Print matched/missing findings grouped by dimension."""
+    label_by_key = {key: label for label, key in DIMENSIONS}
+    by_dim: dict[str, list[dict]] = {}
+    for f in findings:
+        by_dim.setdefault(f["dimension"], []).append(f)
+
+    console.print()
+    console.print("[bold]Findings (matched vs missing signals)[/bold]")
+    for _, key in DIMENSIONS:
+        items = by_dim.get(key, [])
+        if not items:
+            continue
+        dim_label = label_by_key.get(key, key)
+        console.print()
+        console.print(f"  [bold]{dim_label}[/bold] ({key})")
+        for f in items:
+            status = f["status"]
+            reason = f.get("pattern_or_reason") or ""
+            snippet = f.get("snippet")
+            if status == "matched":
+                detail = snippet or reason
+                console.print(f"    [green]matched[/green]  {detail}")
+            else:
+                console.print(f"    [red]missing[/red]  {reason}")
+
 
 
 @main.command()
@@ -223,6 +294,11 @@ def fix(prompt, prompt_file, apply, output, as_json):
     before_result = build_result(before)
     fixes = generate_fixes(before)
 
+    honesty_note = (
+        "Templates must be paired with runtime gates "
+        "(tool allowlists, human approval hooks, logging, and policy enforcement)"
+    )
+
     if not fixes:
         if as_json:
             click.echo(
@@ -232,6 +308,7 @@ def fix(prompt, prompt_file, apply, output, as_json):
                         "before": before_result.to_dict(),
                         "after": before_result.to_dict(),
                         "message": "No fixes needed",
+                        "note": honesty_note,
                     },
                     indent=2,
                     sort_keys=True,
@@ -265,6 +342,7 @@ def fix(prompt, prompt_file, apply, output, as_json):
                     "path": str(source_path)
                     if apply and source_path
                     else (output or None),
+                    "note": honesty_note,
                 },
                 indent=2,
                 sort_keys=True,
@@ -282,6 +360,12 @@ def fix(prompt, prompt_file, apply, output, as_json):
     )
     console.print()
     console.print(explain_fixes(fixes))
+    console.print()
+    console.print(
+        "[yellow]Honesty note:[/yellow] These are prompt templates — "
+        "they must be paired with runtime gates (tool allowlists, human "
+        "approval hooks, logging, and policy enforcement) to have real effect."
+    )
     console.print()
 
     if apply and source_path:
