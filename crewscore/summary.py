@@ -6,6 +6,32 @@ from typing import Any
 
 from crewscore.scoring import DIMENSIONS, RULESET_ID, ScoreResult
 
+# Plain-language explanation for warning keys that a reader cannot act on
+# from the key alone.
+_WARNING_NOTES = {
+    "template_boilerplate_detected": (
+        "Score may be inflated by pasted fix templates "
+        "(text coverage ≠ runtime safety)."
+    ),
+    "threshold_ignored_for_config": (
+        "`--threshold` gates the governance score, which this artifact is not "
+        "judged on — the gate did nothing. Use `--max-smells N` to gate CI here."
+    ),
+}
+
+
+def _warning_lines(warnings: list[str]) -> list[str]:
+    """Markdown for a result's warnings; empty when there are none."""
+    if not warnings:
+        return []
+    lines = ["", "### Warnings"]
+    for w in warnings:
+        lines.append(f"- ⚠️ `{w}`")
+        note = _WARNING_NOTES.get(w)
+        if note:
+            lines.append(f"  - {note}")
+    return lines
+
 
 def format_score_markdown(
     result: ScoreResult | dict[str, Any],
@@ -52,6 +78,10 @@ def format_score_markdown(
                 lines.append(f"| **{s.get('name', '?')}** | {detail} |")
         else:
             lines.extend(["", "No configuration smells detected."])
+        # Warnings matter most here: the Action always passes --threshold, so
+        # this comment is the only place a CI owner learns their gate was a
+        # no-op on this file.
+        lines.extend(_warning_lines(warnings))
         return "\n".join(lines) + "\n"
 
     lines = [
@@ -72,15 +102,7 @@ def format_score_markdown(
         score = int(dims.get(key, 0))
         lines.append(f"| {label} | {score} |")
 
-    if warnings:
-        lines.extend(["", "### Warnings"])
-        for w in warnings:
-            lines.append(f"- ⚠️ `{w}`")
-            if w == "template_boilerplate_detected":
-                lines.append(
-                    "  - Score may be inflated by pasted fix templates "
-                    "(text coverage ≠ runtime safety)."
-                )
+    lines.extend(_warning_lines(warnings))
 
     if findings:
         lines.extend(["", "### Findings (open rule IDs)", ""])
@@ -150,8 +172,8 @@ def format_scan_markdown(
         # Nothing here is judged on the governance dimensions, so there is no
         # score to headline — say that rather than inventing a zero.
         lines.append(
-            f"**No agent system prompts found** — "
-            f"{len(config)} coding-agent config file(s) scanned."
+            f"**No governance grade:** all {len(config)} file(s) scanned are "
+            "coding-agent config, judged on configuration smells."
         )
     lines.extend(
         [

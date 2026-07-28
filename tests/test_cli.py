@@ -208,6 +208,35 @@ def test_test_json_warns_when_threshold_ignored_for_config(tmp_path: Path):
     assert "threshold_ignored_for_config" in payload["warnings"]
 
 
+def test_test_summary_markdown_reports_the_ignored_threshold(tmp_path: Path):
+    """The sticky PR comment / step summary is the consumer that needs this.
+
+    The Action passes --threshold unconditionally (default "50"), so without
+    this every config-file comment silently omits that the gate is a no-op.
+    """
+    config = tmp_path / "AGENTS.md"
+    config.write_text("# Guide\n\nBuild with `make`.\n", encoding="utf-8")
+    summary = tmp_path / "out.md"
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "test",
+            "--prompt-file",
+            str(config),
+            "--json",
+            "--threshold",
+            "90",
+            "--summary",
+            str(summary),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    text = summary.read_text(encoding="utf-8")
+    assert "threshold_ignored_for_config" in text
+    assert "--max-smells" in text
+
+
 def test_test_json_has_no_threshold_warning_without_threshold(tmp_path: Path):
     config = tmp_path / "AGENTS.md"
     config.write_text("# Guide\n\nBuild with `make`.\n", encoding="utf-8")

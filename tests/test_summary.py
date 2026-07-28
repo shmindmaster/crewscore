@@ -1,7 +1,38 @@
 """Markdown CI summaries are transparent (rule IDs, formula, not black box)."""
 
+from crewscore.profiles import CODING_AGENT_CONFIG
 from crewscore.scoring import build_result
 from crewscore.summary import format_scan_markdown, format_score_markdown
+
+_ZERO_DIMS = {
+    k: 0
+    for k in [
+        "injection", "hallucination", "citation", "cost",
+        "human_gate", "safe_stop", "audit", "compliance",
+    ]
+}
+
+
+def test_config_markdown_reports_warnings():
+    """The PR comment is where a no-op CI gate has to show up.
+
+    The Action passes --threshold unconditionally (default "50"), so every
+    config-file comment would otherwise omit that the gate did nothing.
+    """
+    result = build_result(
+        dict(_ZERO_DIMS),
+        profile=CODING_AGENT_CONFIG,
+        warnings=["threshold_ignored_for_config"],
+    )
+    md = format_score_markdown(result)
+    assert "threshold_ignored_for_config" in md
+    assert "--max-smells" in md
+
+
+def test_config_markdown_has_no_warnings_section_when_clean():
+    result = build_result(dict(_ZERO_DIMS), profile=CODING_AGENT_CONFIG)
+    md = format_score_markdown(result)
+    assert "Warnings" not in md
 
 
 def test_score_markdown_includes_formula_and_ruleset():
@@ -120,3 +151,6 @@ def test_scan_markdown_config_only_has_no_governance_headline():
     assert "Worst score" not in md
     assert "configuration smells" in md.lower()
     assert "CONFIG: 1 SMELL" in md
+    # Do not claim nothing was found directly above a table listing what was found.
+    assert "No agent system prompts found" not in md
+    assert "coding-agent config" in md.lower()
