@@ -294,7 +294,72 @@ def test_js_classifies_a_real_filename_like_the_cli_when_node_present():
 def test_index_classifies_loaded_urls_by_filename():
     """The URL loader must not leave a config file declared as a system prompt."""
     html = (ROOT / "index.html").read_text(encoding="utf-8")
-    assert "classifyFilename" in html
+    # profileForLoadedUrl wraps classifyFilename with the promotion-only rule.
+    assert "profileForLoadedUrl" in html
+
+
+def test_js_url_load_never_demotes_a_declared_config_when_node_present():
+    """Filename evidence may promote to config; it must never demote away from it.
+
+    classify_path returns system_prompt as a *default*, not as a finding. Using
+    that default to overrule a declaration the user actively made turns absence
+    of evidence into evidence against, and re-grades a coding-agent config --
+    the one thing the profile split exists to prevent.
+    """
+    if not shutil.which("node"):
+        return
+    cases = [
+        # Declared config + a filename that matches no config basename: the
+        # user's declaration stands. These all regraded before the fix.
+        (CODING_AGENT_CONFIG, "/o/r/main/rules.md", CODING_AGENT_CONFIG),
+        (
+            CODING_AGENT_CONFIG,
+            "/o/r/main/.github/instructions/backend.instructions.md",
+            CODING_AGENT_CONFIG,
+        ),
+        (CODING_AGENT_CONFIG, "/o/r/main/docs/agent-guidelines.md", CODING_AGENT_CONFIG),
+        # Non-.mdc under .cursor/rules -- classify_path does not match it.
+        (CODING_AGENT_CONFIG, "/o/r/main/.cursor/rules/testing.md", CODING_AGENT_CONFIG),
+        # Declared config + a name that does match: still config.
+        (CODING_AGENT_CONFIG, "/o/r/main/AGENTS.md", CODING_AGENT_CONFIG),
+        # Promotion from the default still works -- that is the whole point of
+        # classifying a real filename at all.
+        (SYSTEM_PROMPT, "/o/r/main/AGENTS.md", CODING_AGENT_CONFIG),
+        (SYSTEM_PROMPT, "/o/r/main/.cursor/rules/testing.mdc", CODING_AGENT_CONFIG),
+        # No config evidence and nothing declared away from the default: stays.
+        (SYSTEM_PROMPT, "/o/r/main/system-prompt.md", SYSTEM_PROMPT),
+    ]
+    out = _run_engine(
+        "const c = "
+        + json.dumps(cases)
+        + ";emit(c.map(([d, p]) => E.profileForLoadedUrl(d, p)));"
+    )
+    for (declared, path, expected), actual in zip(cases, out):
+        assert actual == expected, (
+            f"declared={declared} path={path}: expected {expected}, got {actual}"
+        )
+
+
+def test_js_demoted_url_load_would_have_produced_a_grade_when_node_present():
+    """Ties the demotion bug to the invariant it broke: a grade for config."""
+    if not shutil.which("node"):
+        return
+    out = _run_engine(
+        'const p = E.profileForLoadedUrl("coding_agent_config", "/o/r/main/rules.md");'
+        'const r = E.analyzeArtifact("You are a helpful assistant.", p);'
+        "emit({ profile: p, governance_applicable: r.governance_applicable, "
+        'has_overall: Object.prototype.hasOwnProperty.call(r, "overall") });'
+    )
+    assert out["profile"] == CODING_AGENT_CONFIG
+    assert out["governance_applicable"] is False
+    assert out["has_overall"] is False
+
+
+def test_index_labels_are_not_score_worded_for_config():
+    """A config verdict is not a score, so the chrome must not say 'score'."""
+    html = (ROOT / "index.html").read_text(encoding="utf-8")
+    assert "Configuration verdict</" in html or "Configuration verdict\"" in html
+    assert "Check configuration" in html
 
 
 def test_js_python_score_parity_when_node_present():
