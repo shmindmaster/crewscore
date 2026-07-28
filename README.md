@@ -2,7 +2,7 @@
 
 # CrewScore
 
-### Free structural score for AI agent prompts — no signup, no install required
+### A governance checklist for AI agent prompts — coverage, not a quality score
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11+-green.svg)](https://python.org)
@@ -20,15 +20,56 @@
 ```bash
 pip install crewscore
 crewscore test --prompt "You are a helpful assistant."
-# → 0/100  STRUCTURAL: CRITICAL GAPS  ·  8 dimensions  ·  offline, no API key
+# → which of 8 governance controls this text states, and which it never mentions
+#   deterministic · offline · no API key, no LLM
 ```
 
+**Coverage, not quality** — [we tested whether this number ranks prompts, and it does not](docs/validation.md).  
 **CI:** `crewscore scan . --threshold 50` · Action `shmindmaster/crewscore@v1`  
 Structural hygiene only — **not a red-team**, not a certification.
 
-[Install](#install) · [Usage](#usage) · [Scoring charter](#scoring-charter) · [Two rulesets](#two-artifacts-two-rulesets) · [Config smells](#configuration-smells) · [How scoring works](#how-scoring-works) · [What changed](#what-changed-in-031) · [CI](#ci-integration) · [Limits](#what-this-is-and-is-not)
+[Read the validation study](docs/validation.md) · [Install](#install) · [Usage](#usage) · [Scoring charter](#scoring-charter) · [Two rulesets](#two-artifacts-two-rulesets) · [Config smells](#configuration-smells) · [How scoring works](#how-scoring-works) · [What changed](#what-changed-in-040) · [CI](#ci-integration) · [Limits](#what-this-is-and-is-not)
 
 </div>
+
+---
+
+## Read this before you use the number
+
+**CrewScore is a checklist, not a benchmark.** A checklist answers *"have you
+written down a rule for X?"* A benchmark answers *"is this prompt better than
+that one?"* CrewScore answers the first question. We tested whether it answers
+the second, and it does not.
+
+We scored **1,368 real system prompts** — 283 from shipped commercial products,
+1,085 from the GPT Store. Once you control for length, the eight-dimension score
+does **not** separate production prompts from amateur ones:
+
+| Measure | Result |
+| --- | --- |
+| Length-matched Cliff's delta | **+0.061** |
+| 95% CI | **−0.050 to +0.172** (crosses zero) |
+| p | **0.36** |
+| Best classifier of the two arms | **`wc -c`** — character count alone, AUC **0.863** vs CrewScore's **0.800** |
+| Highest score by any real prompt in the corpus | **50 / 100** |
+
+So: **a low score is actionable** — you probably have not written down an
+explicit injection policy, human gate, or safe-stop rule, and writing those down
+is worth doing. **A high score means the text is present.** It does not mean the
+agent will obey it, that the prompt is good, or that it beats a prompt scoring
+lower. Do not rank prompts, teams, or vendors by this number, and do not treat a
+threshold as a safety bar. Use the findings — which rule fired, which did not —
+rather than the total.
+
+Three of the eight dimensions (**Cost**, **Compliance**, **Audit**) ship with
+known-poor construct validity and are disclosed as such below.
+
+**[Read the full validation study →](docs/validation.md)** — method, corpora,
+per-dimension recall, and the sensitivity checks that all made the tool look
+*better* than the number we published.
+
+None of this touches the [configuration-smell detectors](#configuration-smells),
+which are a separate feature with separate grounding.
 
 ---
 
@@ -41,7 +82,7 @@ You shipped an agent that works in a demo. Before production you still need to a
 - Are writes, sends, and publishes gated on human approval?
 - Is there any cost, audit, or compliance language at all?
 
-Most teams never inspect those instructions systematically. **CrewScore** does a fast structural scan and can append proven guardrail patterns.
+Most teams never inspect those instructions systematically. **CrewScore** walks that checklist deterministically, tells you which controls the text never states, and can append standard guardrail text for the ones it is missing.
 
 ---
 
@@ -49,12 +90,15 @@ Most teams never inspect those instructions systematically. **CrewScore** does a
 
 | Is | Is not |
 |----|--------|
+| A **checklist**: *"have you written down a rule for X?"* | A **benchmark**: *"is this prompt better than that one?"* — [measured, and it is not](docs/validation.md) |
 | Offline structural scan of system-prompt text | Live adversarial LLM red-teaming |
 | Fix mode that appends guardrail sections | Proof that the runtime will obey the text |
 | JSON output + exit threshold for CI | LangGraph / CrewAI graph execution analysis |
 | Optional vendor self-attest checklist | Independent security certification |
 
-Scores reflect **prompt-text signals**. They are a useful smoke test, not a guarantee of runtime safety.
+The number reports **coverage of prompt-text signals**: how many of the eight
+governance controls this text states. It is a useful gap list, not a ranking and
+not a guarantee of runtime safety.
 
 > **Name note:** PyPI package `agent-guard` is an unrelated third-party CrewAI monitoring library. This project is **CrewScore** (`pip install crewscore`). The CLI also accepts the legacy alias `agent-guard` after install.
 
@@ -64,22 +108,32 @@ Scores reflect **prompt-text signals**. They are a useful smoke test, not a guar
 
 Honest principles we ship by:
 
-1. CrewScore measures **presence of hygiene signals in text**, not agent behavior.
-2. Scores are **rule-pack versioned** (`crewscore-hygiene@0.3.1`) and **deterministic** — no LLM, no hidden model.
-3. **Every rule is public.** List them anytime:
+1. CrewScore measures **coverage: presence of hygiene signals in text**, not agent behavior and not prompt quality.
+2. **The number does not rank prompts, and we published the study that shows it.** Across 1,368 real prompts, length-matched Cliff's delta is **+0.061** (95% CI −0.050 to +0.172, p=0.36) — the CI crosses zero — and character count alone classifies the two arms better than we do (AUC **0.863** vs **0.800**). No real prompt in the corpus scored above **50/100**. Full method and caveats: [`docs/validation.md`](docs/validation.md).
+3. **Three dimensions ship with known-poor construct validity**, disclosed rather than quietly removed, because removing dimensions changes every score and belongs in a release that changes scoring on purpose:
+
+   | Dimension | Why it is weak | Status |
+   |-----------|----------------|--------|
+   | Cost Runaway Protection | 50% recall but **0% on-target** — it fires on text that is not a budget rule | Re-specification planned |
+   | Compliance Readiness | Only **4.2%** of production prompts name a regime at all | Re-specification planned |
+   | Audit Trail | Present in **1 prompt of 283**; recall not estimable | Removal under consideration |
+
+   **Read `audit` and `cost` results with suspicion.** A `0` there mostly means the rules did not find something, not that you failed to write it.
+4. Scores are **rule-pack versioned** (`crewscore-hygiene@0.4.0`) and **deterministic** — no LLM, no hidden model.
+5. **Every rule is public.** List them anytime:
    ```bash
    crewscore rules              # human: formula + provenance + every rule_id + regex
    crewscore rules --json       # machine-readable full catalog
    ```
-4. Findings show **open `rule_id`s**, match snippets, or explicit missing labels (default in CLI and JSON).
-5. **Every rule declares where it came from.** Each dimension is graded `evidence-backed`, `plausible`, or `author-intuition`, with citations. Three of the eight are evidence-backed; one (Compliance Readiness) is explicitly author-intuition, because detecting the word "HIPAA" is not detecting compliance.
-6. **Length is never a score.** Long files cost tokens on every run — see [configuration smells](#configuration-smells) below.
-7. `fix` improves **text coverage**, not runtime safety; it reports its own context cost, and template boilerplate triggers a warning.
-8. We never call a score a **certification**, **audit**, or **red-team result**.
-9. When in doubt, **under-score** rather than inflate.
-10. Source of truth: [`crewscore/scorers/structural_analysis.py`](crewscore/scorers/structural_analysis.py).
+6. Findings show **open `rule_id`s**, match snippets, or explicit missing labels (default in CLI and JSON). **Prefer the findings to the total** — the findings are the part we can defend.
+7. **Every rule declares where it came from.** Each dimension is graded `evidence-backed`, `plausible`, or `author-intuition`, with citations. Three of the eight are evidence-backed; one (Compliance Readiness) is explicitly author-intuition, because detecting the word "HIPAA" is not detecting compliance.
+8. **Length is never a score.** Long files cost tokens on every run — see [configuration smells](#configuration-smells) below. (The measured length correlation is an artifact of imprecise patterns, not a length term; we tested length normalization as a fix and rejected it — it made the correlation worse.)
+9. `fix` improves **text coverage**, not runtime safety; it reports its own context cost, and template boilerplate triggers a warning.
+10. We never call a score a **certification**, **audit**, or **red-team result**.
+11. When in doubt, **under-score** rather than inflate.
+12. Source of truth: [`crewscore/scorers/structural_analysis.py`](crewscore/scorers/structural_analysis.py). Validation harness: `scripts/`.
 
-> **Changed in `0.3.0`:** CrewScore used to award up to +10 per dimension for prompts over 500 words. That rewarded the exact thing the research penalizes — and it was never in the published formula. It is gone. See [what changed and why](#what-changed-in-031).
+> **Changed in `0.3.0`:** CrewScore used to award up to +10 per dimension for prompts over 500 words. That rewarded the exact thing the research penalizes — and it was never in the published formula. It is gone. See [what changed and why](#what-changed-in-040).
 
 See also [docs/next-steps-eval.md](docs/next-steps-eval.md) for when to graduate to live eval tools.
 
@@ -185,7 +239,7 @@ crewscore fix --prompt-file ./system-prompt.md --plan --json
 
 `--plan` / `--dry-run` is mutually exclusive with `--apply` and `--output`. These are **prompt text templates**. They can raise the structural score without changing runtime behavior — wire matching controls (tool gates, logging, budgets) in your application.
 
-**Exit `1` on coding-agent config.** Since `0.3.1`, `fix` refuses to write governance templates into an `AGENTS.md`-class file and exits `1` (`--json`: `{"refused": true, ...}`). A loop that treats any non-zero exit as fatal will stop there — skip those paths, or pass `--profile system_prompt` to force the templates in. Forced runs report `"forced_governance_write": true`.
+**Exit `1` on coding-agent config.** Since `0.4.0`, `fix` refuses to write governance templates into an `AGENTS.md`-class file and exits `1` (`--json`: `{"refused": true, ...}`). A loop that treats any non-zero exit as fatal will stop there — skip those paths, or pass `--profile system_prompt` to force the templates in. Forced runs report `"forced_governance_write": true`.
 
 ### Vendor checklist (self-attest, secondary)
 
@@ -228,7 +282,7 @@ Eight dimensions, equal weight, each 0–100:
 | Audit Trail | Log decisions / immutable trail language |
 | Compliance Readiness | HIPAA/SOC2/GDPR/EU AI Act style handling language |
 
-### Score tiers (structural framing)
+### Score tiers (coverage framing)
 
 | Score | Verdict |
 |-------|---------|
@@ -238,6 +292,16 @@ Eight dimensions, equal weight, each 0–100:
 | 0–49 | `STRUCTURAL: CRITICAL GAPS` |
 
 Labels describe **prompt-text coverage**, not production certification.
+
+**The top half of this ladder is empty.** Across 1,368 real system prompts, the
+highest score any of them reached was **50/100**, and 99.3% of production
+prompts landed in the worst tier. That is a defect in the aggregation formula,
+not a finding about the industry: because each dimension holds several
+near-synonymous patterns, a control stated *once, clearly* matches one pattern
+and scores 24–32. To score high you must restate the same rule five or six
+different ways — which is exactly the redundancy our own Context Bloat detector
+flags. It is [tracked for repair](docs/validation.md). Set thresholds against
+what real files actually score, not against this ladder.
 
 ---
 
@@ -290,21 +354,27 @@ The paper's other three smells (Skill Leakage, Blind References, Conflicting Ins
 
 Smells are **advisory. They never change the score.** Folding them in would silently change what every existing `--threshold N` means in someone's CI. Whether they *should* affect the score is a question for corpus validation, not something to slip into a patch release.
 
+**Not affected by the validation study.** The [validation study](docs/validation.md) covers the eight governance dimensions only. The smell detectors are a separate feature with separate grounding — they replicate published work ([arXiv:2606.15828](https://arxiv.org/abs/2606.15828)) on a 2,000-repository corpus, and on the paper's own 100-repo corpus our Context Bloat labels match theirs exactly. Nothing in that study bears on them.
+
 ---
 
-## What changed in 0.3.1
+## What changed in 0.4.0
 
-Defects found by testing CrewScore against the published research rather than waiting for someone else to. Two releases are listed because the ruleset split shipped after the scoring fixes did.
+Defects found by testing CrewScore against the published research — and against
+our own corpus — rather than waiting for someone else to. Two releases are
+listed because the ruleset split shipped after the scoring fixes did.
 
-### 0.3.1 — the ruleset split (breaking for `--json` consumers)
+### 0.4.0 — the validation release (breaking for `--json` consumers)
+
+**0. We published the study that says the number does not rank prompts.** [`docs/validation.md`](docs/validation.md) reports a length-matched Cliff's delta of **+0.061** (95% CI −0.050 to +0.172, p=0.36) across 1,368 real system prompts, an `wc -c` baseline that classifies them better than we do (AUC 0.863 vs 0.800), and per-dimension construct validity — including three dimensions (Cost, Compliance, Audit) that ship known-weak. The positioning changed with it: CrewScore is a **checklist, not a benchmark**, and the number is **coverage, not quality**. The rules and the formula are unchanged in this release; what changed is what we claim they mean.
 
 **1. `AGENTS.md` files were being judged by the wrong ruleset.** Validated against the [arXiv:2606.15828](https://arxiv.org/abs/2606.15828) corpus of the 100 most-starred repos with an agent config file, CrewScore scored them at a median of **0/100** — all 100 in the worst tier. `crewscore scan` targeted exactly those files by default, so the headline command pointed the governance ruleset at the one artifact it can't assess. Fixed by [splitting the rulesets](#two-artifacts-two-rulesets): 0 of those 100 files now receive a governance grade, and the 42 flagged for Context Bloat match the paper's labels exactly.
 
 **2. Four rules were matching ordinary developer prose.** Measured on the same corpus: `compliance.01` matched `phi` *inside "cryptographic"* (19/100 files); `injection.05` matched *dependency injection* (19/100); `audit.02` matched bare `logging` (30/100); `citation.01`/`.05` matched `reference` and any numbered list containing "refer" (83 hits). All narrowed, with regression tests built from the exact offending strings. Roughly **70% of the apparent signal on real files was noise**.
 
-**3. `--json` no longer carries a governance grade for coding-agent config.** *(breaking)* When `governance_applicable` is `false`, `crewscore test --json` and `crewscore scan --json` omit `overall` and `dimensions` **entirely** — they are not zeroed, they are absent. Previously `crewscore test --prompt-file AGENTS.md --json` reported `overall: 0`, so `jq -e '.overall >= 50'` failed on every `AGENTS.md` in existence while the [browser engine](https://crewscore.ai) reported no number at all for the same file. Same artifact, two contracts; the browser one was right. `tier` (a `CONFIG:` verdict), `governance_applicable`, `profile`, `source`, `ruleset`, `smells` and `warnings` are unchanged. **If you parse the JSON, branch on `governance_applicable` before reading `overall`** — see [CLI in CI](#cli-in-ci).
+**3. `--json` no longer carries a governance grade for coding-agent config.** *(breaking)* When `governance_applicable` is `false`, `crewscore test --json` and `crewscore scan --json` omit `overall`, `dimensions`, `findings` and `transparency` **entirely** — they are not zeroed, they are absent. Previously `crewscore test --prompt-file AGENTS.md --json` reported `overall: 0`, so `jq -e '.overall >= 50'` failed on every `AGENTS.md` in existence while the [browser engine](https://crewscore.ai) reported no number at all for the same file. Same artifact, two contracts; the browser one was right. `findings` and `transparency` went with them: they carry the matched/missing governance rules and the `15 + 85 × matches / total_rules` formula, so a consumer could reconstruct the withheld grade from those two fields alone. `tier` (a `CONFIG:` verdict), `governance_applicable`, `profile`, `source`, `ruleset`, `smells` and `warnings` are unchanged. **If you parse the JSON, branch on `governance_applicable` before reading `overall`** — see [CLI in CI](#cli-in-ci).
 
-**4. `crewscore fix` exits `1` instead of writing governance templates into coding-agent config.** *(breaking)* Every fix template is a governance template — HIPAA language, human-approval gates, audit trails — and `fix` used to append them to an `AGENTS.md` on request. It now refuses, prints the reason and the next step, and exits `1`; `--json` emits `{"refused": true, ...}`. **A script that loops over files and treats any non-zero exit as fatal will now stop on the first config file.** Either skip those paths, or pass `--profile system_prompt` to force the templates in — forced runs are recorded as `"forced_governance_write": true` in the `--json` payload.
+**4. `crewscore fix` exit codes changed: it now exits `1` instead of writing governance templates into coding-agent config.** *(breaking)* Every fix template is a governance template — HIPAA language, human-approval gates, audit trails — and `fix` used to append them to an `AGENTS.md` on request. It now refuses, prints the reason and the next step, and exits `1`; `--json` emits `{"refused": true, ...}`. **A script that loops over files and treats any non-zero exit as fatal will now stop on the first config file.** Either skip those paths, or pass `--profile system_prompt` to force the templates in — forced runs are recorded as `"forced_governance_write": true` in the `--json` payload.
 
 **5. `--threshold` says when it did nothing.** `--threshold` gates the governance score, so it is a no-op on coding-agent config — and both `test` and `scan` now record `threshold_ignored_for_config` in `warnings` and print it in the `--summary` markdown that becomes the sticky PR comment. The Action passes `threshold` unconditionally (default `"50"`) and the docs recommend `scan-path`, so before this the most-recommended CI setup reported a passing gate that had never run. Use `--max-smells N` to gate those files.
 
@@ -410,7 +480,7 @@ Or parse JSON yourself:
 SCORE=$(crewscore test --prompt-file ./agents/system-prompt.md --json | jq '.overall')
 ```
 
-**Branch on `governance_applicable` before reading `overall`.** [Coding-agent config](#two-artifacts-two-rulesets) carries no governance grade, and since `0.3.1` the field is **absent** rather than `0` — `jq '.overall'` yields `null` there, and `jq -e '.overall >= 50'` errors:
+**Branch on `governance_applicable` before reading `overall`.** [Coding-agent config](#two-artifacts-two-rulesets) carries no governance grade, and since `0.4.0` the field is **absent** rather than `0` — `jq '.overall'` yields `null` there, and `jq -e '.overall >= 50'` errors:
 
 ```bash
 # single file: score it only if it is judged on the governance score

@@ -1,13 +1,29 @@
-"""Contract tests locking preflight workflow UX in index.html."""
+"""Contract tests locking the public positioning copy.
+
+Two surfaces, one claim: index.html (the preflight workflow a visitor sees)
+and README.md (the first thing a reader sees on GitHub). Both must say the
+number is *coverage*, not a quality ranking, and both must carry the
+validation study that proves it.
+"""
 
 import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
+# The site is served at crewscore.ai, where docs/ does not exist — the study
+# has to be linked at its canonical GitHub URL or the link is dead in prod.
+VALIDATION_URL = (
+    "https://github.com/shmindmaster/crewscore/blob/main/docs/validation.md"
+)
+
 
 def _html() -> str:
     return (ROOT / "index.html").read_text(encoding="utf-8")
+
+
+def _readme() -> str:
+    return (ROOT / "README.md").read_text(encoding="utf-8")
 
 
 def test_preflight_stages_present():
@@ -296,6 +312,103 @@ def test_body_grid_restrained():
             assert float(a) <= 0.15, (
                 f"body repeating grid alpha {a} exceeds 0.15 (must be atmospheric)"
             )
+
+
+def test_readme_headline_is_a_checklist_not_a_score():
+    """The headline sells a checklist. "Score" as the noun claims a ranking
+    the length-matched study could not demonstrate."""
+    md = _readme()
+    assert "Free structural score for AI agent prompts" not in md
+    assert "### A governance checklist for AI agent prompts" in md
+
+
+def test_readme_links_validation_study_above_the_fold():
+    """The negative result is the credibility play — it belongs in the first
+    screen, not in a Limits section a skimmer never reaches."""
+    md = _readme()
+    assert "docs/validation.md" in md[:2400]
+
+
+def test_readme_states_the_discrimination_result_with_numbers():
+    """Vague hedging is not disclosure. The measured figures ship in prose."""
+    md = _readme()
+    for stat in ("+0.061", "p=0.36", "0.863", "0.800"):
+        assert stat in md, f"validation statistic {stat} missing from README"
+
+
+def test_readme_draws_the_checklist_versus_benchmark_line():
+    """The is/is-not table must name the distinction outright: a checklist
+    answers "did you write a rule for X"; a benchmark ranks A against B."""
+    md = _readme()
+    rows = [
+        line
+        for line in md.splitlines()
+        if line.startswith("|")
+        and "checklist" in line.lower()
+        and "benchmark" in line.lower()
+    ]
+    assert rows, "no is/is-not row drawing the checklist vs benchmark line"
+
+
+def test_readme_charter_carries_discrimination_and_validity_disclosure():
+    """The charter is where honesty principles live, so the discrimination
+    result and the three low-validity dimensions live there too."""
+    md = _readme()
+    start = md.find("## Scoring charter")
+    end = md.find("## Install", start)
+    assert start > 0 and end > start, "scoring charter section not found"
+    charter = md[start:end]
+    assert "crewscore-hygiene@0.4.0" in charter
+    assert "+0.061" in charter
+    for dim in ("Cost", "Compliance", "Audit"):
+        assert dim in charter, f"charter omits low-validity dimension {dim}"
+    assert "docs/validation.md" in charter
+
+
+def test_readme_documents_040_breaking_changes():
+    """0.4.0 drops four fields from config `--json` payloads and changes a
+    `fix` exit code. A consumer who upgrades blind breaks; say so."""
+    md = _readme()
+    start = md.find("## What changed in 0.4.0")
+    assert start > 0, "0.4.0 release-notes section not found"
+    end = md.find("## CI integration", start)
+    assert end > start
+    section = md[start:end]
+    for field in ("`overall`", "`dimensions`", "`findings`", "`transparency`"):
+        assert field in section, f"0.4.0 notes omit dropped field {field}"
+    assert "exit" in section.lower()
+
+
+def test_readme_tier_table_discloses_the_empty_top_half():
+    """The tier ladder advertises 90-100 as reachable. Nothing real reaches
+    it — the highest score across 1,368 prompts was 50 — so a reader looking
+    at the ladder must be told that before they set a threshold against it."""
+    md = _readme()
+    start = md.find("### Score tiers")
+    end = md.find("## Two artifacts", start)
+    assert start > 0 and end > start, "score tiers section not found"
+    tiers = md[start:end]
+    assert "50" in tiers and "1,368" in tiers
+    assert "docs/validation.md" in tiers
+
+
+def test_readme_config_smells_marked_unaffected_by_the_study():
+    """The smell detectors replicate published work on a separate corpus.
+    The reframe must not read as if they were implicated too."""
+    md = _readme()
+    start = md.find("## Configuration smells")
+    end = md.find("## What changed", start)
+    assert start > 0 and end > start, "configuration smells section not found"
+    section = md[start:end]
+    assert "validation study" in section.lower()
+    assert "arxiv.org/abs/2606.15828" in section
+
+
+def test_readme_has_no_stale_031_references():
+    """0.3.1 was never released (latest tag is v0.2.7); its notes ship as
+    0.4.0. A lingering 0.3.1 points a reader at a version that never existed."""
+    md = _readme()
+    assert "0.3.1" not in md
 
 
 def test_panel_lifted_from_bg():
