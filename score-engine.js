@@ -515,11 +515,34 @@
     return Math.min(100, Math.round(15 + raw * 85));
   }
 
+  // Python's \b and \d are Unicode-aware. JavaScript's are ASCII-only, and the
+  // `u` flag does NOT change that -- JS \w stays [A-Za-z0-9_] in unicode mode.
+  // So \bhipaa\b fires inside "确保hipaa合规性" in the browser and not in the
+  // CLI: CJK has no inter-word spaces, so an English acronym flush against
+  // native script is ordinary prose, not an edge case. Same prompt, two
+  // different scores, which is the one failure this project cannot ship.
+  // Rebuilding the boundary from Unicode lookarounds restores parity.
+  const UWORD = "[\\p{L}\\p{N}_]";
+  const UBOUND =
+    "(?:(?<=" + UWORD + ")(?!" + UWORD + ")|(?<!" + UWORD + ")(?=" + UWORD + "))";
+
+  function toUnicodeAware(pattern) {
+    // split/join, not replace(): no replacement-string escaping to get wrong.
+    return pattern.split("\\b").join(UBOUND).split("\\d").join("\\p{Nd}");
+  }
+
   function safeRegExp(pattern) {
     try {
-      return new RegExp(pattern, "i");
+      return new RegExp(toUnicodeAware(pattern), "iu");
     } catch (e) {
-      return null;
+      // Never silently drop a rule: a pattern that will not compile in unicode
+      // mode still runs in legacy mode. Returning null here would make the rule
+      // permanently unmatchable in the browser while the CLI kept applying it.
+      try {
+        return new RegExp(pattern, "i");
+      } catch (e2) {
+        return null;
+      }
     }
   }
 
