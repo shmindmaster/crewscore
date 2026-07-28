@@ -65,7 +65,7 @@ Scores reflect **prompt-text signals**. They are a useful smoke test, not a guar
 Honest principles we ship by:
 
 1. CrewScore measures **presence of hygiene signals in text**, not agent behavior.
-2. Scores are **rule-pack versioned** (`crewscore-hygiene@0.3.0`) and **deterministic** — no LLM, no hidden model.
+2. Scores are **rule-pack versioned** (`crewscore-hygiene@0.3.1`) and **deterministic** — no LLM, no hidden model.
 3. **Every rule is public.** List them anytime:
    ```bash
    crewscore rules              # human: formula + provenance + every rule_id + regex
@@ -351,16 +351,16 @@ jobs:
 | Input | Required | Default | Description |
 |-------|----------|---------|-------------|
 | `prompt-file` | one of | — | Path to a single system prompt file |
-| `scan-path` | one of | — | Path for `crewscore scan` (worst score becomes the output) |
+| `scan-path` | one of | — | Path for `crewscore scan` (worst score across **governed** files — system prompts only, coding-agent config excluded — becomes the output) |
 | `threshold` | no | `50` | Fail the step (exit 2) when a **system prompt** scores below this. Coding-agent config is exempt — see [two rulesets](#two-artifacts-two-rulesets) |
 | `max-smells` | no | `""` | Fail the step (exit 2) when any file has more than N configuration smells. This is the gate for `AGENTS.md`-style files |
 | `explain` | no | `false` | Pass `true` to include matched/missing signals |
 | `summary` | no | `crewscore-summary.md` | Markdown path (also appends to `GITHUB_STEP_SUMMARY`) |
 | `pr-comment` | no | `true` | On `pull_request`, post/update a sticky comment with the summary |
 
-Provide **either** `prompt-file` **or** `scan-path` (not neither). For scan mode, outputs use the **minimum** overall across discovered files.
+Provide **either** `prompt-file` **or** `scan-path` (not neither). For scan mode, outputs use the **minimum** overall across **governed** files only — coding-agent config (`AGENTS.md`, `CLAUDE.md`, `.cursorrules`) is excluded, since it is judged on configuration smells, not this number.
 
-**Outputs:** `score` (0–100), `tier` (label string), `summary-path` (markdown file if written).
+**Outputs:** `score` (0–100, governed files only) and `tier` (label string) are both the **empty string** when a scan finds no governed files at all — for example a repo that has only `AGENTS.md`/`CLAUDE.md`-style config and no system prompts. Write conditions accordingly, e.g. `if: steps.crewscore.outputs.score != '' && steps.crewscore.outputs.score < 50` rather than assuming a numeric value is always present. `summary-path` is the markdown summary path, if written.
 
 Sticky PR comments need `permissions: pull-requests: write` on the job. Set `pr-comment: "false"` to disable.
 
