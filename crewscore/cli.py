@@ -12,6 +12,7 @@ from rich.panel import Panel
 
 from crewscore import __version__
 from crewscore.report import render_badge_svg, render_html_report, share_text
+from crewscore.scan import discover_prompt_files, score_paths
 from crewscore.scoring import DIMENSIONS, build_result, tier_color
 from crewscore.scorers import structural_analysis
 from crewscore.vendor_scorecard import assess_vendor
@@ -391,5 +392,129 @@ def fix(prompt, prompt_file, apply, output, as_json):
         console.print()
 
 
+@main.command("scan")
+@click.argument(
+    "path",
+    default=".",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+)
+@click.option(
+    "--json",
+    "as_json",
+    is_flag=True,
+    help="Emit machine-readable JSON list of scored files",
+)
+@click.option(
+    "--threshold",
+    type=click.IntRange(0, 100),
+    default=None,
+    help="Exit 2 if any file's overall score is below this threshold",
+)
+@click.option(
+    "--explain",
+    is_flag=True,
+    help="Show matched vs missing signals for the lowest-scoring file",
+)
+def scan(path, as_json, threshold, explain):
+    """Discover and score agent prompt files under PATH (default: .).
+
+    Looks for AGENTS.md, CLAUDE.md, system-prompt.md, and files under
+    agents/prompts/prompt directories. Offline structural scan only.
+    """
+    root = Path(path).resolve()
+    files = discover_prompt_files(root)
+
+    if not files:
+        err_console.print(
+            f"[red]No agent prompt files found under {root}[/red]"
+        )
+        err_console.print(
+            "[dim]Looking for AGENTS.md, CLAUDE.md, system-prompt.md, "
+            "system_prompt.md, AGENT.md, prompts.md, and files under "
+            "agents/, prompts/, or prompt/ directories.[/dim]"
+        )
+        sys.exit(1)
+
+    scored = score_paths(files)
+
+    # Prefer paths relative to scan root for display; keep abs for --explain.
+    abs_by_rel: dict[str, Path] = {}
+    for item in scored:
+        abs_path = Path(item["path"]).resolve()
+        try:
+            rel = str(abs_path.relative_to(root))
+        except ValueError:
+            rel = str(abs_path)
+        abs_by_rel[rel] = abs_path
+        item["path"] = rel
+
+    if as_json:
+        click.echo(json.dumps(scored, indent=2, sort_keys=True))
+    else:
+        from rich.table import Table
+
+        console.print()
+        console.print(
+            Panel(
+                f"[bold]{BRAND.upper()} — Repo Prompt Scan[/bold]",
+                border_style="blue",
+                expand=False,
+            )
+        )
+        console.print()
+        console.print(
+            f"[dim]Scanned {root} — {len(scored)} file(s). "
+            "Structural offline scores only.[/dim]"
+        )
+        console.print()
+
+        table = Table(show_header=True, header_style="bold")
+        table.add_column("Path", style="cyan", overflow="fold")
+        table.add_column("Overall", justify="right")
+        table.add_column("Tier")
+
+        for item in scored:
+            color = tier_color(item["overall"])
+            table.add_row(
+                item["path"],
+                f"[{color}]{item['overall']}[/{color}]",
+                f"[{color}]{item['tier']}[/{color}]",
+            )
+
+        console.print(table)
+        console.print()
+
+        if explain and scored:
+            worst = min(scored, key=lambda r: r["overall"])
+            worst_abs = abs_by_rel.get(worst["path"], root / worst["path"])
+            text = worst_abs.read_text(encoding="utf-8", errors="replace")
+            _dims, findings = structural_analysis.analyze_with_findings(text)
+            console.print(
+                f"[bold]Explain (lowest score):[/bold] {worst['path']} "
+                f"({worst['overall']}/100)"
+            )
+            _render_findings(findings)
+            console.print()
+
+        console.print(
+            "  -> Re-run with [bold]--json[/bold] for CI. "
+            "Use [bold]--threshold N[/bold] to fail if any file is below N."
+        )
+        console.print(f"  -> {HOMEPAGE}")
+        console.print()
+
+    if threshold is not None:
+        below = [item for item in scored if item["overall"] < threshold]
+        if below:
+            if not as_json:
+                for item in below:
+                    err_console.print(
+                        f"  [red]Threshold failure: {item['path']} "
+                        f"{item['overall']} < {threshold}[/red]"
+                    )
+            sys.exit(2)
+
+
 if __name__ == "__main__":
     main()
+
