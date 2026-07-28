@@ -101,6 +101,8 @@ const VENDOR_Q = [
   "Documented failure/escalation process when it breaks?"
 ];
 let vendorAnswers = new Array(10).fill(null);
+// Critical Q indices: certification, audit, human_override, security_audit, incident
+const VENDOR_CRITICAL = [2, 3, 4, 7, 9];
 
 function switchTab(t){
   document.querySelectorAll('.tab').forEach((el,i)=>{el.classList.toggle('active',i===(t==='agent'?0:1))});
@@ -125,6 +127,14 @@ function setAnswer(i,v,btn){
   btn.className=v==='yes'?'selected-yes':v==='no'?'selected-no':'selected-dk';
 }
 
+function collectVendorFlags(){
+  // NO on any Q, or DK on critical keys — same rule as CLI red_flags
+  return VENDOR_Q.filter((_,i)=>
+    vendorAnswers[i]==='no' ||
+    (vendorAnswers[i]==='dk' && VENDOR_CRITICAL.includes(i))
+  ).map(q=>q.replace(/\?$/,''));
+}
+
 function bar(score){
   const pct=Math.max(0,Math.min(100,score));
   const color=pct>=70?'#10b981':pct>=50?'#eab308':pct>=30?'#f59e0b':'#ef4444';
@@ -142,16 +152,37 @@ function renderScorecard(el,scores,labels,title,opts){
   const tier=tierFor(overall);
   let html=`<h3>${title}</h3><div class="score-big ${tier.c}">${overall}/100</div><div class="tier ${tier.c}">${tier.n}</div>`;
   scores.forEach((s,i)=>{html+=`<div class="dim-row"><span class="dim-label">${labels[i]}</span>${bar(s)}<span class="dim-score">${s}</span></div>`;});
-  const flags=labels.filter((_,i)=>scores[i]===0);
+  // Prefer opts.flags (shared with share) when provided; else score===0 labels
+  const flags = opts.flags !== undefined
+    ? opts.flags
+    : labels.filter((_,i)=>scores[i]===0);
   if(flags.length)html+=`<div class="flags">${flags.length} RED FLAG(S): ${flags.join(', ')}</div>`;
-  const copyFn=opts.copyFn||'copyScore';
-  const shareExtra=opts.shareExtra?`,${JSON.stringify(opts.shareExtra)}`:'';
   html+=`<div class="share-row">
-    <button class="share-btn linkedin" onclick="shareLinkedIn(${overall},'${tier.n.replace(/'/g,"\\'")}','${title.replace(/'/g,"\\'")}'${shareExtra})">Share on LinkedIn</button>
-    <button class="share-btn x" onclick="shareX(${overall},'${tier.n.replace(/'/g,"\\'")}','${title.replace(/'/g,"\\'")}'${shareExtra})">Share on X</button>
-    <button class="share-btn" onclick="${copyFn}(${overall},'${tier.n.replace(/'/g,"\\'")}','${title.replace(/'/g,"\\'")}'${shareExtra})">Copy Score</button>
+    <button type="button" class="share-btn linkedin" data-share="linkedin">Share on LinkedIn</button>
+    <button type="button" class="share-btn x" data-share="x">Share on X</button>
+    <button type="button" class="share-btn" data-share="copy">Copy Score</button>
   </div>`;
-  el.innerHTML=html;el.classList.add('show');
+  el.innerHTML=html;
+  el.classList.add('show');
+  // Bind handlers via addEventListener — no JSON inside onclick attributes
+  const ctx={
+    overall,
+    tier:tier.n,
+    title,
+    copyFn:opts.copyFn||'copyScore',
+    extra:opts.shareExtra||null
+  };
+  el.querySelectorAll('[data-share]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const kind=btn.getAttribute('data-share');
+      if(kind==='linkedin') shareLinkedIn(ctx.overall,ctx.tier,ctx.title,ctx.extra);
+      else if(kind==='x') shareX(ctx.overall,ctx.tier,ctx.title,ctx.extra);
+      else if(kind==='copy'){
+        if(ctx.copyFn==='copyVendorScore') copyVendorScore(ctx.overall,ctx.tier,ctx.title,ctx.extra);
+        else copyScore(ctx.overall,ctx.tier,ctx.title);
+      }
+    });
+  });
 }
 
 function scoreAgent(){
@@ -177,14 +208,13 @@ function scoreVendor(){
   const name=document.getElementById('vendor-name').value||'AI Vendor';
   const scores=vendorAnswers.map(a=>a==='yes'?100:a==='dk'?30:0);
   const labels=VENDOR_Q.map(q=>q.split('?')[0].substring(0,40));
-  const flags=VENDOR_Q.filter((_,i)=>vendorAnswers[i]==='no'||(vendorAnswers[i]==='dk'&&[2,3,4,7,9].includes(i)))
-    .map(q=>q.replace(/\?$/,''));
+  const flags=collectVendorFlags();
   renderScorecard(
     document.getElementById('vendor-scorecard'),
     scores,
     labels,
     `${name} — Vendor Score`,
-    {copyFn:'copyVendorScore',shareExtra:{name,flags}}
+    {copyFn:'copyVendorScore',shareExtra:{name,flags},flags}
   );
 }
 
