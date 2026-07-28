@@ -107,6 +107,17 @@ precision pass are both known defects, deliberately **not** fixed here: they
 change every score, and bundling a scoring change into the release headlined
 "we corrected our claims" would muddle both messages.
 
+**Known, unfixed: eight rules are quadratic in input length.** Patterns shaped
+`TRIGGER.*CLOSER` (in `injection`, `hallucination`, `human_gate` and
+`safe_stop`) backtrack badly when the trigger word repeats many times and the
+closing word never appears. A 90 KB file of one repeated trigger takes about
+ten seconds to score. This release **bounds** the exposure — `test`, `fix` and
+`export-eval` now refuse files over 500 KB, the same cap `scan` already
+applied — but does not repair the patterns, because narrowing them changes
+which prompts match and therefore changes scores. That work lands with the
+regex precision pass. If you scan untrusted input, note that the worst case is
+slow, not unbounded, and the GitHub Action inherits your job timeout.
+
 ---
 
 ## [0.2.7] — the last public release
