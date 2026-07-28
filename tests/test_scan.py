@@ -451,13 +451,24 @@ def test_scan_profile_defaults_to_auto(tmp_path: Path):
 
 
 def test_scan_cli_threshold_passes(tmp_path: Path):
-    _write(tmp_path / "AGENTS.md", BARE)
+    """A governed file scoring at or above the threshold exits 0.
+
+    The previous version of this test used an AGENTS.md and --threshold 0:
+    the file is exempt from --threshold and 0 is unfailable, so it passed no
+    matter what the gate did. This one is graded on a real system prompt that
+    really clears the bar, so inverting or dropping the comparison fails it.
+    """
+    _write(tmp_path / "system-prompt.md", GUARDED)
 
     runner = CliRunner()
     result = runner.invoke(
-        main, ["scan", str(tmp_path), "--json", "--threshold", "0"]
+        main, ["scan", str(tmp_path), "--json", "--threshold", "50"]
     )
     assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert len(payload) == 1
+    assert payload[0]["governance_applicable"] is True
+    assert payload[0]["overall"] >= 50
 
 
 def test_scan_cli_default_path_is_cwd(tmp_path: Path, monkeypatch):
