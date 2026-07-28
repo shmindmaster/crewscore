@@ -172,14 +172,81 @@ def test_action_outputs_default_missing_governance_key_to_governed(tmp_path: Pat
     assert outputs["score"] == "30"
 
 
-def test_action_outputs_document_the_empty_case():
-    """The empty-string contract is documented where consumers read it."""
-    text = _action_text()
-    outputs_block = text.split("outputs:", 1)[1].split("runs:", 1)[0]
+def test_action_declares_scored_output_wired_to_the_step():
+    """`scored` is a real declared output, not just something the step writes.
+
+    A step that writes `scored=` to GITHUB_OUTPUT is invisible to consumers
+    unless the composite action re-exports it under `outputs:`.
+    """
+    outputs_block = _action_text().split("outputs:", 1)[1].split("runs:", 1)[0]
+    assert "scored:" in outputs_block
+    scored_value = outputs_block.split("scored:", 1)[1].split("value:", 1)[1]
+    assert "steps.run.outputs.scored" in scored_value
+
+
+def test_action_scored_output_is_true_when_a_prompt_was_scored(tmp_path: Path):
+    outputs = _run_outputs(
+        [
+            {"path": "AGENTS.md", "overall": 0, "tier": "CONFIG: 1 SMELL",
+             "governance_applicable": False},
+            {"path": "p.md", "overall": 87, "tier": "STRUCTURAL: OK WITH GAPS",
+             "governance_applicable": True},
+        ],
+        tmp_path,
+    )
+    assert outputs["scored"] == "true"
+
+
+def test_action_scored_output_is_false_when_nothing_was_graded(tmp_path: Path):
+    """GitHub casts '' to 0 in numeric comparisons, so `score` cannot guard itself.
+
+    `if: outputs.score < 50` evaluates 0 < 50 -> true on a config-only repo and
+    fires a "score too low" branch for a run that measured nothing. `scored` is
+    the flag a consumer can actually guard on.
+    """
+    outputs = _run_outputs(
+        [
+            {"path": "AGENTS.md", "overall": 0, "tier": "CONFIG: 1 SMELL",
+             "governance_applicable": False},
+        ],
+        tmp_path,
+    )
+    assert outputs["scored"] == "false"
+    assert outputs["score"] == ""
+    assert outputs["tier"] == ""
+
+
+def test_action_scored_output_is_false_for_single_config_file(tmp_path: Path):
+    outputs = _run_outputs(
+        {"overall": 0, "tier": "CONFIG: NO SMELLS DETECTED",
+         "governance_applicable": False},
+        tmp_path,
+    )
+    assert outputs["scored"] == "false"
+
+
+def test_action_output_script_triggers_no_shell_substitution():
+    """The step passes this snippet inside a bash double-quoted string.
+
+    A backtick or $( ) anywhere in it — including in a Python comment — is
+    command substitution: bash executes the text and splices its output into
+    the code. Prose punctuation must not become a shell command.
+    """
+    snippet = _action_text().split('echo "$OUTPUT" | python -c "', 1)[1].split(
+        '\n        "', 1
+    )[0]
+    assert "`" not in snippet
+    assert "$(" not in snippet
+
+
+def test_action_outputs_document_the_scored_guard():
+    """score/tier descriptions must name the guard, not imply '' protects itself."""
+    outputs_block = _action_text().split("outputs:", 1)[1].split("runs:", 1)[0]
+    guard = "scored == 'true'"
     score_desc = outputs_block.split("score:", 1)[1].split("value:", 1)[0]
-    assert "empty" in score_desc.lower()
+    assert guard in score_desc
     tier_desc = outputs_block.split("tier:", 1)[1].split("value:", 1)[0]
-    assert "empty" in tier_desc.lower()
+    assert guard in tier_desc
 
 
 def test_action_script_requires_prompt_file_or_scan_path():
