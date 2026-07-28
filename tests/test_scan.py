@@ -158,6 +158,20 @@ def test_score_paths_returns_overall_and_tier(tmp_path: Path):
     assert len(by_name["AGENTS.md"]["dimensions"]) == 8
 
 
+def test_score_paths_items_carry_source_and_warnings(tmp_path: Path):
+    """scan items must expose the same `source`/`warnings` fields `test --json` does.
+
+    Without `warnings` there is nowhere to record that a CI gate was a no-op on
+    a file, and without `source` a consumer cannot tell which artifact a row
+    was read from once `path` is rewritten to a scan-relative display path.
+    """
+    p = _write(tmp_path / "system-prompt.md", BARE)
+
+    item = score_paths([p])[0]
+    assert item["source"] == str(p)
+    assert item["warnings"] == []
+
+
 def test_score_paths_preserves_path(tmp_path: Path):
     p = _write(tmp_path / "system-prompt.md", BARE)
     results = score_paths([p])
