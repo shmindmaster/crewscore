@@ -250,3 +250,18 @@ def test_fix_plan_human_mentions_plan(tmp_path: Path):
     ]
     assert any(name in lower for name in dimension_names)
     assert prompt_file.read_text(encoding="utf-8") == BARE
+
+
+def test_fix_plan_human_not_past_tense_applied(tmp_path: Path):
+    """Plan mode must not claim fixes were applied (honesty / dry-run)."""
+    prompt_file = tmp_path / "prompt.md"
+    prompt_file.write_text(BARE, encoding="utf-8")
+    runner = CliRunner()
+    result = runner.invoke(
+        main, ["fix", "--prompt-file", str(prompt_file), "--plan"]
+    )
+    assert result.exit_code == 0, result.output
+    lower = result.output.lower()
+    assert "applied the following" not in lower
+    assert "would apply" in lower or "plan" in lower
+    assert "runtime" in lower or "gates" in lower or "template" in lower
