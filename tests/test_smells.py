@@ -9,6 +9,7 @@ from crewscore.scoring import build_result
 from crewscore.scorers.structural_analysis import analyze
 from crewscore.smells import (
     CONTEXT_BLOAT_MAX_LINES,
+    _git_commit_count,
     detect_context_bloat,
     detect_init_fossilization,
     detect_lint_leakage,
@@ -104,6 +105,41 @@ def test_untracked_file_is_not_fossilized(tmp_path):
     agents = tmp_path / "AGENTS.md"
     agents.write_text("# Never committed\n", encoding="utf-8")
     assert detect_init_fossilization(agents) is None
+
+
+@needs_git
+def test_shallow_clone_commit_count_is_none(tmp_path):
+    """A --depth 1 clone must not look like a single-commit history.
+
+    actions/checkout defaults to fetch-depth: 1. Before this fix, git log
+    -2 in a shallow clone exits 0 with exactly one commit line, so
+    _git_commit_count returned 1 (not None) for a file revised many times
+    on the un-truncated history, and Init Fossilization fired on every
+    file in CI.
+    """
+    origin = tmp_path / "origin"
+    origin.mkdir()
+    _init_repo(origin)
+    agents = origin / "AGENTS.md"
+    for i in range(3):
+        agents.write_text(f"# Revision {i}\n", encoding="utf-8")
+        _git("add", "AGENTS.md", cwd=origin)
+        _git("commit", "-m", f"revision {i}", cwd=origin)
+
+    shallow = tmp_path / "shallow"
+    origin_url = origin.resolve().as_uri()
+    clone = subprocess.run(
+        ["git", "clone", "--depth", "1", origin_url, str(shallow)],
+        capture_output=True,
+        text=True,
+    )
+    if clone.returncode != 0:
+        pytest.skip(f"this git refuses shallow file:// clones: {clone.stderr}")
+
+    shallow_agents = shallow / "AGENTS.md"
+    assert shallow_agents.exists()
+    assert _git_commit_count(shallow_agents) is None
+    assert detect_init_fossilization(shallow_agents) is None
 
 
 def test_init_fossilization_outside_repo_is_silent(tmp_path):
