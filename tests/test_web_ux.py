@@ -55,6 +55,24 @@ def test_builder_first_hero_preserved():
     assert "hygiene" in html.lower() or "Structural pre-gate" in html
 
 
+def test_camera_ready_zero_bars_and_delta_hero():
+    """G6: empty dims are camera-dense; after-fix shows delta on Inspect first."""
+    html = _html()
+    assert "is-empty" in html
+    assert "is-empty-marker" in html or "is-critical" in html
+    assert "hero-delta" in html or "delta-compare" in html
+    assert "Continue to export" in html
+    # Apply must land on inspect (hero moment), not skip to export as first paint
+    apply_idx = html.find("function applyFixPlan")
+    assert apply_idx > 0
+    chunk = html[apply_idx : apply_idx + 1200]
+    assert 'setStage("inspect")' in chunk
+    assert 'showDeck("deck-inspect", true)' in chunk
+    # Must not set export as the stage immediately after apply without inspect hold
+    # (export still available via Continue to export)
+    assert "After approved fix" in html
+
+
 def test_export_completion_checklist_present():
     """Export stage has a completion checklist with share, CI, and prompt items."""
     html = _html()
