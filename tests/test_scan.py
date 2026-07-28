@@ -550,3 +550,50 @@ def test_scan_skips_node_modules_in_cli(tmp_path: Path):
     payload = json.loads(result.output)
     assert len(payload) == 1
     assert "node_modules" not in payload[0]["path"]
+
+
+def test_discovery_finds_prefixed_system_prompt_names(tmp_path):
+    """A real prompt must not be silently skipped by the name filter.
+
+    Discovery was only exercised with names like `system-prompt.md`, where
+    the leading token happens to satisfy every clause. Nothing covered
+    `backend-system-prompt.md`, so tightening `"system" in lower or
+    lower.startswith("agent")` into an `and` dropped genuine production
+    prompts from `crewscore scan` with no error and no output - the file is
+    simply never graded, and CI reports a pass over a repo it never read.
+    """
+    included = [
+        "system-prompt.md",
+        "backend-system-prompt.md",
+        "system_prompt.txt",
+        "checkout-service-system-prompt.md",
+        "agent-prompt.md",
+    ]
+    for name in included:
+        (tmp_path / name).write_text(BARE, encoding="utf-8")
+    found = {p.name for p in discover_prompt_files(tmp_path)}
+    missing = [n for n in included if n not in found]
+    assert not missing, "discovery dropped real prompt files: " + repr(missing)
+
+
+def test_discovery_still_excludes_readme_and_unrelated_markdown(tmp_path):
+    """The filter must stay tight, or unrelated files get a governance grade.
+
+    The mirror of the test above: loosening the same condition sweeps in
+    ordinary documentation and hands it a score it was never meant to have.
+    """
+    # agent-todo.md is the load-bearing case: it satisfies the inner
+    # `startswith("agent")` guard, so only the outer clause keeps it out. A
+    # file list without it lets the outer clause rot undetected, and ordinary
+    # planning notes start getting a governance grade in scan output.
+    for name in (
+        "README.md",
+        "readme-prompt.md",
+        "notes.md",
+        "changelog.md",
+        "agent-todo.md",
+        "agent-notes.md",
+    ):
+        (tmp_path / name).write_text(BARE, encoding="utf-8")
+    found = {p.name for p in discover_prompt_files(tmp_path)}
+    assert not found, "discovery swept in unrelated files: " + repr(found)
