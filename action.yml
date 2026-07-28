@@ -26,6 +26,10 @@ inputs:
     description: Write transparent markdown summary to this path (also appends to GITHUB_STEP_SUMMARY when set)
     required: false
     default: "crewscore-summary.md"
+  pr-comment:
+    description: On pull_request events, post or update a sticky PR comment with the summary (requires pull-requests: write)
+    required: false
+    default: "true"
 
 outputs:
   score:
@@ -34,6 +38,9 @@ outputs:
   tier:
     description: Score tier label
     value: ${{ steps.run.outputs.tier }}
+  summary-path:
+    description: Path to the markdown summary file (if written)
+    value: ${{ steps.run.outputs.summary-path }}
 
 runs:
   using: composite
@@ -56,18 +63,21 @@ runs:
         SCAN_PATH="${{ inputs.scan-path }}"
         THRESHOLD="${{ inputs.threshold }}"
         EXPLAIN="${{ inputs.explain }}"
+        SUMMARY="${{ inputs.summary }}"
 
         if [ -z "$SCAN_PATH" ] && [ -z "$PROMPT_FILE" ]; then
           echo "Either prompt-file or scan-path is required" >&2
           exit 1
         fi
 
-        SUMMARY="${{ inputs.summary }}"
         set +e
         if [ -n "$SCAN_PATH" ]; then
           ARGS=(scan "$SCAN_PATH" --json --threshold "$THRESHOLD")
           if [ "$EXPLAIN" = "true" ]; then
             ARGS+=(--explain)
+          fi
+          if [ -n "$SUMMARY" ]; then
+            ARGS+=(--summary "$SUMMARY")
           fi
           OUTPUT=$(crewscore "${ARGS[@]}")
           EXIT=$?
@@ -84,9 +94,11 @@ runs:
         fi
         set -e
         echo "$OUTPUT"
-        # Job summary is written by CLI when GITHUB_STEP_SUMMARY is set.
         if [ -n "$SUMMARY" ] && [ -f "$SUMMARY" ]; then
           echo "Wrote summary markdown: $SUMMARY"
+          echo "summary-path=$SUMMARY" >> "$GITHUB_OUTPUT"
+        else
+          echo "summary-path=" >> "$GITHUB_OUTPUT"
         fi
         # Single-file test JSON: {overall, tier, ...}
         # scan --json: list of {path, overall, tier, ...} — take min overall (worst).
@@ -108,3 +120,67 @@ runs:
             f.write(f'tier={tier}\n')
         "
         exit "$EXIT"
+
+    - name: Sticky PR comment
+      if: ${{ always() && inputs.pr-comment == 'true' && github.event_name == 'pull_request' && steps.run.outputs.summary-path != '' }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        SUMMARY_PATH: ${{ steps.run.outputs.summary-path }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        REPO: ${{ github.repository }}
+      run: |
+        set -euo pipefail
+        if [ ! -f "$SUMMARY_PATH" ]; then
+          echo "No summary file at $SUMMARY_PATH; skip PR comment"
+          exit 0
+        fi
+        if [ -z "${PR_NUMBER:-}" ]; then
+          echo "No PR number; skip PR comment"
+          exit 0
+        fi
+        MARKER="<!-- crewscore-sticky -->"
+        BODY_FILE=$(mktemp)
+        {
+          printf '%s\n\n' "$MARKER"
+          cat "$SUMMARY_PATH"
+        } > "$BODY_FILE"
+        # Find existing sticky comment by marker (gh --paginate yields JSON array).
+        COMMENT_ID=$(
+          gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" --paginate \
+          | MARKER="$MARKER" python -c "
+        import json, os, sys
+        marker = os.environ['MARKER']
+        raw = sys.stdin.read().strip()
+        comments = []
+        if raw:
+            try:
+                data = json.loads(raw)
+                comments = data if isinstance(data, list) else []
+            except json.JSONDecodeError:
+                # Multiple pages can appear as ][ between arrays.
+                fixed = raw.replace('][', ',')
+                data = json.loads(fixed)
+                comments = data if isinstance(data, list) else []
+        for c in comments:
+            if marker in (c.get('body') or ''):
+                print(c['id'])
+                break
+        "
+        )
+        # Prefer raw JSON input for reliable multiline body.
+        python -c "
+        import json, pathlib, sys
+        body = pathlib.Path(sys.argv[1]).read_text(encoding='utf-8')
+        print(json.dumps({'body': body}))
+        " "$BODY_FILE" > "${BODY_FILE}.json"
+        if [ -n "${COMMENT_ID:-}" ]; then
+          gh api --method PATCH "repos/${REPO}/issues/comments/${COMMENT_ID}" \
+            --input "${BODY_FILE}.json"
+          echo "Updated sticky PR comment id=$COMMENT_ID"
+        else
+          gh api --method POST "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+            --input "${BODY_FILE}.json"
+          echo "Created sticky PR comment"
+        fi
+        rm -f "$BODY_FILE" "${BODY_FILE}.json"

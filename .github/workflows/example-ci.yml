@@ -27,12 +27,14 @@ jobs:
         uses: actions/checkout@v4
 
       # Published action (recommended for consumer repos):
+      # permissions: { contents: read, pull-requests: write }  # for sticky PR comments
       # - name: CrewScore
       #   uses: shmindmaster/crewscore@v1
       #   with:
       #     prompt-file: agents/system-prompt.md
       #     threshold: "50"
       #     # explain: "true"
+      #     # pr-comment: "true"   # default on pull_request
 
       # Repo-wide structural scan (preferred when you have multiple agent files):
       # - name: CrewScore scan
@@ -49,6 +51,7 @@ jobs:
         with:
           prompt-file: examples/sample-prompt.md
           threshold: "50"
+          pr-comment: "false"
 
       # Local scan example (uncomment when `crewscore scan` is available):
       # - name: CrewScore scan

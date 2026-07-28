@@ -9,6 +9,9 @@ on:
 jobs:
   selftest:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -82,3 +85,22 @@ jobs:
           grep -q 'crewscore-hygiene@' /tmp/cs-summary.md
           grep -q 'rules' /tmp/cs-summary.md
           echo "OK summary markdown"
+
+      - name: Scan summary + corpus gradient
+        run: |
+          crewscore scan examples/corpus --summary /tmp/cs-scan.md --json > /tmp/cs-scan.json
+          test -s /tmp/cs-scan.md
+          grep -q 'Worst score' /tmp/cs-scan.md || grep -q 'Path' /tmp/cs-scan.md
+          python -c "
+          import json
+          from pathlib import PurePosixPath, PureWindowsPath
+          rows = json.load(open('/tmp/cs-scan.json'))
+          by = {}
+          for r in rows:
+              p = r['path'].replace('\\\\', '/')
+              by[PurePosixPath(p).name] = int(r['overall'])
+          assert by['01-bare-assistant.md'] == 0
+          assert by['05-hardened-ops.md'] >= 70
+          assert by['05-hardened-ops.md'] > by['04-partial-hygiene.md']
+          print('OK corpus', by)
+          "

@@ -41,6 +41,16 @@ def test_action_script_runs_scan_when_scan_path_set():
     assert "isinstance(data, list)" in text
 
 
+def test_action_scan_and_test_both_pass_summary():
+    """Both scan and single-file paths must write --summary when configured."""
+    text = _action_text()
+    assert "summary:" in text
+    assert "--summary" in text
+    assert "pr-comment:" in text
+    assert "crewscore-sticky" in text
+    assert "summary-path" in text
+
+
 def test_action_script_requires_prompt_file_or_scan_path():
     """Script must fail if neither prompt-file nor scan-path is provided."""
     text = _action_text()

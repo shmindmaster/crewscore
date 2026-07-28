@@ -586,7 +586,13 @@ def fix(prompt, prompt_file, apply, output, as_json):
     is_flag=True,
     help="Show matched vs missing signals for the lowest-scoring file",
 )
-def scan(path, as_json, threshold, explain):
+@click.option(
+    "--summary",
+    type=click.Path(),
+    default=None,
+    help="Write GitHub-flavored markdown summary (PR/step comment body) to this path",
+)
+def scan(path, as_json, threshold, explain, summary):
     """Discover and score agent prompt files under PATH (default: .).
 
     Looks for AGENTS.md, CLAUDE.md, system-prompt.md, and files under
@@ -619,14 +625,20 @@ def scan(path, as_json, threshold, explain):
         abs_by_rel[rel] = abs_path
         item["path"] = rel
 
+    md_body = format_scan_markdown(scored)
+    if summary:
+        summary_path = Path(summary)
+        summary_path.parent.mkdir(parents=True, exist_ok=True)
+        summary_path.write_text(md_body, encoding="utf-8")
+    if os.environ.get("GITHUB_STEP_SUMMARY"):
+        with Path(os.environ["GITHUB_STEP_SUMMARY"]).open(
+            "a", encoding="utf-8"
+        ) as fh:
+            fh.write(md_body)
+            fh.write("\n")
+
     if as_json:
         click.echo(json.dumps(scored, indent=2, sort_keys=True))
-        if os.environ.get("GITHUB_STEP_SUMMARY"):
-            with Path(os.environ["GITHUB_STEP_SUMMARY"]).open(
-                "a", encoding="utf-8"
-            ) as fh:
-                fh.write(format_scan_markdown(scored))
-                fh.write("\n")
     else:
         from rich.table import Table
 
@@ -672,13 +684,6 @@ def scan(path, as_json, threshold, explain):
             )
             _render_findings(findings)
             console.print()
-
-        if os.environ.get("GITHUB_STEP_SUMMARY"):
-            with Path(os.environ["GITHUB_STEP_SUMMARY"]).open(
-                "a", encoding="utf-8"
-            ) as fh:
-                fh.write(format_scan_markdown(scored))
-                fh.write("\n")
 
         console.print(
             "  -> Re-run with [bold]--json[/bold] for CI. "
