@@ -31,7 +31,14 @@ Score the **text** of your agent instructions. Fix gaps. Gate CI when scores dro
 
 <br/>
 
+![CrewScore hero: weak prompt → structural score → plan → apply fix → export](docs/hero-demo.gif)
+
+<details>
+<summary>Static scorecard strip (SVG)</summary>
+
 ![CrewScore demo: bare prompt 0/100 → after fix ~46/100](docs/demo.svg)
+
+</details>
 
 </div>
 
