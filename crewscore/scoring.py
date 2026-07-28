@@ -35,6 +35,12 @@ class ScoreResult:
     # Advisory configuration smells (arXiv:2606.15828). Reported, never scored —
     # see crewscore/smells.py for why they stay out of the number.
     smells: list[dict[str, Any]] = field(default_factory=list)
+    # Which ruleset this artifact should be judged by (crewscore/profiles.py).
+    profile: str = "system_prompt"
+    # False for coding-agent config, where the governance dimensions are a
+    # category error. `overall` is still reported for transparency, but it is
+    # not a verdict — read `tier`.
+    governance_applicable: bool = True
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -44,6 +50,21 @@ def overall_score(dimensions: dict[str, int]) -> int:
     if not dimensions:
         return 0
     return sum(dimensions.values()) // len(dimensions)
+
+
+def config_tier(smell_count: int) -> str:
+    """Verdict for coding-agent config, expressed in smells rather than points.
+
+    Deliberately not a 0-100 grade. Measured against the arXiv:2606.15828
+    corpus, the governance score puts 100/100 real config files in the worst
+    tier — a scale where the whole population fails carries no information.
+    Smell counts are what that artifact can honestly be judged on.
+    """
+    if smell_count <= 0:
+        return "CONFIG: NO SMELLS DETECTED"
+    if smell_count == 1:
+        return "CONFIG: 1 SMELL"
+    return f"CONFIG: {smell_count} SMELLS"
 
 
 def score_tier(overall: int) -> str:
@@ -104,7 +125,14 @@ def build_result(
     prompt_text: str | None = None,
     warnings: list[str] | None = None,
     smells: list[dict[str, Any]] | None = None,
+    profile: str | None = None,
 ) -> ScoreResult:
+    from crewscore.profiles import SYSTEM_PROMPT, governance_applies
+
+    resolved_profile = profile or SYSTEM_PROMPT
+    resolved_smells = list(smells) if smells else []
+    applicable = governance_applies(resolved_profile)
+
     overall = overall_score(dimensions)
     resolved_warnings = list(warnings) if warnings is not None else []
     if warnings is None and prompt_text is not None:
@@ -112,10 +140,14 @@ def build_result(
     return ScoreResult(
         dimensions=dimensions,
         overall=overall,
-        tier=score_tier(overall),
+        tier=score_tier(overall)
+        if applicable
+        else config_tier(len(resolved_smells)),
         mode=mode,
         source=source,
         ruleset=RULESET_ID,
         warnings=resolved_warnings,
-        smells=list(smells) if smells else [],
+        smells=resolved_smells,
+        profile=resolved_profile,
+        governance_applicable=applicable,
     )

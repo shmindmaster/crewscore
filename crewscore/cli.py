@@ -19,6 +19,7 @@ from crewscore.scan import discover_prompt_files, score_paths
 from crewscore.scoring import DIMENSIONS, RULESET_ID, build_result, tier_color
 from crewscore.scorers import structural_analysis
 from crewscore.smells import detect_smells, find_repo_root
+from crewscore.profiles import PROFILE_LABELS, PROFILES, classify_path
 from crewscore.summary import format_scan_markdown, format_score_markdown
 from crewscore.vendor_scorecard import assess_vendor
 
@@ -127,7 +128,37 @@ main.add_command(assess_vendor)
     default=None,
     help="Write GitHub-flavored markdown summary (PR/step comment body) to this path",
 )
-def test(prompt, prompt_file, as_json, threshold, explain, report, badge, summary):
+@click.option(
+    "--profile",
+    type=click.Choice(["auto", *PROFILES], case_sensitive=False),
+    default="auto",
+    help=(
+        "Ruleset to judge by. auto (default) picks from the filename: "
+        "coding-agent config (AGENTS.md, CLAUDE.md, .cursorrules) is judged on "
+        "configuration smells; everything else on the 8 governance dimensions."
+    ),
+)
+@click.option(
+    "--max-smells",
+    type=click.IntRange(0, 100),
+    default=None,
+    help=(
+        "CI gate for coding-agent config: exit 2 if more than N configuration "
+        "smells are found. Use instead of --threshold for AGENTS.md-style files."
+    ),
+)
+def test(
+    prompt,
+    prompt_file,
+    as_json,
+    threshold,
+    explain,
+    report,
+    badge,
+    summary,
+    profile,
+    max_smells,
+):
     """Run structural production-readiness analysis on an agent system prompt.
 
     Offline, deterministic regex scan — not live red-teaming.
@@ -159,12 +190,16 @@ def test(prompt, prompt_file, as_json, threshold, explain, report, badge, summar
         path=prompt_path,
         repo_root=find_repo_root(prompt_path),
     )
+    resolved_profile = (
+        classify_path(prompt_path) if profile == "auto" else profile.lower()
+    )
     result = build_result(
         dimensions,
         mode="structural",
         source=source,
         prompt_text=system_prompt,
         smells=smells,
+        profile=resolved_profile,
     )
 
     if report:
@@ -211,24 +246,51 @@ def test(prompt, prompt_file, as_json, threshold, explain, report, badge, summar
             "deterministic regex · no LLM · not a red-team[/dim]"
         )
         console.print(
-            "[dim]How scored: each dimension = "
-            "min(100, round(15+85×matches/total_rules)); "
-            "overall = mean of 8 dimensions. "
-            "List every rule: [bold]crewscore rules[/bold] "
-            "· machine: [bold]crewscore rules --json[/bold][/dim]"
+            f"[dim]Artifact: [bold]{PROFILE_LABELS.get(result.profile, result.profile)}"
+            "[/bold] · override with [bold]--profile[/bold][/dim]"
         )
-        console.print()
 
-        for label, key in DIMENSIONS:
-            score = result.dimensions.get(key, 0)
-            console.print(f"  {label:<32} {render_score_bar(score)}")
+        if not result.governance_applicable:
+            # Governance dimensions on a build-instructions file are a category
+            # error — measured at median 0/100 across 100 real repos.
+            console.print()
+            console.print(
+                "  This is repo guidance for a coding agent, so it is judged on "
+                "[bold]configuration smells[/bold], not on the production-"
+                "governance dimensions."
+            )
+            console.print(
+                "  [dim]Those dimensions (injection defense, human gates, audit, "
+                "compliance) describe agents that act on a user's behalf. "
+                "Scoring build instructions against them says nothing useful: "
+                "measured across the 100 most-starred repos with an AGENTS.md, "
+                "the median was 0/100.[/dim]"
+            )
+            console.print()
+            console.print(f"  {'-' * 54}")
+            console.print(f"  [bold]{result.tier}[/bold]")
+            console.print(f"  {'-' * 54}")
+        else:
+            console.print(
+                "[dim]How scored: each dimension = "
+                "min(100, round(15+85×matches/total_rules)); "
+                "overall = mean of 8 dimensions. "
+                "List every rule: [bold]crewscore rules[/bold] "
+                "· machine: [bold]crewscore rules --json[/bold][/dim]"
+            )
+            console.print()
 
-        console.print()
-        console.print(f"  {'-' * 54}")
-        console.print(
-            f"  [{color}]OVERALL SCORE:  {result.overall}/100  {result.tier}[/{color}]"
-        )
-        console.print(f"  {'-' * 54}")
+            for label, key in DIMENSIONS:
+                score = result.dimensions.get(key, 0)
+                console.print(f"  {label:<32} {render_score_bar(score)}")
+
+            console.print()
+            console.print(f"  {'-' * 54}")
+            console.print(
+                f"  [{color}]OVERALL SCORE:  {result.overall}/100  "
+                f"{result.tier}[/{color}]"
+            )
+            console.print(f"  {'-' * 54}")
 
         if result.warnings:
             console.print()
@@ -242,43 +304,51 @@ def test(prompt, prompt_file, as_json, threshold, explain, report, badge, summar
 
         _render_smells(result.smells)
 
-        critical = [
-            (label, key)
-            for label, key in DIMENSIONS
-            if result.dimensions.get(key, 0) < 50
-        ]
-        if critical:
+        if result.governance_applicable:
+            critical = [
+                (label, key)
+                for label, key in DIMENSIONS
+                if result.dimensions.get(key, 0) < 50
+            ]
+            if critical:
+                console.print()
+                for label, key in critical:
+                    score = result.dimensions[key]
+                    if score == 0:
+                        console.print(
+                            f"  [red]CRITICAL:[/red] No {label.lower()} signals matched."
+                        )
+                    else:
+                        console.print(
+                            f"  [dark_orange]WEAK:[/dark_orange] {label} is low "
+                            f"({score}/100) — few open rules matched."
+                        )
+
+            if explain:
+                _render_findings(findings)
+
+        console.print()
+        if result.governance_applicable:
+            console.print(f"  Share: {share_text(result)}")
             console.print()
-            for label, key in critical:
-                score = result.dimensions[key]
-                if score == 0:
-                    console.print(
-                        f"  [red]CRITICAL:[/red] No {label.lower()} signals matched."
-                    )
-                else:
-                    console.print(
-                        f"  [dark_orange]WEAK:[/dark_orange] {label} is low "
-                        f"({score}/100) — few open rules matched."
-                    )
-
-        if explain:
-            _render_findings(findings)
-
-        console.print()
-        console.print(f"  Share: {share_text(result)}")
-        console.print()
         console.print(
             f"  -> Open rules: [bold]crewscore rules[/bold] "
             f"(source: {SCORING_METHOD['source_of_truth']})"
         )
-        console.print(
-            f"  -> Run [bold]crewscore fix[/bold] to append templates "
-            "(still not runtime proof)."
-        )
-        console.print(
-            "  -> CI: [bold]--json --threshold N[/bold] · "
-            "repo: [bold]crewscore scan .[/bold]"
-        )
+        if result.governance_applicable:
+            console.print(
+                f"  -> Run [bold]crewscore fix[/bold] to append templates "
+                "(still not runtime proof)."
+            )
+            console.print(
+                "  -> CI: [bold]--json --threshold N[/bold] · "
+                "repo: [bold]crewscore scan .[/bold]"
+            )
+        else:
+            console.print(
+                "  -> CI: [bold]--json --max-smells N[/bold] · "
+                "repo: [bold]crewscore scan .[/bold]"
+            )
         if report:
             console.print(f"  -> HTML report written to [bold]{report}[/bold]")
         if badge:
@@ -286,12 +356,29 @@ def test(prompt, prompt_file, as_json, threshold, explain, report, badge, summar
         console.print(f"  -> {HOMEPAGE}")
         console.print()
 
-    if threshold is not None and result.overall < threshold:
-        if not as_json:
+    if result.governance_applicable:
+        if threshold is not None and result.overall < threshold:
+            if not as_json:
+                err_console.print(
+                    f"  [red]Threshold failure: {result.overall} < {threshold}[/red]"
+                )
+            sys.exit(2)
+    else:
+        # --threshold gates the governance score, which this artifact is not
+        # judged on. Failing the build on it would fail every real AGENTS.md.
+        if threshold is not None and not as_json:
             err_console.print(
-                f"  [red]Threshold failure: {result.overall} < {threshold}[/red]"
+                "  [yellow]--threshold ignored:[/yellow] coding-agent config is "
+                "judged on configuration smells, not the governance score. "
+                "Use --max-smells to gate CI."
             )
-        sys.exit(2)
+        if max_smells is not None and len(result.smells) > max_smells:
+            if not as_json:
+                err_console.print(
+                    f"  [red]Smell threshold failure: {len(result.smells)} "
+                    f"> {max_smells}[/red]"
+                )
+            sys.exit(2)
 
 
 _PROVENANCE_COLOR = {
@@ -750,7 +837,16 @@ def fix(prompt, prompt_file, apply, output, plan, as_json):
     "--threshold",
     type=click.IntRange(0, 100),
     default=None,
-    help="Exit 2 if any file's overall score is below this threshold",
+    help=(
+        "Exit 2 if any system-prompt file scores below this. Coding-agent "
+        "config is exempt — it is judged on smells, not the governance score."
+    ),
+)
+@click.option(
+    "--max-smells",
+    type=click.IntRange(0, 100),
+    default=None,
+    help="Exit 2 if any file has more than N configuration smells",
 )
 @click.option(
     "--explain",
@@ -763,7 +859,7 @@ def fix(prompt, prompt_file, apply, output, plan, as_json):
     default=None,
     help="Write GitHub-flavored markdown summary (PR/step comment body) to this path",
 )
-def scan(path, as_json, threshold, explain, summary):
+def scan(path, as_json, threshold, max_smells, explain, summary):
     """Discover and score agent prompt files under PATH (default: .).
 
     Looks for AGENTS.md, CLAUDE.md, system-prompt.md, and files under
@@ -829,19 +925,25 @@ def scan(path, as_json, threshold, explain, summary):
         console.print()
 
         any_smells = any(item.get("smells") for item in scored)
+        any_config = any(not item.get("governance_applicable", True) for item in scored)
 
         table = Table(show_header=True, header_style="bold")
         table.add_column("Path", style="cyan", overflow="fold")
-        table.add_column("Overall", justify="right")
-        table.add_column("Tier")
+        table.add_column("Artifact")
+        table.add_column("Score", justify="right")
+        table.add_column("Verdict")
         if any_smells:
             table.add_column("Smells")
 
         for item in scored:
-            color = tier_color(item["overall"])
+            governed = item.get("governance_applicable", True)
+            color = tier_color(item["overall"]) if governed else "cyan"
             row = [
                 item["path"],
-                f"[{color}]{item['overall']}[/{color}]",
+                "prompt" if governed else "config",
+                # A governance score on a config file is not a verdict; showing
+                # a number there is what made every real AGENTS.md look broken.
+                f"[{color}]{item['overall']}[/{color}]" if governed else "[dim]n/a[/dim]",
                 f"[{color}]{item['tier']}[/{color}]",
             ]
             if any_smells:
@@ -852,15 +954,24 @@ def scan(path, as_json, threshold, explain, summary):
         console.print(table)
         console.print()
 
+        if any_config:
+            console.print(
+                "  [dim]config = repo guidance for a coding agent (AGENTS.md, "
+                "CLAUDE.md, .cursorrules). Judged on configuration smells, not "
+                "the governance score. Override with [bold]--profile[/bold].[/dim]"
+            )
         if any_smells:
             console.print(
-                "  [dim]Smells are advisory and do not affect the score. "
+                "  [dim]Smells are advisory and never affect the score. "
                 "Detail: [bold]crewscore test --prompt-file <path>[/bold][/dim]"
             )
+        if any_config or any_smells:
             console.print()
 
-        if explain and scored:
-            worst = min(scored, key=lambda r: r["overall"])
+        # Explain only makes sense where a governance score is a verdict.
+        governed = [i for i in scored if i.get("governance_applicable", True)]
+        if explain and governed:
+            worst = min(governed, key=lambda r: r["overall"])
             worst_abs = abs_by_rel.get(worst["path"], root / worst["path"])
             text = worst_abs.read_text(encoding="utf-8", errors="replace")
             _dims, findings = structural_analysis.analyze_with_findings(text)
@@ -873,21 +984,43 @@ def scan(path, as_json, threshold, explain, summary):
 
         console.print(
             "  -> Re-run with [bold]--json[/bold] for CI. "
-            "Use [bold]--threshold N[/bold] to fail if any file is below N."
+            "[bold]--threshold N[/bold] gates prompts; "
+            "[bold]--max-smells N[/bold] gates config files."
         )
         console.print(f"  -> {HOMEPAGE}")
         console.print()
 
+    failed = False
     if threshold is not None:
-        below = [item for item in scored if item["overall"] < threshold]
+        # Only files actually judged on the governance score can fail it.
+        below = [
+            item
+            for item in scored
+            if item.get("governance_applicable", True)
+            and item["overall"] < threshold
+        ]
         if below:
+            failed = True
             if not as_json:
                 for item in below:
                     err_console.print(
                         f"  [red]Threshold failure: {item['path']} "
                         f"{item['overall']} < {threshold}[/red]"
                     )
-            sys.exit(2)
+
+    if max_smells is not None:
+        over = [item for item in scored if len(item.get("smells", [])) > max_smells]
+        if over:
+            failed = True
+            if not as_json:
+                for item in over:
+                    err_console.print(
+                        f"  [red]Smell threshold failure: {item['path']} "
+                        f"{len(item['smells'])} > {max_smells}[/red]"
+                    )
+
+    if failed:
+        sys.exit(2)
 
 
 if __name__ == "__main__":

@@ -8,6 +8,7 @@ from typing import Any
 from crewscore.scoring import build_result
 from crewscore.scorers import structural_analysis
 from crewscore.smells import detect_smells, find_repo_root
+from crewscore.profiles import classify_path
 
 # Exact basenames always treated as agent instruction files.
 KNOWN_NAMES = frozenset(
@@ -174,6 +175,7 @@ def score_paths(paths: list[Path]) -> list[dict[str, Any]]:
             mode="structural",
             source=str(path),
             smells=detect_smells(text, path=path, repo_root=repo_roots[parent]),
+            profile=classify_path(path),
         )
         item: dict[str, Any] = {
             "path": str(path),
@@ -181,6 +183,8 @@ def score_paths(paths: list[Path]) -> list[dict[str, Any]]:
             "tier": result.tier,
             "dimensions": result.dimensions,
             "smells": result.smells,
+            "profile": result.profile,
+            "governance_applicable": result.governance_applicable,
         }
         # Include ruleset when workstream A has shipped it.
         ruleset = getattr(result, "ruleset", None)
