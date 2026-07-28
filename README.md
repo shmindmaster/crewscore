@@ -352,7 +352,8 @@ jobs:
 |-------|----------|---------|-------------|
 | `prompt-file` | one of | — | Path to a single system prompt file |
 | `scan-path` | one of | — | Path for `crewscore scan` (worst score becomes the output) |
-| `threshold` | no | `50` | Fail the step (exit 2) when overall score is below this |
+| `threshold` | no | `50` | Fail the step (exit 2) when a **system prompt** scores below this. Coding-agent config is exempt — see [two rulesets](#two-artifacts-two-rulesets) |
+| `max-smells` | no | `""` | Fail the step (exit 2) when any file has more than N configuration smells. This is the gate for `AGENTS.md`-style files |
 | `explain` | no | `false` | Pass `true` to include matched/missing signals |
 | `summary` | no | `crewscore-summary.md` | Markdown path (also appends to `GITHUB_STEP_SUMMARY`) |
 | `pr-comment` | no | `true` | On `pull_request`, post/update a sticky comment with the summary |
