@@ -1,0 +1,46 @@
+# Documented copy-paste example for consumers.
+#
+# In your own repo, prefer the published tag:
+#   uses: shmindmaster/crewscore@v1
+#
+# When developing this monorepo (or a fork), local path works:
+#   uses: ./
+#
+# Point prompt-file at your agent system prompt. The sample path below is only
+# for illustration; examples/sample-prompt.md intentionally scores low.
+#
+# workflow_dispatch only so this example does not fail default CI on the bare
+# sample prompt. Use crewscore-selftest.yml for green self-tests.
+name: CrewScore CI Example
+
+on:
+  workflow_dispatch:
+
+jobs:
+  score:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Published action (recommended for consumer repos):
+      # - name: CrewScore
+      #   uses: shmindmaster/crewscore@v1
+      #   with:
+      #     prompt-file: agents/system-prompt.md
+      #     threshold: "50"
+      #     # explain: "true"
+
+      # Local composite action (this repo / monorepo self-check):
+      - name: CrewScore
+        id: crewscore
+        uses: ./
+        with:
+          prompt-file: examples/sample-prompt.md
+          threshold: "50"
+
+      - name: Use score outputs
+        if: always()
+        run: |
+          echo "score=${{ steps.crewscore.outputs.score }}"
+          echo "tier=${{ steps.crewscore.outputs.tier }}"
