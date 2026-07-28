@@ -27,7 +27,7 @@ inputs:
     required: false
     default: "crewscore-summary.md"
   pr-comment:
-    description: On pull_request events, post or update a sticky PR comment with the summary (requires pull-requests: write)
+    description: "On pull_request events, post or update a sticky PR comment with the summary (requires pull-requests write permission)"
     required: false
     default: "true"
 

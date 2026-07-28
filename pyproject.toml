@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "crewscore"
-version = "0.2.4"
+version = "0.2.5"
 description = "CrewScore — offline structural production-readiness scorecard for AI agent system prompts."
 readme = "README.md"
 license = "MIT"
