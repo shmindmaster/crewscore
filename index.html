@@ -1131,6 +1131,10 @@ body.sheet-open{overflow:hidden}
     const ci = `# Gate coding-agent config on configuration smells (not a score)
 # This browser ran ${result.detectors_run} of ${result.detectors_total} detectors; the full CLI
 # may find more. max-smells is a fixed gate, not the count this scan found.
+#
+# 0 is strict: the paper found Context Bloat alone in ~42% of popular repos,
+# so this will red-build most codebases on day one. Start at your current
+# count and ratchet down, or keep 0 and treat it as a blocking standard.
 - uses: shmindmaster/crewscore@v1
   with:
     scan-path: "."

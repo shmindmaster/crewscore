@@ -330,7 +330,7 @@ Override the detection with `--profile system_prompt` or `--profile coding_agent
 
 **In CI:** `--threshold N` gates system prompts and is ignored for config files (which record `threshold_ignored_for_config` in `warnings`); `--max-smells N` gates config files.
 
-**In `--json`:** config carries no governance grade either. `overall` and `dimensions` are **omitted** from the payload when `governance_applicable` is `false` — read `tier` and `smells` instead, and [branch on `governance_applicable`](#cli-in-ci) before touching `overall`.
+**In `--json`:** config carries no governance grade either. `overall`, `dimensions`, `findings` and `transparency` are **omitted** from the payload when `governance_applicable` is `false` — read `tier` and `smells` instead, and [branch on `governance_applicable`](#cli-in-ci) before touching `overall`.
 
 ---
 
@@ -480,7 +480,7 @@ Or parse JSON yourself:
 SCORE=$(crewscore test --prompt-file ./agents/system-prompt.md --json | jq '.overall')
 ```
 
-**Branch on `governance_applicable` before reading `overall`.** [Coding-agent config](#two-artifacts-two-rulesets) carries no governance grade, and since `0.4.0` the field is **absent** rather than `0` — `jq '.overall'` yields `null` there, and `jq -e '.overall >= 50'` errors:
+**Branch on `governance_applicable` before reading `overall`.** [Coding-agent config](#two-artifacts-two-rulesets) carries no governance grade, and since `0.4.0` the field is **absent** rather than `0` — `jq '.overall'` yields `null` there, and `jq -e '.overall >= 50'` prints `false` and **exits 1** — it does not error, so an unguarded gate just quietly fails the build on every `AGENTS.md` in the repo:
 
 ```bash
 # single file: score it only if it is judged on the governance score
