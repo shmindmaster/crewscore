@@ -179,6 +179,40 @@ label{display:block;font-size:var(--fs-sm);color:var(--muted);margin-bottom:.35r
 }
 .chip:hover,.chip:focus-visible{border-color:var(--line2);color:var(--ink);outline:2px solid var(--line2);outline-offset:1px}
 .chip.active{border-color:var(--amber-line);background:var(--amber-dim);color:var(--ink)}
+/* —— artifact type (declared, never inferred) —— */
+.artifact-types{display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin-bottom:.75rem}
+@media(max-width:640px){.artifact-types{grid-template-columns:1fr}}
+.artifact-opt{
+  display:flex;gap:.5rem;align-items:flex-start;margin:0;cursor:pointer;
+  border:1px solid var(--line2);background:var(--panel2);padding:.55rem .6rem;
+  font-weight:400;color:var(--ink);
+}
+.artifact-opt:hover{border-color:var(--amber-line)}
+.artifact-opt:has(input:checked){border-color:var(--amber-line);background:var(--amber-dim)}
+.artifact-opt input{margin-top:.25rem;accent-color:var(--amber);flex-shrink:0}
+.artifact-opt strong{display:block;font-size:var(--fs-sm);color:var(--ink)}
+.artifact-opt .opt-sub{display:block;font-size:.7rem;color:var(--faint);line-height:1.4;margin-top:.15rem}
+.artifact-opt:focus-within{outline:2px solid var(--amber);outline-offset:2px}
+/* —— config verdict (no 0-100, no dimension bars) —— */
+.config-tier{
+  font-family:var(--mono);font-size:clamp(1.1rem,4vw,1.5rem);font-weight:700;
+  letter-spacing:-.01em;margin:.35rem 0 .5rem;color:var(--ink);
+}
+.config-tier.is-clean{color:var(--ok)}
+.config-tier.is-smelly{color:var(--warn)}
+.partial-note{
+  text-align:left;font-size:.78rem;color:var(--muted);background:var(--amber-dim);
+  border:1px solid var(--amber-line);padding:.6rem .65rem;margin:.6rem 0;line-height:1.5;
+}
+.partial-note strong{color:var(--ink)}
+.partial-note ul{margin:.35rem 0 .35rem 1.1rem}
+.partial-note code{font-family:var(--mono);font-size:.7rem;color:#c5cbbd}
+.smell-item{
+  text-align:left;border:1px solid var(--line);background:var(--panel2);
+  padding:.55rem .65rem;margin-bottom:.35rem;font-size:.78rem;color:var(--muted);
+}
+.smell-item strong{color:var(--ink);display:block;font-size:var(--fs-sm)}
+.smell-item .cite{display:block;color:var(--faint);font-size:.68rem;margin-top:.3rem}
 textarea,input[type=url],input[type=text]{
   width:100%;padding:.7rem .75rem;background:#090b0a;
   border:1px solid var(--line2);color:var(--ink);font-size:16px;
@@ -482,8 +516,20 @@ body.sheet-open{overflow:hidden}
     </div>
     <label>Try a template</label>
     <div class="chips" id="template-chips"></div>
-    <label for="agent-prompt">System prompt / agent instructions</label>
-    <p class="help">ChatGPT custom instructions, Claude projects, Cursor rules, LangChain, CrewAI, AGENTS.md — anything that tells the model who it is.</p>
+    <label id="artifact-type-label">What did you paste?</label>
+    <p class="help">These are judged by different rulesets. The CLI decides from the filename; a browser has no filename, so you declare it — CrewScore never guesses from your text.</p>
+    <div class="artifact-types" role="radiogroup" aria-labelledby="artifact-type-label">
+      <label class="artifact-opt">
+        <input type="radio" name="artifact-type" value="system_prompt" checked>
+        <span><strong>System prompt</strong><span class="opt-sub">An agent acting for users — ChatGPT custom instructions, Claude projects, LangChain, CrewAI. Scored 0-100 on 8 governance dimensions.</span></span>
+      </label>
+      <label class="artifact-opt">
+        <input type="radio" name="artifact-type" value="coding_agent_config">
+        <span><strong>Coding-agent config</strong><span class="opt-sub">AGENTS.md, CLAUDE.md, .cursorrules, Copilot instructions — repo guidance for a coding agent. Judged on configuration smells, no governance grade.</span></span>
+      </label>
+    </div>
+    <label for="agent-prompt">Paste the text</label>
+    <p class="help">Which ruleset applies comes from the artifact type above — not from the content.</p>
     <textarea id="agent-prompt" placeholder="Paste your system prompt here…" spellcheck="false"></textarea>
     <div class="row">
       <input type="url" id="prompt-url" placeholder="Or load a public GitHub raw / gist URL" />
@@ -615,6 +661,21 @@ body.sheet-open{overflow:hidden}
     const color = pct >= 70 ? "#5dbe7c" : pct >= 50 ? "#d4a017" : pct >= 30 ? "#e08940" : "#e85d5d";
     return `<div class="dim-bar"><div class="dim-fill" style="width:${pct}%;background:${color}"></div></div>`;
   }
+  /* —— artifact type: declared by the user, never inferred from the text ——
+     The CLI classifies by filename (crewscore/profiles.py). A browser tab has
+     no filename, and sniffing the pasted text would be a guess dressed up as a
+     measurement. So we ask. */
+  function currentProfile() {
+    const picked = document.querySelector('input[name="artifact-type"]:checked');
+    return (picked && picked.value) || E.defaultProfile || "system_prompt";
+  }
+  function setProfile(value) {
+    const el = document.querySelector('input[name="artifact-type"][value="' + value + '"]');
+    if (el) el.checked = true;
+  }
+  function isConfig(result) {
+    return result && result.governance_applicable === false;
+  }
   function friendlyTier(overall) {
     if (overall >= 90) return "Looks solid on paper";
     if (overall >= 70) return "Decent coverage — still gaps";
@@ -735,6 +796,8 @@ body.sheet-open{overflow:hidden}
       document.getElementById("agent-prompt").value = t.text;
       document.getElementById("agent-error").classList.remove("show");
       document.getElementById("empty-invite").classList.add("hidden");
+      // Every built-in template is a system prompt, so declare it as one.
+      setProfile(E.defaultProfile || "system_prompt");
       scoreAgent({ source: "template" });
     });
     chips.appendChild(b);
@@ -768,6 +831,80 @@ body.sheet-open{overflow:hidden}
       return `We scored an AI vendor ${overall}/100 (${tierName}) with CrewScore — free structural diligence checklist. Not an audit. Try yours: ${location.origin}`;
     }
     return `My AI agent scored ${overall}/100 on CrewScore (${tierName}). Structural hygiene only — not a red-team. Score yours free (no install): ${location.origin}`;
+  }
+
+  /**
+   * Coding-agent config verdict: smells, not a grade.
+   *
+   * Deliberately renders no 0-100 number, no dimension bars and no governance
+   * tier. Measured on the arXiv:2606.15828 corpus, the governance ruleset put
+   * 100/100 real config files in the worst tier — a scale on which the whole
+   * population fails carries no information about any single file.
+   */
+  function renderConfigVerdict(result) {
+    const smells = result.smells || [];
+    const label = E.profileLabel ? E.profileLabel(result.profile) : "coding-agent config";
+    const undetectable = result.undetectable || [];
+    const ran = result.detectors_run || 1;
+    const total = result.detectors_total || 3;
+
+    let html = `<div class="score-hero">
+      <div class="score-kicker">Configuration verdict · ${escapeHtml(label)}</div>
+      <div class="config-tier ${smells.length ? "is-smelly" : "is-clean"}">${escapeHtml(result.tier)}</div>
+      <div class="stamp">No governance grade — this artifact is judged on smells</div>
+    </div>`;
+
+    html += `<p class="help" style="text-align:left">Repo guidance for a coding agent is not scored on the 8 governance dimensions.
+      Across the 100 most-starred repos with an <code>AGENTS.md</code>, that ruleset put the median file at 0/100 —
+      a scale where the whole population fails says nothing about any one file. Configuration smells are what this
+      artifact can honestly be judged on.</p>`;
+
+    if (smells.length) {
+      html += `<div class="gaps"><h4>Configuration smells (advisory — never scored)</h4>`;
+      smells.forEach((s) => {
+        html += `<div class="smell-item">
+          <strong>${escapeHtml(s.name || s.smell_id)}</strong>
+          ${escapeHtml(s.detail || "")}
+          <span class="cite">Heuristic: ${escapeHtml(s.heuristic || "")} · ${escapeHtml(s.paper_prevalence || "")}<br>${escapeHtml(s.citation || "")}</span>
+        </div>`;
+      });
+      html += `</div>`;
+    } else {
+      html += `<p class="help" style="text-align:left">No browser-detectable smell found — read the coverage note before treating that as clean.</p>`;
+    }
+
+    html += `<div class="partial-note">
+      <strong>This browser ran ${ran} of ${total} detectors.</strong>
+      Context Bloat needs only the text, so it runs here. The other two cannot:
+      <ul>`;
+    undetectable.forEach((s) => {
+      html += `<li><strong>${escapeHtml(s.name || s.smell_id)}</strong> — ${escapeHtml(s.reason || "")}</li>`;
+    });
+    html += `</ul>
+      A clean result here is a partial check, not a clean bill of health.
+      Full check: <code>pip install crewscore</code> then <code>crewscore scan .</code>
+    </div>`;
+
+    html += `<details class="how">
+      <summary>How config is judged</summary>
+      <div class="formula">Ruleset <code>${escapeHtml(String(result.ruleset || E.ruleset || ""))}</code> · profile <code>${escapeHtml(result.profile)}</code><br>
+      Context Bloat: >= ${E.contextBloatMaxLines} lines (published heuristic, verbatim)<br>
+      Smells are advisory findings; they never change any number.<br>
+      CLI: <code>crewscore scan . --max-smells 0</code></div>
+    </details>`;
+
+    html += `<button type="button" class="btn" id="btn-config-export" style="margin-top:.85rem">Export verdict</button>`;
+
+    document.getElementById("agent-scorecard").innerHTML = html;
+    document.getElementById("inspect-meta").textContent = String(result.ruleset || E.ruleset || "");
+    const exportBtn = document.getElementById("btn-config-export");
+    if (exportBtn) {
+      exportBtn.addEventListener("click", () => {
+        renderExport();
+        setStage("export");
+        openSheet("export");
+      });
+    }
   }
 
   function renderInspect(result, opts) {
@@ -873,6 +1010,9 @@ body.sheet-open{overflow:hidden}
 
   function buildFixPlan() {
     if (!lastAgent) return;
+    // Fix templates are governance guardrails. Appending them to repo guidance
+    // for a coding agent would be the same category error as grading it.
+    if (isConfig(lastAgent.result)) return;
     const source = lastAgent.fixed || lastAgent.prompt || document.getElementById("agent-prompt").value;
     const before = E.analyzeWithFindings(source);
     const fixes = E.generateFixes(before.scores);
@@ -947,8 +1087,59 @@ body.sheet-open{overflow:hidden}
     document.getElementById("deck-inspect").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  /** Export for coding-agent config: smell verdict, never a score or a tier. */
+  function renderConfigExport() {
+    const result = lastAgent.result;
+    const smells = result.smells || [];
+    const label = E.profileLabel ? E.profileLabel(result.profile) : "coding-agent config";
+    const st = `CrewScore checked my ${label} — ${result.tier}. Configuration smells (dos Santos et al., arXiv:2606.15828), not a 0-100 governance grade: that number is meaningless for this artifact. The browser runs ${result.detectors_run} of ${result.detectors_total} detectors; the CLI runs all three. ${location.origin}`;
+    const ci = `# Gate coding-agent config on configuration smells (not a score)
+- uses: shmindmaster/crewscore@v1
+  with:
+    scan-path: "."
+    max-smells: "${smells.length}"
+# or: crewscore scan . --max-smells ${smells.length}`;
+
+    let html = `<p class="help">Take the verdict with you. No 0-100 number is exported — this artifact is not graded.</p>
+      <ul class="export-checklist" aria-label="Export completion checklist">
+        <li data-check="share">Share the verdict</li>
+        <li data-check="ci">Gate configuration smells in CI</li>
+        <li data-check="cli">Run the CLI for the ${result.detectors_total - result.detectors_run} detectors this browser cannot</li>
+      </ul>
+      <div class="export-grid">
+        <button type="button" class="btn-sec" data-c="copy">Copy share text</button>
+        <button type="button" class="btn-sec" data-c="x">Post on X</button>
+      </div>
+      <p class="help" style="margin-top:.75rem">Gate this in CI</p>
+      <pre class="ci-block" id="ci-snippet">${escapeHtml(ci)}</pre>
+      <button type="button" class="btn-ghost" id="btn-copy-ci">Copy CI snippet</button>
+      <p class="help" style="margin-top:.7rem">Init Fossilization and Lint Leakage need git history and the rest of the repo. Run <code>crewscore scan .</code> locally or in CI for the full check.</p>`;
+
+    const el = document.getElementById("export-body");
+    el.innerHTML = html;
+    el.querySelectorAll("[data-c]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const k = btn.getAttribute("data-c");
+        if (k === "copy") {
+          navigator.clipboard.writeText(st).then(() => toast("Share text copied"));
+        } else {
+          window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(st)}`);
+        }
+        track("cs_export", { kind: "config_share_text" });
+      });
+    });
+    document.getElementById("btn-copy-ci").addEventListener("click", () => {
+      navigator.clipboard.writeText(ci).then(() => toast("CI snippet copied"));
+      track("cs_export", { kind: "ci_copy", profile: result.profile });
+    });
+  }
+
   function renderExport() {
     if (!lastAgent) return;
+    if (isConfig(lastAgent.result)) {
+      renderConfigExport();
+      return;
+    }
     const overall = lastAgent.result.overall;
     const tier = E.scoreTier(overall);
     const soft = friendlyTier(overall);
@@ -1045,17 +1236,25 @@ body.sheet-open{overflow:hidden}
     }
     err.classList.remove("show");
     document.getElementById("empty-invite").classList.add("hidden");
-    const result = E.analyzeWithFindings(prompt);
-    lastAgent = { prompt, result, fixed: null, delta: null };
+    const profile = currentProfile();
+    const result = E.analyzeArtifact(prompt, profile);
+    lastAgent = { prompt, result, profile, fixed: null, delta: null };
     pendingPlan = null;
     track("cs_score", {
       source: meta.source || "paste",
-      overall_bucket: bucket(result.overall),
+      profile: profile,
+      // Config artifacts have no governance number to bucket.
+      overall_bucket: isConfig(result) ? null : bucket(result.overall),
+      smell_count: isConfig(result) ? (result.smells || []).length : null,
       ruleset: String(E.ruleset || ""),
     });
     closeSheets();
     document.getElementById("deck-prompt").classList.add("is-scored");
-    renderInspect(result, { title: "Structural score", openHow: openHowNext });
+    if (isConfig(result)) {
+      renderConfigVerdict(result);
+    } else {
+      renderInspect(result, { title: "Structural score", openHow: openHowNext });
+    }
     showDeck("deck-inspect", true);
     document.getElementById("act-body").innerHTML = "";
     document.getElementById("export-body").innerHTML = "";
@@ -1229,16 +1428,28 @@ body.sheet-open{overflow:hidden}
     }
   }
 
+  // Changing the declared type changes the ruleset, so a shown verdict is
+  // stale the moment it changes — re-score rather than leave a wrong one up.
+  document.querySelectorAll('input[name="artifact-type"]').forEach((radio) => {
+    radio.addEventListener("change", () => {
+      if (lastAgent) scoreAgent({ source: "profile_change" });
+    });
+  });
+
   document.getElementById("btn-load-url").addEventListener("click", loadUrl);
   document.getElementById("link-how-score").addEventListener("click", () => {
     if (lastAgent) {
       openHowNext = true;
       closeSheets();
-      renderInspect(lastAgent.result, {
-        title: lastAgent.fixed ? "After approved fix" : "Structural score",
-        delta: lastAgent.delta,
-        openHow: true,
-      });
+      if (isConfig(lastAgent.result)) {
+        renderConfigVerdict(lastAgent.result);
+      } else {
+        renderInspect(lastAgent.result, {
+          title: lastAgent.fixed ? "After approved fix" : "Structural score",
+          delta: lastAgent.delta,
+          openHow: true,
+        });
+      }
       showDeck("deck-inspect", true);
       setStage("inspect");
       document.getElementById("deck-inspect").scrollIntoView({ behavior: "smooth", block: "start" });
