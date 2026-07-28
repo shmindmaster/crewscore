@@ -8,6 +8,7 @@ version = "0.4.0"
 description = "CrewScore - deterministic offline checker for AI agent prompts and coding-agent config: governance guardrail coverage and configuration smells, with explainable per-rule findings and a CI gate."
 readme = "README.md"
 license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
 authors = [
     { name = "Sarosh Hussain", email = "sarosh@pendoah.ai" },
@@ -33,7 +34,6 @@ classifiers = [
     # still actively changing release to release.
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
