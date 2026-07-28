@@ -144,18 +144,34 @@ def test_discover_empty_repo(tmp_path: Path):
 
 
 def test_score_paths_returns_overall_and_tier(tmp_path: Path):
-    bare = _write(tmp_path / "AGENTS.md", BARE)
-    guarded = _write(tmp_path / "CLAUDE.md", GUARDED)
+    # Both fixtures must be system prompts: coding-agent config is judged on
+    # smells and carries no `overall`/`dimensions` at all.
+    bare = _write(tmp_path / "system-prompt.md", BARE)
+    guarded = _write(tmp_path / "prompts" / "hardened.md", GUARDED)
 
     results = score_paths([bare, guarded])
     assert len(results) == 2
     by_name = {Path(r["path"]).name: r for r in results}
-    assert "overall" in by_name["AGENTS.md"]
-    assert "tier" in by_name["AGENTS.md"]
-    assert "dimensions" in by_name["AGENTS.md"]
-    assert isinstance(by_name["AGENTS.md"]["overall"], int)
-    assert by_name["CLAUDE.md"]["overall"] > by_name["AGENTS.md"]["overall"]
-    assert len(by_name["AGENTS.md"]["dimensions"]) == 8
+    assert "overall" in by_name["system-prompt.md"]
+    assert "tier" in by_name["system-prompt.md"]
+    assert "dimensions" in by_name["system-prompt.md"]
+    assert isinstance(by_name["system-prompt.md"]["overall"], int)
+    assert by_name["hardened.md"]["overall"] > by_name["system-prompt.md"]["overall"]
+    assert len(by_name["system-prompt.md"]["dimensions"]) == 8
+
+
+def test_score_paths_items_carry_source_and_warnings(tmp_path: Path):
+    """scan items must expose the same `source`/`warnings` fields `test --json` does.
+
+    Without `warnings` there is nowhere to record that a CI gate was a no-op on
+    a file, and without `source` a consumer cannot tell which artifact a row
+    was read from once `path` is rewritten to a scan-relative display path.
+    """
+    p = _write(tmp_path / "system-prompt.md", BARE)
+
+    item = score_paths([p])[0]
+    assert item["source"] == str(p)
+    assert item["warnings"] == []
 
 
 def test_score_paths_preserves_path(tmp_path: Path):
@@ -173,8 +189,10 @@ def test_score_paths_preserves_path(tmp_path: Path):
 
 
 def test_scan_cli_json(tmp_path: Path):
-    _write(tmp_path / "AGENTS.md", BARE)
-    _write(tmp_path / "CLAUDE.md", GUARDED)
+    # System prompts, so every row is judged on the governance score; the
+    # config shape is covered by test_scan_json_omits_governance_grade_for_config.
+    _write(tmp_path / "system-prompt.md", BARE)
+    _write(tmp_path / "prompts" / "hardened.md", GUARDED)
 
     runner = CliRunner()
     result = runner.invoke(main, ["scan", str(tmp_path), "--json"])
@@ -212,7 +230,7 @@ def test_scan_cli_no_files_exit_1(tmp_path: Path):
 
 
 def test_scan_cli_threshold_fails_exit_2(tmp_path: Path):
-    _write(tmp_path / "AGENTS.md", BARE)  # low score
+    _write(tmp_path / "system-prompt.md", BARE)  # low score, governed profile
 
     runner = CliRunner()
     result = runner.invoke(
@@ -223,14 +241,281 @@ def test_scan_cli_threshold_fails_exit_2(tmp_path: Path):
     assert any(item["overall"] < 90 for item in payload)
 
 
-def test_scan_cli_threshold_passes(tmp_path: Path):
+def test_scan_threshold_exempts_coding_agent_config(tmp_path: Path):
+    """AGENTS.md is judged on smells, so --threshold must not fail it.
+
+    Measured on the arXiv:2606.15828 corpus, the governance score puts 100/100
+    real config files below any useful threshold. Gating CI on that number
+    would fail every repo that has an AGENTS.md.
+    """
     _write(tmp_path / "AGENTS.md", BARE)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        main, ["scan", str(tmp_path), "--json", "--threshold", "90"]
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert all(item["profile"] == "coding_agent_config" for item in payload)
+    assert all(item["governance_applicable"] is False for item in payload)
+
+
+def test_scan_json_omits_governance_grade_for_config(tmp_path: Path):
+    """A scan row for coding-agent config carries no number and no dimensions.
+
+    Same contract as `test --json` and as the JS engine: a governance grade on
+    a build-instructions file is a category error on every surface, and
+    `jq '.[] | select(.overall < 50)'` must not be able to find one.
+    """
+    _write(tmp_path / "AGENTS.md", BARE)
+    _write(tmp_path / "system-prompt.md", BARE)
+
+    runner = CliRunner()
+    result = runner.invoke(main, ["scan", str(tmp_path), "--json"])
+    assert result.exit_code == 0, result.output
+    by_name = {Path(i["path"]).name: i for i in json.loads(result.output)}
+
+    config = by_name["AGENTS.md"]
+    assert config["governance_applicable"] is False
+    assert "overall" not in config
+    assert "dimensions" not in config
+    assert config["tier"].startswith("CONFIG:")
+    assert config["profile"] == "coding_agent_config"
+    assert config["source"]
+    assert config["ruleset"]
+
+    governed = by_name["system-prompt.md"]
+    assert isinstance(governed["overall"], int)
+    assert len(governed["dimensions"]) == 8
+
+
+def test_scan_json_warns_when_threshold_ignored_for_config(tmp_path: Path):
+    """The exempt file must say the gate did nothing, in the payload CI reads.
+
+    The Action passes --threshold unconditionally (default "50") and the docs
+    recommend scan-path, so the most-recommended CI configuration silently
+    loses its gate. `test` already emits this key; `scan` must match.
+    """
+    _write(tmp_path / "AGENTS.md", BARE)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        main, ["scan", str(tmp_path), "--json", "--threshold", "90"]
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert all(
+        "threshold_ignored_for_config" in item["warnings"] for item in payload
+    )
+
+
+def test_scan_json_has_no_threshold_warning_without_threshold(tmp_path: Path):
+    _write(tmp_path / "AGENTS.md", BARE)
+
+    runner = CliRunner()
+    result = runner.invoke(main, ["scan", str(tmp_path), "--json"])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert all(item["warnings"] == [] for item in payload)
+
+
+def test_scan_json_governed_file_never_gets_the_threshold_warning(tmp_path: Path):
+    """--threshold is not a no-op on a system prompt, so it must not warn there."""
+    _write(tmp_path / "system-prompt.md", BARE)
 
     runner = CliRunner()
     result = runner.invoke(
         main, ["scan", str(tmp_path), "--json", "--threshold", "0"]
     )
     assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert all(item["warnings"] == [] for item in payload)
+
+
+def test_scan_summary_markdown_reports_the_ignored_threshold(tmp_path: Path):
+    """The sticky PR comment is the surface the `test` fix existed to reach."""
+    _write(tmp_path / "AGENTS.md", BARE)
+    summary = tmp_path / "out.md"
+
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "scan",
+            str(tmp_path),
+            "--json",
+            "--threshold",
+            "90",
+            "--summary",
+            str(summary),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    text = summary.read_text(encoding="utf-8")
+    assert "threshold_ignored_for_config" in text
+    assert "--max-smells" in text
+
+
+def test_scan_human_mode_notes_the_ignored_threshold(tmp_path: Path):
+    """The human terminal path must say the gate did nothing, not exit clean.
+
+    `scan --json` already carries `threshold_ignored_for_config`, and `test`
+    (non-JSON) prints a notice when --threshold is a no-op on config. `scan`
+    (non-JSON) printed nothing at all — a user running
+    `crewscore scan . --threshold 90` on a config-only directory saw a clean
+    exit with no indication their gate did nothing.
+    """
+    _write(tmp_path / "AGENTS.md", BARE)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        main, ["scan", str(tmp_path), "--threshold", "90"]
+    )
+    assert result.exit_code == 0, result.output
+    lower = " ".join(result.output.split()).lower()
+    assert "threshold" in lower
+    assert "ignored" in lower
+    assert "configuration smells" in lower
+    assert "--max-smells" in result.output
+    # The new notice itself must stay cp1252-encodable (ASCII only) — the
+    # rest of the output includes rich's own box-drawing chrome, which this
+    # concern is not about.
+    ignored_lines = [
+        line for line in result.output.splitlines() if "ignored" in line.lower()
+    ]
+    assert ignored_lines
+    for line in ignored_lines:
+        line.encode("cp1252")
+
+
+def test_scan_human_mode_has_no_ignored_threshold_note_for_governed_files(
+    tmp_path: Path,
+):
+    """A system-prompt-only scan must not print the config no-op notice."""
+    _write(tmp_path / "system-prompt.md", BARE)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        main, ["scan", str(tmp_path), "--threshold", "0"]
+    )
+    assert result.exit_code == 0, result.output
+    lower = " ".join(result.output.split()).lower()
+    assert "ignored" not in lower
+
+
+def test_scan_max_smells_gates_config_files(tmp_path: Path):
+    """--max-smells is the CI gate that does apply to coding-agent config."""
+    bloated = "# Guide\n" + "\n".join(f"- rule {i}" for i in range(250))
+    _write(tmp_path / "AGENTS.md", bloated)
+
+    runner = CliRunner()
+    passing = runner.invoke(
+        main, ["scan", str(tmp_path), "--json", "--max-smells", "5"]
+    )
+    assert passing.exit_code == 0, passing.output
+
+    failing = runner.invoke(
+        main, ["scan", str(tmp_path), "--json", "--max-smells", "0"]
+    )
+    assert failing.exit_code == 2
+    payload = json.loads(failing.output)
+    assert any(
+        s["smell_id"] == "smell.context_bloat"
+        for item in payload
+        for s in item["smells"]
+    )
+
+
+def test_scan_profile_override_governs_config_files(tmp_path: Path):
+    """`scan --profile` exists — the human output advertises it as the escape hatch.
+
+    Without it, "Override with --profile" was advice for an option that did
+    not exist on this command (exit 2, "no such option").
+    """
+    _write(tmp_path / "AGENTS.md", BARE)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        main, ["scan", str(tmp_path), "--json", "--profile", "system_prompt"]
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert all(item["profile"] == "system_prompt" for item in payload)
+    assert all(item["governance_applicable"] is True for item in payload)
+    assert all(item["tier"].startswith("STRUCTURAL:") for item in payload)
+
+
+def test_scan_profile_override_applies_to_every_file(tmp_path: Path):
+    """The override applies to every file the scan visits, not just the first."""
+    _write(tmp_path / "system-prompt.md", BARE)
+    _write(tmp_path / "prompts" / "sys.md", GUARDED)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        ["scan", str(tmp_path), "--json", "--profile", "coding_agent_config"],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert len(payload) == 2
+    assert all(item["profile"] == "coding_agent_config" for item in payload)
+    assert all(item["tier"].startswith("CONFIG:") for item in payload)
+
+
+def test_scan_profile_override_makes_threshold_apply_to_config(tmp_path: Path):
+    """Forcing system_prompt re-arms --threshold for a misclassified file."""
+    _write(tmp_path / "AGENTS.md", BARE)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "scan",
+            str(tmp_path),
+            "--json",
+            "--profile",
+            "system_prompt",
+            "--threshold",
+            "90",
+        ],
+    )
+    assert result.exit_code == 2
+    payload = json.loads(result.output)
+    assert all(item["governance_applicable"] is True for item in payload)
+    assert any(item["overall"] < 90 for item in payload)
+
+
+def test_scan_profile_defaults_to_auto(tmp_path: Path):
+    _write(tmp_path / "AGENTS.md", BARE)
+    _write(tmp_path / "system-prompt.md", BARE)
+
+    runner = CliRunner()
+    result = runner.invoke(main, ["scan", str(tmp_path), "--json", "--profile", "auto"])
+    assert result.exit_code == 0, result.output
+    by_name = {Path(i["path"]).name: i for i in json.loads(result.output)}
+    assert by_name["AGENTS.md"]["profile"] == "coding_agent_config"
+    assert by_name["system-prompt.md"]["profile"] == "system_prompt"
+
+
+def test_scan_cli_threshold_passes(tmp_path: Path):
+    """A governed file scoring at or above the threshold exits 0.
+
+    The previous version of this test used an AGENTS.md and --threshold 0:
+    the file is exempt from --threshold and 0 is unfailable, so it passed no
+    matter what the gate did. This one is graded on a real system prompt that
+    really clears the bar, so inverting or dropping the comparison fails it.
+    """
+    _write(tmp_path / "system-prompt.md", GUARDED)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        main, ["scan", str(tmp_path), "--json", "--threshold", "50"]
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert len(payload) == 1
+    assert payload[0]["governance_applicable"] is True
+    assert payload[0]["overall"] >= 50
 
 
 def test_scan_cli_default_path_is_cwd(tmp_path: Path, monkeypatch):
@@ -265,3 +550,50 @@ def test_scan_skips_node_modules_in_cli(tmp_path: Path):
     payload = json.loads(result.output)
     assert len(payload) == 1
     assert "node_modules" not in payload[0]["path"]
+
+
+def test_discovery_finds_prefixed_system_prompt_names(tmp_path):
+    """A real prompt must not be silently skipped by the name filter.
+
+    Discovery was only exercised with names like `system-prompt.md`, where
+    the leading token happens to satisfy every clause. Nothing covered
+    `backend-system-prompt.md`, so tightening `"system" in lower or
+    lower.startswith("agent")` into an `and` dropped genuine production
+    prompts from `crewscore scan` with no error and no output - the file is
+    simply never graded, and CI reports a pass over a repo it never read.
+    """
+    included = [
+        "system-prompt.md",
+        "backend-system-prompt.md",
+        "system_prompt.txt",
+        "checkout-service-system-prompt.md",
+        "agent-prompt.md",
+    ]
+    for name in included:
+        (tmp_path / name).write_text(BARE, encoding="utf-8")
+    found = {p.name for p in discover_prompt_files(tmp_path)}
+    missing = [n for n in included if n not in found]
+    assert not missing, "discovery dropped real prompt files: " + repr(missing)
+
+
+def test_discovery_still_excludes_readme_and_unrelated_markdown(tmp_path):
+    """The filter must stay tight, or unrelated files get a governance grade.
+
+    The mirror of the test above: loosening the same condition sweeps in
+    ordinary documentation and hands it a score it was never meant to have.
+    """
+    # agent-todo.md is the load-bearing case: it satisfies the inner
+    # `startswith("agent")` guard, so only the outer clause keeps it out. A
+    # file list without it lets the outer clause rot undetected, and ordinary
+    # planning notes start getting a governance grade in scan output.
+    for name in (
+        "README.md",
+        "readme-prompt.md",
+        "notes.md",
+        "changelog.md",
+        "agent-todo.md",
+        "agent-notes.md",
+    ):
+        (tmp_path / name).write_text(BARE, encoding="utf-8")
+    found = {p.name for p in discover_prompt_files(tmp_path)}
+    assert not found, "discovery swept in unrelated files: " + repr(found)

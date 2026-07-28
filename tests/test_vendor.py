@@ -112,10 +112,28 @@ def test_index_html_vendor_uses_cli_vendor_tiers_not_agent_tiers():
 
 
 def test_index_html_hero_is_builder_first():
-    """Hero positions structural agent-prompt scoring for builders, not vendor quiz."""
+    """Hero sells prompt scoring to builders, not a vendor quiz, and is honest.
+
+    This used to pin the exact headline, so every copy edit broke it and told
+    us nothing. What must hold is the positioning: the hero is about scoring
+    your own prompt, and it states the coverage-not-quality limit up front
+    rather than burying it in docs/validation.md.
+    """
     text = Path("index.html").read_text(encoding="utf-8")
-    assert "Score agent prompts in your browser" in text
-    assert "structural hygiene only" in text.lower() or "Structural hygiene only" in text
+    hero = text.split('<section class="hero">', 1)[1].split("</section>", 1)[0]
+    lowered = hero.lower()
+
+    # Builder-first: the subject is the reader's own prompt.
+    assert "prompt" in lowered
+    # Not the vendor-procurement quiz, which is the secondary path.
+    assert "buying ai software" not in lowered
+
+    # The limit is stated in the hero, not only in the study.
+    assert "coverage" in lowered
+    assert "not a quality ranking" in lowered or "not a benchmark" in lowered
+    assert "validation.md" in lowered
+    # And it still says what the scan is not.
+    assert "red-team" in lowered or "red team" in lowered
 
 
 def test_index_html_vendor_tab_is_secondary_self_attest():
