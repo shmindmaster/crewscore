@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="CrewScore — free structural score for AI agent prompts. Score in your browser — structural hygiene only. No signup. No install.">
-<meta property="og:title" content="CrewScore — score agent prompts in your browser">
-<meta property="og:description" content="Structural hygiene score for agent system prompts. Not a red-team. Fix gaps. Share. No signup, no API key.">
+<meta name="description" content="CrewScore - a governance checklist for AI agent prompts. See which controls your prompt states and which it never mentions, in your browser. Coverage, not a quality ranking. No signup. No install.">
+<meta property="og:title" content="CrewScore - governance checklist for agent prompts">
+<meta property="og:description" content="Checklist coverage for agent system prompts: which governance controls the text states and which it does not. Coverage, not a quality ranking. Not a red-team. No signup, no API key.">
 <meta property="og:url" content="https://crewscore.ai">
 <meta property="og:type" content="website">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<title>CrewScore — Free AI agent prompt score (no install)</title>
+<title>CrewScore - Free governance checklist for AI agent prompts (no install)</title>
 <style>
 :root{
   --bg:#0a0c0b;
@@ -492,16 +492,17 @@ body.sheet-open{overflow:hidden}
   </header>
 
   <section class="hero">
-    <div class="eyebrow">Preflight for agent instructions</div>
-    <h2>Score agent prompts in your browser — structural hygiene only</h2>
-    <p class="sub">Paste a prompt → see gaps → plan text fixes. Same open rules as the CLI. <strong>Not a red-team.</strong>
-      <button type="button" class="linkish" id="link-how-score">How scoring works</button>
+    <div class="eyebrow">Governance checklist for agent instructions</div>
+    <h2>See which governance rules your prompt does not state</h2>
+    <p class="sub">Paste a prompt in your browser, get the eight controls it states and the ones it never mentions. Same open rules as the CLI. <strong>Not a red-team.</strong>
+      <button type="button" class="linkish" id="link-how-score">How the number is computed</button>
     </p>
+    <p class="trust"><strong>Coverage, not a quality ranking.</strong> We scored 1,368 real system prompts and published the result: once length is controlled, this number does not separate production prompts from amateur ones (Cliff's delta +0.061, 95% CI -0.050 to +0.172, p=0.36), and character count alone classifies them better (AUC 0.863 vs 0.800). A low score tells you what you have not written down. A high score means the text is present - nothing more. <a href="https://github.com/shmindmaster/crewscore/blob/main/docs/validation.md" target="_blank" rel="noopener">Read the validation study</a>.</p>
   </section>
 
   <nav class="stages" aria-label="Preflight stages">
     <button type="button" class="stage-pill on" data-stage="prompt" id="stg-prompt" aria-current="step">1 Prompt</button>
-    <button type="button" class="stage-pill" data-stage="inspect" id="stg-inspect" disabled>2 Score</button>
+    <button type="button" class="stage-pill" data-stage="inspect" id="stg-inspect" disabled>2 Coverage</button>
     <button type="button" class="stage-pill" data-stage="export" id="stg-export" disabled>3 Export</button>
   </nav>
 
@@ -512,7 +513,7 @@ body.sheet-open{overflow:hidden}
       <span class="hint">Stays in your browser</span>
     </div>
     <div class="empty-invite" id="empty-invite">
-      <strong>First time?</strong> Click <em>Weak demo prompt</em> — you should land near 0/100, then inspect gaps.
+      <strong>First time?</strong> Click <em>Weak demo prompt</em> - it states almost none of the controls, so you should land near 0/100. The gap list is the useful part.
     </div>
     <label>Try a template</label>
     <div class="chips" id="template-chips"></div>
@@ -521,7 +522,7 @@ body.sheet-open{overflow:hidden}
     <div class="artifact-types" role="radiogroup" aria-labelledby="artifact-type-label">
       <label class="artifact-opt">
         <input type="radio" name="artifact-type" value="system_prompt" checked>
-        <span><strong>System prompt</strong><span class="opt-sub">An agent acting for users — ChatGPT custom instructions, Claude projects, LangChain, CrewAI. Scored 0-100 on 8 governance dimensions.</span></span>
+        <span><strong>System prompt</strong><span class="opt-sub">An agent acting for users — ChatGPT custom instructions, Claude projects, LangChain, CrewAI. Checked against 8 governance dimensions; coverage reported 0-100.</span></span>
       </label>
       <label class="artifact-opt">
         <input type="radio" name="artifact-type" value="coding_agent_config">
@@ -535,14 +536,14 @@ body.sheet-open{overflow:hidden}
       <input type="url" id="prompt-url" placeholder="Or load a public GitHub raw / gist URL" />
       <button class="btn-sec" type="button" id="btn-load-url">Load URL</button>
     </div>
-    <button class="btn" type="button" id="btn-score-agent">Run structural score</button>
+    <button class="btn" type="button" id="btn-score-agent">Run coverage check</button>
     <p class="error" id="agent-error" role="alert"></p>
   </section>
 
   <!-- STAGE 2: SCORE (stays mounted — primary product surface) -->
   <section class="deck deck-instrument hidden" id="deck-inspect" aria-labelledby="inspect-head">
     <div class="deck-head">
-      <h3 id="inspect-head">02 · Score</h3>
+      <h3 id="inspect-head">02 · Coverage</h3>
       <span class="hint" id="inspect-meta"></span>
     </div>
     <div id="agent-scorecard" aria-live="polite"></div>
@@ -571,11 +572,12 @@ body.sheet-open{overflow:hidden}
     <code>uses: shmindmaster/crewscore@v1</code><br>
     <a href="https://github.com/shmindmaster/crewscore">Open source on GitHub</a>
     · structural scan only · templates must be paired with runtime gates<br>
-    Same scoring rules in the browser and the CLI.
+    Same rules in the browser and the CLI. The number is coverage, not quality:
+    <a href="https://github.com/shmindmaster/crewscore/blob/main/docs/validation.md" target="_blank" rel="noopener">read the validation study</a>.
   </footer>
 </div>
 <div id="mobile-score-bar" aria-hidden="true">
-  <button class="btn" type="button" id="btn-score-agent-mobile">Run structural score</button>
+  <button class="btn" type="button" id="btn-score-agent-mobile">Run coverage check</button>
 </div>
 <!-- Plan + export sheets (score stays on page underneath) -->
 <div id="sheet-backdrop" class="sheet-backdrop" aria-hidden="true"></div>
@@ -680,7 +682,7 @@ body.sheet-open{overflow:hidden}
   /* A config verdict is not a score, so the chrome around it must not say
      "score" either — the wording is the same category error as the number. */
   const CHROME = {
-    system_prompt: { cta: "Run structural score", head: "02 · Score" },
+    system_prompt: { cta: "Run coverage check", head: "02 · Coverage" },
     coding_agent_config: { cta: "Check configuration", head: "02 · Configuration verdict" },
   };
   function syncChrome() {
@@ -692,12 +694,15 @@ body.sheet-open{overflow:hidden}
     const head = document.getElementById("inspect-head");
     if (head) head.textContent = c.head;
   }
+  /* Verdict wording describes coverage of stated controls only. It must not
+     read as a judgment of the prompt: the length-matched study found no
+     evidence this number ranks prompts against each other. */
   function friendlyTier(overall) {
-    if (overall >= 90) return "Looks solid on paper";
-    if (overall >= 70) return "Decent coverage — still gaps";
-    if (overall >= 50) return "Weak hygiene — easy wins left";
-    if (overall > 0) return "Critical gaps — start here";
-    return "No hygiene signals found";
+    if (overall >= 90) return "Nearly every control stated in text";
+    if (overall >= 70) return "Most controls stated - gaps remain";
+    if (overall >= 50) return "About half the controls stated";
+    if (overall > 0) return "Few controls stated - start here";
+    return "None of the 8 controls stated in this text";
   }
   let reached = { prompt: true, inspect: false, export: false };
 
@@ -846,7 +851,7 @@ body.sheet-open{overflow:hidden}
     if (kind === "vendor") {
       return `We scored an AI vendor ${overall}/100 (${tierName}) with CrewScore — free structural diligence checklist. Not an audit. Try yours: ${location.origin}`;
     }
-    return `My AI agent scored ${overall}/100 on CrewScore (${tierName}). Structural hygiene only — not a red-team. Score yours free (no install): ${location.origin}`;
+    return `My agent prompt covers ${overall}/100 of CrewScore's governance checklist (${tierName}). That is coverage, not a quality ranking - CrewScore is a checklist, not a benchmark, and its own validation study says so. Check yours free (no install): ${location.origin}`;
   }
 
   /**
@@ -939,7 +944,7 @@ body.sheet-open{overflow:hidden}
         ? "score-ring is-critical"
         : "score-ring";
     let html = `<div class="score-hero">
-      <div class="score-kicker">${escapeHtml(opts.title || "Structural score")}</div>`;
+      <div class="score-kicker">${escapeHtml(opts.title || "Checklist coverage")}</div>`;
     if (opts.delta != null && opts.delta !== 0) {
       const before = opts.beforeOverall != null ? opts.beforeOverall : overall - opts.delta;
       html += `<div class="delta" id="hero-delta">${opts.delta > 0 ? "+" + opts.delta : opts.delta} after approved fix</div>
@@ -950,6 +955,19 @@ body.sheet-open{overflow:hidden}
       <div class="hard-tier">${escapeHtml(tier.n)}</div>
       <div class="stamp">Structural pre-gate · not a red-team · not certification</div>
     </div>`;
+
+    /* The disclosure has to sit with the number, not only in the hero: this
+       is the element people screenshot, and it is read with nothing else on
+       screen. Figures are from docs/validation.md. */
+    html += `<p class="trust" style="margin:.2rem 0 .7rem">
+      <strong>This number is coverage, not quality.</strong> It counts how many of
+      the 8 governance controls this text states. Across 1,368 real prompts,
+      length-matched, it did not separate production prompts from amateur ones
+      (Cliff's delta +0.061, p=0.36). A high number means the text is present -
+      not that the agent will obey it, and not that this prompt beats one scoring
+      lower. Read the missing rules below, not the total.
+      <a href="https://github.com/shmindmaster/crewscore/blob/main/docs/validation.md" target="_blank" rel="noopener">Validation study</a>.
+    </p>`;
 
     html += `<div class="dims" id="dim-bars">`;
     dims.forEach((d) => {
@@ -981,10 +999,12 @@ body.sheet-open{overflow:hidden}
     });
     html += `</div>
       <details class="how" id="how-score-details"${openHowNext || opts.openHow ? " open" : ""}>
-        <summary>How we score</summary>
+        <summary>How this number is computed</summary>
         <div class="formula">Ruleset <code>${escapeHtml(String(ruleset))}</code> · deterministic regex · open rule_ids<br>
         dim = min(100, round(15+85×matches/rules)); overall = mean of 8 dims<br>
-        CLI: <code>crewscore rules --json</code> · Templates can inflate scores.</div>
+        Coverage of stated controls only - never validated as a ranking of prompt quality.<br>
+        cost, compliance and audit ship with known-poor construct validity - read a 0 there with suspicion.<br>
+        CLI: <code>crewscore rules --json</code> · Templates can inflate this number.</div>
       </details>
     </div>`;
 
@@ -1099,7 +1119,7 @@ body.sheet-open{overflow:hidden}
     });
     showDeck("deck-inspect", true);
     setStage("inspect");
-    toast(delta > 0 ? `Applied — score +${delta}` : "Applied — little score change");
+    toast(delta > 0 ? `Applied - coverage +${delta}` : "Applied - little coverage change");
     document.getElementById("deck-inspect").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
@@ -1161,7 +1181,9 @@ body.sheet-open{overflow:hidden}
     const tier = E.scoreTier(overall);
     const soft = friendlyTier(overall);
     const st = shareText(overall, tier.n, "agent");
-    const ci = `# Gate agent prompt hygiene (structural only — not red-team)
+    const ci = `# Gate governance-checklist coverage (structural only - not a red-team)
+# This gates whether controls are stated in the prompt text. It is not a
+# quality bar and not a safety bar - see docs/validation.md.
 - uses: shmindmaster/crewscore@v1
   with:
     scan-path: "."
@@ -1171,9 +1193,9 @@ body.sheet-open{overflow:hidden}
     const promptCheck = lastAgent.fixed
       ? "Copy or download the improved prompt"
       : "Copy or download improved prompt (after fix)";
-    let html = `<p class="help">Take the result with you. Share text includes the honesty disclaimer.</p>
+    let html = `<p class="help">Take the result with you. Share text says it is coverage, not a ranking - the disclosure travels with the number.</p>
       <ul class="export-checklist" id="export-checklist" aria-label="Export completion checklist">
-        <li data-check="share">Share your score</li>
+        <li data-check="share">Share your coverage result</li>
         <li data-check="ci">Gate this prompt in CI</li>
         <li data-check="prompt">${promptCheck}</li>
       </ul>
@@ -1270,7 +1292,7 @@ body.sheet-open{overflow:hidden}
     if (isConfig(result)) {
       renderConfigVerdict(result);
     } else {
-      renderInspect(result, { title: "Structural score", openHow: openHowNext });
+      renderInspect(result, { title: "Checklist coverage", openHow: openHowNext });
     }
     showDeck("deck-inspect", true);
     document.getElementById("act-body").innerHTML = "";
@@ -1338,7 +1360,7 @@ body.sheet-open{overflow:hidden}
     ctx.fillStyle = "#6b7268";
     ctx.font = "500 15px IBM Plex Mono, monospace";
     ctx.fillText(tierName, 78, 368);
-    ctx.fillText("crewscore.ai · free · not a red-team", 78, 410);
+    ctx.fillText("crewscore.ai - coverage, not a ranking - not a red-team", 78, 410);
     c.toBlob((blob) => {
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
@@ -1476,7 +1498,7 @@ body.sheet-open{overflow:hidden}
         renderConfigVerdict(lastAgent.result);
       } else {
         renderInspect(lastAgent.result, {
-          title: lastAgent.fixed ? "After approved fix" : "Structural score",
+          title: lastAgent.fixed ? "After approved fix" : "Checklist coverage",
           delta: lastAgent.delta,
           openHow: true,
         });
@@ -1487,7 +1509,7 @@ body.sheet-open{overflow:hidden}
       return;
     }
     document.getElementById("agent-prompt").focus();
-    toast("Score a prompt first — formula appears under Score");
+    toast("Check a prompt first - the formula appears under Coverage");
   });
   document.getElementById("link-vendor").addEventListener("click", (e) => {
     e.preventDefault();
