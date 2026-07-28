@@ -997,6 +997,17 @@ def scan(path, as_json, threshold, max_smells, explain, summary, profile):
     forced_profile = None if profile == "auto" else profile.lower()
     scored = score_paths(files, profile=forced_profile)
 
+    if threshold is not None:
+        # Same warning key `test` emits, for the same reason: the Action passes
+        # --threshold unconditionally and the docs recommend scan-path, so the
+        # most-recommended CI setup loses its gate on every exempt file. CI
+        # reads --json and the sticky PR comment, not the console.
+        for item in scored:
+            if not item.get("governance_applicable", True):
+                item.setdefault("warnings", []).append(
+                    "threshold_ignored_for_config"
+                )
+
     # Prefer paths relative to scan root for display; keep abs for --explain.
     abs_by_rel: dict[str, Path] = {}
     for item in scored:

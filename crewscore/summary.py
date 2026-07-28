@@ -33,6 +33,32 @@ def _warning_lines(warnings: list[str]) -> list[str]:
     return lines
 
 
+def _scan_warning_lines(results: list[dict[str, Any]]) -> list[str]:
+    """Markdown for per-file warnings across a scan; empty when there are none.
+
+    Each row names its file, because in a scan the reader has to know *which*
+    artifact lost its gate. The plain-language note is printed once per warning
+    key rather than once per file — a monorepo with twenty AGENTS.md files
+    should not repeat the same paragraph twenty times.
+    """
+    rows = [
+        (str(r.get("path", "")), w)
+        for r in results
+        for w in (r.get("warnings") or [])
+    ]
+    if not rows:
+        return []
+    lines = ["", "### Warnings"]
+    noted: set[str] = set()
+    for path, w in rows:
+        lines.append(f"- ⚠️ `{path}` — `{w}`")
+        note = _WARNING_NOTES.get(w)
+        if note and w not in noted:
+            lines.append(f"  - {note}")
+            noted.add(w)
+    return lines
+
+
 def format_score_markdown(
     result: ScoreResult | dict[str, Any],
     *,
@@ -204,5 +230,6 @@ def format_scan_markdown(
         lines.append(
             f"| `{r.get('path', '')}` | {score} | `{r.get('tier', '')}` |"
         )
+    lines.extend(_scan_warning_lines(results))
     lines.extend(["", "---", "_Structural pre-gate only._", ""])
     return "\n".join(lines)

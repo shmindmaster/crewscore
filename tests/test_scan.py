@@ -256,6 +256,73 @@ def test_scan_threshold_exempts_coding_agent_config(tmp_path: Path):
     assert all(item["governance_applicable"] is False for item in payload)
 
 
+def test_scan_json_warns_when_threshold_ignored_for_config(tmp_path: Path):
+    """The exempt file must say the gate did nothing, in the payload CI reads.
+
+    The Action passes --threshold unconditionally (default "50") and the docs
+    recommend scan-path, so the most-recommended CI configuration silently
+    loses its gate. `test` already emits this key; `scan` must match.
+    """
+    _write(tmp_path / "AGENTS.md", BARE)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        main, ["scan", str(tmp_path), "--json", "--threshold", "90"]
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert all(
+        "threshold_ignored_for_config" in item["warnings"] for item in payload
+    )
+
+
+def test_scan_json_has_no_threshold_warning_without_threshold(tmp_path: Path):
+    _write(tmp_path / "AGENTS.md", BARE)
+
+    runner = CliRunner()
+    result = runner.invoke(main, ["scan", str(tmp_path), "--json"])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert all(item["warnings"] == [] for item in payload)
+
+
+def test_scan_json_governed_file_never_gets_the_threshold_warning(tmp_path: Path):
+    """--threshold is not a no-op on a system prompt, so it must not warn there."""
+    _write(tmp_path / "system-prompt.md", BARE)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        main, ["scan", str(tmp_path), "--json", "--threshold", "0"]
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert all(item["warnings"] == [] for item in payload)
+
+
+def test_scan_summary_markdown_reports_the_ignored_threshold(tmp_path: Path):
+    """The sticky PR comment is the surface the `test` fix existed to reach."""
+    _write(tmp_path / "AGENTS.md", BARE)
+    summary = tmp_path / "out.md"
+
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "scan",
+            str(tmp_path),
+            "--json",
+            "--threshold",
+            "90",
+            "--summary",
+            str(summary),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    text = summary.read_text(encoding="utf-8")
+    assert "threshold_ignored_for_config" in text
+    assert "--max-smells" in text
+
+
 def test_scan_max_smells_gates_config_files(tmp_path: Path):
     """--max-smells is the CI gate that does apply to coding-agent config."""
     bloated = "# Guide\n" + "\n".join(f"- rule {i}" for i in range(250))
