@@ -144,18 +144,20 @@ def test_discover_empty_repo(tmp_path: Path):
 
 
 def test_score_paths_returns_overall_and_tier(tmp_path: Path):
-    bare = _write(tmp_path / "AGENTS.md", BARE)
-    guarded = _write(tmp_path / "CLAUDE.md", GUARDED)
+    # Both fixtures must be system prompts: coding-agent config is judged on
+    # smells and carries no `overall`/`dimensions` at all.
+    bare = _write(tmp_path / "system-prompt.md", BARE)
+    guarded = _write(tmp_path / "prompts" / "hardened.md", GUARDED)
 
     results = score_paths([bare, guarded])
     assert len(results) == 2
     by_name = {Path(r["path"]).name: r for r in results}
-    assert "overall" in by_name["AGENTS.md"]
-    assert "tier" in by_name["AGENTS.md"]
-    assert "dimensions" in by_name["AGENTS.md"]
-    assert isinstance(by_name["AGENTS.md"]["overall"], int)
-    assert by_name["CLAUDE.md"]["overall"] > by_name["AGENTS.md"]["overall"]
-    assert len(by_name["AGENTS.md"]["dimensions"]) == 8
+    assert "overall" in by_name["system-prompt.md"]
+    assert "tier" in by_name["system-prompt.md"]
+    assert "dimensions" in by_name["system-prompt.md"]
+    assert isinstance(by_name["system-prompt.md"]["overall"], int)
+    assert by_name["hardened.md"]["overall"] > by_name["system-prompt.md"]["overall"]
+    assert len(by_name["system-prompt.md"]["dimensions"]) == 8
 
 
 def test_score_paths_items_carry_source_and_warnings(tmp_path: Path):
@@ -187,8 +189,10 @@ def test_score_paths_preserves_path(tmp_path: Path):
 
 
 def test_scan_cli_json(tmp_path: Path):
-    _write(tmp_path / "AGENTS.md", BARE)
-    _write(tmp_path / "CLAUDE.md", GUARDED)
+    # System prompts, so every row is judged on the governance score; the
+    # config shape is covered by test_scan_json_omits_governance_grade_for_config.
+    _write(tmp_path / "system-prompt.md", BARE)
+    _write(tmp_path / "prompts" / "hardened.md", GUARDED)
 
     runner = CliRunner()
     result = runner.invoke(main, ["scan", str(tmp_path), "--json"])
@@ -254,6 +258,35 @@ def test_scan_threshold_exempts_coding_agent_config(tmp_path: Path):
     payload = json.loads(result.output)
     assert all(item["profile"] == "coding_agent_config" for item in payload)
     assert all(item["governance_applicable"] is False for item in payload)
+
+
+def test_scan_json_omits_governance_grade_for_config(tmp_path: Path):
+    """A scan row for coding-agent config carries no number and no dimensions.
+
+    Same contract as `test --json` and as the JS engine: a governance grade on
+    a build-instructions file is a category error on every surface, and
+    `jq '.[] | select(.overall < 50)'` must not be able to find one.
+    """
+    _write(tmp_path / "AGENTS.md", BARE)
+    _write(tmp_path / "system-prompt.md", BARE)
+
+    runner = CliRunner()
+    result = runner.invoke(main, ["scan", str(tmp_path), "--json"])
+    assert result.exit_code == 0, result.output
+    by_name = {Path(i["path"]).name: i for i in json.loads(result.output)}
+
+    config = by_name["AGENTS.md"]
+    assert config["governance_applicable"] is False
+    assert "overall" not in config
+    assert "dimensions" not in config
+    assert config["tier"].startswith("CONFIG:")
+    assert config["profile"] == "coding_agent_config"
+    assert config["source"]
+    assert config["ruleset"]
+
+    governed = by_name["system-prompt.md"]
+    assert isinstance(governed["overall"], int)
+    assert len(governed["dimensions"]) == 8
 
 
 def test_scan_json_warns_when_threshold_ignored_for_config(tmp_path: Path):

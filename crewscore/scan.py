@@ -184,9 +184,7 @@ def score_paths(
         )
         item: dict[str, Any] = {
             "path": str(path),
-            "overall": result.overall,
             "tier": result.tier,
-            "dimensions": result.dimensions,
             "smells": result.smells,
             "profile": result.profile,
             "governance_applicable": result.governance_applicable,
@@ -197,6 +195,13 @@ def score_paths(
             "source": result.source,
             "warnings": result.warnings,
         }
+        if result.governance_applicable:
+            # Coding-agent config is judged on smells, so it publishes no
+            # number and no dimension breakdown — same contract as
+            # ScoreResult.to_dict() and the browser engine. Consumers must
+            # branch on `governance_applicable` before reading `overall`.
+            item["overall"] = result.overall
+            item["dimensions"] = result.dimensions
         # Include ruleset when workstream A has shipped it.
         ruleset = getattr(result, "ruleset", None)
         if ruleset is None:
