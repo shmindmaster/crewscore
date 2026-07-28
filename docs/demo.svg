@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="400" viewBox="0 0 720 400" role="img" aria-labelledby="title desc">
+  <title id="title">CrewScore demo</title>
+  <desc id="desc">Bare prompt scores low, then fix raises the structural score</desc>
+  <defs>
+    <style>
+      .bg { fill: #0f0f1a; }
+      .panel { fill: #1a1f2e; stroke: #334155; }
+      .t { font-family: Consolas, 'SF Mono', monospace; fill: #e2e8f0; }
+      .dim { font-size: 13px; fill: #94a3b8; }
+      .muted { font-size: 12px; fill: #64748b; }
+      .title { font-size: 16px; font-weight: 700; fill: #fff; }
+      .big { font-size: 42px; font-weight: 700; }
+      .red { fill: #ef4444; }
+      .green { fill: #10b981; }
+      .barbg { fill: #1e293b; }
+      .bar { fill: #ef4444; }
+      .bar2 { fill: #10b981; }
+      .phase1 { opacity: 1; }
+      .phase2 { opacity: 0; }
+    </style>
+    <!-- Loop: show before 0–3s, after 3–6s -->
+    <animate id="toAfter" />
+  </defs>
+  <rect class="bg" width="720" height="400" rx="12"/>
+  <rect class="panel" x="24" y="24" width="672" height="352" rx="12"/>
+
+  <!-- BEFORE -->
+  <g>
+    <animate attributeName="opacity" values="1;1;0;0;1" keyTimes="0;0.42;0.5;0.92;1" dur="8s" repeatCount="indefinite"/>
+    <text class="t title" x="48" y="64">crewscore test — structural scorecard</text>
+    <text class="t muted" x="48" y="88">prompt: “You are a helpful assistant…”</text>
+    <text class="t big red" x="48" y="150">0/100</text>
+    <text class="t red" x="48" y="178">NOT PRODUCTION READY</text>
+    <text class="t dim" x="48" y="220">Injection · Hallucination · Citation · Cost · HITL · Stop · Audit · Compliance</text>
+    <rect class="barbg" x="48" y="240" width="600" height="10" rx="4"/>
+    <rect class="bar" x="48" y="240" width="8" height="10" rx="4"/>
+    <text class="t muted" x="48" y="280">Structural hygiene only — not a red-team</text>
+    <text class="t muted" x="48" y="320">→ crewscore fix  ·  crewscore.ai  ·  pip install crewscore</text>
+  </g>
+
+  <!-- AFTER -->
+  <g>
+    <animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.42;0.5;0.92;1" dur="8s" repeatCount="indefinite"/>
+    <text class="t title" x="48" y="64">crewscore fix --apply — guardrails appended</text>
+    <text class="t muted" x="48" y="88">same prompt + production patterns</text>
+    <text class="t big green" x="48" y="150">46/100</text>
+    <text class="t green" x="48" y="178">NOT PRODUCTION READY (+46 after fix)</text>
+    <text class="t dim" x="48" y="220">Injection · Hallucination · Citation · Cost · HITL · Stop · Audit · Compliance</text>
+    <rect class="barbg" x="48" y="240" width="600" height="10" rx="4"/>
+    <rect class="bar2" x="48" y="240" width="276" height="10" rx="4"/>
+    <text class="t muted" x="48" y="280">Templates must be paired with runtime gates</text>
+    <text class="t muted" x="48" y="320">Score yours: https://crewscore.ai · pip install crewscore</text>
+  </g>
+</svg>

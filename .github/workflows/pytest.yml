@@ -1,0 +1,29 @@
+name: pytest
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Export web engine (freshness check via tests)
+        run: python scripts/export_web_engine.py
+      - name: Test
+        run: pytest -q
+      - name: Node parity (optional extra)
+        run: |
+          if command -v node >/dev/null; then
+            node -e "console.log('node', process.version)"
+          fi

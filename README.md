@@ -32,6 +32,11 @@ Score the **text** of your agent instructions. Fix gaps. Gate CI when scores dro
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11+-green.svg)](https://python.org)
 [![PyPI](https://img.shields.io/badge/PyPI-crewscore-blue.svg)](https://pypi.org/project/crewscore/)
+[![GitHub Action](https://img.shields.io/badge/Action-shmindmaster%2Fcrewscore%40v1-blue.svg)](https://github.com/shmindmaster/crewscore/blob/main/action.yml)
+
+<br/>
+
+![CrewScore demo: bare prompt 0/100 → after fix ~46/100](docs/demo.svg)
 
 </div>
 
@@ -145,6 +150,8 @@ Open `index.html` locally (or on GitHub Pages) for a zero-install structural sca
 ---
 
 ## How scoring works
+
+**One engine:** Python CLI and the [crewscore.ai](https://crewscore.ai) site use the same patterns. The browser loads `score-engine.js`, generated from Python via `scripts/export_web_engine.py` (CI fails if it drifts).
 
 Eight dimensions, equal weight, each 0–100:
 

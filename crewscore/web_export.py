@@ -1,0 +1,209 @@
+"""Export structural scorer data for the static web engine."""
+
+from __future__ import annotations
+
+import json
+
+from crewscore.scoring import DIMENSIONS
+from crewscore.scorers.structural_analysis import DIMENSION_SIGNAL_LABELS, SCORER_MAP
+from crewscore.vendor_scorecard import QUESTIONS
+
+JS_RUNTIME = r"""
+/** CrewScore browser scorer — generated from Python. Do not edit by hand. */
+(function (global) {
+  const ENGINE = __PAYLOAD__;
+
+  function scoreFromMatchCount(matches, total) {
+    if (!total || matches === 0) return 0;
+    const raw = matches / total;
+    return Math.min(100, Math.round(15 + raw * 85));
+  }
+
+  function safeRegExp(pattern) {
+    try {
+      return new RegExp(pattern, "i");
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function matchPatterns(promptLower, patterns) {
+    const hits = [];
+    for (const pattern of patterns) {
+      const re = safeRegExp(pattern);
+      if (!re) continue;
+      const m = promptLower.match(re);
+      if (m) {
+        let snip = m[0].replace(/\s+/g, " ");
+        if (snip.length > 120) snip = snip.slice(0, 119) + "…";
+        hits.push({ pattern, snippet: snip });
+      }
+    }
+    return hits;
+  }
+
+  function applyLengthBonus(scores, promptLower) {
+    const words = promptLower.trim() ? promptLower.trim().split(/\s+/).length : 0;
+    if (words > 500) {
+      const bonus = Math.min(10, Math.floor((words - 500) / 200));
+      for (const k of Object.keys(scores)) {
+        scores[k] = Math.min(100, scores[k] + bonus);
+      }
+    }
+    return scores;
+  }
+
+  function analyzeWithFindings(systemPrompt) {
+    const dimOrder = ENGINE.dimensions.map((d) => d.key);
+    if (!systemPrompt || !String(systemPrompt).trim()) {
+      const scores = {};
+      const findings = [];
+      for (const key of dimOrder) {
+        scores[key] = 0;
+        const signals = ENGINE.signal_labels[key] || [];
+        for (const s of signals.slice(0, 3)) {
+          findings.push({
+            dimension: key,
+            status: "missing",
+            pattern_or_reason: s.label,
+            snippet: null,
+          });
+        }
+      }
+      return { scores, findings, overall: 0 };
+    }
+
+    const promptLower = String(systemPrompt).toLowerCase();
+    const scores = {};
+    const findings = [];
+
+    for (const key of dimOrder) {
+      const patterns = ENGINE.patterns[key] || [];
+      const hits = matchPatterns(promptLower, patterns);
+      scores[key] = scoreFromMatchCount(hits.length, patterns.length);
+
+      for (const h of hits.slice(0, 3)) {
+        findings.push({
+          dimension: key,
+          status: "matched",
+          pattern_or_reason: h.pattern,
+          snippet: h.snippet,
+        });
+      }
+
+      let missingCount = 0;
+      for (const s of ENGINE.signal_labels[key] || []) {
+        if (missingCount >= 3) break;
+        const re = safeRegExp(s.pattern);
+        const matched = re ? re.test(promptLower) : false;
+        if (matched) continue;
+        findings.push({
+          dimension: key,
+          status: "missing",
+          pattern_or_reason: s.label,
+          snippet: null,
+        });
+        missingCount += 1;
+      }
+      if (!hits.length && missingCount === 0) {
+        findings.push({
+          dimension: key,
+          status: "missing",
+          pattern_or_reason: "No " + key + " guardrail signals detected",
+          snippet: null,
+        });
+      }
+    }
+
+    applyLengthBonus(scores, promptLower);
+    const vals = dimOrder.map((k) => scores[k]);
+    const overall = vals.length
+      ? Math.floor(vals.reduce((a, b) => a + b, 0) / vals.length)
+      : 0;
+    return { scores, findings, overall };
+  }
+
+  function analyze(systemPrompt) {
+    return analyzeWithFindings(systemPrompt).scores;
+  }
+
+  function scoreTier(overall) {
+    if (overall >= 90) return { n: "PRODUCTION READY", c: "score-green" };
+    if (overall >= 70) return { n: "SHIP WITH MONITORING", c: "score-yellow" };
+    if (overall >= 50) return { n: "NEEDS WORK", c: "score-orange" };
+    return { n: "NOT PRODUCTION READY", c: "score-red" };
+  }
+
+  function vendorTier(overall) {
+    if (overall >= 80) return { n: "TRUSTED", c: "score-green" };
+    if (overall >= 50) return { n: "CAUTION", c: "score-yellow" };
+    if (overall >= 30) return { n: "HIGH RISK", c: "score-orange" };
+    return { n: "RED FLAG", c: "score-red" };
+  }
+
+  /** answers: array of 'yes'|'no'|'dk' — same points as CLI (y=10, dk=3, no=0). */
+  function scoreVendor(answers) {
+    const SCORE = { yes: 10, dk: 3, no: 0 };
+    let total = 0;
+    const redFlags = [];
+    const critical = new Set(ENGINE.vendor_critical_keys);
+    (answers || []).forEach((a, i) => {
+      const norm = (a || "no").toLowerCase();
+      const pts = SCORE[norm] !== undefined ? SCORE[norm] : 0;
+      total += pts;
+      const q = ENGINE.vendor_questions[i] || "";
+      const key = ENGINE.vendor_keys[i] || "";
+      if (norm === "no" || (norm === "dk" && critical.has(key))) {
+        redFlags.push(q.replace(/\?$/, ""));
+      }
+    });
+    return { score: total, tier: vendorTier(total), redFlags };
+  }
+
+  global.CrewScoreEngine = {
+    ENGINE,
+    analyze,
+    analyzeWithFindings,
+    scoreTier,
+    vendorTier,
+    scoreVendor,
+    dimensions: ENGINE.dimensions,
+    vendorQuestions: ENGINE.vendor_questions,
+  };
+})(typeof window !== "undefined" ? window : globalThis);
+"""
+
+
+def build_payload() -> dict:
+    dim_order = [key for _, key in DIMENSIONS]
+    return {
+        "version": "0.2.0",
+        "dimensions": [{"key": key, "label": label} for label, key in DIMENSIONS],
+        "patterns": {key: list(SCORER_MAP[key]) for key in dim_order},
+        "signal_labels": {
+            key: [
+                {"pattern": p, "label": lab}
+                for p, lab in DIMENSION_SIGNAL_LABELS.get(key, [])
+            ]
+            for key in dim_order
+        },
+        "vendor_questions": [q for q, _ in QUESTIONS],
+        "vendor_keys": [k for _, k in QUESTIONS],
+        "vendor_critical_keys": [
+            "certification",
+            "audit",
+            "human_override",
+            "security_audit",
+            "incident",
+        ],
+    }
+
+
+def render_js(payload: dict | None = None) -> str:
+    payload = payload or build_payload()
+    blob = json.dumps(payload, indent=2, ensure_ascii=False)
+    header = (
+        "/* eslint-disable */\n"
+        "/* Generated by scripts/export_web_engine.py — do not edit by hand. */\n"
+    )
+    return header + JS_RUNTIME.replace("__PAYLOAD__", blob)
