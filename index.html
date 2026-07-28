@@ -3,148 +3,189 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="CrewScore — offline structural production-readiness scorecard for AI agent system prompts. Score in seconds. No API key.">
-<title>CrewScore — Score your AI agent prompts</title>
+<meta name="description" content="CrewScore — free structural score for AI agent prompts and AI vendors. No signup. No install. Paste and score in seconds.">
+<meta property="og:title" content="CrewScore — free AI agent prompt scorecard">
+<meta property="og:description" content="Paste a system prompt. Get a score. Fix gaps. Share. No signup, no API key.">
+<meta property="og:url" content="https://crewscore.ai">
+<title>CrewScore — Free AI agent prompt score (no install)</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;background:#0f0f1a;color:#e2e8f0;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
-h1{font-size:2rem;text-align:center;margin-bottom:0.35rem;color:#fff}
-.subtitle{text-align:center;color:#94a3b8;margin-bottom:0.75rem;font-size:0.9rem;max-width:36rem;margin-left:auto;margin-right:auto;line-height:1.45}
-.install{text-align:center;margin-bottom:1.5rem;font-size:0.8rem;color:#64748b}
-.install code{background:#1e293b;padding:0.2rem 0.5rem;border-radius:4px;color:#93c5fd}
-.container{max-width:720px;width:100%}
-.tabs{display:flex;gap:0;margin-bottom:1.5rem}
-.tab{flex:1;padding:0.75rem;text-align:center;cursor:pointer;border:1px solid #334155;background:#1e293b;color:#94a3b8;font-size:0.85rem;transition:all 0.2s}
-.tab:first-child{border-radius:8px 0 0 8px}
-.tab:last-child{border-radius:0 8px 8px 0}
-.tab.active{background:#3b82f6;color:#fff;border-color:#3b82f6}
-.tab:focus-visible{outline:2px solid #60a5fa;outline-offset:2px}
-.panel{display:none;background:#1a1f2e;border:1px solid #334155;border-radius:12px;padding:1.5rem}
+body{font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#0b0f1a;color:#e2e8f0;min-height:100vh;padding:1.25rem 1rem 3rem}
+.wrap{max-width:760px;margin:0 auto}
+.badge-free{display:inline-block;font-size:0.7rem;letter-spacing:0.04em;text-transform:uppercase;color:#86efac;background:#052e1a;border:1px solid #166534;padding:0.25rem 0.55rem;border-radius:999px;margin-bottom:0.75rem}
+h1{font-size:clamp(1.75rem,4vw,2.35rem);line-height:1.15;color:#fff;margin-bottom:0.5rem;font-weight:750}
+.sub{color:#94a3b8;font-size:1.05rem;line-height:1.5;margin-bottom:0.75rem;max-width:38rem}
+.zero{display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1.25rem}
+.pill{font-size:0.78rem;color:#cbd5e1;background:#111827;border:1px solid #1f2937;padding:0.35rem 0.65rem;border-radius:999px}
+.tabs{display:flex;gap:0;margin-bottom:1rem}
+.tab{flex:1;padding:0.85rem;text-align:center;cursor:pointer;border:1px solid #334155;background:#111827;color:#94a3b8;font-size:0.9rem;font-weight:600}
+.tab:first-child{border-radius:12px 0 0 12px}
+.tab:last-child{border-radius:0 12px 12px 0}
+.tab.active{background:#2563eb;color:#fff;border-color:#2563eb}
+.panel{display:none;background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:1.15rem}
 .panel.active{display:block}
-label{display:block;font-size:0.85rem;color:#94a3b8;margin-bottom:0.5rem}
-.hint{font-size:0.75rem;color:#64748b;margin-bottom:0.75rem;line-height:1.4}
-textarea{width:100%;height:140px;background:#0f0f1a;border:1px solid #334155;border-radius:8px;color:#e2e8f0;padding:0.75rem;font-family:inherit;font-size:0.85rem;resize:vertical}
-textarea:focus{outline:none;border-color:#3b82f6}
-.btn{width:100%;padding:0.75rem;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-size:0.9rem;cursor:pointer;font-family:inherit;margin-top:1rem;transition:background 0.2s}
-.btn:hover{background:#2563eb}
+label{display:block;font-size:0.85rem;color:#94a3b8;margin-bottom:0.4rem;font-weight:600}
+.hint{font-size:0.78rem;color:#64748b;margin-bottom:0.65rem;line-height:1.45}
+.chips{display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:0.75rem}
+.chip{border:1px solid #334155;background:#111827;color:#e2e8f0;border-radius:999px;padding:0.4rem 0.7rem;font-size:0.75rem;cursor:pointer}
+.chip:hover,.chip:focus{border-color:#3b82f6;color:#93c5fd;outline:none}
+.row{display:flex;gap:0.5rem;margin-bottom:0.65rem;flex-wrap:wrap}
+input[type=url],input[type=text],.vendor-name-input{width:100%;padding:0.7rem 0.8rem;background:#020617;border:1px solid #334155;border-radius:10px;color:#e2e8f0;font-size:0.9rem}
+input:focus,textarea:focus{outline:none;border-color:#3b82f6}
+textarea{width:100%;min-height:150px;background:#020617;border:1px solid #334155;border-radius:10px;color:#e2e8f0;padding:0.85rem;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:0.85rem;resize:vertical}
+.btn{width:100%;padding:0.9rem;background:#2563eb;color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;margin-top:0.65rem}
+.btn:hover{background:#1d4ed8}
 .btn:disabled{opacity:0.5;cursor:not-allowed}
-.btn-secondary{background:#1e293b;border:1px solid #334155;margin-top:0.5rem}
-.btn-secondary:hover{border-color:#3b82f6;color:#93c5fd;background:#1e293b}
-.question{margin-bottom:1rem;padding:0.75rem;background:#0f0f1a;border-radius:8px;border:1px solid #1e293b}
-.question p{font-size:0.8rem;margin-bottom:0.5rem;color:#cbd5e1}
-.answers{display:flex;gap:0.5rem}
-.answers button{flex:1;padding:0.4rem;border:1px solid #334155;background:#1e293b;color:#94a3b8;border-radius:6px;cursor:pointer;font-size:0.75rem;font-family:inherit;transition:all 0.2s}
-.answers button:hover{border-color:#3b82f6;color:#3b82f6}
-.answers button.selected-yes{background:#065f46;border-color:#10b981;color:#10b981}
-.answers button.selected-no{background:#7f1d1d;border-color:#ef4444;color:#ef4444}
-.answers button.selected-dk{background:#78350f;border-color:#f59e0b;color:#f59e0b}
-.scorecard{display:none;margin-top:1.5rem;background:#0f0f1a;border:1px solid #334155;border-radius:12px;padding:1.5rem;text-align:center}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.5rem}
+.btn-sec{background:#111827;border:1px solid #334155;color:#e2e8f0;font-weight:600;font-size:0.9rem;padding:0.75rem;border-radius:12px;cursor:pointer}
+.btn-sec:hover{border-color:#3b82f6;color:#93c5fd}
+.btn-green{background:#059669}
+.btn-green:hover{background:#047857}
+.question{margin-bottom:0.75rem;padding:0.75rem;background:#020617;border-radius:10px;border:1px solid #1e293b}
+.question p{font-size:0.82rem;margin-bottom:0.45rem;color:#cbd5e1}
+.answers{display:flex;gap:0.4rem}
+.answers button{flex:1;padding:0.45rem;border:1px solid #334155;background:#111827;color:#94a3b8;border-radius:8px;cursor:pointer;font-size:0.75rem}
+.answers button.selected-yes{background:#064e3b;border-color:#10b981;color:#6ee7b7}
+.answers button.selected-no{background:#7f1d1d;border-color:#ef4444;color:#fca5a5}
+.answers button.selected-dk{background:#78350f;border-color:#f59e0b;color:#fcd34d}
+.scorecard{display:none;margin-top:1rem;background:#020617;border:1px solid #1e293b;border-radius:14px;padding:1.15rem;text-align:center}
 .scorecard.show{display:block}
-.score-big{font-size:3rem;font-weight:bold;margin:0.5rem 0}
+.delta{font-size:0.95rem;font-weight:700;margin:0.25rem 0 0.5rem}
+.score-big{font-size:3.1rem;font-weight:800;margin:0.25rem 0}
 .score-red{color:#ef4444}.score-orange{color:#f59e0b}.score-yellow{color:#eab308}.score-green{color:#10b981}
-.tier{font-size:1.1rem;margin-bottom:0.5rem;font-weight:bold}
-.disclaimer{font-size:0.7rem;color:#64748b;margin-bottom:1rem;line-height:1.4}
-.dim-row{display:flex;align-items:center;gap:0.5rem;margin:0.4rem 0;font-size:0.75rem;text-align:left}
+.tier{font-size:1.05rem;font-weight:700;margin-bottom:0.35rem}
+.disclaimer{font-size:0.72rem;color:#64748b;margin-bottom:0.85rem;line-height:1.4}
+.dim-row{display:flex;align-items:center;gap:0.5rem;margin:0.35rem 0;font-size:0.75rem;text-align:left}
 .dim-bar{flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden}
-.dim-fill{height:100%;border-radius:4px;transition:width 0.5s}
-.dim-label{width:180px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dim-score{width:50px;text-align:right;color:#64748b}
-.explain{margin-top:1rem;text-align:left;font-size:0.72rem;color:#94a3b8;border-top:1px solid #1e293b;padding-top:0.75rem}
-.explain h4{color:#cbd5e1;margin:0.6rem 0 0.25rem;font-size:0.75rem}
-.explain ul{margin:0 0 0.4rem 1.1rem}
-.explain .matched{color:#10b981}
-.explain .missing{color:#f87171}
-.share-row{display:flex;gap:0.75rem;margin-top:1.5rem;justify-content:center;flex-wrap:wrap}
-.share-btn{padding:0.5rem 1rem;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;cursor:pointer;font-size:0.8rem;font-family:inherit;transition:all 0.2s}
-.share-btn:hover{border-color:#3b82f6;color:#3b82f6}
-.share-btn.linkedin:hover{border-color:#0a66c2;color:#0a66c2}
-.share-btn.x:hover{border-color:#000;color:#fff;background:#000}
-.dev-note{margin-top:2rem;text-align:center;font-size:0.75rem;color:#475569;line-height:1.55}
-.dev-note a{color:#3b82f6;text-decoration:none}
-.flags{margin-top:0.75rem;font-size:0.8rem;text-align:left;color:#ef4444}
-.vendor-name-input{width:100%;padding:0.6rem;background:#0f0f1a;border:1px solid #334155;border-radius:8px;color:#e2e8f0;font-family:inherit;font-size:0.85rem;margin-bottom:1rem}
-.vendor-name-input:focus{outline:none;border-color:#3b82f6}
-.error{color:#f87171;font-size:0.8rem;margin-top:0.75rem;display:none}
+.dim-fill{height:100%;border-radius:4px}
+.dim-label{width:min(180px,38vw);color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dim-score{width:42px;text-align:right;color:#64748b}
+.explain{margin-top:0.85rem;text-align:left;font-size:0.72rem;color:#94a3b8;border-top:1px solid #1e293b;padding-top:0.65rem}
+.explain h4{color:#cbd5e1;margin:0.5rem 0 0.2rem;font-size:0.75rem}
+.matched{color:#34d399}.missing{color:#f87171}
+.flags{margin-top:0.65rem;font-size:0.8rem;text-align:left;color:#f87171}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:1rem}
+.share-row{display:flex;gap:0.5rem;margin-top:0.75rem;justify-content:center;flex-wrap:wrap}
+.share-btn{padding:0.55rem 0.85rem;border-radius:10px;border:1px solid #334155;background:#111827;color:#e2e8f0;cursor:pointer;font-size:0.8rem;font-weight:600}
+.share-btn:hover{border-color:#3b82f6}
+.fixed-box{margin-top:0.85rem;text-align:left}
+.fixed-box textarea{min-height:120px}
+.foot{margin-top:1.5rem;text-align:center;font-size:0.78rem;color:#64748b;line-height:1.55}
+.foot a{color:#60a5fa;text-decoration:none}
+.foot code{background:#111827;padding:0.1rem 0.35rem;border-radius:4px;color:#93c5fd;font-size:0.75rem}
+.error{color:#f87171;font-size:0.82rem;margin-top:0.55rem;display:none}
 .error.show{display:block}
-.toast{position:fixed;bottom:1.25rem;left:50%;transform:translateX(-50%);background:#1e293b;border:1px solid #3b82f6;color:#e2e8f0;padding:0.6rem 1rem;border-radius:8px;font-size:0.8rem;opacity:0;pointer-events:none;transition:opacity 0.2s;z-index:50}
+.toast{position:fixed;bottom:1.1rem;left:50%;transform:translateX(-50%);background:#111827;border:1px solid #3b82f6;color:#e2e8f0;padding:0.65rem 1rem;border-radius:10px;font-size:0.85rem;opacity:0;pointer-events:none;transition:opacity .2s;z-index:50;max-width:90vw}
 .toast.show{opacity:1}
-@media (max-width:560px){
-  .dim-label{width:120px}
-  h1{font-size:1.5rem}
-}
+.social-proof{font-size:0.8rem;color:#64748b;margin-bottom:1rem}
+@media(max-width:560px){.btn-row,.actions{grid-template-columns:1fr}.score-big{font-size:2.5rem}}
 </style>
 </head>
 <body>
-<div class="container">
-<h1>CrewScore</h1>
-<p class="subtitle">Offline structural scorecard for AI agent system prompts. Score in seconds. Fix gaps. Gate CI. Not a red-team or certification.</p>
-<p class="install">Developers: <code>pip install crewscore</code> · <a href="https://github.com/shmindmaster/crewscore" style="color:#3b82f6">GitHub</a></p>
+<div class="wrap">
+  <div class="badge-free">Free · No signup · No install · No API key</div>
+  <h1>Is your AI agent actually ready — or just a demo that talks well?</h1>
+  <p class="sub">Paste a system prompt. Get a structural production score in seconds. Fix gaps in one click. Works for builders <em>and</em> buyers checking AI vendors.</p>
+  <div class="zero">
+    <span class="pill">⏱ Under 30 seconds</span>
+    <span class="pill">🔒 Stays in your browser</span>
+    <span class="pill">📤 Share a number people understand</span>
+    <span class="pill">🛠 Fix without installing anything</span>
+  </div>
+  <p class="social-proof">Structural hygiene only — not a red-team or certification. Same engine as the free CLI for teams that want CI later.</p>
 
-<div class="tabs" role="tablist">
-  <div class="tab active" role="tab" tabindex="0" aria-selected="true" data-tab="agent" id="tab-agent">Score Your AI Agent</div>
-  <div class="tab" role="tab" tabindex="0" aria-selected="false" data-tab="vendor" id="tab-vendor">Score Your AI Vendor</div>
-</div>
+  <div class="tabs" role="tablist">
+    <div class="tab active" role="tab" data-tab="agent" tabindex="0">I have an AI agent</div>
+    <div class="tab" role="tab" data-tab="vendor" tabindex="0">I’m buying AI software</div>
+  </div>
 
-<div class="panel active" id="panel-agent" role="tabpanel">
-  <label for="agent-prompt">Paste your agent’s system prompt</label>
-  <p class="hint">Same 8-dimension structural scanner as the CLI (<code>score-engine.js</code> is generated from Python). Structural text signals only — not proof the model will obey.</p>
-  <textarea id="agent-prompt" placeholder="You are a helpful assistant that..."></textarea>
-  <button class="btn" type="button" id="btn-score-agent">Score My Agent</button>
-  <button class="btn btn-secondary" type="button" id="btn-sample">Try sample bare prompt</button>
-  <p class="error" id="agent-error" role="alert"></p>
-  <div class="scorecard" id="agent-scorecard" aria-live="polite"></div>
-</div>
+  <div class="panel active" id="panel-agent">
+    <label>Start with a common template (or paste your own)</label>
+    <div class="chips" id="template-chips"></div>
+    <label for="agent-prompt">System prompt / agent instructions</label>
+    <p class="hint">From ChatGPT custom instructions, Claude projects, Cursor rules, LangChain, CrewAI, internal agents — anything that tells the model who it is.</p>
+    <textarea id="agent-prompt" placeholder="Paste your system prompt here…"></textarea>
+    <div class="row" style="margin-top:0.65rem">
+      <input type="url" id="prompt-url" placeholder="Or paste a public GitHub raw / gist URL to a prompt file" style="flex:1;min-width:200px" />
+      <button class="btn-sec" type="button" id="btn-load-url" style="width:auto;padding:0.7rem 0.9rem">Load URL</button>
+    </div>
+    <button class="btn" type="button" id="btn-score-agent">Score my agent — free</button>
+    <div class="btn-row">
+      <button class="btn-sec" type="button" id="btn-fix-agent">Fix gaps (no install)</button>
+      <button class="btn-sec" type="button" id="btn-download-card">Download score card</button>
+    </div>
+    <p class="error" id="agent-error" role="alert"></p>
+    <div class="scorecard" id="agent-scorecard" aria-live="polite"></div>
+  </div>
 
-<div class="panel" id="panel-vendor" role="tabpanel">
-  <label for="vendor-name">Vendor / product name</label>
-  <input class="vendor-name-input" id="vendor-name" placeholder="e.g., Acme AI" />
-  <p class="hint">10 diligence questions. Self-attested answers — not an independent audit. Same scoring math as <code>crewscore assess-vendor</code>.</p>
-  <div id="vendor-questions"></div>
-  <button class="btn" type="button" id="btn-score-vendor">Get Vendor Scorecard</button>
-  <p class="error" id="vendor-error" role="alert"></p>
-  <div class="scorecard" id="vendor-scorecard" aria-live="polite"></div>
-</div>
+  <div class="panel" id="panel-vendor">
+    <label for="vendor-name">Which AI product are you evaluating?</label>
+    <input class="vendor-name-input" id="vendor-name" placeholder="e.g. Acme AI Copilot" />
+    <p class="hint">10 diligence questions. Self-attested — not a formal audit. Get a score + red flags you can paste into LinkedIn or a buying thread.</p>
+    <div id="vendor-questions"></div>
+    <button class="btn" type="button" id="btn-score-vendor">Get vendor score — free</button>
+    <p class="error" id="vendor-error" role="alert"></p>
+    <div class="scorecard" id="vendor-scorecard" aria-live="polite"></div>
+  </div>
 
-<div class="dev-note">
-  Same structural engine as CLI · offline · no signup · no API key<br>
-  <a href="https://github.com/shmindmaster/crewscore">github.com/shmindmaster/crewscore</a>
-  · structural scan only (not live adversarial testing)<br>
-  Install: <code style="color:#93c5fd">pip install crewscore</code>
-  · <code style="color:#93c5fd">crewscore fix</code> appends guardrail templates (pair with runtime gates)
-</div>
+  <div class="foot">
+    Want this in CI? <code>pip install crewscore</code> ·
+    <code>uses: shmindmaster/crewscore@v1</code><br>
+    <a href="https://github.com/shmindmaster/crewscore">Open source on GitHub</a>
+    · structural scan only · templates must be paired with runtime gates<br>
+    Same scoring rules in the browser and the CLI.
+  </div>
 </div>
 <div class="toast" id="toast" role="status"></div>
+<canvas id="share-canvas" width="800" height="420" style="display:none"></canvas>
 
 <script src="score-engine.js"></script>
 <script>
 (function () {
   const E = window.CrewScoreEngine;
   if (!E) {
-    document.body.insertAdjacentHTML(
-      "afterbegin",
-      '<p style="color:#f87171;text-align:center;padding:1rem">score-engine.js failed to load. Refresh or open via GitHub Pages.</p>'
-    );
+    document.body.insertAdjacentHTML("afterbegin",
+      '<p style="color:#f87171;text-align:center;padding:1rem">Could not load scoring engine. Refresh the page.</p>');
     return;
   }
 
+  const TEMPLATES = [
+    {
+      id: "bare",
+      label: "Weak demo prompt",
+      text: "You are a helpful assistant that answers customer questions.",
+    },
+    {
+      id: "support",
+      label: "Customer support agent",
+      text: "You are a customer support agent for a SaaS product. Answer questions politely and help users resolve issues. Be friendly and efficient.",
+    },
+    {
+      id: "coding",
+      label: "Coding agent",
+      text: "You are a senior software engineer agent. Write code, explain tradeoffs, and implement features in the user's repository when asked.",
+    },
+    {
+      id: "rag",
+      label: "Docs / RAG agent",
+      text: "You are a documentation assistant. Answer using the provided knowledge base snippets. Prefer short, actionable answers for internal employees.",
+    },
+  ];
+
   const vendorAnswers = new Array(E.vendorQuestions.length).fill(null);
+  let lastAgent = null; // {prompt, result, fixed?}
 
   function toast(msg) {
     const el = document.getElementById("toast");
     el.textContent = msg;
     el.classList.add("show");
-    setTimeout(() => el.classList.remove("show"), 2200);
+    setTimeout(() => el.classList.remove("show"), 2400);
   }
-
   function escapeHtml(s) {
     return String(s)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
-
   function bar(score) {
     const pct = Math.max(0, Math.min(100, score));
     const color = pct >= 70 ? "#10b981" : pct >= 50 ? "#eab308" : pct >= 30 ? "#f59e0b" : "#ef4444";
@@ -155,12 +196,10 @@ textarea:focus{outline:none;border-color:#3b82f6}
     document.querySelectorAll(".tab").forEach((el) => {
       const on = el.getAttribute("data-tab") === t;
       el.classList.toggle("active", on);
-      el.setAttribute("aria-selected", on ? "true" : "false");
     });
     document.getElementById("panel-agent").classList.toggle("active", t === "agent");
     document.getElementById("panel-vendor").classList.toggle("active", t === "vendor");
   }
-
   document.querySelectorAll(".tab").forEach((el) => {
     el.addEventListener("click", () => switchTab(el.getAttribute("data-tab")));
     el.addEventListener("keydown", (ev) => {
@@ -171,6 +210,21 @@ textarea:focus{outline:none;border-color:#3b82f6}
     });
   });
 
+  // Templates
+  const chips = document.getElementById("template-chips");
+  TEMPLATES.forEach((t) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip";
+    b.textContent = t.label;
+    b.addEventListener("click", () => {
+      document.getElementById("agent-prompt").value = t.text;
+      document.getElementById("agent-error").classList.remove("show");
+      scoreAgent();
+    });
+    chips.appendChild(b);
+  });
+
   function buildVendorQ() {
     const c = document.getElementById("vendor-questions");
     c.innerHTML = "";
@@ -179,9 +233,8 @@ textarea:focus{outline:none;border-color:#3b82f6}
       div.className = "question";
       div.innerHTML = `<p>${i + 1}. ${escapeHtml(q)}</p><div class="answers" data-i="${i}">
         <button type="button" data-v="yes">Yes</button>
-        <button type="button" data-v="dk">Don't Know</button>
-        <button type="button" data-v="no">No</button>
-      </div>`;
+        <button type="button" data-v="dk">Don't know</button>
+        <button type="button" data-v="no">No</button></div>`;
       c.appendChild(div);
     });
     c.querySelectorAll(".answers button").forEach((btn) => {
@@ -190,9 +243,8 @@ textarea:focus{outline:none;border-color:#3b82f6}
         const i = Number(wrap.getAttribute("data-i"));
         const v = btn.getAttribute("data-v");
         vendorAnswers[i] = v;
-        wrap.querySelectorAll("button").forEach((b) => (b.className = ""));
-        btn.className =
-          v === "yes" ? "selected-yes" : v === "no" ? "selected-no" : "selected-dk";
+        wrap.querySelectorAll("button").forEach((x) => (x.className = ""));
+        btn.className = v === "yes" ? "selected-yes" : v === "no" ? "selected-no" : "selected-dk";
       });
     });
   }
@@ -200,168 +252,291 @@ textarea:focus{outline:none;border-color:#3b82f6}
   function explainHtml(findings, dimKey) {
     const matched = findings.filter((f) => f.dimension === dimKey && f.status === "matched");
     const missing = findings.filter((f) => f.dimension === dimKey && f.status === "missing");
-    if (!matched.length && !missing.length) return "";
     let h = "";
-    if (matched.length) {
-      h += `<div class="matched">Matched: ${matched
-        .map((f) => escapeHtml(f.snippet || f.pattern_or_reason))
-        .join(" · ")}</div>`;
-    }
-    if (missing.length) {
-      h += `<div class="missing">Missing: ${missing
-        .map((f) => escapeHtml(f.pattern_or_reason))
-        .join(" · ")}</div>`;
-    }
+    if (matched.length)
+      h += `<div class="matched">Matched: ${matched.map((f) => escapeHtml(f.snippet || f.pattern_or_reason)).join(" · ")}</div>`;
+    if (missing.length)
+      h += `<div class="missing">Missing: ${missing.map((f) => escapeHtml(f.pattern_or_reason)).join(" · ")}</div>`;
     return h;
   }
 
-  function renderAgentScorecard(prompt) {
-    const { scores, findings, overall } = E.analyzeWithFindings(prompt);
+  function shareText(overall, tierName, kind) {
+    if (kind === "vendor") {
+      return `We scored an AI vendor ${overall}/100 (${tierName}) with CrewScore — free structural diligence checklist. Not an audit. Try yours: ${location.origin}`;
+    }
+    return `My AI agent scored ${overall}/100 on CrewScore (${tierName}). Structural hygiene only — not a red-team. Score yours free (no install): ${location.origin}`;
+  }
+
+  function renderAgent(result, opts) {
+    opts = opts || {};
+    const { scores, findings, overall } = result;
     const tier = E.scoreTier(overall);
     const dims = E.dimensions;
     const weak = dims.filter((d) => (scores[d.key] || 0) < 50);
-
-    let html = `<h3>Agent structural score</h3>
-      <div class="score-big ${tier.c}">${overall}/100</div>
+    let html = `<h3 style="font-size:0.95rem;color:#94a3b8;font-weight:600">${escapeHtml(opts.title || "Your agent score")}</h3>`;
+    if (opts.delta != null) {
+      const d = opts.delta;
+      html += `<div class="delta ${d > 0 ? "score-green" : ""}">${d > 0 ? "+" + d : d} points after fix</div>`;
+    }
+    html += `<div class="score-big ${tier.c}">${overall}/100</div>
       <div class="tier ${tier.c}">${escapeHtml(tier.n)}</div>
-      <p class="disclaimer">Structural scan only — not runtime proof, not a security certification.</p>`;
-
+      <p class="disclaimer">Structural text scan only — not proof the model will obey, not a security certification.</p>`;
     dims.forEach((d) => {
       const s = scores[d.key] || 0;
-      html += `<div class="dim-row"><span class="dim-label" title="${escapeHtml(d.label)}">${escapeHtml(
-        d.label
-      )}</span>${bar(s)}<span class="dim-score">${s}</span></div>`;
+      html += `<div class="dim-row"><span class="dim-label" title="${escapeHtml(d.label)}">${escapeHtml(d.label)}</span>${bar(s)}<span class="dim-score">${s}</span></div>`;
     });
-
-    if (weak.length) {
-      html += `<div class="flags">${weak.length} weak dimension(s): ${weak
-        .map((d) => escapeHtml(d.label))
-        .join(", ")}</div>`;
-    }
-
-    html += `<div class="explain"><h4>Why (matched / missing signals)</h4>`;
+    if (weak.length)
+      html += `<div class="flags">${weak.length} weak area(s): ${weak.map((d) => escapeHtml(d.label)).join(", ")}</div>`;
+    html += `<div class="explain"><h4>Why this score</h4>`;
     dims.forEach((d) => {
       const body = explainHtml(findings, d.key);
       if (body) html += `<h4>${escapeHtml(d.label)}</h4>${body}`;
     });
     html += `</div>`;
-
-    const share = `My agent scored ${overall}/100 on CrewScore (${tier.n}). Structural hygiene only — not a red-team. Score yours: ${location.origin}/ · pip install crewscore`;
-    html += `<div class="share-row">
-      <button type="button" class="share-btn linkedin" data-share="li">Share LinkedIn</button>
-      <button type="button" class="share-btn x" data-share="x">Share on X</button>
-      <button type="button" class="share-btn" data-share="copy">Copy score</button>
+    html += `<div class="actions">
+      <button type="button" class="btn-sec btn-green" id="inline-fix">Fix gaps free</button>
+      <button type="button" class="btn-sec" id="inline-download">Download improved prompt</button>
     </div>`;
-
+    html += `<div class="share-row">
+      <button type="button" class="share-btn" data-s="copy">Copy share text</button>
+      <button type="button" class="share-btn" data-s="x">Post on X</button>
+      <button type="button" class="share-btn" data-s="li">LinkedIn</button>
+      <button type="button" class="share-btn" data-s="img">Save score image</button>
+    </div>`;
+    if (opts.enhanced) {
+      html += `<div class="fixed-box"><label>Improved prompt (copy into your agent)</label>
+        <textarea id="fixed-prompt" readonly></textarea>
+        <p class="hint">Templates must be paired with runtime gates (tool permissions, approvals, logging).</p></div>`;
+    }
     const el = document.getElementById("agent-scorecard");
     el.innerHTML = html;
     el.classList.add("show");
-    el.querySelectorAll("[data-share]").forEach((btn) => {
+    if (opts.enhanced) {
+      document.getElementById("fixed-prompt").value = opts.enhanced;
+    }
+    const st = shareText(overall, tier.n, "agent");
+    el.querySelectorAll("[data-s]").forEach((btn) => {
       btn.addEventListener("click", () => {
-        const kind = btn.getAttribute("data-share");
-        if (kind === "li") {
-          navigator.clipboard.writeText(share).then(() => {
-            window.open(
-              `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(location.href)}`
-            );
-            toast("Score copied — paste into LinkedIn");
+        const k = btn.getAttribute("data-s");
+        if (k === "copy") navigator.clipboard.writeText(st).then(() => toast("Share text copied"));
+        else if (k === "x") window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(st)}`);
+        else if (k === "li") {
+          navigator.clipboard.writeText(st).then(() => {
+            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(location.href)}`);
+            toast("Copied — paste into LinkedIn");
           });
-        } else if (kind === "x") {
-          window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(share)}`);
-        } else {
-          navigator.clipboard.writeText(share).then(() => toast("Copied!"));
-        }
+        } else if (k === "img") downloadScoreCard(overall, tier.n, "AI Agent");
       });
+    });
+    const fixBtn = document.getElementById("inline-fix");
+    if (fixBtn) fixBtn.addEventListener("click", fixAgent);
+    const dl = document.getElementById("inline-download");
+    if (dl) dl.addEventListener("click", () => {
+      const text = (opts.enhanced) || (lastAgent && lastAgent.fixed) || document.getElementById("agent-prompt").value;
+      if (!opts.enhanced && lastAgent && !lastAgent.fixed) {
+        fixAgent();
+        return;
+      }
+      downloadText(lastAgent && lastAgent.fixed ? lastAgent.fixed : text, "crewscore-improved-prompt.md");
     });
   }
 
-  function renderVendorScorecard(name) {
+  function scoreAgent() {
+    const err = document.getElementById("agent-error");
+    const prompt = document.getElementById("agent-prompt").value || "";
+    if (!prompt.trim()) {
+      err.textContent = "Paste a prompt, pick a template, or load a public URL.";
+      err.classList.add("show");
+      return;
+    }
+    err.classList.remove("show");
+    const result = E.analyzeWithFindings(prompt);
+    lastAgent = { prompt, result, fixed: null };
+    renderAgent(result, { title: "Your agent score" });
+    try {
+      history.replaceState(null, "", "#scored");
+    } catch (e) {}
+  }
+
+  function fixAgent() {
+    const err = document.getElementById("agent-error");
+    const prompt = document.getElementById("agent-prompt").value || "";
+    if (!prompt.trim()) {
+      err.textContent = "Paste a prompt first.";
+      err.classList.add("show");
+      return;
+    }
+    err.classList.remove("show");
+    const pack = E.fixAndRescore(prompt);
+    lastAgent = { prompt, result: pack.after, fixed: pack.enhanced, before: pack.before, delta: pack.delta };
+    document.getElementById("agent-prompt").value = pack.enhanced;
+    renderAgent(pack.after, {
+      title: "After free fix",
+      delta: pack.delta,
+      enhanced: pack.enhanced,
+    });
+    toast(pack.delta > 0 ? `Fixed — score +${pack.delta}` : "Already strong — few or no fixes needed");
+  }
+
+  function downloadText(text, filename) {
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast("Downloaded");
+  }
+
+  function downloadScoreCard(overall, tierName, label) {
+    const c = document.getElementById("share-canvas");
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "#0b0f1a";
+    ctx.fillRect(0, 0, c.width, c.height);
+    ctx.fillStyle = "#0f172a";
+    ctx.strokeStyle = "#1e293b";
+    ctx.lineWidth = 2;
+    roundRect(ctx, 40, 40, 720, 340, 20);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#94a3b8";
+    ctx.font = "600 22px system-ui,sans-serif";
+    ctx.fillText("CrewScore", 70, 100);
+    ctx.fillStyle = "#64748b";
+    ctx.font = "16px system-ui,sans-serif";
+    ctx.fillText(label + " · structural hygiene", 70, 130);
+    const color = overall >= 70 ? "#10b981" : overall >= 50 ? "#eab308" : overall >= 30 ? "#f59e0b" : "#ef4444";
+    ctx.fillStyle = color;
+    ctx.font = "800 96px system-ui,sans-serif";
+    ctx.fillText(overall + "/100", 70, 240);
+    ctx.font = "700 28px system-ui,sans-serif";
+    ctx.fillText(tierName, 70, 290);
+    ctx.fillStyle = "#64748b";
+    ctx.font = "16px system-ui,sans-serif";
+    ctx.fillText("crewscore.ai · free · no install · not a red-team", 70, 340);
+    c.toBlob((blob) => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "crewscore-" + overall + ".png";
+      a.click();
+      URL.revokeObjectURL(a.href);
+      toast("Score card image saved");
+    });
+  }
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function renderVendor(name) {
     const { score, tier, redFlags } = E.scoreVendor(vendorAnswers);
-    let html = `<h3>${escapeHtml(name)} — Vendor score</h3>
+    let html = `<h3 style="font-size:0.95rem;color:#94a3b8">${escapeHtml(name)}</h3>
       <div class="score-big ${tier.c}">${score}/100</div>
       <div class="tier ${tier.c}">${escapeHtml(tier.n)}</div>
       <p class="disclaimer">Self-attested checklist — not an independent audit or certification.</p>`;
-
     E.vendorQuestions.forEach((q, i) => {
       const a = vendorAnswers[i];
       const pts = a === "yes" ? 10 : a === "dk" ? 3 : 0;
       const label = a === "yes" ? "YES" : a === "dk" ? "DK" : "NO";
-      html += `<div class="dim-row"><span class="dim-label" title="${escapeHtml(q)}">${escapeHtml(
-        q.slice(0, 42)
-      )}</span>${bar(pts * 10)}<span class="dim-score">${label}</span></div>`;
+      html += `<div class="dim-row"><span class="dim-label" title="${escapeHtml(q)}">${escapeHtml(q.slice(0, 48))}</span>${bar(pts * 10)}<span class="dim-score">${label}</span></div>`;
     });
-
-    if (redFlags.length) {
-      html += `<div class="flags">${redFlags.length} RED FLAG(S): ${redFlags
-        .map(escapeHtml)
-        .join("; ")}</div>`;
-    }
-
-    const share = `We evaluated ${name} for AI production use.\n\nScore: ${score}/100 — ${tier.n}\n${
+    if (redFlags.length)
+      html += `<div class="flags">${redFlags.length} red flag(s): ${redFlags.map(escapeHtml).join("; ")}</div>`;
+    const st = `We evaluated ${name} for AI production use.\n\nScore: ${score}/100 — ${tier.n}\n${
       redFlags.length ? "\nRed flags:\n" + redFlags.map((f) => "- " + f).join("\n") + "\n" : ""
-    }\nSelf-attested checklist — not an independent audit.\nScored with CrewScore | ${location.href}`;
-
+    }\nSelf-attested · not an audit\nFree tool: ${location.origin}`;
     html += `<div class="share-row">
-      <button type="button" class="share-btn linkedin" data-share="li">Share LinkedIn</button>
-      <button type="button" class="share-btn x" data-share="x">Share on X</button>
-      <button type="button" class="share-btn" data-share="copy">Copy score</button>
+      <button type="button" class="share-btn" data-s="copy">Copy for buying thread</button>
+      <button type="button" class="share-btn" data-s="x">Post on X</button>
+      <button type="button" class="share-btn" data-s="li">LinkedIn</button>
+      <button type="button" class="share-btn" data-s="img">Save score image</button>
     </div>`;
-
     const el = document.getElementById("vendor-scorecard");
     el.innerHTML = html;
     el.classList.add("show");
-    el.querySelectorAll("[data-share]").forEach((btn) => {
+    el.querySelectorAll("[data-s]").forEach((btn) => {
       btn.addEventListener("click", () => {
-        const kind = btn.getAttribute("data-share");
-        if (kind === "li") {
-          navigator.clipboard.writeText(share).then(() => {
-            window.open(
-              `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(location.href)}`
-            );
-            toast("Score copied — paste into LinkedIn");
+        const k = btn.getAttribute("data-s");
+        if (k === "copy") navigator.clipboard.writeText(st).then(() => toast("Copied"));
+        else if (k === "x") window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(shareText(score, tier.n, "vendor"))}`);
+        else if (k === "li") {
+          navigator.clipboard.writeText(st).then(() => {
+            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(location.href)}`);
+            toast("Copied — paste into LinkedIn");
           });
-        } else if (kind === "x") {
-          const short = `${name}: ${score}/100 — ${tier.n}. Vendor diligence with CrewScore: ${location.href}`;
-          window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(short)}`);
-        } else {
-          navigator.clipboard.writeText(share).then(() => toast("Copied!"));
-        }
+        } else if (k === "img") downloadScoreCard(score, tier.n, name);
       });
     });
   }
 
-  document.getElementById("btn-score-agent").addEventListener("click", () => {
+  async function loadUrl() {
     const err = document.getElementById("agent-error");
-    const prompt = document.getElementById("agent-prompt").value || "";
-    if (!prompt.trim()) {
-      err.textContent = "Paste a system prompt first (or click Try sample).";
+    let url = (document.getElementById("prompt-url").value || "").trim();
+    if (!url) {
+      err.textContent = "Paste a public URL first.";
       err.classList.add("show");
       return;
     }
+    // Normalize github blob → raw
+    url = url.replace(
+      /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)$/,
+      "https://raw.githubusercontent.com/$1/$2/$3/$4"
+    );
     err.classList.remove("show");
-    renderAgentScorecard(prompt);
-  });
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const text = await res.text();
+      if (!text.trim()) throw new Error("Empty file");
+      if (text.length > 500000) throw new Error("File too large");
+      document.getElementById("agent-prompt").value = text;
+      toast("Loaded — scoring…");
+      scoreAgent();
+    } catch (e) {
+      err.textContent =
+        "Could not load URL (private file, CORS, or network). Paste the prompt text instead — still free, still no install.";
+      err.classList.add("show");
+    }
+  }
 
-  document.getElementById("btn-sample").addEventListener("click", () => {
-    document.getElementById("agent-prompt").value =
-      "You are a helpful assistant that answers customer questions.";
-    document.getElementById("agent-error").classList.remove("show");
-    renderAgentScorecard(document.getElementById("agent-prompt").value);
+  document.getElementById("btn-score-agent").addEventListener("click", scoreAgent);
+  document.getElementById("btn-fix-agent").addEventListener("click", fixAgent);
+  document.getElementById("btn-download-card").addEventListener("click", () => {
+    if (!lastAgent) {
+      scoreAgent();
+      setTimeout(() => {
+        if (lastAgent) {
+          const t = E.scoreTier(lastAgent.result.overall);
+          downloadScoreCard(lastAgent.result.overall, t.n, "AI Agent");
+        }
+      }, 50);
+      return;
+    }
+    const t = E.scoreTier(lastAgent.result.overall);
+    downloadScoreCard(lastAgent.result.overall, t.n, "AI Agent");
   });
-
+  document.getElementById("btn-load-url").addEventListener("click", loadUrl);
   document.getElementById("btn-score-vendor").addEventListener("click", () => {
     const err = document.getElementById("vendor-error");
     if (vendorAnswers.some((a) => a == null)) {
-      err.textContent = "Answer all 10 questions (Yes / Don't know / No).";
+      err.textContent = "Answer all 10 questions — takes about a minute.";
       err.classList.add("show");
       return;
     }
     err.classList.remove("show");
-    const name = (document.getElementById("vendor-name").value || "AI Vendor").trim();
-    renderVendorScorecard(name);
+    renderVendor((document.getElementById("vendor-name").value || "AI Vendor").trim());
   });
 
   buildVendorQ();
+
+  // Deep link: ?tab=vendor
+  const params = new URLSearchParams(location.search);
+  if (params.get("tab") === "vendor") switchTab("vendor");
 })();
 </script>
 </body>

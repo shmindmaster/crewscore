@@ -44,6 +44,10 @@ def test_export_payload_matches_scorer_map():
         "compliance",
     }
     assert len(payload["vendor_questions"]) == 10
+    assert "injection" in payload["fix_templates"]
+    assert "Guardrails" in payload["fix_templates"]["injection"] or "injection" in payload[
+        "fix_templates"
+    ]["injection"].lower() or "NEVER" in payload["fix_templates"]["injection"]
 
 
 def test_score_engine_js_is_current():
@@ -60,6 +64,10 @@ def test_index_loads_shared_engine():
     assert 'src="score-engine.js"' in html
     assert "CrewScoreEngine" in html
     assert "analyzeWithFindings" in html
+    assert "fixAndRescore" in html
+    assert "No signup" in html or "no install" in html.lower()
+    assert "template-chips" in html
+    assert "downloadScoreCard" in html or "share-canvas" in html
 
 
 def test_js_python_score_parity_when_node_present():
@@ -106,3 +114,36 @@ def test_python_findings_still_sane():
     scores, findings = analyze_with_findings(BARE)
     assert overall_score(scores) < 50
     assert any(f["status"] == "missing" for f in findings)
+
+
+def test_js_fix_raises_score_when_node_present():
+    if not shutil.which("node"):
+        return
+    script = f"""
+const fs = require('fs');
+const vm = require('vm');
+const code = fs.readFileSync({json.dumps(str(ENGINE_JS))}, 'utf8');
+const ctx = {{}};
+vm.createContext(ctx);
+vm.runInContext(code, ctx);
+const E = ctx.CrewScoreEngine;
+const bare = {json.dumps(BARE)};
+const pack = E.fixAndRescore(bare);
+process.stdout.write(JSON.stringify({{
+  before: pack.before.overall,
+  after: pack.after.overall,
+  hasFixes: Object.keys(pack.fixes).length > 0,
+  hasCrewScore: pack.enhanced.includes('CrewScore')
+}}));
+"""
+    proc = subprocess.run(
+        ["node", "-e", script],
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=str(ROOT),
+    )
+    data = json.loads(proc.stdout)
+    assert data["hasFixes"]
+    assert data["after"] > data["before"]
+    assert data["hasCrewScore"]

@@ -76,8 +76,8 @@ def test_index_html_share_uses_data_attrs_not_json_onclick():
     """Vendor share must not inject JSON.stringify into double-quoted onclick."""
     text = Path("index.html").read_text(encoding="utf-8")
     assert "JSON.stringify(opts.shareExtra)" not in text
-    assert "data-share" in text
     assert "addEventListener" in text
+    assert 'data-s="' in text or "data-share" in text
 
 
 def test_index_html_uses_shared_engine_for_vendor_and_agent():
