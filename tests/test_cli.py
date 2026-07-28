@@ -142,6 +142,78 @@ def test_assess_vendor_json():
     assert len(payload["answers"]) == 10
 
 
+def test_fix_refuses_coding_agent_config_json(tmp_path: Path):
+    """`fix` must not plan governance templates for a build-instructions file.
+
+    It reported overall 0 / STRUCTURAL: CRITICAL GAPS / governance_applicable
+    true for an AGENTS.md and planned to inject HIPAA, human-gate and audit
+    templates into it.
+    """
+    config = tmp_path / "AGENTS.md"
+    original = "# Build\n\nRun `make test`.\n"
+    config.write_text(original, encoding="utf-8")
+    runner = CliRunner()
+    result = runner.invoke(
+        main, ["fix", "--prompt-file", str(config), "--plan", "--json"]
+    )
+    assert result.exit_code == 1
+    payload = json.loads(result.output)
+    assert payload["refused"] is True
+    assert payload["profile"] == "coding_agent_config"
+    assert payload["governance_applicable"] is False
+    assert payload["fixes_planned"] == []
+    assert payload["written"] is False
+    # No governance grade anywhere in the payload.
+    assert "STRUCTURAL" not in json.dumps(payload)
+    assert "overall" not in json.dumps(payload)
+    assert "--profile system_prompt" in payload["reason"]
+
+
+def test_fix_refuses_to_modify_a_config_file(tmp_path: Path):
+    config = tmp_path / "CLAUDE.md"
+    original = "# Guide\n\nUse pnpm. Build with make.\n"
+    config.write_text(original, encoding="utf-8")
+    runner = CliRunner()
+    result = runner.invoke(main, ["fix", "--prompt-file", str(config), "--apply"])
+    assert result.exit_code == 1
+    assert config.read_text(encoding="utf-8") == original
+    assert "HIPAA" not in config.read_text(encoding="utf-8")
+    lower = result.output.lower()
+    assert "configuration smells" in lower
+    assert "crewscore test" in lower
+    assert "--profile system_prompt" in result.output
+
+
+def test_fix_profile_override_applies_templates_to_config(tmp_path: Path):
+    """The refusal has an escape hatch, for parity with test and scan."""
+    config = tmp_path / "AGENTS.md"
+    config.write_text("# Build\n\nRun make.\n", encoding="utf-8")
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "fix",
+            "--prompt-file",
+            str(config),
+            "--plan",
+            "--json",
+            "--profile",
+            "system_prompt",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["fixes_planned"]
+
+
+def test_fix_pasted_string_is_still_treated_as_a_prompt():
+    """A --prompt string has no path, so it stays governed and fixable."""
+    runner = CliRunner()
+    result = runner.invoke(main, ["fix", "--prompt", "You are helpful.", "--plan", "--json"])
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.output)["fixes_planned"]
+
+
 def test_fix_mentions_runtime_gates():
     runner = CliRunner()
     result = runner.invoke(main, ["fix", "--prompt", "You are helpful."])

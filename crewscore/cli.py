@@ -19,7 +19,12 @@ from crewscore.scan import discover_prompt_files, score_paths
 from crewscore.scoring import DIMENSIONS, RULESET_ID, build_result, tier_color
 from crewscore.scorers import structural_analysis
 from crewscore.smells import detect_smells, find_repo_root
-from crewscore.profiles import PROFILE_LABELS, PROFILES, classify_path
+from crewscore.profiles import (
+    PROFILE_LABELS,
+    PROFILES,
+    classify_path,
+    governance_applies,
+)
 from crewscore.summary import format_scan_markdown, format_score_markdown
 from crewscore.vendor_scorecard import assess_vendor
 
@@ -629,7 +634,17 @@ def export_eval(prompt, prompt_file, output_dir):
     is_flag=True,
     help="Emit JSON summary of applied dimensions and score delta",
 )
-def fix(prompt, prompt_file, apply, output, plan, as_json):
+@click.option(
+    "--profile",
+    type=click.Choice(["auto", *PROFILES], case_sensitive=False),
+    default="auto",
+    help=(
+        "Ruleset to treat the file as. auto (default) declines to write "
+        "governance templates into coding-agent config (AGENTS.md, CLAUDE.md, "
+        ".cursorrules); pass system_prompt to force them."
+    ),
+)
+def fix(prompt, prompt_file, apply, output, plan, as_json, profile):
     """Append recommended guardrail patterns to a system prompt."""
     from crewscore.scorers.fix_patterns import (
         apply_fixes,
@@ -660,8 +675,66 @@ def fix(prompt, prompt_file, apply, output, plan, as_json):
         )
         sys.exit(1)
 
+    resolved_profile = (
+        classify_path(source_path) if profile == "auto" else profile.lower()
+    )
+    if not governance_applies(resolved_profile):
+        # Every fix template is a governance template (HIPAA language, human
+        # approval gates, audit trails). Injecting them into build instructions
+        # is the same category error as grading that file 0/100 — and here it
+        # would write the mistake into the user's repo. Decline loudly rather
+        # than no-op: someone who ran `fix` is owed a reason and a next step.
+        reason = (
+            "coding-agent config is judged on configuration smells, not the "
+            "governance dimensions these templates target. See the smell "
+            "verdict with `crewscore test --prompt-file "
+            f"{source_path}`, gate CI with `--max-smells N`, or re-run with "
+            "`--profile system_prompt` to force the templates in anyway."
+        )
+        if as_json:
+            click.echo(
+                json.dumps(
+                    {
+                        "refused": True,
+                        "reason": reason,
+                        "profile": resolved_profile,
+                        "governance_applicable": False,
+                        "fixes_planned": [],
+                        "fixes_applied": [],
+                        "written": False,
+                        "path": str(source_path) if source_path else None,
+                    },
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
+        else:
+            err_console.print()
+            err_console.print(
+                "  [yellow]Refusing to fix coding-agent config:[/yellow] "
+                f"{PROFILE_LABELS.get(resolved_profile, resolved_profile)} is "
+                "judged on configuration smells, not the governance dimensions "
+                "these templates target."
+            )
+            err_console.print(
+                f"  -> Smell verdict: [bold]crewscore test --prompt-file "
+                f"{source_path}[/bold]"
+            )
+            err_console.print(
+                "  -> Gate CI on it: [bold]--max-smells N[/bold]"
+            )
+            err_console.print(
+                "  -> Force the templates anyway: "
+                "[bold]--profile system_prompt[/bold]"
+            )
+            err_console.print()
+        sys.exit(1)
+
     before = structural_analysis.analyze(system_prompt)
-    before_result = build_result(before)
+    before_result = build_result(
+        before, source=str(source_path) if source_path else "prompt",
+        profile=resolved_profile,
+    )
     fixes = generate_fixes(before)
 
     honesty_note = (
