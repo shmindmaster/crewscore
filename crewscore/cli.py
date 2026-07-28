@@ -238,8 +238,14 @@ def test(
 
     if as_json:
         payload = result.to_dict()
-        payload["findings"] = findings
-        payload["transparency"] = scoring_transparency_block()
+        if result.governance_applicable:
+            # `findings` (matched/missing governance rules) and
+            # `transparency` (the 15+85*matches/total_rules formula) are the
+            # apparatus of a governance grade. Coding-agent config already
+            # has `overall`/`dimensions` withheld; publishing these two would
+            # let a reader reconstruct a score from them alone.
+            payload["findings"] = findings
+            payload["transparency"] = scoring_transparency_block()
         click.echo(json.dumps(payload, indent=2, sort_keys=True))
     else:
         color = tier_color(result.overall)
