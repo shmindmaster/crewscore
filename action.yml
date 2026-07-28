@@ -36,11 +36,14 @@ inputs:
     default: "true"
 
 outputs:
+  scored:
+    description: "'true' when the run scored at least one system prompt, 'false' when it found only coding-agent config (AGENTS.md, CLAUDE.md, .cursorrules), which is judged on configuration smells rather than a 0-100 score. Guard every use of score/tier on this."
+    value: ${{ steps.run.outputs.scored }}
   score:
-    description: "Overall structural score (0-100) for the scored system prompt; in scan mode the worst (minimum) overall across system prompts. Coding-agent config (AGENTS.md, CLAUDE.md, .cursorrules) is excluded — it is judged on configuration smells, not this number. Empty string when no system prompt was scored, because 0 would read as a failing grade the run never measured."
+    description: "Overall structural score (0-100) for the scored system prompt; in scan mode the worst (minimum) overall across system prompts. Coding-agent config is excluded — it is judged on configuration smells, not this number. Empty string when nothing was scored, but GitHub casts '' to 0 in numeric comparisons, so `if: outputs.score < 50` is TRUE for a run that measured nothing and `fromJSON(outputs.score)` errors. Always guard first: if: steps.<id>.outputs.scored == 'true' && ..."
     value: ${{ steps.run.outputs.score }}
   tier:
-    description: "Tier label for the score output (e.g. STRUCTURAL: OK WITH GAPS). Empty string when no system prompt was scored — coding-agent config never sets it."
+    description: "Tier label for the score output (e.g. STRUCTURAL: OK WITH GAPS). Empty string when nothing was scored — coding-agent config never sets it. Guard on scored == 'true' before using it."
     value: ${{ steps.run.outputs.tier }}
   summary-path:
     description: Path to the markdown summary file (if written)
@@ -131,9 +134,13 @@ runs:
             score, tier = worst['overall'], worst['tier']
         else:
             # Nothing here carries a governance grade. Emit empty rather than a
-            # 0 that consumers would read as a failing score.
+            # 0 that reads as a failing score - but '' is cast to 0 by GitHub in
+            # numeric comparisons, so scored= is the flag consumers must guard on.
+            # (No backticks anywhere in this block: bash runs command
+            # substitution inside the double-quoted python -c argument.)
             score, tier = '', ''
         with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as f:
+            f.write('scored={}\n'.format('true' if governed else 'false'))
             f.write(f'score={score}\n')
             f.write(f'tier={tier}\n')
         "
