@@ -1,5 +1,6 @@
 """Contract tests locking preflight workflow UX in index.html."""
 
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -145,3 +146,91 @@ def test_mobile_score_bar():
     """Sticky mobile primary CTA for Run score without hunting for the main button."""
     html = _html()
     assert 'id="mobile-score-bar"' in html
+
+
+def test_type_scale_tokens():
+    """Type scale CSS variables establish a coherent size ladder."""
+    html = _html()
+    for token in ("--fs-xs", "--fs-sm", "--fs-md"):
+        assert token in html
+    assert "--fs-hero" in html or "--fs-score" in html
+
+
+def test_mono_reserved_not_all_chrome():
+    """Stage pills use sans for UI chrome, not mono-only."""
+    html = _html()
+    # Isolate the .stage-pill rule block (base, not :hover/:disabled/etc.).
+    m = re.search(r"\.stage-pill\s*\{([^}]+)\}", html)
+    assert m, ".stage-pill style rule missing"
+    rule = m.group(1)
+    assert "var(--sans)" in rule or "IBM Plex Sans" in rule, (
+        ".stage-pill must use sans (var(--sans) or IBM Plex Sans), not mono-only chrome"
+    )
+
+
+def test_score_ring_annular():
+    """Score ring uses an annular/thin-ring technique, not a soft filled gold disc."""
+    html = _html()
+    m = re.search(r"\.score-ring\s*\{([^}]+)\}", html)
+    assert m, ".score-ring style rule missing"
+    rule = m.group(1)
+    compact = rule.replace(" ", "")
+    assert "transparent" in rule, (
+        ".score-ring must use transparent (hollow center / track gap)"
+    )
+    has_border_ring = (
+        "border-radius:50%" in compact
+        and bool(re.search(r"(?<![\w-])border\s*:\s*[^;]*\d", rule))
+    )
+    has_conic_radial_hole = (
+        ("conic-gradient" in rule or "radial-gradient" in rule)
+        and "transparent" in rule
+    )
+    assert has_border_ring or has_conic_radial_hole, (
+        ".score-ring must use border ring or conic/radial with transparent center"
+    )
+    # Soft multi-stop gold disc: amber haze + soft inset glow without a border track.
+    soft_gold_disc = (
+        bool(re.search(r"rgba\(\s*232\s*,\s*163\s*,\s*23", rule))
+        and "inset" in rule
+        and not has_border_ring
+    )
+    assert not soft_gold_disc, (
+        ".score-ring must be a thin annular track, not a soft filled gold disc"
+    )
+
+
+def test_body_grid_restrained():
+    """Body page grid is absent or atmospheric (alpha ≤ 0.15)."""
+    html = _html()
+    # Pull body rule background section.
+    m = re.search(r"\bbody\s*\{([^}]+)\}", html)
+    assert m, "body style rule missing"
+    body_rule = m.group(1)
+    if "repeating-linear-gradient" not in body_rule:
+        return  # no grid — restrained by absence
+    # Grid present: every rgba/hsla alpha in the repeating-linear-gradient stop ≤ 0.15
+    for grad in re.findall(
+        r"repeating-linear-gradient\([^)]+\)", body_rule
+    ):
+        alphas = re.findall(
+            r"rgba?\([^)]*?,\s*(\d*\.?\d+)\s*\)", grad
+        ) + re.findall(
+            r"hsla?\([^)]*?,\s*(\d*\.?\d+)\s*\)", grad
+        )
+        for a in alphas:
+            assert float(a) <= 0.15, (
+                f"body repeating grid alpha {a} exceeds 0.15 (must be atmospheric)"
+            )
+
+
+def test_panel_lifted_from_bg():
+    """Panel surface color is distinct from page background (lifted card)."""
+    html = _html()
+    bg_m = re.search(r"--bg\s*:\s*([^;]+);", html)
+    panel_m = re.search(r"--panel\s*:\s*([^;]+);", html)
+    assert bg_m, "--bg token missing"
+    assert panel_m, "--panel token missing"
+    bg = bg_m.group(1).strip().lower()
+    panel = panel_m.group(1).strip().lower()
+    assert bg != panel, "--panel must differ from --bg so cards read as lifted surfaces"
