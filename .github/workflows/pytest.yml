@@ -7,10 +7,22 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
+      # Don't let one platform's failure hide the others — we need to know
+      # which platforms are affected, not just that something broke.
+      fail-fast: false
       matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.11", "3.12", "3.13"]
+        exclude:
+          # One Python per non-Linux platform is enough to catch OS-specific
+          # breakage (path handling, console encoding, line endings); the
+          # version matrix is what Linux is for.
+          - {os: windows-latest, python-version: "3.11"}
+          - {os: windows-latest, python-version: "3.12"}
+          - {os: macos-latest, python-version: "3.11"}
+          - {os: macos-latest, python-version: "3.12"}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
