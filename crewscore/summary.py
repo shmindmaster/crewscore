@@ -125,30 +125,62 @@ def format_scan_markdown(
     *,
     title: str = "CrewScore scan (repo)",
 ) -> str:
-    """Markdown table for multi-file scan results."""
+    """Markdown table for multi-file scan results.
+
+    Coding-agent config never contributes a governance grade: it cannot be the
+    headline score, and its row shows the smell verdict instead of a number.
+    This body is the sticky PR comment and the job summary, so a config file
+    displacing the real prompt at 0/100 would be the most visible defect there is.
+    """
     if not results:
         return f"## {title}\n\n_No agent prompt files found._\n"
 
-    sorted_rows = sorted(results, key=lambda r: int(r.get("overall", 0)))
-    worst = sorted_rows[0]
-    ruleset = worst.get("ruleset") or RULESET_ID
+    governed = [r for r in results if r.get("governance_applicable", True)]
+    config = [r for r in results if not r.get("governance_applicable", True)]
+    ruleset = (governed or results)[0].get("ruleset") or RULESET_ID
 
-    lines = [
-        f"## {title}",
-        "",
-        f"**Worst score:** **{worst['overall']}/100** (`{worst.get('tier', '')}`) "
-        f"on `{worst.get('path', '?')}`",
-        "",
-        f"- **Ruleset:** `{ruleset}` · open rules: `crewscore rules --json`",
-        "- Not a red-team / not runtime proof",
-        "",
-        "| Path | Score | Tier |",
-        "| --- | ---: | --- |",
-    ]
-    for r in sorted(results, key=lambda x: str(x.get("path", ""))):
+    lines = [f"## {title}", ""]
+    if governed:
+        worst = min(governed, key=lambda r: int(r.get("overall", 0)))
         lines.append(
-            f"| `{r.get('path', '')}` | {r.get('overall', 0)} | "
-            f"`{r.get('tier', '')}` |"
+            f"**Worst score:** **{worst.get('overall', 0)}/100** "
+            f"(`{worst.get('tier', '')}`) on `{worst.get('path', '?')}`"
+        )
+    else:
+        # Nothing here is judged on the governance dimensions, so there is no
+        # score to headline — say that rather than inventing a zero.
+        lines.append(
+            f"**No agent system prompts found** — "
+            f"{len(config)} coding-agent config file(s) scanned."
+        )
+    lines.extend(
+        [
+            "",
+            f"- **Ruleset:** `{ruleset}` · open rules: `crewscore rules --json`",
+        ]
+    )
+    if config:
+        lines.append(
+            f"- **Coding-agent config ({len(config)}):** judged on configuration "
+            "smells ([arXiv:2606.15828](https://arxiv.org/abs/2606.15828)), "
+            "not the production-governance dimensions"
+        )
+    lines.extend(
+        [
+            "- Not a red-team / not runtime proof",
+            "",
+            "| Path | Score | Tier |",
+            "| --- | ---: | --- |",
+        ]
+    )
+    for r in sorted(results, key=lambda x: str(x.get("path", ""))):
+        score = (
+            r.get("overall", 0)
+            if r.get("governance_applicable", True)
+            else "n/a"
+        )
+        lines.append(
+            f"| `{r.get('path', '')}` | {score} | `{r.get('tier', '')}` |"
         )
     lines.extend(["", "---", "_Structural pre-gate only._", ""])
     return "\n".join(lines)
