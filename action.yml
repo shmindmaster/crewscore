@@ -1,5 +1,5 @@
 name: CrewScore
-description: Deterministic offline check for AI agent prompts and coding-agent config — governance guardrail coverage and configuration smells, with a CI gate
+description: Deterministic offline check for AI agent prompts and coding-agent config - governance guardrail coverage and configuration smells, with a CI gate
 author: shmindmaster
 branding:
   icon: shield
