@@ -172,9 +172,52 @@ Eight dimensions, equal weight, each 0–100:
 
 ## CI integration
 
+### Official GitHub Action (recommended)
+
+One YAML step — no manual pip ritual:
+
 ```yaml
-# .github/workflows/agent-safety.yml
-name: Agent Safety Check
+# .github/workflows/crewscore.yml
+name: CrewScore
+on: [pull_request]
+jobs:
+  score:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: CrewScore
+        id: crewscore
+        uses: shmindmaster/crewscore@v1
+        with:
+          prompt-file: ./agents/system-prompt.md
+          threshold: "50"
+          # explain: "true"   # optional: matched vs missing signals
+      - name: Report
+        if: always()
+        run: |
+          echo "score=${{ steps.crewscore.outputs.score }}"
+          echo "tier=${{ steps.crewscore.outputs.tier }}"
+```
+
+**Inputs**
+
+| Input | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `prompt-file` | yes | — | Path to the system prompt file |
+| `threshold` | no | `50` | Fail the step (exit 2) when overall score is below this |
+| `explain` | no | `false` | Pass `true` to include matched/missing signals |
+
+**Outputs:** `score` (0–100), `tier` (label string).
+
+The composite action installs CrewScore from the action path (`pip install "${{ github.action_path }}"`), so monorepo / pre-PyPI self-tests work with `uses: ./`.
+
+See [`.github/workflows/example-ci.yml`](.github/workflows/example-ci.yml) for a documented consumer template and [`.github/workflows/crewscore-selftest.yml`](.github/workflows/crewscore-selftest.yml) for this repo’s smoke self-test.
+
+### CLI in CI
+
+```yaml
+# .github/workflows/crewscore-cli.yml
+name: CrewScore CLI
 on: [pull_request]
 jobs:
   score:
@@ -229,7 +272,6 @@ See [AGENTS.md](AGENTS.md) for agent/contributor operating notes.
 
 ## Roadmap (not implemented yet)
 
-- Official GitHub Action wrapper
 - Framework adapters that extract prompts from LangGraph / CrewAI / AutoGen graphs
 - Optional live adversarial testing (post-traction; not the default path)
 

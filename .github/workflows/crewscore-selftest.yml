@@ -1,0 +1,46 @@
+# Self-test for the composite CrewScore action in this repo.
+# Installs from github.action_path so it works before PyPI publish.
+name: CrewScore Self-Test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  selftest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Score sample prompt (smoke, threshold 0)
+        id: score
+        uses: ./
+        with:
+          prompt-file: examples/sample-prompt.md
+          threshold: "0"
+
+      - name: Assert score and tier outputs parse
+        run: |
+          echo "score=${{ steps.score.outputs.score }}"
+          echo "tier=${{ steps.score.outputs.tier }}"
+          python -c "
+          import sys
+          score = int(sys.argv[1])
+          tier = sys.argv[2]
+          assert 0 <= score <= 100, score
+          assert tier, 'tier output empty'
+          print(f'OK score={score} tier={tier!r}')
+          " "${{ steps.score.outputs.score }}" "${{ steps.score.outputs.tier }}"
+
+      - name: Threshold gate fails when score is below threshold
+        run: |
+          set +e
+          crewscore test --prompt-file examples/sample-prompt.md --json --threshold 50
+          EXIT=$?
+          set -e
+          if [ "$EXIT" -ne 2 ]; then
+            echo "Expected exit code 2 for bare sample prompt under threshold 50, got $EXIT"
+            exit 1
+          fi
+          echo "Threshold failure behaved as expected (exit 2)"
