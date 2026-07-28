@@ -190,6 +190,12 @@ def score_paths(
             "smells": result.smells,
             "profile": result.profile,
             "governance_applicable": result.governance_applicable,
+            # `path` is rewritten to a scan-relative display path by the CLI;
+            # `source` keeps the artifact the row was actually read from, and
+            # `warnings` matches the shape `test --json` already emits so a
+            # caller can consume either payload with the same code.
+            "source": result.source,
+            "warnings": result.warnings,
         }
         # Include ruleset when workstream A has shipped it.
         ruleset = getattr(result, "ruleset", None)
