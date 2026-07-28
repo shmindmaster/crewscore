@@ -918,3 +918,60 @@ def test_scan_reports_boilerplate_warning_like_test_does(tmp_path):
     )
     row = next(r for r in scanned if r["path"].endswith("system-prompt.md"))
     assert "template_boilerplate_detected" in row["warnings"], row
+
+
+def _invoke_file(tmp_path, name, data: bytes, cmd="test"):
+    f = tmp_path / name
+    f.write_bytes(data)
+    return CliRunner().invoke(main, [cmd, "--prompt-file", str(f), "--json"])
+
+
+def test_undecodable_files_error_cleanly_instead_of_crashing(tmp_path):
+    """`scan` reads with errors="replace"; `test`/`fix` did not.
+
+    A UTF-16 export, a latin-1 file, or a renamed binary produced a raw
+    UnicodeDecodeError traceback -- even under --json, where the caller is a
+    machine. Same bytes, two behaviors depending on which command you used.
+    """
+    cases = {
+        "utf16.md": "You are an agent.".encode("utf-16"),
+        "latin1.md": b"You are an agent. caf\xe9 na\xefve",
+        "binary.md": b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\xff\xfe\x00",
+    }
+    for name, data in cases.items():
+        result = _invoke_file(tmp_path, name, data)
+        assert result.exception is None or isinstance(
+            result.exception, SystemExit
+        ), f"{name} raised {result.exception!r}"
+        assert "Traceback" not in result.output, name
+
+
+def test_unreadable_target_errors_cleanly(tmp_path):
+    """A directory passed as --prompt-file crashed with an unguarded OSError."""
+    d = tmp_path / "adir.md"
+    d.mkdir()
+    result = CliRunner().invoke(
+        main, ["test", "--prompt-file", str(d), "--json"]
+    )
+    assert result.exit_code != 0
+    assert not isinstance(result.exception, (IsADirectoryError, PermissionError))
+    assert "Traceback" not in result.output
+
+
+def test_oversized_prompt_file_is_refused_like_scan_does(tmp_path):
+    """`scan` skips files over 500KB; `test`/`fix` read any size.
+
+    A 50MB file took 89 seconds. Worse, several rules are quadratic in input
+    length, so an oversized file is also the cheapest way to stall CI.
+    """
+    from crewscore.scan import MAX_FILE_BYTES
+
+    big = tmp_path / "huge.md"
+    big.write_text("guardrail " * ((MAX_FILE_BYTES // 10) + 1000), encoding="utf-8")
+    assert big.stat().st_size > MAX_FILE_BYTES
+    result = CliRunner().invoke(
+        main, ["test", "--prompt-file", str(big), "--json"]
+    )
+    assert result.exit_code != 0
+    assert "Traceback" not in result.output
+    assert "large" in result.output.lower() or "size" in result.output.lower()
