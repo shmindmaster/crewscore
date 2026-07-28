@@ -7,8 +7,10 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from crewscore.profiles import CODING_AGENT_CONFIG, PROFILE_LABELS, SYSTEM_PROMPT
 from crewscore.scorers.structural_analysis import analyze, analyze_with_findings
-from crewscore.scoring import overall_score
+from crewscore.scoring import config_tier, overall_score
+from crewscore.smells import CITATION, CONTEXT_BLOAT_MAX_LINES, detect_context_bloat
 from crewscore.web_export import build_payload, render_js
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -50,6 +52,35 @@ def test_export_payload_matches_scorer_map():
     ]["injection"].lower() or "NEVER" in payload["fix_templates"]["injection"]
 
 
+def test_export_payload_carries_profile_metadata():
+    """The browser cannot honor the profile invariant without knowing profiles."""
+    payload = build_payload()
+    assert payload["default_profile"] == SYSTEM_PROMPT
+    keys = [p["key"] for p in payload["profiles"]]
+    assert keys == [CODING_AGENT_CONFIG, SYSTEM_PROMPT]
+    labels = {p["key"]: p["label"] for p in payload["profiles"]}
+    assert labels == PROFILE_LABELS
+
+
+def test_export_payload_carries_context_bloat_detector():
+    """Context Bloat is the one smell a browser can honestly run."""
+    payload = build_payload()
+    assert payload["context_bloat_max_lines"] == CONTEXT_BLOAT_MAX_LINES
+    assert payload["smell_citation"] == CITATION
+    bloat = payload["smell_catalog"]["smell.context_bloat"]
+    assert bloat["name"] == "Context Bloat"
+    assert bloat["affects_score"] is False
+
+
+def test_export_payload_names_the_detectors_the_browser_cannot_run():
+    """A clean browser result must never be presentable as a full check."""
+    payload = build_payload()
+    undetectable = {s["smell_id"]: s for s in payload["browser_undetectable_smells"]}
+    assert set(undetectable) == {"smell.init_fossilization", "smell.lint_leakage"}
+    assert "git history" in undetectable["smell.init_fossilization"]["reason"]
+    assert "repo" in undetectable["smell.lint_leakage"]["reason"]
+
+
 def test_score_engine_js_is_current():
     expected = render_js(build_payload())
     assert ENGINE_JS.exists(), "score-engine.js missing — run scripts/export_web_engine.py"
@@ -73,6 +104,121 @@ def test_index_loads_shared_engine():
     # Preflight workflow stages (product experience redesign)
     assert "Plan fix" in html or "plan" in html.lower()
     assert "Structural pre-gate" in html or "not a red-team" in html.lower()
+
+
+def _run_engine(body: str):
+    """Load score-engine.js in Node and return whatever `body` writes as JSON.
+
+    `body` runs with `E` bound to the engine and must call `emit(obj)`.
+    """
+    script = f"""
+const fs = require('fs');
+const vm = require('vm');
+const code = fs.readFileSync({json.dumps(str(ENGINE_JS))}, 'utf8');
+const ctx = {{}};
+vm.createContext(ctx);
+vm.runInContext(code, ctx);
+const E = ctx.CrewScoreEngine;
+const emit = (o) => process.stdout.write(JSON.stringify(o));
+{body}
+"""
+    proc = subprocess.run(
+        ["node", "-e", script],
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=str(ROOT),
+    )
+    return json.loads(proc.stdout)
+
+
+def test_js_never_grades_declared_config_when_node_present():
+    """The invariant: coding-agent config gets no governance number in the browser.
+
+    This is the shipped defect — the browser handed AGENTS.md a 27/100 while the
+    CLI said CONFIG: NO SMELLS DETECTED for the identical bytes.
+    """
+    if not shutil.which("node"):
+        return
+    agents_md = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+    out = _run_engine(
+        "emit(E.analyzeArtifact("
+        + json.dumps(agents_md)
+        + ", "
+        + json.dumps(CODING_AGENT_CONFIG)
+        + "));"
+    )
+    assert out["governance_applicable"] is False
+    assert "overall" not in out, "config must not carry a 0-100 governance number"
+    assert "scores" not in out, "config must not carry 8 governance dimensions"
+    py_smells = [s for s in [detect_context_bloat(agents_md)] if s]
+    assert out["tier"] == config_tier(len(py_smells))
+    assert [s["smell_id"] for s in out["smells"]] == [
+        s["smell_id"] for s in py_smells
+    ]
+
+
+def test_js_declared_system_prompt_is_unchanged_when_node_present():
+    """Declaring a system prompt must keep the existing 8-dimension behavior."""
+    if not shutil.which("node"):
+        return
+    out = _run_engine(
+        "const a = E.analyzeArtifact("
+        + json.dumps(GUARDED)
+        + ', "system_prompt");'
+        + "const b = E.analyzeWithFindings(" + json.dumps(GUARDED) + ");"
+        + "emit({ a, b });"
+    )
+    assert out["a"]["governance_applicable"] is True
+    assert out["a"]["scores"] == out["b"]["scores"]
+    assert out["a"]["overall"] == out["b"]["overall"]
+    assert out["a"]["overall"] == overall_score(analyze(GUARDED))
+
+
+def test_js_context_bloat_threshold_matches_python_when_node_present():
+    """Same published 200-line threshold on both sides, including edge cases."""
+    if not shutil.which("node"):
+        return
+    fixtures = {
+        "empty": "",
+        "short": "line\n" * 10,
+        "just_under": "line\n" * (CONTEXT_BLOAT_MAX_LINES - 1),
+        "exact": "line\n" * CONTEXT_BLOAT_MAX_LINES,
+        "over": "line\n" * (CONTEXT_BLOAT_MAX_LINES + 40),
+        "no_trailing_newline": "line\n" * (CONTEXT_BLOAT_MAX_LINES - 1) + "line",
+        "crlf_exact": "line\r\n" * CONTEXT_BLOAT_MAX_LINES,
+        "blank_lines": "\n" * CONTEXT_BLOAT_MAX_LINES,
+    }
+    out = _run_engine(
+        "const fx = "
+        + json.dumps(fixtures)
+        + ";const o = {};for (const [k, t] of Object.entries(fx)) "
+        + "{ const s = E.detectContextBloat(t); "
+        + "o[k] = s ? { smell_id: s.smell_id, line_count: s.line_count } : null; }"
+        + "emit(o);"
+    )
+    for name, text in fixtures.items():
+        py = detect_context_bloat(text)
+        expected = (
+            None if py is None
+            else {"smell_id": py["smell_id"], "line_count": py["line_count"]}
+        )
+        assert out[name] == expected, f"context bloat mismatch on {name}"
+
+
+def test_js_config_verdict_declares_what_it_cannot_check_when_node_present():
+    """A browser-clean config must still say two detectors did not run."""
+    if not shutil.which("node"):
+        return
+    out = _run_engine(
+        'emit(E.analyzeArtifact("Build with make.\\n", "coding_agent_config"));'
+    )
+    assert out["tier"] == config_tier(0)
+    assert out["smells"] == []
+    assert {s["smell_id"] for s in out["undetectable"]} == {
+        "smell.init_fossilization",
+        "smell.lint_leakage",
+    }
 
 
 def test_js_python_score_parity_when_node_present():

@@ -418,6 +418,44 @@
     "audit": "## Audit Trail Requirements\n- Log every significant action with timestamp, action, inputs, result, sources referenced, decision rationale, and any approval received.\n- Logs are append-only and immutable; the decision chain must be reconstructable from the log alone.\n- Never log raw credentials or full PHI/PII — reference them by ID.",
     "compliance": "## Compliance & Data Protection\n- Handle personal data under the regulations that apply (HIPAA, GDPR, SOC 2, EU AI Act). Apply data minimization.\n- Never place raw PHI, PII, or financial data in prompts outside an authorized BAA/DPA scope; encrypt or redact in transit.\n- Maintain tenant separation, and never cross-reference one user's data into another's context."
   },
+  "profiles": [
+    {
+      "key": "coding_agent_config",
+      "label": "coding-agent config"
+    },
+    {
+      "key": "system_prompt",
+      "label": "agent system prompt"
+    }
+  ],
+  "default_profile": "system_prompt",
+  "config_profile": "coding_agent_config",
+  "context_bloat_max_lines": 200,
+  "smell_citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+  "smell_catalog": {
+    "smell.context_bloat": {
+      "name": "Context Bloat",
+      "definition": "File is large enough that rules, examples, and low-priority detail crowd out critical instructions and inflate token cost.",
+      "heuristic": ">= 200 lines",
+      "paper_prevalence": "42% of 100 popular OSS projects",
+      "deterministic": true,
+      "approximates_paper": false,
+      "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+      "affects_score": false
+    }
+  },
+  "browser_undetectable_smells": [
+    {
+      "smell_id": "smell.init_fossilization",
+      "reason": "needs git history for the file — run the CLI",
+      "name": "Init Fossilization"
+    },
+    {
+      "smell_id": "smell.lint_leakage",
+      "reason": "needs the rest of the repo (linter/formatter configs) — run the CLI",
+      "name": "Lint Leakage"
+    }
+  ],
   "vendor_questions": [
     "Can you demo it with YOUR data, not their cherry-picked showcase?",
     "Published accuracy/reliability benchmark from an independent third party?",
@@ -605,6 +643,102 @@
     return analyzeWithFindings(systemPrompt).scores;
   }
 
+  /** Mirrors Python str.splitlines() so the line count is the same number. */
+  function splitLines(text) {
+    if (!text) return [];
+    const parts = String(text).split(
+      /\r\n|[\n\r\u000b\u000c\u001c\u001d\u001e\u0085\u2028\u2029]/
+    );
+    // Python treats a trailing terminator as ending the last line, not as
+    // starting an empty one: "a\n".splitlines() == ["a"].
+    if (parts.length && parts[parts.length - 1] === "") parts.pop();
+    return parts;
+  }
+
+  /**
+   * Context Bloat — the only one of the three configuration smells a browser
+   * can honestly run. Threshold and wording are the published heuristic from
+   * crewscore/smells.py; do not tune them here.
+   */
+  function detectContextBloat(text) {
+    if (!text) return null;
+    const lines = splitLines(text).length;
+    const max = ENGINE.context_bloat_max_lines;
+    if (lines < max) return null;
+    const meta = (ENGINE.smell_catalog || {})["smell.context_bloat"] || {};
+    return {
+      smell_id: "smell.context_bloat",
+      name: meta.name,
+      detail:
+        lines +
+        " lines (threshold " +
+        max +
+        "). Long files raise token cost and reduce adherence to the rules " +
+        "that matter.",
+      heuristic: meta.heuristic,
+      paper_prevalence: meta.paper_prevalence,
+      citation: ENGINE.smell_citation,
+      deterministic: meta.deterministic,
+      approximates_paper: meta.approximates_paper,
+      // Advisory only — never folded into any number. See crewscore/smells.py.
+      affects_score: false,
+      line_count: lines,
+    };
+  }
+
+  /** Mirrors crewscore.scoring.config_tier — smell counts, never a 0-100 grade. */
+  function configTier(smellCount) {
+    if (!smellCount || smellCount <= 0) return "CONFIG: NO SMELLS DETECTED";
+    if (smellCount === 1) return "CONFIG: 1 SMELL";
+    return "CONFIG: " + smellCount + " SMELLS";
+  }
+
+  /** Mirrors crewscore.profiles.governance_applies. */
+  function governanceApplies(profile) {
+    return profile !== ENGINE.config_profile;
+  }
+
+  function profileLabel(profile) {
+    const hit = (ENGINE.profiles || []).find((p) => p.key === profile);
+    return hit ? hit.label : profile;
+  }
+
+  /**
+   * Score an artifact the user has *declared* the type of.
+   *
+   * The CLI classifies by filename (crewscore/profiles.py::classify_path). A
+   * browser has no filename, and sniffing the pasted text would be a guess
+   * dressed up as a measurement — so the profile is declared, never inferred.
+   *
+   * Coding-agent config gets no governance number, no dimensions and no
+   * governance tier: measured on the arXiv:2606.15828 corpus the governance
+   * ruleset put 100/100 real config files in the worst tier, so the number
+   * carries no information for that artifact.
+   */
+  function analyzeArtifact(text, profile) {
+    const declared = profile || ENGINE.default_profile;
+    if (governanceApplies(declared)) {
+      const result = analyzeWithFindings(text);
+      result.profile = declared;
+      result.governance_applicable = true;
+      return result;
+    }
+    const smells = [];
+    const bloat = detectContextBloat(text);
+    if (bloat) smells.push(bloat);
+    return {
+      profile: declared,
+      governance_applicable: false,
+      tier: configTier(smells.length),
+      smells,
+      // Two detectors cannot run here; a clean result is a partial check.
+      undetectable: ENGINE.browser_undetectable_smells || [],
+      detectors_run: 1,
+      detectors_total: 3,
+      ruleset: ENGINE.ruleset,
+    };
+  }
+
   function scoreTier(overall) {
     if (overall >= 90) return { n: "STRUCTURAL: STRONG", c: "score-green" };
     if (overall >= 70) return { n: "STRUCTURAL: OK WITH GAPS", c: "score-yellow" };
@@ -684,6 +818,15 @@
     ruleset: ENGINE.ruleset,
     analyze,
     analyzeWithFindings,
+    analyzeArtifact,
+    detectContextBloat,
+    configTier,
+    governanceApplies,
+    profileLabel,
+    profiles: ENGINE.profiles,
+    defaultProfile: ENGINE.default_profile,
+    configProfile: ENGINE.config_profile,
+    contextBloatMaxLines: ENGINE.context_bloat_max_lines,
     scoreTier,
     vendorTier,
     scoreVendor,
