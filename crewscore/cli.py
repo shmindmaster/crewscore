@@ -514,11 +514,15 @@ def fix(prompt, prompt_file, apply, output, plan, as_json):
             for key in planned:
                 console.print(f"    · {key}")
             console.print()
-            console.print(explain_fixes(fixes))
+            console.print(explain_fixes(fixes, planned=True))
             console.print()
             console.print(
                 "[dim]Plan only — file not modified. "
                 "Re-run without --plan and with --apply or --output to write.[/dim]"
+            )
+            console.print(
+                "[yellow]Honesty note:[/yellow] Templates must be paired with "
+                "runtime gates (tool allowlists, human approval hooks, logging)."
             )
         console.print()
         return

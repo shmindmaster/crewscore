@@ -153,32 +153,48 @@ def apply_fixes(system_prompt: str, fixes: Dict[str, str]) -> str:
     return enhanced
 
 
-def explain_fixes(fixes: Dict[str, str]) -> str:
-    """Generate a human-readable explanation of what was fixed and why."""
+def explain_fixes(fixes: Dict[str, str], *, planned: bool = False) -> str:
+    """Human-readable explanation of fixes applied, or planned (dry-run)."""
     if not fixes:
         return "[OK] No fixes needed - your agent is production-ready."
-    
-    lines = [
-        "[FIX] CrewScore applied the following fixes:",
-        "",
-    ]
-    
+
+    if planned:
+        lines = [
+            "[PLAN] CrewScore would apply the following templates:",
+            "",
+        ]
+    else:
+        lines = [
+            "[FIX] CrewScore applied the following fixes:",
+            "",
+        ]
+
     descriptions = {
-        "injection": "Added prompt injection defense (reject override attempts, protect system instructions)",
-        "hallucination": "Added anti-hallucination policy (never fabricate facts/citations, say 'I don't know')",
-        "citation": "Added source citation requirements (every claim must cite its source)",
-        "cost": "Added cost governance (response length limits, tool call limits, batch confirmation)",
-        "human_gate": "Added human-in-the-loop gates (approval required for writes, sends, publishes, financial actions)",
-        "safe_stop": "Added safe-stop protocol (halt when evidence is missing or confidence is low)",
-        "audit": "Added audit trail requirements (log every action with timestamp, sources, and rationale)",
-        "compliance": "Added compliance & data protection (HIPAA/GDPR/SOC2 patterns, data minimization)",
+        "injection": "prompt injection defense (reject override attempts, protect system instructions)",
+        "hallucination": "anti-hallucination policy (never fabricate facts/citations, say 'I don't know')",
+        "citation": "source citation requirements (every claim must cite its source)",
+        "cost": "cost governance (response length limits, tool call limits, batch confirmation)",
+        "human_gate": "human-in-the-loop gates (approval required for writes, sends, publishes, financial actions)",
+        "safe_stop": "safe-stop protocol (halt when evidence is missing or confidence is low)",
+        "audit": "audit trail requirements (log every action with timestamp, sources, and rationale)",
+        "compliance": "compliance & data protection (HIPAA/GDPR/SOC2 patterns, data minimization)",
     }
-    
+
     for dimension in fixes:
-        desc = descriptions.get(dimension, f"Applied {dimension} guardrails")
-        lines.append(f"  [OK] {desc}")
-    
+        base = descriptions.get(dimension, f"{dimension} guardrails")
+        if planned:
+            lines.append(f"  [ ] Would add {base}")
+        else:
+            lines.append(f"  [OK] Added {base}")
+
     lines.append("")
-    lines.append("Re-run `crewscore test` to see your improved score.")
-    
+    if planned:
+        lines.append("Nothing written yet. Use --apply or --output to write templates.")
+        lines.append(
+            "Templates must be paired with runtime gates "
+            "(tool allowlists, human approval hooks, logging, and policy enforcement)."
+        )
+    else:
+        lines.append("Re-run `crewscore test` to see your improved score.")
+
     return "\n".join(lines)
