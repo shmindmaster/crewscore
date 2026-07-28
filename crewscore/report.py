@@ -37,6 +37,12 @@ def _bar_color(score: int) -> str:
 
 def share_text(result: ScoreResult) -> str:
     """One-line share copy with overall score and product URL."""
+    if not result.governance_applicable:
+        # Never publish a governance grade for a coding-agent config file.
+        return (
+            f"My agent config scored {result.tier} on CrewScore — "
+            f"offline configuration-smell scan. {HOMEPAGE}"
+        )
     return (
         f"My AI agent scored {result.overall}/100 on CrewScore "
         f"({result.tier}) — structural production-readiness scan. "

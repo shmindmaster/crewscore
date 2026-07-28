@@ -26,6 +26,33 @@ def format_score_markdown(
     dims = data.get("dimensions") or {}
     warnings = data.get("warnings") or []
     source = data.get("source") or "prompt"
+    governed = data.get("governance_applicable", True)
+    smells = data.get("smells") or []
+
+    if not governed:
+        # Coding-agent config: report smells, never a governance grade. A
+        # PR comment saying "0/100 CRITICAL GAPS" on a build-instructions
+        # file is wrong and would be the first thing a reviewer mocks.
+        lines = [
+            f"## {title}",
+            "",
+            f"**`{tier}`** — coding-agent config",
+            "",
+            f"- **Ruleset:** `{ruleset}` (deterministic · no LLM)",
+            f"- **Source:** `{source}`",
+            "- **Judged on:** configuration smells "
+            "([arXiv:2606.15828](https://arxiv.org/abs/2606.15828)), "
+            "not the production-governance dimensions",
+            "- **Not:** red-team, runtime proof, or certification",
+        ]
+        if smells:
+            lines.extend(["", "| Smell | Detail |", "| --- | --- |"])
+            for s in smells:
+                detail = str(s.get("detail", "")).replace("|", "\\|")
+                lines.append(f"| **{s.get('name', '?')}** | {detail} |")
+        else:
+            lines.extend(["", "No configuration smells detected."])
+        return "\n".join(lines) + "\n"
 
     lines = [
         f"## {title}",

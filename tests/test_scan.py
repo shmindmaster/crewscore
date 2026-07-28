@@ -212,7 +212,7 @@ def test_scan_cli_no_files_exit_1(tmp_path: Path):
 
 
 def test_scan_cli_threshold_fails_exit_2(tmp_path: Path):
-    _write(tmp_path / "AGENTS.md", BARE)  # low score
+    _write(tmp_path / "system-prompt.md", BARE)  # low score, governed profile
 
     runner = CliRunner()
     result = runner.invoke(
@@ -221,6 +221,48 @@ def test_scan_cli_threshold_fails_exit_2(tmp_path: Path):
     assert result.exit_code == 2
     payload = json.loads(result.output)
     assert any(item["overall"] < 90 for item in payload)
+
+
+def test_scan_threshold_exempts_coding_agent_config(tmp_path: Path):
+    """AGENTS.md is judged on smells, so --threshold must not fail it.
+
+    Measured on the arXiv:2606.15828 corpus, the governance score puts 100/100
+    real config files below any useful threshold. Gating CI on that number
+    would fail every repo that has an AGENTS.md.
+    """
+    _write(tmp_path / "AGENTS.md", BARE)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        main, ["scan", str(tmp_path), "--json", "--threshold", "90"]
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert all(item["profile"] == "coding_agent_config" for item in payload)
+    assert all(item["governance_applicable"] is False for item in payload)
+
+
+def test_scan_max_smells_gates_config_files(tmp_path: Path):
+    """--max-smells is the CI gate that does apply to coding-agent config."""
+    bloated = "# Guide\n" + "\n".join(f"- rule {i}" for i in range(250))
+    _write(tmp_path / "AGENTS.md", bloated)
+
+    runner = CliRunner()
+    passing = runner.invoke(
+        main, ["scan", str(tmp_path), "--json", "--max-smells", "5"]
+    )
+    assert passing.exit_code == 0, passing.output
+
+    failing = runner.invoke(
+        main, ["scan", str(tmp_path), "--json", "--max-smells", "0"]
+    )
+    assert failing.exit_code == 2
+    payload = json.loads(failing.output)
+    assert any(
+        s["smell_id"] == "smell.context_bloat"
+        for item in payload
+        for s in item["smells"]
+    )
 
 
 def test_scan_cli_threshold_passes(tmp_path: Path):

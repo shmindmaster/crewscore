@@ -26,7 +26,7 @@ crewscore test --prompt "You are a helpful assistant."
 **CI:** `crewscore scan . --threshold 50` · Action `shmindmaster/crewscore@v1`  
 Structural hygiene only — **not a red-team**, not a certification.
 
-[Install](#install) · [Usage](#usage) · [Scoring charter](#scoring-charter) · [How scoring works](#how-scoring-works) · [Config smells](#configuration-smells) · [What changed in 0.3.0](#what-changed-in-030) · [CI](#ci-integration) · [After CrewScore](#after-crewscore) · [Limits](#what-this-is-and-is-not)
+[Install](#install) · [Usage](#usage) · [Scoring charter](#scoring-charter) · [Two rulesets](#two-artifacts-two-rulesets) · [Config smells](#configuration-smells) · [How scoring works](#how-scoring-works) · [What changed](#what-changed-in-030) · [CI](#ci-integration) · [Limits](#what-this-is-and-is-not)
 
 </div>
 
@@ -107,7 +107,8 @@ Discover and score likely agent instruction files (`AGENTS.md`, `CLAUDE.md`, `sy
 ```bash
 crewscore scan .
 crewscore scan ./agents --json
-crewscore scan . --threshold 50
+crewscore scan . --threshold 50            # gates system prompts
+crewscore scan . --max-smells 0            # gates coding-agent config
 crewscore scan . --json --threshold 50
 crewscore scan . --summary crewscore-summary.md
 crewscore test --prompt-file ./AGENTS.md --summary crewscore-summary.md
@@ -116,8 +117,9 @@ crewscore test --prompt-file ./AGENTS.md --summary crewscore-summary.md
 crewscore scan examples/corpus
 ```
 
-- Prints a table of path → overall → tier (JSON with `--json`).
-- `--threshold N` exits `2` if **any** file scores below `N`.
+- Prints a table of path → artifact → score → verdict (JSON with `--json`).
+- `--threshold N` exits `2` if any **system prompt** scores below `N`. [Coding-agent config is exempt](#two-artifacts-two-rulesets) — it isn't judged on that number.
+- `--max-smells N` exits `2` if any file has more than `N` configuration smells.
 - `--summary PATH` writes transparent PR/job markdown (formula + open rule IDs for single-file; table for scan).
 - Exit `1` if no candidate files are found.
 - Skips `node_modules`, `.git`, `venv`, `dist`, `__pycache__`, `.venv`.
@@ -237,6 +239,33 @@ Labels describe **prompt-text coverage**, not production certification.
 
 ---
 
+## Two artifacts, two rulesets
+
+CrewScore judges two different kinds of file, and it will tell you which one it thinks it's looking at.
+
+| Artifact | Examples | Judged on |
+|----------|----------|-----------|
+| **Coding-agent config** | `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, `.cursor/rules/*.mdc`, `copilot-instructions.md` | [Configuration smells](#configuration-smells) |
+| **Agent system prompt** | `system-prompt.md`, anything under `prompts/` or `agents/`, pasted text | The [8 governance dimensions](#how-scoring-works) |
+
+Why: a file that says *"Always use pnpm"* and *"Build with `make build`"* is telling a coding agent how to work in your repo. It has no reason to contain HIPAA language or human-approval gates, and scoring it against those is a category error.
+
+We know the size of that error because we measured it. Against the 100 most-starred repos with an `AGENTS.md` ([arXiv:2606.15828](https://arxiv.org/abs/2606.15828) corpus), the governance ruleset scored them at a **median of 0/100**, with all 100 in the worst tier. A scale where the entire real-world population fails carries no information. So config files no longer get a governance grade at all — they get a smell verdict.
+
+```bash
+crewscore test --prompt-file AGENTS.md
+# → CONFIG: NO SMELLS DETECTED  (not "0/100 CRITICAL GAPS")
+
+crewscore test --prompt-file ./agents/system-prompt.md
+# → OVERALL SCORE: 87/100  STRUCTURAL: OK WITH GAPS
+```
+
+Override the detection with `--profile system_prompt` or `--profile coding_agent_config` when your filenames don't follow convention.
+
+**In CI:** `--threshold N` gates system prompts and is ignored for config files; `--max-smells N` gates config files.
+
+---
+
 ## Configuration smells
 
 Alongside the score, CrewScore reports **configuration smells** — problems in the *shape* of an instruction file rather than its content. These come from a published, peer-reviewed catalog: [*Configuration Smells in AGENTS.md Files*](https://arxiv.org/abs/2606.15828) (dos Santos et al., 2026), which found **91 of 100** popular open-source projects carried at least one.
@@ -261,7 +290,11 @@ Smells are **advisory. They never change the score.** Folding them in would sile
 
 ## What changed in 0.3.0
 
-Two defects, both found by testing CrewScore against the published research rather than waiting for someone else to.
+Four defects, all found by testing CrewScore against the published research rather than waiting for someone else to.
+
+**0. `AGENTS.md` files were being judged by the wrong ruleset.** Validated against the [arXiv:2606.15828](https://arxiv.org/abs/2606.15828) corpus of the 100 most-starred repos with an agent config file, CrewScore scored them at a median of **0/100** — all 100 in the worst tier. `crewscore scan` targeted exactly those files by default, so the headline command pointed the governance ruleset at the one artifact it can't assess. Fixed by [splitting the rulesets](#two-artifacts-two-rulesets): 0 of those 100 files now receive a governance grade, and the 42 flagged for Context Bloat match the paper's labels exactly.
+
+**0b. Four rules were matching ordinary developer prose.** Measured on the same corpus: `compliance.01` matched `phi` *inside "cryptographic"* (19/100 files); `injection.05` matched *dependency injection* (19/100); `audit.02` matched bare `logging` (30/100); `citation.01`/`.05` matched `reference` and any numbered list containing "refer" (83 hits). All narrowed, with regression tests built from the exact offending strings. Roughly **70% of the apparent signal on real files was noise**.
 
 **1. The length bonus is gone.** CrewScore awarded up to +10 per dimension for prompts over 500 words. That rewarded length — and length is a cost, not a virtue: files at or over 200 lines are Context Bloat, and [Gloaguen et al.](https://arxiv.org/abs/2602.11988) measured **>20% higher inference cost** from context files with **no gain in task success**. It was also never in the published formula, so the documented formula did not match the code. Both are fixed: the formula in this README is now the whole formula.
 
