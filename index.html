@@ -47,28 +47,36 @@ body{
     repeating-linear-gradient(0deg,transparent,transparent 47px,rgba(42,50,44,.35) 48px),
     var(--bg);
   min-height:100vh;
-  padding:1rem 1rem 3.5rem;
+  min-height:100dvh;
+  padding:
+    max(1rem, env(safe-area-inset-top))
+    max(1rem, env(safe-area-inset-right))
+    max(4.5rem, calc(3.5rem + env(safe-area-inset-bottom)))
+    max(1rem, env(safe-area-inset-left));
   line-height:1.45;
+  -webkit-text-size-adjust:100%;
 }
 .wrap{max-width:780px;margin:0 auto}
 /* —— chrome —— */
 .topbar{
-  display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  display:flex;align-items:center;justify-content:space-between;gap:.65rem;
   margin-bottom:1.25rem;padding-bottom:.85rem;border-bottom:1px solid var(--line);
+  flex-wrap:wrap;
 }
-.brand{display:flex;align-items:center;gap:.65rem}
+.brand{display:flex;align-items:center;gap:.65rem;min-width:0}
 .mark{
   width:34px;height:34px;border:1px solid var(--amber-line);
   background:var(--panel);display:grid;place-items:center;
   font-family:var(--mono);font-weight:700;font-size:.72rem;color:var(--amber);
-  letter-spacing:.04em;
+  letter-spacing:.04em;flex-shrink:0;
 }
 .brand h1{font-size:1rem;font-weight:700;letter-spacing:-.02em}
 .brand p{font-family:var(--mono);font-size:.65rem;color:var(--faint);text-transform:uppercase;letter-spacing:.06em}
 .cap-chip{
   font-family:var(--mono);font-size:.68rem;color:var(--amber);
   border:1px solid var(--amber-line);background:var(--amber-dim);
-  padding:.35rem .55rem;white-space:nowrap;
+  padding:.35rem .55rem;line-height:1.25;max-width:100%;
+  white-space:normal;text-align:right;
 }
 /* —— hero —— */
 .hero{margin-bottom:1.1rem}
@@ -98,22 +106,54 @@ body{
   font-family:var(--mono);font-size:.68rem;text-align:center;
   padding:.5rem .25rem;border:1px solid var(--line);color:var(--faint);
   background:var(--panel2);text-transform:uppercase;letter-spacing:.04em;
+  min-height:44px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;width:100%;appearance:none;-webkit-appearance:none;
+  border-left:3px solid transparent;
 }
-.stage-pill.on{border-color:var(--amber-line);color:var(--amber);background:var(--amber-dim)}
-.stage-pill.done{border-color:rgba(93,190,124,.35);color:var(--ok)}
-@media(max-width:560px){
-  .stages{grid-template-columns:repeat(2,1fr)}
-  .cap-chip{display:none}
+.stage-pill:disabled{opacity:.55;cursor:not-allowed}
+.stage-pill:not(:disabled):hover{border-color:var(--line2);color:var(--muted)}
+.stage-pill:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.stage-pill.on{
+  border-color:var(--amber-line);color:var(--amber);background:var(--amber-dim);
+  border-left-color:var(--amber);
+}
+.stage-pill.done{border-color:rgba(93,190,124,.35);color:var(--ok);border-left-color:var(--ok)}
+@media(max-width:640px){
+  .stages{
+    grid-template-columns:repeat(2,1fr);
+    position:sticky;top:0;z-index:20;
+    margin:0 0 .9rem;padding:.45rem 0;
+    background:linear-gradient(180deg,var(--bg) 70%,transparent);
+    backdrop-filter:blur(6px);
+  }
+  .cap-chip{font-size:.62rem;padding:.3rem .45rem;text-align:left;flex:1 1 12rem}
+  .topbar{gap:.5rem}
+}
+@media(min-width:900px){
+  .wrap{max-width:960px}
+  .hero h2{max-width:24ch}
+  #deck-inspect .score-hero{padding:.75rem 0 1rem}
 }
 /* —— panels —— */
-.deck{
+.deck,.deck-instrument{
   border:1px solid var(--line);background:var(--panel);
-  box-shadow:var(--shadow);padding:1.1rem;
+  box-shadow:
+    var(--shadow),
+    inset 0 0 0 1px rgba(232,163,23,.04);
+  padding:1.1rem;
+  position:relative;
 }
-.deck + .deck{margin-top:.75rem}
+.deck-instrument::before,.deck-instrument::after{
+  content:"";position:absolute;width:12px;height:12px;
+  border-color:var(--amber-line);border-style:solid;pointer-events:none;
+}
+.deck-instrument::before{top:6px;left:6px;border-width:1px 0 0 1px}
+.deck-instrument::after{bottom:6px;right:6px;border-width:0 1px 1px 0}
+.deck + .deck,.deck-instrument + .deck,.deck + .deck-instrument{margin-top:.75rem}
 .deck-head{
   display:flex;align-items:baseline;justify-content:space-between;gap:.5rem;
   margin-bottom:.75rem;padding-bottom:.55rem;border-bottom:1px solid var(--line);
+  flex-wrap:wrap;
 }
 .deck-head h3{
   font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;
@@ -126,23 +166,28 @@ label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:.35rem;font
 .chip{
   font-family:var(--mono);font-size:.7rem;border:1px solid var(--line2);
   background:var(--panel2);color:var(--ink);padding:.4rem .6rem;cursor:pointer;
+  min-height:44px;display:inline-flex;align-items:center;
 }
 .chip:hover,.chip:focus-visible{border-color:var(--amber);color:var(--amber);outline:none}
 .chip.active{border-color:var(--amber);background:var(--amber-dim);color:var(--amber)}
 textarea,input[type=url],input[type=text]{
   width:100%;padding:.7rem .75rem;background:#090b0a;
-  border:1px solid var(--line2);color:var(--ink);font-size:.88rem;
+  border:1px solid var(--line2);color:var(--ink);font-size:16px;
   font-family:var(--mono);border-radius:var(--r);
 }
-textarea{min-height:140px;resize:vertical;line-height:1.5}
+textarea{min-height:140px;resize:vertical;line-height:1.5;font-size:.88rem}
+@media(max-width:640px){
+  textarea{font-size:16px} /* prevent iOS zoom on focus */
+}
 input:focus,textarea:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 2px var(--amber-dim)}
-.row{display:flex;gap:.45rem;flex-wrap:wrap;margin-top:.55rem}
+.row{display:flex;gap:.45rem;flex-wrap:wrap;margin-top:.55rem;align-items:stretch}
 .row input{flex:1;min-width:160px}
 .btn{
   width:100%;margin-top:.7rem;padding:.85rem;
   font-family:var(--mono);font-weight:700;font-size:.88rem;
   letter-spacing:.03em;text-transform:uppercase;cursor:pointer;
   border:1px solid var(--amber);background:var(--amber);color:#14110a;
+  min-height:44px;
 }
 .btn:hover{filter:brightness(1.05)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
@@ -150,20 +195,31 @@ input:focus,textarea:focus{outline:none;border-color:var(--amber);box-shadow:0 0
   border:1px solid var(--line2);background:transparent;color:var(--ink);
   font-family:var(--mono);font-size:.78rem;font-weight:600;
   padding:.65rem .8rem;cursor:pointer;text-transform:uppercase;letter-spacing:.03em;
+  min-height:44px;display:inline-flex;align-items:center;justify-content:center;
 }
 .btn-sec:hover{border-color:var(--amber);color:var(--amber)}
 .btn-ok{border-color:var(--ok);background:var(--ok);color:#0a140e}
 .btn-ghost{
   background:none;border:none;color:var(--muted);font-family:var(--mono);
   font-size:.72rem;cursor:pointer;text-decoration:underline;text-underline-offset:2px;
-  padding:.35rem 0;
+  padding:.35rem 0;min-height:44px;
 }
 .btn-ghost:hover{color:var(--amber)}
 .error{display:none;margin-top:.55rem;padding:.55rem .65rem;background:var(--bad-dim);
   border:1px solid rgba(232,93,93,.35);color:#f0a0a0;font-size:.8rem}
 .error.show{display:block}
 /* —— inspect —— */
-.score-hero{text-align:center;padding:.5rem 0 .85rem}
+.score-hero{text-align:center;padding:.5rem 0 .85rem;position:relative}
+.score-ring{
+  width:min(168px,46vw);height:min(168px,46vw);margin:.35rem auto .15rem;
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 50% 50%,transparent 58%,rgba(232,163,23,.08) 59%,transparent 62%),
+    conic-gradient(from 210deg,var(--amber-line),transparent 40%,var(--line) 70%,var(--amber-line));
+  display:grid;place-items:center;
+  box-shadow:0 0 0 1px rgba(42,50,44,.8),inset 0 0 24px rgba(0,0,0,.35);
+}
+.score-ring .score-big{margin:0}
 .score-kicker{font-family:var(--mono);font-size:.7rem;color:var(--faint);letter-spacing:.06em;text-transform:uppercase}
 .delta{
   display:inline-block;margin:.4rem 0 .1rem;padding:.2rem .5rem;
@@ -266,9 +322,11 @@ details.how summary::-webkit-details-marker{display:none}
 .question{margin-bottom:.6rem;padding:.6rem;border:1px solid var(--line);background:var(--panel2)}
 .question p{font-size:.8rem;margin-bottom:.4rem;color:#d5d9d0}
 .answers{display:flex;gap:.35rem}
+.answers{flex-wrap:wrap}
 .answers button{
-  flex:1;padding:.4rem;border:1px solid var(--line2);background:#0a0c0b;
+  flex:1;min-width:4.5rem;padding:.4rem;border:1px solid var(--line2);background:#0a0c0b;
   color:var(--muted);font-family:var(--mono);font-size:.7rem;cursor:pointer;
+  min-height:44px;
 }
 .answers button.selected-yes{border-color:var(--ok);color:var(--ok);background:var(--ok-dim)}
 .answers button.selected-no{border-color:var(--bad);color:var(--bad);background:var(--bad-dim)}
@@ -298,6 +356,23 @@ details.how summary::-webkit-details-marker{display:none}
   font-size:.8rem;color:var(--muted);background:rgba(0,0,0,.15);
 }
 .empty-invite strong{color:var(--ink)}
+/* mobile sticky primary CTA */
+#mobile-score-bar{
+  display:none;
+  position:fixed;left:0;right:0;bottom:0;z-index:30;
+  padding:.55rem max(.75rem, env(safe-area-inset-right))
+    max(.55rem, env(safe-area-inset-bottom)) max(.75rem, env(safe-area-inset-left));
+  background:linear-gradient(180deg,transparent,rgba(10,12,11,.92) 28%,var(--bg));
+  border-top:1px solid var(--line);
+}
+#mobile-score-bar .btn{margin:0}
+@media(max-width:640px){
+  #mobile-score-bar.show-mobile{display:block}
+  #btn-score-agent{display:none}
+}
+@media(min-width:641px){
+  #mobile-score-bar{display:none !important}
+}
 </style>
 </head>
 <body>
@@ -325,14 +400,14 @@ details.how summary::-webkit-details-marker{display:none}
   </section>
 
   <nav class="stages" aria-label="Preflight stages">
-    <div class="stage-pill on" data-stage="prompt" id="stg-prompt">1 Prompt</div>
-    <div class="stage-pill" data-stage="inspect" id="stg-inspect">2 Inspect</div>
-    <div class="stage-pill" data-stage="act" id="stg-act">3 Act</div>
-    <div class="stage-pill" data-stage="export" id="stg-export">4 Export</div>
+    <button type="button" class="stage-pill on" data-stage="prompt" id="stg-prompt" aria-current="step">1 Prompt</button>
+    <button type="button" class="stage-pill" data-stage="inspect" id="stg-inspect" disabled>2 Inspect</button>
+    <button type="button" class="stage-pill" data-stage="act" id="stg-act" disabled>3 Act</button>
+    <button type="button" class="stage-pill" data-stage="export" id="stg-export" disabled>4 Export</button>
   </nav>
 
   <!-- STAGE 1: PROMPT -->
-  <section class="deck" id="deck-prompt" aria-labelledby="prompt-head">
+  <section class="deck deck-instrument" id="deck-prompt" aria-labelledby="prompt-head">
     <div class="deck-head">
       <h3 id="prompt-head">01 · Prompt artifact</h3>
       <span class="hint">Stays in your browser</span>
@@ -354,7 +429,7 @@ details.how summary::-webkit-details-marker{display:none}
   </section>
 
   <!-- STAGE 2: INSPECT -->
-  <section class="deck hidden" id="deck-inspect" aria-labelledby="inspect-head">
+  <section class="deck deck-instrument hidden" id="deck-inspect" aria-labelledby="inspect-head">
     <div class="deck-head">
       <h3 id="inspect-head">02 · Inspect</h3>
       <span class="hint" id="inspect-meta"></span>
@@ -363,7 +438,7 @@ details.how summary::-webkit-details-marker{display:none}
   </section>
 
   <!-- STAGE 3: ACT -->
-  <section class="deck hidden" id="deck-act" aria-labelledby="act-head">
+  <section class="deck deck-instrument hidden" id="deck-act" aria-labelledby="act-head">
     <div class="deck-head">
       <h3 id="act-head">03 · Act (plan before mutate)</h3>
       <span class="hint">Text templates only — not runtime proof</span>
@@ -372,7 +447,7 @@ details.how summary::-webkit-details-marker{display:none}
   </section>
 
   <!-- STAGE 4: EXPORT -->
-  <section class="deck hidden" id="deck-export" aria-labelledby="export-head">
+  <section class="deck deck-instrument hidden" id="deck-export" aria-labelledby="export-head">
     <div class="deck-head">
       <h3 id="export-head">04 · Export</h3>
       <span class="hint">Leave with something useful</span>
@@ -384,7 +459,7 @@ details.how summary::-webkit-details-marker{display:none}
     Secondary: <a href="#vendor" id="link-vendor">Vendor checklist (self-attest)</a> — not the primary product path.
   </p>
 
-  <section class="deck" id="panel-vendor" aria-labelledby="vendor-head">
+  <section class="deck deck-instrument" id="panel-vendor" aria-labelledby="vendor-head">
     <div class="deck-head">
       <h3 id="vendor-head">Vendor checklist (self-attest)</h3>
       <button type="button" class="btn-ghost" id="btn-close-vendor">Close</button>
@@ -405,6 +480,9 @@ details.how summary::-webkit-details-marker{display:none}
     · structural scan only · templates must be paired with runtime gates<br>
     Same scoring rules in the browser and the CLI.
   </footer>
+</div>
+<div id="mobile-score-bar" aria-hidden="true">
+  <button class="btn" type="button" id="btn-score-agent-mobile">Run structural score</button>
 </div>
 <div class="toast" id="toast" role="status"></div>
 <canvas id="share-canvas" width="900" height="500" style="display:none"></canvas>
@@ -477,21 +555,61 @@ details.how summary::-webkit-details-marker{display:none}
     if (overall > 0) return "Critical gaps — start here";
     return "No hygiene signals found";
   }
+  let reached = { prompt: true, inspect: false, act: false, export: false };
+
   function setStage(active) {
     const order = ["prompt", "inspect", "act", "export"];
     const idx = order.indexOf(active);
+    if (idx >= 0) {
+      for (let i = 0; i <= idx; i++) reached[order[i]] = true;
+    }
     order.forEach((s, i) => {
       const el = document.getElementById("stg-" + s);
       if (!el) return;
-      el.classList.toggle("on", s === active);
+      const isOn = s === active;
+      el.classList.toggle("on", isOn);
       el.classList.toggle("done", i < idx);
+      el.disabled = !reached[s];
+      if (isOn) el.setAttribute("aria-current", "step");
+      else el.removeAttribute("aria-current");
     });
+    updateMobileScoreBar(active);
   }
   function showDeck(id, on) {
     const el = document.getElementById(id);
     if (!el) return;
     el.classList.toggle("hidden", !on);
   }
+  function updateMobileScoreBar(active) {
+    const bar = document.getElementById("mobile-score-bar");
+    if (!bar) return;
+    const onPrompt = !active || active === "prompt";
+    bar.classList.toggle("show-mobile", onPrompt);
+    bar.setAttribute("aria-hidden", onPrompt ? "false" : "true");
+  }
+  function jumpToStage(stage) {
+    if (!reached[stage]) return;
+    const map = {
+      prompt: "deck-prompt",
+      inspect: "deck-inspect",
+      act: "deck-act",
+      export: "deck-export",
+    };
+    const deckId = map[stage];
+    if (!deckId) return;
+    if (stage !== "prompt" && document.getElementById(deckId).classList.contains("hidden")) {
+      showDeck(deckId, true);
+    }
+    setStage(stage);
+    document.getElementById(deckId).scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  document.querySelectorAll(".stage-pill").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const stage = btn.getAttribute("data-stage");
+      if (stage) jumpToStage(stage);
+    });
+  });
+  updateMobileScoreBar("prompt");
 
   /* templates */
   const chips = document.getElementById("template-chips");
@@ -557,7 +675,7 @@ details.how summary::-webkit-details-marker{display:none}
     if (opts.delta != null && opts.delta !== 0) {
       html += `<div class="delta">${opts.delta > 0 ? "+" + opts.delta : opts.delta} after approved fix</div>`;
     }
-    html += `<div class="score-big ${tier.c}">${overall}<span style="font-size:.4em;opacity:.7">/100</span></div>
+    html += `<div class="score-ring" aria-hidden="true"><div class="score-big ${tier.c}">${overall}<span style="font-size:.4em;opacity:.7">/100</span></div></div>
       <div class="soft-verdict ${tier.c}">${escapeHtml(soft)}</div>
       <div class="hard-tier">${escapeHtml(tier.n)}</div>
       <div class="stamp">Structural pre-gate · not a red-team · not certification</div>
@@ -779,6 +897,11 @@ details.how summary::-webkit-details-marker{display:none}
     });
   }
 
+  const scoreBtn = document.getElementById("btn-score-agent");
+  const scoreBtnMobile = document.getElementById("btn-score-agent-mobile");
+  if (scoreBtn) scoreBtn.addEventListener("click", () => scoreAgent({ source: "paste" }));
+  if (scoreBtnMobile) scoreBtnMobile.addEventListener("click", () => scoreAgent({ source: "paste" }));
+
   function scoreAgent(meta) {
     meta = meta || {};
     const err = document.getElementById("agent-error");
@@ -974,7 +1097,6 @@ details.how summary::-webkit-details-marker{display:none}
     }
   }
 
-  document.getElementById("btn-score-agent").addEventListener("click", () => scoreAgent({ source: "paste" }));
   document.getElementById("btn-load-url").addEventListener("click", loadUrl);
   document.getElementById("link-how-score").addEventListener("click", () => {
     if (lastAgent) {
