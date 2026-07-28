@@ -11,9 +11,9 @@
 
 <br/>
 
-![CrewScore — paste a weak prompt, score it, plan fixes, export](docs/hero-demo.gif)
+![CrewScore — a bare prompt states none of the eight controls; crewscore fix raises coverage to 50/100 and CrewScore flags its own output as template boilerplate](docs/demo.svg)
 
-**Try it live (no install):** [crewscore.ai](https://crewscore.ai) · [video](docs/hero-demo.mp4)
+**Try it live (no install):** [crewscore.ai](https://crewscore.ai)
 
 <br/>
 
