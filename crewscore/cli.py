@@ -201,6 +201,11 @@ def test(
         smells=smells,
         profile=resolved_profile,
     )
+    if threshold is not None and not result.governance_applicable:
+        # CI always passes --json, where a console notice is invisible. The one
+        # consumer whose gate just became a no-op has to learn it from the
+        # payload, so record it as a warning rather than only printing it.
+        result.warnings.append("threshold_ignored_for_config")
 
     if report:
         report_path = Path(report)
@@ -363,22 +368,26 @@ def test(
                     f"  [red]Threshold failure: {result.overall} < {threshold}[/red]"
                 )
             sys.exit(2)
-    else:
+    elif threshold is not None and not as_json:
         # --threshold gates the governance score, which this artifact is not
         # judged on. Failing the build on it would fail every real AGENTS.md.
-        if threshold is not None and not as_json:
+        # (The --json path carries `threshold_ignored_for_config` in warnings.)
+        err_console.print(
+            "  [yellow]--threshold ignored:[/yellow] coding-agent config is "
+            "judged on configuration smells, not the governance score. "
+            "Use --max-smells to gate CI."
+        )
+
+    # Smells stay out of every score, but --max-smells is an explicit request
+    # to gate on them — and it has to mean the same thing here as in `scan`,
+    # which applies it to every file regardless of profile.
+    if max_smells is not None and len(result.smells) > max_smells:
+        if not as_json:
             err_console.print(
-                "  [yellow]--threshold ignored:[/yellow] coding-agent config is "
-                "judged on configuration smells, not the governance score. "
-                "Use --max-smells to gate CI."
+                f"  [red]Smell threshold failure: {len(result.smells)} "
+                f"> {max_smells}[/red]"
             )
-        if max_smells is not None and len(result.smells) > max_smells:
-            if not as_json:
-                err_console.print(
-                    f"  [red]Smell threshold failure: {len(result.smells)} "
-                    f"> {max_smells}[/red]"
-                )
-            sys.exit(2)
+        sys.exit(2)
 
 
 _PROVENANCE_COLOR = {
