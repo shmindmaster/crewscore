@@ -67,3 +67,81 @@ def test_prefers_reduced_motion():
     """CSS respects prefers-reduced-motion for a11y."""
     html = _html()
     assert "prefers-reduced-motion" in html
+
+
+def test_mobile_touch_targets():
+    """Primary controls meet ~44px touch target floor for mobile."""
+    html = _html()
+    assert "min-height:44px" in html or "min-height: 44px" in html
+    # Stage pills, chips, and secondary buttons must be covered by the rule set.
+    for selector in (".btn", ".btn-sec", ".chip", ".stage-pill"):
+        assert selector in html
+
+
+def test_safe_area_padding():
+    """Body uses safe-area insets for notched phones."""
+    html = _html()
+    assert "safe-area-inset" in html
+
+
+def test_sticky_stages_mobile():
+    """Stage nav sticks on small screens for orientation during scroll."""
+    html = _html()
+    assert "position:sticky" in html or "position: sticky" in html
+    assert ".stages" in html
+
+
+def test_cap_chip_not_hidden_on_mobile():
+    """Honesty capability chip must remain visible on mobile (no display:none)."""
+    html = _html()
+    # Ban the anti-pattern of hiding the cap chip in a mobile media query.
+    assert ".cap-chip{display:none}" not in html.replace(" ", "")
+    assert "cap-chip" in html
+    assert "Structural pre-gate" in html
+
+
+def test_desktop_density_breakpoint():
+    """Desktop breakpoint widens layout for builder density."""
+    html = _html()
+    assert "min-width:900px" in html or "min-width: 900px" in html
+    assert "960px" in html or "max-width:960px" in html or "max-width: 960px" in html
+
+
+def test_stage_nav_are_buttons():
+    """Stage pills are real buttons for keyboard/touch jump to reached stages."""
+    html = _html()
+    assert 'id="stg-prompt"' in html
+    assert "<button" in html
+    # Each stage control is a button element.
+    for sid in ("stg-prompt", "stg-inspect", "stg-act", "stg-export"):
+        assert f'id="{sid}"' in html
+        # button ... id="stg-..."
+        assert f'id="{sid}"' in html
+    assert 'type="button"' in html
+    assert "stage-pill" in html
+    # Explicit marker that stages are navigable controls
+    assert 'aria-label="Preflight stages"' in html
+    assert "stg-prompt" in html and "button" in html[html.find("stg-prompt") - 80 : html.find("stg-prompt") + 20]
+
+
+def test_ci_gate_export_markers():
+    """CI handoff copy remains part of the export surface contract."""
+    html = _html()
+    assert "ci-block" in html
+    assert "Gate this in CI" in html
+    assert "shmindmaster/crewscore@v1" in html
+
+
+def test_preflight_aesthetic_tokens():
+    """Instrument/preflight visual tokens stay distinctive (not generic AI cyan)."""
+    html = _html()
+    assert "--amber:" in html
+    assert "--mono:" in html or "IBM Plex Mono" in html
+    assert "score-ring" in html or "deck-instrument" in html
+    assert "#0a0c0b" in html or "--bg:#0a0c0b" in html
+
+
+def test_mobile_score_bar():
+    """Sticky mobile primary CTA for Run score without hunting for the main button."""
+    html = _html()
+    assert 'id="mobile-score-bar"' in html
