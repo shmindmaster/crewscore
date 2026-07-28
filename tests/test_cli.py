@@ -869,3 +869,18 @@ def test_fix_plan_human_not_past_tense_applied(tmp_path: Path):
     assert "applied the following" not in lower
     assert "would apply" in lower or "plan" in lower
     assert "runtime" in lower or "gates" in lower or "template" in lower
+
+
+def test_help_text_does_not_claim_production_readiness():
+    """`crewscore --help` is the first thing a new user reads.
+
+    docs/validation.md retracts the production-readiness claim. Leaving it in
+    the command help means every user still meets the old claim first, no
+    matter what the README says.
+    """
+    runner = CliRunner()
+    for args in ([], ["test", "--help"], ["scan", "--help"]):
+        result = runner.invoke(main, args + (["--help"] if not args else []))
+        lowered = result.output.lower()
+        assert "production-readiness" not in lowered, args
+        assert "production readiness" not in lowered, args

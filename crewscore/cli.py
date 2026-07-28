@@ -1,4 +1,4 @@
-"""CrewScore CLI — structural production-readiness scoring for AI agents."""
+"""CrewScore CLI — offline guardrail-coverage scoring for AI agents."""
 
 from __future__ import annotations
 
@@ -84,7 +84,7 @@ def render_score_bar(score: int) -> str:
 @click.group()
 @click.version_option(version=__version__, prog_name="crewscore")
 def main():
-    """CrewScore — offline structural scorecard for AI agent system prompts."""
+    """CrewScore — offline guardrail-coverage checks for AI agent prompts and config."""
     pass
 
 
@@ -165,9 +165,11 @@ def test(
     profile,
     max_smells,
 ):
-    """Run structural production-readiness analysis on an agent system prompt.
+    """Measure governance guardrail coverage in an agent system prompt.
 
     Offline, deterministic regex scan — not live red-teaming.
+    The score is coverage, not quality: it reports which controls are written
+    down, not whether the agent obeys them. See docs/validation.md.
     Every rule is public: run `crewscore rules` or `crewscore rules --json`.
     """
     system_prompt = None

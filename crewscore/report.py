@@ -43,9 +43,11 @@ def share_text(result: ScoreResult) -> str:
             f"My agent config scored {result.tier} on CrewScore — "
             f"offline configuration-smell scan. {HOMEPAGE}"
         )
+    # Coverage, not quality: the score says which guardrails are written down,
+    # not that the agent is production-ready. See docs/validation.md.
     return (
         f"My AI agent scored {result.overall}/100 on CrewScore "
-        f"({result.tier}) — structural production-readiness scan. "
+        f"({result.tier}) — offline guardrail coverage scan. "
         f"{HOMEPAGE}"
     )
 
