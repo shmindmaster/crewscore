@@ -1,6 +1,7 @@
 """Transparency: open rules catalog is complete and non-black-box."""
 
 import json
+from pathlib import Path
 
 from click.testing import CliRunner
 
@@ -145,6 +146,34 @@ def test_test_human_shows_ruleset_and_method_without_explain_flag():
     assert "crewscore rules" in result.output.lower() or "rules --json" in result.output
     # Findings visible by default (transparency)
     assert "missing" in result.output.lower() or "Findings" in result.output
+
+
+def test_ruleset_id_is_0_4_0():
+    """The ruleset moves alongside the package to 0.4.0.
+
+    0.3.1 was never published (the last public release is 0.3.0) and this
+    branch is unpushed, so there is no comparison history to invalidate.
+    """
+    assert RULESET_ID == "crewscore-hygiene@0.4.0"
+
+
+def test_pyproject_description_does_not_overclaim_production_readiness():
+    """Packaging metadata must match what the tool actually does.
+
+    docs/validation.md is the source of truth: the score does not establish
+    production readiness. The description must not claim production-
+    readiness assessment or certification.
+    """
+    text = Path("pyproject.toml").read_text(encoding="utf-8")
+    desc_line = next(
+        line for line in text.splitlines() if line.strip().startswith("description")
+    )
+    lowered = desc_line.lower()
+    assert "production-readiness" not in lowered
+    assert "production readiness" not in lowered
+    assert "certif" not in lowered
+    assert "governance guardrail coverage" in lowered
+    assert "configuration smells" in lowered
 
 
 def test_scoring_method_constant_honest():
