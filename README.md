@@ -11,14 +11,13 @@
 
 <br/>
 
-<!-- Hero demo: real product capture (weak prompt → score → plan → apply → export) -->
-![CrewScore hero demo — weak prompt → structural score → plan fix → apply → export](docs/hero-demo.gif)
+![CrewScore — paste a weak prompt, score it, plan fixes, export](docs/hero-demo.gif)
 
-**[~25s end-to-end](docs/hero-demo.mp4)** · try live: **[crewscore.ai](https://crewscore.ai)** · re-record: `node scripts/record-hero-demo.mjs --public-gif`
+**Try it live (no install):** [crewscore.ai](https://crewscore.ai) · [video](docs/hero-demo.mp4)
 
 <br/>
 
-**Everyone (zero friction):** open **[crewscore.ai](https://crewscore.ai)** → paste prompt or pick a template → score → **fix gaps** → share.
+**Everyone:** open **[crewscore.ai](https://crewscore.ai)** → paste prompt or pick a template → score → **fix gaps** → share.
 
 **Teams / CI:** `pip install crewscore` · GitHub Action `shmindmaster/crewscore@v1`
 
@@ -37,7 +36,7 @@ $ crewscore scan .
 Score the **text** of your agent instructions. Fix gaps. Gate CI when scores drop.  
 Structural hygiene only — **not a red-team**, not a certification.
 
-[Install](#install) · [Usage](#usage) · [Demo](#demo) · [Scoring charter](#scoring-charter) · [Share](#share-your-score) · [How scoring works](#how-scoring-works) · [CI](#ci-integration) · [After CrewScore](#after-crewscore) · [Limits](#what-this-is-and-is-not)
+[Install](#install) · [Usage](#usage) · [Scoring charter](#scoring-charter) · [Share](#share-your-score) · [How scoring works](#how-scoring-works) · [CI](#ci-integration) · [After CrewScore](#after-crewscore) · [Limits](#what-this-is-and-is-not)
 
 </div>
 
@@ -68,31 +67,6 @@ Most teams never inspect those instructions systematically. **CrewScore** does a
 Scores reflect **prompt-text signals**. They are a useful smoke test, not a guarantee of runtime safety.
 
 > **Name note:** PyPI package `agent-guard` is an unrelated third-party CrewAI monitoring library. This project is **CrewScore** (`pip install crewscore`). The CLI also accepts the legacy alias `agent-guard` after install.
-
----
-
-## Demo
-
-The README hero is a **real browser capture** of the product (not a mock):
-
-1. Weak demo prompt  
-2. Structural score (~0/100 critical gaps)  
-3. Inspect dimensions  
-4. Plan fix → apply templates  
-5. Export / share  
-
-| Asset | Use |
-| --- | --- |
-| [docs/hero-demo.gif](docs/hero-demo.gif) | README / embeds (autoplay loop) |
-| [docs/hero-demo.mp4](docs/hero-demo.mp4) | X, LinkedIn, Reddit, Show HN first comment |
-| [crewscore.ai](https://crewscore.ai) | Live interactive demo (no install) |
-
-```bash
-# regenerate from the real static site in this repo
-node scripts/record-hero-demo.mjs --public-gif
-```
-
-Requires Playwright + ffmpeg (script reuses a portfolio Playwright install if present).
 
 ---
 

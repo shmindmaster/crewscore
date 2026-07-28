@@ -45,10 +45,6 @@ crewscore assess-vendor --name "Acme AI" --answers "y,y,n,dk,y,y,n,y,n,y" --json
 # after pattern changes: keep web in lockstep
 python scripts/export_web_engine.py
 
-# hero screencast (real product UI → _production/ + optional docs/hero-demo.gif)
-# requires Playwright + ffmpeg (reuses sabhi/studio Playwright if present)
-node scripts/record-hero-demo.mjs --public-gif
-
 # tests
 pytest
 ```

@@ -22,3 +22,7 @@ docs/viral-product-spec-*.md
 docs/publish-checklist.md
 docs/ui-*.png
 
+
+# Marketing media pipeline (keep out of public tree)
+scripts/record-hero-demo.mjs
+
