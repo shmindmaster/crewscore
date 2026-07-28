@@ -1,5 +1,9 @@
 """Unit tests for structural scoring and fix application."""
 
+import re
+
+import pytest
+
 from crewscore.scoring import RULESET_ID, build_result, overall_score, score_tier
 from crewscore.scorers.fix_patterns import apply_fixes, generate_fixes
 from crewscore.scorers.structural_analysis import analyze, analyze_with_findings
@@ -120,6 +124,116 @@ def test_bare_safety_word_does_not_inflate_injection():
     assert scores["injection"] < 40
 
 
+def test_fix_stays_well_under_the_bloat_threshold():
+    """A full fix must not eat the context budget it is meant to protect."""
+    from crewscore.smells import CONTEXT_BLOAT_MAX_LINES
+
+    enhanced = apply_fixes(BARE_PROMPT, generate_fixes(analyze(BARE_PROMPT)))
+    lines = len(enhanced.splitlines())
+    # All 8 templates at once must stay a small fraction of the 200-line budget.
+    assert lines < CONTEXT_BLOAT_MAX_LINES // 2, (
+        f"full fix produced {lines} lines; templates have regrown"
+    )
+
+
+def test_fix_cost_report_measures_added_lines():
+    from crewscore.scorers.fix_patterns import fix_cost_report
+
+    enhanced = apply_fixes(BARE_PROMPT, generate_fixes(analyze(BARE_PROMPT)))
+    cost = fix_cost_report(BARE_PROMPT, enhanced)
+    assert cost["lines_before"] == 1
+    assert cost["lines_after"] == len(enhanced.splitlines())
+    assert cost["lines_added"] == cost["lines_after"] - 1
+
+
+def test_fix_warns_when_result_crosses_bloat_threshold():
+    from crewscore.scorers.fix_patterns import fix_cost_report
+    from crewscore.smells import CONTEXT_BLOAT_MAX_LINES
+
+    big = "\n".join(f"- rule {i}" for i in range(CONTEXT_BLOAT_MAX_LINES + 50))
+    enhanced = apply_fixes(big, generate_fixes(analyze(big)))
+    cost = fix_cost_report(big, enhanced)
+    assert any(w.startswith("context_bloat:") for w in cost["warnings"])
+
+
+def test_fix_warns_when_generic_text_dominates():
+    """Appending more boilerplate than the file's own content is a smell."""
+    from crewscore.scorers.fix_patterns import fix_cost_report
+
+    enhanced = apply_fixes(BARE_PROMPT, generate_fixes(analyze(BARE_PROMPT)))
+    cost = fix_cost_report(BARE_PROMPT, enhanced)
+    assert any(w.startswith("generic_dominates:") for w in cost["warnings"])
+
+
+def test_fix_cost_quiet_when_proportionate():
+    from crewscore.scorers.fix_patterns import fix_cost_report
+
+    substantial = "\n".join(f"Project rule {i}." for i in range(120))
+    enhanced = substantial + "\n\n## Added\n- one line\n"
+    assert fix_cost_report(substantial, enhanced)["warnings"] == []
+
+
+def test_length_alone_earns_no_points():
+    """Padding must never raise a score.
+
+    Ruleset 0.3.0 removed the old length bonus: file length is a cost
+    (Context Bloat, arXiv:2606.15828), never evidence of hygiene.
+    """
+    padded = BARE_PROMPT + "\n" + ("lorem ipsum dolor sit amet " * 400)
+    assert len(padded.split()) > 500  # would have triggered the old bonus
+    assert analyze(padded) == analyze(BARE_PROMPT)
+
+
+def test_published_formula_matches_implementation():
+    """The documented formula is the whole formula — no hidden terms."""
+    from crewscore.rules_catalog import demo_formula
+    from crewscore.scorers.structural_analysis import SCORER_MAP
+
+    scores = analyze(GUARDED_PROMPT)
+    for dimension, patterns in SCORER_MAP.items():
+        matches = sum(
+            1
+            for _, pattern in patterns
+            if re.search(pattern, GUARDED_PROMPT.lower(), re.IGNORECASE)
+        )
+        assert scores[dimension] == demo_formula(matches, len(patterns))
+
+
+def test_developer_docs_do_not_trigger_governance_rules():
+    """Regression: real false positives measured on 100 top-starred repos.
+
+    Each string below is drawn from an actual AGENTS.md / CLAUDE.md in the
+    arXiv:2606.15828 corpus, where it produced a spurious match before 0.3.1.
+    """
+    cases = [
+        # `phi` had no word boundary -> matched inside "cryptographic".
+        ("compliance", "- `crypto.zig` - cryptographic operations for the runtime"),
+        # bare `pci` matched hardware terms.
+        ("compliance", "Configure the pcie passthrough device before booting."),
+        # bare `injection` matched the dependency-injection sense.
+        ("injection", "Services are wired with constructor dependency injection."),
+        ("injection", "Sanitize inputs to avoid SQL injection in raw queries."),
+        # bare `logging`/`trace` are ordinary build-doc words.
+        ("audit", "Use `bun_debug_quiet_logs=1` to disable debug logging."),
+        ("audit", "Read the stack trace printed by the test runner."),
+        # `reference`/`attribute` are ordinary developer words.
+        ("citation", "See the API reference for the full attribute list."),
+        # any numbered list line containing "refer"/"prefer" matched.
+        ("citation", "8. **Memory management** - prefer defer for cleanup"),
+    ]
+    for dimension, text in cases:
+        assert analyze(text)[dimension] == 0, (
+            f"{dimension} false-positived on: {text!r}"
+        )
+
+
+def test_real_governance_language_still_scores():
+    """The FP fixes must not have gutted the true positives."""
+    scores = analyze(GUARDED_PROMPT)
+    for dimension in ("injection", "citation", "audit", "compliance"):
+        assert scores[dimension] > 0, f"{dimension} lost its true positives"
+
+
 def test_matched_findings_include_rule_id():
     scores, findings = analyze_with_findings(GUARDED_PROMPT)
     matched = [f for f in findings if f["status"] == "matched"]
@@ -128,3 +242,69 @@ def test_matched_findings_include_rule_id():
         assert "rule_id" in f
         assert f["rule_id"]  # e.g. injection.01
         assert "." in f["rule_id"]
+
+# The exact boundary values. Existing tier tests used 95/75/55/40 -- all
+# comfortably inside a band -- so mutating `>= 90` to `> 90` changed the
+# verdict at exactly 90 and every test still passed. The tier is the headline
+# users see in the CLI, the PR comment, the badge and the share text.
+TIER_BOUNDARIES = [
+    (100, "STRUCTURAL: STRONG", "green"),
+    (90, "STRUCTURAL: STRONG", "green"),
+    (89, "STRUCTURAL: OK WITH GAPS", "yellow"),
+    (70, "STRUCTURAL: OK WITH GAPS", "yellow"),
+    (69, "STRUCTURAL: WEAK", "dark_orange"),
+    (50, "STRUCTURAL: WEAK", "dark_orange"),
+    (49, "STRUCTURAL: CRITICAL GAPS", "red"),
+    (0, "STRUCTURAL: CRITICAL GAPS", "red"),
+]
+
+
+@pytest.mark.parametrize("score,tier,color", TIER_BOUNDARIES)
+def test_tier_and_color_are_exact_at_every_boundary(score, tier, color):
+    from crewscore.scoring import tier_color
+
+    assert score_tier(score) == tier, score
+    assert tier_color(score) == color, score
+
+
+@pytest.mark.parametrize("score,tier,color", TIER_BOUNDARIES)
+def test_report_hex_ladder_agrees_with_the_tier_ladder(score, tier, color):
+    """The same boundary ladder is written three times in two modules.
+
+    scoring.score_tier, scoring.tier_color and report._score_color_hex each
+    re-implement `>= 90 / 70 / 50`. Nothing forced them to agree, so a badge
+    could render yellow next to the word STRONG. This pins them together.
+    """
+    from crewscore.report import _TIER_HEX, _score_color_hex
+
+    assert _score_color_hex(score) == _TIER_HEX[color], score
+
+
+def test_apply_fixes_does_not_re_append_guardrails_it_already_added():
+    """`fix --apply` twice must not duplicate its own templates.
+
+    The guard checked for "## Guardrails" while the writer emitted
+    "# Guardrails" -- one hash -- so it never matched its own output and
+    every run appended a fresh copy. Three runs took a one-line prompt to
+    123 lines with three identical blocks.
+
+    That is the worst possible bug for this tool to have: Context Bloat is
+    the defect it exists to flag, and `fix` was generating it without bound.
+    """
+    prompt = "You are a helpful assistant."
+    once = apply_fixes(prompt, generate_fixes(analyze(prompt)))
+    twice = apply_fixes(once, generate_fixes(analyze(once)))
+    thrice = apply_fixes(twice, generate_fixes(analyze(twice)))
+
+    marker = "Prompt Injection Defense"
+    assert once.count(marker) <= 1, "first apply duplicated a section"
+    assert twice.count(marker) == once.count(marker), (
+        "second apply re-appended a section it had already written"
+    )
+    assert thrice.count(marker) == once.count(marker), (
+        "third apply re-appended a section it had already written"
+    )
+    # And the file must stop growing once the guardrails are in place.
+    assert len(thrice.splitlines()) == len(twice.splitlines()) == len(
+        once.splitlines()
+    ), "fix --apply grows the prompt without bound"

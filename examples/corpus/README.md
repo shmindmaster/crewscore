@@ -19,7 +19,7 @@ python scripts/score_corpus.py   # refreshes LEADERBOARD.md
 |--------|---------|
 | Zero-friction bare prompt fails the gate | `prompts/01-bare-assistant.md` |
 | Demo agents still lack production signals | `prompts/02-demo-agent.md` |
-| Repo agent docs ≠ hygiene | `prompts/03-agents-md-weak.md` |
+| Repo agent docs ≠ hygiene (coding-agent config, judged on configuration smells, not a governance score) | `repo-config/AGENTS.md` |
 | A few real rules move the needle | `prompts/04-partial-hygiene.md` |
 | Text can look “strong” structurally | `prompts/05-hardened-ops.md` |
 

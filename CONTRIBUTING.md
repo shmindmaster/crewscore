@@ -1,6 +1,13 @@
 # Contributing to CrewScore
 
-Thanks for helping improve an offline structural scorecard for AI agent prompts.
+Thanks for helping improve an offline guardrail-coverage checker for AI agent
+prompts and coding-agent config.
+
+Before proposing a change to the rules or the scoring formula, read
+[`docs/validation.md`](docs/validation.md). It reports a discrimination study
+against 1,368 real prompts that the tool failed, and it is the reason claims in
+this repo are phrased as *coverage* rather than *quality*. New claims about what
+the score proves need new evidence.
 
 ## Dev setup
 

@@ -15,6 +15,119 @@ from crewscore.scorers.structural_analysis import (
     SCORER_MAP,
 )
 
+# ─── Provenance ───────────────────────────────────────────────────
+#
+# Where each dimension's rules come from, graded honestly. The point is not to
+# claim more grounding than exists — it is to let a reader see exactly which
+# dimensions rest on published measurement and which rest on the author's
+# judgement, and to weight their trust accordingly.
+#
+# Provenance is recorded per dimension, not per rule: the rules within a
+# dimension share one justification, and pretending to per-regex citations
+# would be false precision.
+
+PROVENANCE_GRADES: dict[str, str] = {
+    "evidence-backed": (
+        "An external published measurement supports both that this failure "
+        "class matters and that it is observable in instruction text."
+    ),
+    "plausible": (
+        "Widely documented practitioner risk, but no measurement shows that "
+        "prompt text mitigates it."
+    ),
+    "author-intuition": (
+        "No external grounding beyond the author's judgement. Treat with "
+        "the least confidence — and argue with us in an issue."
+    ),
+}
+
+DIMENSION_PROVENANCE: dict[str, dict[str, Any]] = {
+    "injection": {
+        "grade": "evidence-backed",
+        "rationale": (
+            "Prompt injection is OWASP's top LLM risk, and cross-vendor "
+            "analysis finds interference patterns detectable in system-prompt "
+            "text itself."
+        ),
+        "citations": [
+            "OWASP Top 10 for LLM Applications — LLM01 Prompt Injection",
+            "Arbiter: Detecting Interference in LLM Agent System Prompts "
+            "(arXiv:2603.08993)",
+        ],
+    },
+    "safe_stop": {
+        "grade": "evidence-backed",
+        "rationale": (
+            "Whether an agent knows when not to act is directly measured, and "
+            "instruction wording has a measured effect on that behaviour."
+        ),
+        "citations": [
+            "AgentAbstain: Do LLM Agents Know When Not to Act? "
+            "(arXiv:2607.10059)",
+            "Coding Agents Don't Know When to Act (arXiv:2605.07769)",
+        ],
+    },
+    "cost": {
+        "grade": "evidence-backed",
+        "rationale": (
+            "Inference cost from instruction text is measured, and cost is a "
+            "named driver of agentic project cancellation."
+        ),
+        "citations": [
+            "Evaluating AGENTS.md (arXiv:2602.11988) — >20% inference-cost "
+            "increase with no success-rate gain",
+            "Gartner, 2025-06-25 — cost as an agentic-project cancellation "
+            "driver",
+        ],
+    },
+    "hallucination": {
+        "grade": "plausible",
+        "rationale": (
+            "Fabrication is a well-documented failure mode, but no study "
+            "shows that anti-hallucination wording in a system prompt "
+            "reduces it."
+        ),
+        "citations": [],
+    },
+    "citation": {
+        "grade": "plausible",
+        "rationale": (
+            "Traceability is standard practice in grounded systems; the "
+            "effect of requiring it in prompt text is unmeasured."
+        ),
+        "citations": [],
+    },
+    "human_gate": {
+        "grade": "plausible",
+        "rationale": (
+            "Over-permissioned agents and soft confirm-before-act language "
+            "recur in incident write-ups, but the mitigation is a runtime "
+            "tool gate. Text is at best a statement of intent."
+        ),
+        "citations": [],
+    },
+    "audit": {
+        "grade": "plausible",
+        "rationale": (
+            "Reconstructing what an agent did is a real compliance need. "
+            "Whether asking for it in a prompt produces it is unmeasured — "
+            "logging is an application concern."
+        ),
+        "citations": [],
+    },
+    "compliance": {
+        "grade": "author-intuition",
+        "rationale": (
+            "The weakest dimension by design: it detects regulatory "
+            "vocabulary, which is the easiest signal to game and the least "
+            "connected to whether data is actually handled lawfully. "
+            "Naming a regulation is not complying with it."
+        ),
+        "citations": [],
+    },
+}
+
+
 # Stable description of how numbers are produced (human + machine).
 SCORING_METHOD: dict[str, Any] = {
     "type": "deterministic_regex",
@@ -23,7 +136,7 @@ SCORING_METHOD: dict[str, Any] = {
     "ruleset": RULESET_ID,
     "dimension_score_formula": (
         "matches = count of rules whose regex hits the prompt (case-insensitive); "
-        "if matches == 0 or total_rules == 0 → 0; "
+        "if matches == 0 or total_rules == 0 -> 0; "
         "else min(100, round(15 + 85 * matches / total_rules))"
     ),
     "overall_score_formula": (
@@ -61,6 +174,7 @@ def list_rules(*, dimension: str | None = None) -> list[dict[str, Any]]:
         if dimension and dim_key != dimension:
             continue
         dim_label = next((lab for lab, k in DIMENSIONS if k == dim_key), dim_key)
+        provenance = DIMENSION_PROVENANCE.get(dim_key, {})
         for rule_id, pattern in patterns:
             rows.append(
                 {
@@ -70,6 +184,7 @@ def list_rules(*, dimension: str | None = None) -> list[dict[str, Any]]:
                     "pattern": pattern,
                     "label": _label_for_pattern(dim_key, pattern),
                     "open": True,
+                    "provenance": provenance.get("grade", "author-intuition"),
                 }
             )
     return rows
@@ -84,8 +199,14 @@ def catalog_payload(*, dimension: str | None = None) -> dict[str, Any]:
     return {
         "ruleset": RULESET_ID,
         "method": SCORING_METHOD,
+        "provenance_grades": PROVENANCE_GRADES,
         "dimensions": [
-            {"key": key, "label": label, "rule_count": by_dim.get(key, 0)}
+            {
+                "key": key,
+                "label": label,
+                "rule_count": by_dim.get(key, 0),
+                **DIMENSION_PROVENANCE.get(key, {}),
+            }
             for label, key in DIMENSIONS
             if not dimension or key == dimension
         ],

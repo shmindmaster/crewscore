@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
-RULESET_ID = "crewscore-hygiene@0.2.3"
+RULESET_ID = "crewscore-hygiene@0.4.0"
 
 DIMENSIONS: list[tuple[str, str]] = [
     ("Prompt Injection Resistance", "injection"),
@@ -32,15 +32,52 @@ class ScoreResult:
     source: str = "prompt"
     ruleset: str = RULESET_ID
     warnings: list[str] = field(default_factory=list)
+    # Advisory configuration smells (arXiv:2606.15828). Reported, never scored —
+    # see crewscore/smells.py for why they stay out of the number.
+    smells: list[dict[str, Any]] = field(default_factory=list)
+    # Which ruleset this artifact should be judged by (crewscore/profiles.py).
+    profile: str = "system_prompt"
+    # False for coding-agent config, where the governance dimensions are a
+    # category error. `overall`/`dimensions` are computed but never published
+    # for that artifact — read `tier`. See to_dict().
+    governance_applicable: bool = True
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        """Serializable payload. Coding-agent config carries no governance grade.
+
+        `overall` and the per-dimension scores are omitted entirely rather than
+        zeroed: a caller running `jq -e '.overall >= 50'` must not find a number
+        to fail on for an artifact that is not judged on one. This mirrors the
+        browser engine, which has never emitted either field for config
+        (`web_export.py::analyzeArtifact`). The fields stay on the dataclass so
+        internal callers that need the raw arithmetic still have it.
+        """
+        payload = asdict(self)
+        if not self.governance_applicable:
+            payload.pop("overall", None)
+            payload.pop("dimensions", None)
+        return payload
 
 
 def overall_score(dimensions: dict[str, int]) -> int:
     if not dimensions:
         return 0
     return sum(dimensions.values()) // len(dimensions)
+
+
+def config_tier(smell_count: int) -> str:
+    """Verdict for coding-agent config, expressed in smells rather than points.
+
+    Deliberately not a 0-100 grade. Measured against the arXiv:2606.15828
+    corpus, the governance score puts 100/100 real config files in the worst
+    tier — a scale where the whole population fails carries no information.
+    Smell counts are what that artifact can honestly be judged on.
+    """
+    if smell_count <= 0:
+        return "CONFIG: NO SMELLS DETECTED"
+    if smell_count == 1:
+        return "CONFIG: 1 SMELL"
+    return f"CONFIG: {smell_count} SMELLS"
 
 
 def score_tier(overall: int) -> str:
@@ -100,7 +137,15 @@ def build_result(
     source: str = "prompt",
     prompt_text: str | None = None,
     warnings: list[str] | None = None,
+    smells: list[dict[str, Any]] | None = None,
+    profile: str | None = None,
 ) -> ScoreResult:
+    from crewscore.profiles import SYSTEM_PROMPT, governance_applies
+
+    resolved_profile = profile or SYSTEM_PROMPT
+    resolved_smells = list(smells) if smells else []
+    applicable = governance_applies(resolved_profile)
+
     overall = overall_score(dimensions)
     resolved_warnings = list(warnings) if warnings is not None else []
     if warnings is None and prompt_text is not None:
@@ -108,9 +153,14 @@ def build_result(
     return ScoreResult(
         dimensions=dimensions,
         overall=overall,
-        tier=score_tier(overall),
+        tier=score_tier(overall)
+        if applicable
+        else config_tier(len(resolved_smells)),
         mode=mode,
         source=source,
         ruleset=RULESET_ID,
         warnings=resolved_warnings,
+        smells=resolved_smells,
+        profile=resolved_profile,
+        governance_applicable=applicable,
     )

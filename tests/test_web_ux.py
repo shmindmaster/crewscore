@@ -1,13 +1,29 @@
-"""Contract tests locking preflight workflow UX in index.html."""
+"""Contract tests locking the public positioning copy.
+
+Two surfaces, one claim: index.html (the preflight workflow a visitor sees)
+and README.md (the first thing a reader sees on GitHub). Both must say the
+number is *coverage*, not a quality ranking, and both must carry the
+validation study that proves it.
+"""
 
 import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
+# The site is served at crewscore.ai, where docs/ does not exist — the study
+# has to be linked at its canonical GitHub URL or the link is dead in prod.
+VALIDATION_URL = (
+    "https://github.com/shmindmaster/crewscore/blob/main/docs/validation.md"
+)
+
 
 def _html() -> str:
     return (ROOT / "index.html").read_text(encoding="utf-8")
+
+
+def _readme() -> str:
+    return (ROOT / "README.md").read_text(encoding="utf-8")
 
 
 def test_preflight_stages_present():
@@ -17,7 +33,7 @@ def test_preflight_stages_present():
     assert 'id="stg-inspect"' in html
     assert 'id="stg-export"' in html
     assert 'id="stg-act"' not in html
-    assert "2 Score" in html or ">2 Score<" in html
+    assert ">2 Coverage<" in html
 
 
 def test_plan_before_mutate_controls():
@@ -26,6 +42,20 @@ def test_plan_before_mutate_controls():
     assert "Plan fix" in html
     assert "Apply plan" in html
     assert "cancel" in html.lower()
+
+
+def test_config_verdict_never_prints_a_slash_100_number():
+    """Config verdict explanatory prose cites corpus rationale, not a grade
+    for the user's file — it must never render an N/100 number, since it
+    sits directly beneath a config verdict a screenshot would misread as
+    the user's own score."""
+    html = _html()
+    match = re.search(
+        r"function renderConfigVerdict\(result\) \{.*?\n  \}", html, re.S
+    )
+    assert match, "renderConfigVerdict function not found"
+    body = match.group(0)
+    assert not re.search(r"\d+/100", body)
 
 
 def test_wizard_lite_sheets_over_score():
@@ -67,9 +97,15 @@ def test_privacy_metrics_hook_present():
 
 
 def test_builder_first_hero_preserved():
-    """Builder-first hero and structural hygiene framing stay intact."""
+    """Builder-first hero stays: browser-local, no signup, structural framing.
+
+    The headline moved from "Score agent prompts in your browser" to a
+    coverage claim, but the builder-first promises around it must survive
+    the reframe rather than be lost with it.
+    """
     html = _html()
-    assert "Score agent prompts in your browser" in html
+    assert "in your browser" in html
+    assert "no signup" in html.lower()
     assert "structural" in html.lower()
     assert "hygiene" in html.lower() or "Structural pre-gate" in html
 
@@ -166,6 +202,33 @@ def test_ci_gate_export_markers():
     assert "shmindmaster/crewscore@v1" in html
 
 
+def test_config_ci_snippet_does_not_pin_partial_browser_smell_count():
+    """The config-mode CI snippet must not gate on the browser's partial smell
+    count. Only 1 of 3 detectors runs in-browser (Init Fossilization and Lint
+    Leakage need git history / repo access the browser doesn't have) — if the
+    copy-paste snippet bakes in `smells.length` from that partial scan, a
+    visitor who copies it without reading gets a CI gate pinned to a count
+    the full CLI will immediately exceed, red-building the very file the
+    site just called clean. The snippet must use a fixed, scan-independent
+    default and must carry its own disclosure so a reader who copies the
+    snippet out of the page is not misled by the snippet text alone."""
+    html = _html()
+    match = re.search(r"function renderConfigExport\(\) \{.*?\n  \}", html, re.S)
+    assert match, "renderConfigExport function not found"
+    body = match.group(0)
+    ci_match = re.search(r"const ci = `([\s\S]*?)`;", body)
+    assert ci_match, "ci template literal not found in renderConfigExport"
+    ci = ci_match.group(1)
+    # No interpolation of the browser's partial smell count into the gate.
+    assert "smells.length" not in ci
+    # A fixed, scan-independent default is used instead.
+    assert 'max-smells: "0"' in ci
+    assert "--max-smells 0" in ci
+    # Disclosure travels with the copied text itself, not just the page around it.
+    assert "browser" in ci.lower()
+    assert "may find more" in ci.lower() or "full cli" in ci.lower()
+
+
 def test_preflight_aesthetic_tokens():
     """Instrument/preflight visual tokens stay distinctive (not generic AI cyan)."""
     html = _html()
@@ -255,6 +318,188 @@ def test_body_grid_restrained():
             assert float(a) <= 0.15, (
                 f"body repeating grid alpha {a} exceeds 0.15 (must be atmospheric)"
             )
+
+
+def test_hero_frames_the_number_as_coverage_not_quality():
+    """A visitor who reads nothing but the hero must still learn that the
+    number does not rank prompt quality — and see the figure that says so."""
+    html = _html()
+    assert "See which governance rules your prompt does not state" in html
+    assert "Coverage, not a quality ranking." in html
+    # The evidence travels with the claim, not only behind a link. The corpus
+    # study was withdrawn; the figure that ships is the one anyone can
+    # reproduce from the rule catalog.
+    assert "28" in html, "hero omits the score a fully-compliant prompt gets"
+    assert VALIDATION_URL in html
+
+
+def test_score_surface_repeats_the_coverage_disclaimer():
+    """The disclosure cannot live only in the hero: a visitor who pastes and
+    scrolls straight to the ring reads the number with none of the hero in
+    view, and that number is what they screenshot."""
+    html = _html()
+    m = re.search(r"function renderInspect\(result, opts\) \{.*?\n  \}", html, re.S)
+    assert m, "renderInspect function not found"
+    body = m.group(0)
+    assert "This number is coverage, not quality." in body
+    assert VALIDATION_URL in body
+
+
+def test_share_text_does_not_claim_prompt_quality():
+    """Share text outlives the page. It is the one artifact that travels to
+    readers who never see any disclosure we put on the site."""
+    html = _html()
+    m = re.search(
+        r"function shareText\(overall, tierName, kind\) \{.*?\n  \}", html, re.S
+    )
+    assert m, "shareText function not found"
+    body = m.group(0)
+    assert "not a quality ranking" in body
+    assert "Structural hygiene only" not in body
+
+
+def test_validation_study_linked_from_footer():
+    """Persistent link for a reader who arrives mid-page or scrolls past."""
+    html = _html()
+    foot = html[html.find('<footer class="foot">') : html.find("</footer>")]
+    assert foot, "footer not found"
+    assert VALIDATION_URL in foot
+
+
+def test_partial_detector_disclosure_survives_the_coverage_reframe():
+    """Separate honest disclosure, separate feature: the browser runs 1 of 3
+    smell detectors. The governance reframe must not take it out with it."""
+    html = _html()
+    m = re.search(r"function renderConfigVerdict\(result\) \{.*?\n  \}", html, re.S)
+    assert m, "renderConfigVerdict function not found"
+    body = m.group(0)
+    assert "partial-note" in body
+    assert "This browser ran ${ran} of ${total} detectors." in body
+    assert (
+        "A clean result here is a partial check, not a clean bill of health." in body
+    )
+
+
+def test_readme_headline_is_a_checklist_not_a_score():
+    """The headline sells a checklist. "Score" as the noun claims a ranking
+    the length-matched study could not demonstrate."""
+    md = _readme()
+    assert "Free structural score for AI agent prompts" not in md
+    assert "### A governance checklist for AI agent prompts" in md
+
+
+def test_readme_links_validation_study_above_the_fold():
+    """The negative result is the credibility play — it belongs in the first
+    screen, not in a Limits section a skimmer never reaches."""
+    md = _readme()
+    assert "docs/validation.md" in md[:2400]
+
+
+def test_readme_states_the_coverage_proof_with_numbers():
+    """Vague hedging is not disclosure. The figure ships in prose.
+
+    This used to pin the corpus study's statistics. That study was withdrawn
+    after our own audit found impossible numbers in it, so what must appear
+    now is the deterministic result: stating all eight controls clearly, once
+    each, scores 28/100 -- below the lowest tier boundary of 50.
+    """
+    md = _readme()
+    assert "28/100" in md, "README omits the fully-compliant-prompt score"
+    assert "50" in md
+    # The withdrawn figures must not reappear anywhere.
+    for stat in ("+0.061", "p=0.36", "0.863", "+0.601", "99.3%"):
+        assert stat not in md, f"withdrawn statistic {stat} is still in README"
+
+
+def test_readme_draws_the_checklist_versus_benchmark_line():
+    """The is/is-not table must name the distinction outright: a checklist
+    answers "did you write a rule for X"; a benchmark ranks A against B."""
+    md = _readme()
+    rows = [
+        line
+        for line in md.splitlines()
+        if line.startswith("|")
+        and "checklist" in line.lower()
+        and "benchmark" in line.lower()
+    ]
+    assert rows, "no is/is-not row drawing the checklist vs benchmark line"
+
+
+def test_readme_charter_carries_discrimination_and_validity_disclosure():
+    """The charter is where honesty principles live, so the discrimination
+    result and the three low-validity dimensions live there too."""
+    md = _readme()
+    start = md.find("## Scoring charter")
+    end = md.find("## Install", start)
+    assert start > 0 and end > start, "scoring charter section not found"
+    charter = md[start:end]
+    assert "crewscore-hygiene@0.4.0" in charter
+    assert "28/100" in charter, "charter omits the coverage-not-quality proof"
+    for dim in ("Cost", "Compliance", "Audit"):
+        assert dim in charter, f"charter omits low-validity dimension {dim}"
+    assert "docs/validation.md" in charter
+
+
+def test_readme_documents_040_breaking_changes():
+    """0.4.0 drops four fields from config `--json` payloads and changes a
+    `fix` exit code. A consumer who upgrades blind breaks; say so."""
+    md = _readme()
+    start = md.find("## What changed in 0.4.0")
+    assert start > 0, "0.4.0 release-notes section not found"
+    end = md.find("## CI integration", start)
+    assert end > start
+    section = md[start:end]
+    for field in ("`overall`", "`dimensions`", "`findings`", "`transparency`"):
+        assert field in section, f"0.4.0 notes omit dropped field {field}"
+    assert "exit" in section.lower()
+
+
+def test_readme_tier_table_discloses_the_empty_top_half():
+    """The tier ladder advertises 90-100 as reachable by a good prompt.
+
+    It is not. A prompt that states all eight controls clearly, once each,
+    scores 28/100 -- it does not even clear the lowest band. A reader looking
+    at this ladder is about to set a CI threshold against it, so the ladder
+    itself has to say so.
+    """
+    md = _readme()
+    start = md.find("### Score tiers")
+    end = md.find("## Two artifacts", start)
+    assert start > 0 and end > start, "score tiers section not found"
+    tiers = md[start:end]
+    assert "28" in tiers, "tier table does not disclose the reachable ceiling"
+    assert "docs/validation.md" in tiers
+
+
+def test_readme_config_smells_marked_unaffected_by_the_study():
+    """The smell detectors replicate published work on a separate corpus.
+    The reframe must not read as if they were implicated too."""
+    md = _readme()
+    start = md.find("## Configuration smells")
+    end = md.find("## What changed", start)
+    assert start > 0 and end > start, "configuration smells section not found"
+    section = md[start:end]
+    assert "validation study" in section.lower()
+    assert "arxiv.org/abs/2606.15828" in section
+
+
+def test_readme_never_presents_an_unpublished_version_as_released():
+    """Neither 0.3.0 nor 0.3.1 was ever published; PyPI stops at 0.2.7.
+
+    The rule is not "never say 0.3.x" — saying it is *fine and useful* when
+    the point being made is that it never shipped, which is what an upgrading
+    user needs to know. What must never happen is presenting it as something
+    the reader could have, install, or be upgrading from.
+    """
+    md = _readme()
+    if "0.3.1" in md or "0.3.0" in md:
+        assert "never published" in md.lower(), (
+            "README mentions a 0.3.x version without saying it never shipped"
+        )
+        assert "0.2.7" in md, "README must name the real last public release"
+    # No instruction anywhere can point at an unpublished version.
+    for bad in ("pip install crewscore==0.3", "crewscore==0.3.0", "crewscore==0.3.1"):
+        assert bad not in md, bad
 
 
 def test_panel_lifted_from_bg():

@@ -7,6 +7,8 @@ from typing import Any
 
 from crewscore.scoring import build_result
 from crewscore.scorers import structural_analysis
+from crewscore.smells import detect_smells, find_repo_root
+from crewscore.profiles import classify_path
 
 # Exact basenames always treated as agent instruction files.
 KNOWN_NAMES = frozenset(
@@ -152,23 +154,59 @@ def discover_prompt_files(root: Path) -> list[Path]:
     return sorted(found)
 
 
-def score_paths(paths: list[Path]) -> list[dict[str, Any]]:
+def score_paths(
+    paths: list[Path], *, profile: str | None = None
+) -> list[dict[str, Any]]:
     """Score each path with structural analysis; return result dicts.
 
     Each dict has: path, overall, tier, dimensions, and optionally ruleset
     when available on the ScoreResult / module.
+
+    `profile` forces every path onto one ruleset (the `--profile` escape hatch
+    for a misclassified file). None keeps per-path classification.
     """
     results: list[dict[str, Any]] = []
+    repo_roots: dict[Path, Any] = {}
     for path in paths:
         text = Path(path).read_text(encoding="utf-8", errors="replace")
         dimensions = structural_analysis.analyze(text)
-        result = build_result(dimensions, mode="structural", source=str(path))
+        # Repo root is per-directory, and a scan usually walks one repo —
+        # cache it rather than climbing the tree once per file.
+        parent = Path(path).parent
+        if parent not in repo_roots:
+            repo_roots[parent] = find_repo_root(path)
+        result = build_result(
+            dimensions,
+            mode="structural",
+            # `prompt_text` is what the boilerplate warning is computed from.
+            # Omitting it made the `warnings` parity promised below a lie:
+            # scan rows could never carry template_boilerplate_detected, and
+            # scan is the CI mode the README recommends.
+            prompt_text=text,
+            source=str(path),
+            smells=detect_smells(text, path=path, repo_root=repo_roots[parent]),
+            profile=profile or classify_path(path),
+        )
         item: dict[str, Any] = {
             "path": str(path),
-            "overall": result.overall,
             "tier": result.tier,
-            "dimensions": result.dimensions,
+            "smells": result.smells,
+            "profile": result.profile,
+            "governance_applicable": result.governance_applicable,
+            # `path` is rewritten to a scan-relative display path by the CLI;
+            # `source` keeps the artifact the row was actually read from, and
+            # `warnings` matches the shape `test --json` already emits so a
+            # caller can consume either payload with the same code.
+            "source": result.source,
+            "warnings": result.warnings,
         }
+        if result.governance_applicable:
+            # Coding-agent config is judged on smells, so it publishes no
+            # number and no dimension breakdown — same contract as
+            # ScoreResult.to_dict() and the browser engine. Consumers must
+            # branch on `governance_applicable` before reading `overall`.
+            item["overall"] = result.overall
+            item["dimensions"] = result.dimensions
         # Include ruleset when workstream A has shipped it.
         ruleset = getattr(result, "ruleset", None)
         if ruleset is None:

@@ -1,0 +1,186 @@
+# Release pipeline for CrewScore.
+#
+# Publishing uses PyPI Trusted Publishing (OIDC), not an API token: there is
+# deliberately no PYPI_TOKEN secret in this repo, because a long-lived token
+# that can publish under this project name is the single worst secret to leak.
+# GitHub mints a short-lived identity token per run instead.
+#
+# ONE-TIME SETUP (must be done by the PyPI project owner, in a browser):
+#   https://pypi.org/manage/project/crewscore/settings/publishing/
+#   Add a trusted publisher with:
+#     Owner: shmindmaster   Repository: crewscore
+#     Workflow: release.yml  Environment: pypi
+# Until that exists, the publish job fails closed with an auth error and
+# nothing is uploaded. The build and verify job still runs and still produces
+# artifacts, so a tag is never silently half-released.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: "Build and verify only; do not publish"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Test, build, and verify artifacts
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install with dev extras
+        run: pip install -e ".[dev]"
+
+      - name: Run the suite
+        run: pytest -q
+
+      # The tag is the release's only claim about which version it is. If it
+      # disagrees with the package, the wrong thing gets published under the
+      # right name and it cannot be taken back.
+      - name: Tag must match the package version
+        if: startsWith(github.ref, 'refs/tags/v') && runner.os == 'Linux'
+        shell: bash
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          PKG=$(python -c "import crewscore; print(crewscore.__version__)")
+          TAG="${REF_NAME#v}"
+          if [ "$PKG" != "$TAG" ]; then
+            echo "Tag $REF_NAME says $TAG but the package says $PKG" >&2
+            exit 1
+          fi
+          echo "OK version $PKG matches tag $REF_NAME"
+
+      # score-engine.js is generated from the Python source. A stale copy means
+      # the website and the CLI disagree, which is the failure this project can
+      # least afford to ship.
+      - name: Web engine must not be stale
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/export_web_engine.py
+          if ! git diff --quiet -- score-engine.js; then
+            echo "score-engine.js is stale; re-run scripts/export_web_engine.py" >&2
+            git diff --stat -- score-engine.js >&2
+            exit 1
+          fi
+          echo "OK web engine is current"
+
+      - name: Build sdist and wheel
+        if: runner.os == 'Linux'
+        run: |
+          pip install build twine
+          python -m build
+          twine check dist/*
+
+      # Install the built artifact somewhere the source tree cannot rescue it.
+      - name: Smoke-test the built wheel in a clean environment
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m venv /tmp/clean
+          /tmp/clean/bin/pip install --quiet dist/*.whl
+          cd /tmp
+          printf 'You are a helpful assistant.\n' > p.md
+          printf '# Rules\n\nUse pnpm.\n' > AGENTS.md
+          /tmp/clean/bin/crewscore --version
+          /tmp/clean/bin/crewscore test --prompt-file p.md --json > gov.json
+          /tmp/clean/bin/crewscore rules --json > rules.json
+          # The 0.4.0 contract: config carries no governance grade at all.
+          /tmp/clean/bin/crewscore test --prompt-file AGENTS.md --json > cfg.json
+          python - <<'PY'
+          import json
+          cfg = json.load(open('/tmp/cfg.json'))
+          for k in ('overall', 'dimensions', 'findings', 'transparency'):
+              assert k not in cfg, k + ' leaked into a coding-agent config payload'
+          assert cfg['governance_applicable'] is False
+          gov = json.load(open('/tmp/gov.json'))
+          assert isinstance(gov['overall'], int)
+          rules = json.load(open('/tmp/rules.json'))
+          assert rules['rule_count'] > 0
+          assert rules['method']['llm_calls'] is False
+          print('OK wheel honors the published contracts')
+          PY
+
+      - name: Upload artifacts
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    name: Publish to PyPI
+    needs: verify
+    if: startsWith(github.ref, 'refs/tags/v') && !inputs.dry-run
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/crewscore
+    permissions:
+      id-token: write # OIDC for trusted publishing — no token stored anywhere
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          attestations: true
+
+  github-release:
+    name: Create the GitHub release
+    needs: publish
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: Publish release notes from the changelog
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REF_NAME: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${REF_NAME#v}"
+          # Pull just this version's section out of CHANGELOG.md. Uses index()
+          # rather than a dynamic regex: the regex form silently matched
+          # nothing (awk mangles the bracket escapes), which would have shipped
+          # a release with empty notes if the -s check below did not catch it.
+          awk -v hdr="## [$VERSION]" '
+            index($0, hdr) == 1 { inside = 1; next }
+            inside && index($0, "## [") == 1 { exit }
+            inside { print }
+          ' CHANGELOG.md > notes.md
+          if [ ! -s notes.md ]; then
+            echo "No CHANGELOG section for $VERSION" >&2
+            exit 1
+          fi
+          gh release create "$REF_NAME" dist/* \
+            --title "$REF_NAME" --notes-file notes.md
