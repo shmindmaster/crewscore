@@ -15,9 +15,13 @@ inputs:
     required: false
     default: ""
   threshold:
-    description: Exit non-zero (code 2) if overall score is below this value (0-100)
+    description: "Exit non-zero (code 2) if a system prompt scores below this value (0-100). Coding-agent config (AGENTS.md, CLAUDE.md, .cursorrules) is exempt — it is judged on configuration smells, not this number. Use max-smells to gate those."
     required: false
     default: "50"
+  max-smells:
+    description: "Exit non-zero (code 2) if any file has more than this many configuration smells (arXiv:2606.15828). Leave empty to disable. This is the gate that applies to AGENTS.md-style config files."
+    required: false
+    default: ""
   explain:
     description: Include matched vs missing guardrail signals (pass "true" to enable)
     required: false
@@ -62,6 +66,7 @@ runs:
         PROMPT_FILE="${{ inputs.prompt-file }}"
         SCAN_PATH="${{ inputs.scan-path }}"
         THRESHOLD="${{ inputs.threshold }}"
+        MAX_SMELLS="${{ inputs.max-smells }}"
         EXPLAIN="${{ inputs.explain }}"
         SUMMARY="${{ inputs.summary }}"
 
@@ -73,6 +78,9 @@ runs:
         set +e
         if [ -n "$SCAN_PATH" ]; then
           ARGS=(scan "$SCAN_PATH" --json --threshold "$THRESHOLD")
+          if [ -n "$MAX_SMELLS" ]; then
+            ARGS+=(--max-smells "$MAX_SMELLS")
+          fi
           if [ "$EXPLAIN" = "true" ]; then
             ARGS+=(--explain)
           fi
@@ -83,6 +91,9 @@ runs:
           EXIT=$?
         else
           ARGS=(test --prompt-file "$PROMPT_FILE" --json --threshold "$THRESHOLD")
+          if [ -n "$MAX_SMELLS" ]; then
+            ARGS+=(--max-smells "$MAX_SMELLS")
+          fi
           if [ "$EXPLAIN" = "true" ]; then
             ARGS+=(--explain)
           fi
