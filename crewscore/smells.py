@@ -173,8 +173,30 @@ def _git_commit_count(path: Path) -> int | None:
     each time would dominate the scan.
 
     Returns None — never 0 — for every failure mode (git missing, not a repo,
-    file untracked). An unanswerable question must not look like a finding.
+    file untracked, shallow clone). An unanswerable question must not look
+    like a finding.
+
+    A shallow clone (e.g. actions/checkout's default fetch-depth: 1) makes
+    `git log -2` exit 0 and return exactly one commit for every file,
+    regardless of how many times the file was really revised in the
+    un-truncated history. That single truncated commit must not be read as
+    "never revised since creation".
     """
+    try:
+        shallow = subprocess.run(
+            ["git", "rev-parse", "--is-shallow-repository"],
+            cwd=str(path.parent),
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if shallow.returncode != 0:
+        return None
+    if shallow.stdout.strip() == "true":
+        return None
+
     try:
         proc = subprocess.run(
             ["git", "log", "--follow", "--format=%H", "-2", "--", path.name],
