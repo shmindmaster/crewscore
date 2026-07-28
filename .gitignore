@@ -13,6 +13,7 @@ agent-guard-report-*.html
 .superpowers/
 .worktrees/
 _product-experience/
+_production/
 docs/superpowers/
 docs/research/
 docs/launch/
