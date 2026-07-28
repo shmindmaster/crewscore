@@ -133,7 +133,7 @@ Honest principles we ship by:
 11. When in doubt, **under-score** rather than inflate.
 12. Source of truth: [`crewscore/scorers/structural_analysis.py`](crewscore/scorers/structural_analysis.py). How to reproduce the study for yourself: [`docs/validation.md`](docs/validation.md).
 
-> **Changed in `0.3.0`:** CrewScore used to award up to +10 per dimension for prompts over 500 words. That rewarded the exact thing the research penalizes — and it was never in the published formula. It is gone. See [what changed and why](#what-changed-in-040).
+> **Removed before `0.4.0`:** CrewScore used to award up to +10 per dimension for prompts over 500 words. That rewarded the exact thing the research penalizes — and it was never in the published formula. It is gone. See [what changed and why](#what-changed-in-040).
 
 See also [docs/next-steps-eval.md](docs/next-steps-eval.md) for when to graduate to live eval tools.
 
@@ -361,8 +361,13 @@ Smells are **advisory. They never change the score.** Folding them in would sile
 ## What changed in 0.4.0
 
 Defects found by testing CrewScore against the published research — and against
-our own corpus — rather than waiting for someone else to. Two releases are
-listed because the ruleset split shipped after the scoring fixes did.
+our own corpus — rather than waiting for someone else to.
+
+> **If you are upgrading, you are coming from `0.2.7`.** That is the newest
+> version on PyPI. `0.3.0` and `0.3.1` were built and tagged in this repo but
+> **never published**, so everything in both groups below is new to you, and a
+> `0.2.7` score is not comparable to a `0.4.0` score. The two groups are kept
+> separate only because the ruleset split was developed after the scoring fixes.
 
 ### 0.4.0 — the validation release (breaking for `--json` consumers)
 
@@ -378,7 +383,7 @@ listed because the ruleset split shipped after the scoring fixes did.
 
 **5. `--threshold` says when it did nothing.** `--threshold` gates the governance score, so it is a no-op on coding-agent config — and both `test` and `scan` now record `threshold_ignored_for_config` in `warnings` and print it in the `--summary` markdown that becomes the sticky PR comment. The Action passes `threshold` unconditionally (default `"50"`) and the docs recommend `scan-path`, so before this the most-recommended CI setup reported a passing gate that had never run. Use `--max-smells N` to gate those files.
 
-### 0.3.0 — the scoring fixes
+### The scoring fixes (developed as `0.3.0`, never released on their own)
 
 **6. The length bonus is gone.** CrewScore awarded up to +10 per dimension for prompts over 500 words. That rewarded length — and length is a cost, not a virtue: files at or over 200 lines are Context Bloat, and [Gloaguen et al.](https://arxiv.org/abs/2602.11988) measured **>20% higher inference cost** from context files with **no gain in task success**. It was also never in the published formula, so the documented formula did not match the code. Both are fixed: the formula in this README is now the whole formula.
 

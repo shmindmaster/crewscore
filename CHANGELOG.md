@@ -48,7 +48,8 @@ publishes the study rather than the marketing.
 
 ### Changed
 
-- **Ruleset is now `crewscore-hygiene@0.4.0`.** 0.3.1 was never published, so no
+- **Ruleset is now `crewscore-hygiene@0.4.0`.** No `0.3.x` was ever published
+  (the last public release is `0.2.7`), so no
   comparison history is invalidated by the renumber.
 - Package description, README, `AGENTS.md`, and the GitHub Action manifest no
   longer claim "production-readiness". The number is coverage of controls you
@@ -102,9 +103,21 @@ change every score, and bundling a scoring change into the release headlined
 
 ---
 
-## [0.3.0] — earlier
+## [0.2.7] — the last public release
 
-Last publicly released version. Offline deterministic scoring across eight
-governance dimensions, CLI + web engine, GitHub Action with a threshold gate.
+**If you are upgrading, you are almost certainly coming from 0.2.7.** It is the
+newest version on PyPI; `0.3.0` and `0.3.1` were developed and tagged in-repo
+but **never published**, so no released version ever carried the `0.3.x`
+behavior. Everything listed under 0.4.0 above is therefore a change relative to
+0.2.7, including two that predate the 0.3.x work:
 
-*(0.3.1 was tagged internally during development and never published.)*
+- **The length bonus is gone.** 0.2.x added score for longer prompts. It
+  rewarded exactly the padding the Context Bloat detector now flags, and it is
+  the reason 0.2.x scores are not comparable to 0.4.0 scores. Expect your score
+  to move, usually down.
+- **Rules with measured false positives were removed**, so the rule set is not
+  a superset of the one you have.
+
+Do not compare a 0.2.7 number to a 0.4.0 number. They are different rulesets
+measuring the same thing with different instruments — and per
+[`docs/validation.md`](docs/validation.md), neither number ranks prompt quality.

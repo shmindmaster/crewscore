@@ -102,7 +102,8 @@ control. Roughly half of all rule firings are not on-target.
 Restricting to genuine matches, the correlation between score and length falls
 from r=+0.465 to **r=+0.034**. The length relationship is an artifact of
 imprecise patterns, not a deliberate length term. (There is no length term; one
-existed in 0.2.x and was removed in 0.3.0.)
+existed in 0.2.x and was removed during 0.3.x development, which never
+shipped; 0.4.0 is the first public release without it.)
 
 We measured length normalization as a fix and **rejected it**: it made the
 correlation worse (+0.253), and it would double-charge for length, which is
