@@ -37,7 +37,7 @@ inputs:
 
 outputs:
   scored:
-    description: "'true' when the run scored at least one system prompt, 'false' when it found only coding-agent config (AGENTS.md, CLAUDE.md, .cursorrules), which is judged on configuration smells rather than a 0-100 score. Guard every use of score/tier on this."
+    description: "'true' when the run scored at least one system prompt, 'false' when it found only coding-agent config (AGENTS.md, CLAUDE.md, .cursorrules), which is judged on configuration smells rather than a 0-100 score. Guard every use of score/tier on this. If crewscore crashes (emits non-JSON), the step dies under `set -euo pipefail` before writing any output, so scored is the empty string — neither 'true' nor 'false'. Use `scored == 'true'`, which fails safe on that empty string; a bare `if: outputs.scored` or `scored == 'false'` would misread it, since GitHub treats the non-empty string 'false' as truthy."
     value: ${{ steps.run.outputs.scored }}
   score:
     description: "Overall structural score (0-100) for the scored system prompt; in scan mode the worst (minimum) overall across system prompts. Coding-agent config is excluded — it is judged on configuration smells, not this number. Empty string when nothing was scored, but GitHub casts '' to 0 in numeric comparisons, so `if: outputs.score < 50` is TRUE for a run that measured nothing and `fromJSON(outputs.score)` errors. Always guard first: if: steps.<id>.outputs.scored == 'true' && ..."

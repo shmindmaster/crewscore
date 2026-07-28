@@ -360,7 +360,7 @@ jobs:
 
 Provide **either** `prompt-file` **or** `scan-path` (not neither). For scan mode, outputs use the **minimum** overall across **governed** files only — coding-agent config (`AGENTS.md`, `CLAUDE.md`, `.cursorrules`) is excluded, since it is judged on configuration smells, not this number.
 
-**Outputs:** `score` (0–100, governed files only) and `tier` (label string) are both the **empty string** when a scan finds no governed files at all — for example a repo that has only `AGENTS.md`/`CLAUDE.md`-style config and no system prompts. Write conditions accordingly, e.g. `if: steps.crewscore.outputs.score != '' && steps.crewscore.outputs.score < 50` rather than assuming a numeric value is always present. `summary-path` is the markdown summary path, if written.
+**Outputs:** `score` (0–100, governed files only) and `tier` (label string) are both the **empty string** when a scan finds no governed files at all — for example a repo that has only `AGENTS.md`/`CLAUDE.md`-style config and no system prompts. Guard on the `scored` output rather than testing `score` for emptiness — `scored` is an explicit `'true'`/`'false'` flag, so `if: steps.crewscore.outputs.scored == 'true' && steps.crewscore.outputs.score < 50` is simpler to read (and to copy) than checking `score != ''`. `summary-path` is the markdown summary path, if written.
 
 Sticky PR comments need `permissions: pull-requests: write` on the job. Set `pr-comment: "false"` to disable.
 
