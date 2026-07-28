@@ -26,7 +26,7 @@ crewscore test --prompt "You are a helpful assistant."
 **CI:** `crewscore scan . --threshold 50` · Action `shmindmaster/crewscore@v1`  
 Structural hygiene only — **not a red-team**, not a certification.
 
-[Install](#install) · [Usage](#usage) · [Scoring charter](#scoring-charter) · [Two rulesets](#two-artifacts-two-rulesets) · [Config smells](#configuration-smells) · [How scoring works](#how-scoring-works) · [What changed](#what-changed-in-030) · [CI](#ci-integration) · [Limits](#what-this-is-and-is-not)
+[Install](#install) · [Usage](#usage) · [Scoring charter](#scoring-charter) · [Two rulesets](#two-artifacts-two-rulesets) · [Config smells](#configuration-smells) · [How scoring works](#how-scoring-works) · [What changed](#what-changed-in-031) · [CI](#ci-integration) · [Limits](#what-this-is-and-is-not)
 
 </div>
 
@@ -79,7 +79,7 @@ Honest principles we ship by:
 9. When in doubt, **under-score** rather than inflate.
 10. Source of truth: [`crewscore/scorers/structural_analysis.py`](crewscore/scorers/structural_analysis.py).
 
-> **Changed in `0.3.0`:** CrewScore used to award up to +10 per dimension for prompts over 500 words. That rewarded the exact thing the research penalizes — and it was never in the published formula. It is gone. See [what changed and why](#what-changed-in-030).
+> **Changed in `0.3.0`:** CrewScore used to award up to +10 per dimension for prompts over 500 words. That rewarded the exact thing the research penalizes — and it was never in the published formula. It is gone. See [what changed and why](#what-changed-in-031).
 
 See also [docs/next-steps-eval.md](docs/next-steps-eval.md) for when to graduate to live eval tools.
 
@@ -185,6 +185,8 @@ crewscore fix --prompt-file ./system-prompt.md --plan --json
 
 `--plan` / `--dry-run` is mutually exclusive with `--apply` and `--output`. These are **prompt text templates**. They can raise the structural score without changing runtime behavior — wire matching controls (tool gates, logging, budgets) in your application.
 
+**Exit `1` on coding-agent config.** Since `0.3.1`, `fix` refuses to write governance templates into an `AGENTS.md`-class file and exits `1` (`--json`: `{"refused": true, ...}`). A loop that treats any non-zero exit as fatal will stop there — skip those paths, or pass `--profile system_prompt` to force the templates in. Forced runs report `"forced_governance_write": true`.
+
 ### Vendor checklist (self-attest, secondary)
 
 Optional procurement diligence checklist — not the main product path:
@@ -262,7 +264,9 @@ crewscore test --prompt-file ./agents/system-prompt.md
 
 Override the detection with `--profile system_prompt` or `--profile coding_agent_config` when your filenames don't follow convention.
 
-**In CI:** `--threshold N` gates system prompts and is ignored for config files; `--max-smells N` gates config files.
+**In CI:** `--threshold N` gates system prompts and is ignored for config files (which record `threshold_ignored_for_config` in `warnings`); `--max-smells N` gates config files.
+
+**In `--json`:** config carries no governance grade either. `overall` and `dimensions` are **omitted** from the payload when `governance_applicable` is `false` — read `tier` and `smells` instead, and [branch on `governance_applicable`](#cli-in-ci) before touching `overall`.
 
 ---
 
@@ -288,17 +292,27 @@ Smells are **advisory. They never change the score.** Folding them in would sile
 
 ---
 
-## What changed in 0.3.0
+## What changed in 0.3.1
 
-Four defects, all found by testing CrewScore against the published research rather than waiting for someone else to.
+Defects found by testing CrewScore against the published research rather than waiting for someone else to. Two releases are listed because the ruleset split shipped after the scoring fixes did.
 
-**0. `AGENTS.md` files were being judged by the wrong ruleset.** Validated against the [arXiv:2606.15828](https://arxiv.org/abs/2606.15828) corpus of the 100 most-starred repos with an agent config file, CrewScore scored them at a median of **0/100** — all 100 in the worst tier. `crewscore scan` targeted exactly those files by default, so the headline command pointed the governance ruleset at the one artifact it can't assess. Fixed by [splitting the rulesets](#two-artifacts-two-rulesets): 0 of those 100 files now receive a governance grade, and the 42 flagged for Context Bloat match the paper's labels exactly.
+### 0.3.1 — the ruleset split (breaking for `--json` consumers)
 
-**0b. Four rules were matching ordinary developer prose.** Measured on the same corpus: `compliance.01` matched `phi` *inside "cryptographic"* (19/100 files); `injection.05` matched *dependency injection* (19/100); `audit.02` matched bare `logging` (30/100); `citation.01`/`.05` matched `reference` and any numbered list containing "refer" (83 hits). All narrowed, with regression tests built from the exact offending strings. Roughly **70% of the apparent signal on real files was noise**.
+**1. `AGENTS.md` files were being judged by the wrong ruleset.** Validated against the [arXiv:2606.15828](https://arxiv.org/abs/2606.15828) corpus of the 100 most-starred repos with an agent config file, CrewScore scored them at a median of **0/100** — all 100 in the worst tier. `crewscore scan` targeted exactly those files by default, so the headline command pointed the governance ruleset at the one artifact it can't assess. Fixed by [splitting the rulesets](#two-artifacts-two-rulesets): 0 of those 100 files now receive a governance grade, and the 42 flagged for Context Bloat match the paper's labels exactly.
 
-**1. The length bonus is gone.** CrewScore awarded up to +10 per dimension for prompts over 500 words. That rewarded length — and length is a cost, not a virtue: files at or over 200 lines are Context Bloat, and [Gloaguen et al.](https://arxiv.org/abs/2602.11988) measured **>20% higher inference cost** from context files with **no gain in task success**. It was also never in the published formula, so the documented formula did not match the code. Both are fixed: the formula in this README is now the whole formula.
+**2. Four rules were matching ordinary developer prose.** Measured on the same corpus: `compliance.01` matched `phi` *inside "cryptographic"* (19/100 files); `injection.05` matched *dependency injection* (19/100); `audit.02` matched bare `logging` (30/100); `citation.01`/`.05` matched `reference` and any numbered list containing "refer" (83 hits). All narrowed, with regression tests built from the exact offending strings. Roughly **70% of the apparent signal on real files was noise**.
 
-**2. `fix` no longer pads.** It used to turn a one-line prompt into 79 lines of generic boilerplate — consuming ~40% of the 200-line budget in one command — and score it 46 points higher for the privilege. Templates are now roughly half the size, and `fix` reports its own context cost:
+**3. `--json` no longer carries a governance grade for coding-agent config.** *(breaking)* When `governance_applicable` is `false`, `crewscore test --json` and `crewscore scan --json` omit `overall` and `dimensions` **entirely** — they are not zeroed, they are absent. Previously `crewscore test --prompt-file AGENTS.md --json` reported `overall: 0`, so `jq -e '.overall >= 50'` failed on every `AGENTS.md` in existence while the [browser engine](https://crewscore.ai) reported no number at all for the same file. Same artifact, two contracts; the browser one was right. `tier` (a `CONFIG:` verdict), `governance_applicable`, `profile`, `source`, `ruleset`, `smells` and `warnings` are unchanged. **If you parse the JSON, branch on `governance_applicable` before reading `overall`** — see [CLI in CI](#cli-in-ci).
+
+**4. `crewscore fix` exits `1` instead of writing governance templates into coding-agent config.** *(breaking)* Every fix template is a governance template — HIPAA language, human-approval gates, audit trails — and `fix` used to append them to an `AGENTS.md` on request. It now refuses, prints the reason and the next step, and exits `1`; `--json` emits `{"refused": true, ...}`. **A script that loops over files and treats any non-zero exit as fatal will now stop on the first config file.** Either skip those paths, or pass `--profile system_prompt` to force the templates in — forced runs are recorded as `"forced_governance_write": true` in the `--json` payload.
+
+**5. `--threshold` says when it did nothing.** `--threshold` gates the governance score, so it is a no-op on coding-agent config — and both `test` and `scan` now record `threshold_ignored_for_config` in `warnings` and print it in the `--summary` markdown that becomes the sticky PR comment. The Action passes `threshold` unconditionally (default `"50"`) and the docs recommend `scan-path`, so before this the most-recommended CI setup reported a passing gate that had never run. Use `--max-smells N` to gate those files.
+
+### 0.3.0 — the scoring fixes
+
+**6. The length bonus is gone.** CrewScore awarded up to +10 per dimension for prompts over 500 words. That rewarded length — and length is a cost, not a virtue: files at or over 200 lines are Context Bloat, and [Gloaguen et al.](https://arxiv.org/abs/2602.11988) measured **>20% higher inference cost** from context files with **no gain in task success**. It was also never in the published formula, so the documented formula did not match the code. Both are fixed: the formula in this README is now the whole formula.
+
+**7. `fix` no longer pads.** It used to turn a one-line prompt into 79 lines of generic boilerplate — consuming ~40% of the 200-line budget in one command — and score it 46 points higher for the privilege. Templates are now roughly half the size, and `fix` reports its own context cost:
 
 ```
 Context cost: +44 lines (1 -> 45). Every line is re-read on every run.
@@ -395,6 +409,20 @@ Or parse JSON yourself:
 ```bash
 SCORE=$(crewscore test --prompt-file ./agents/system-prompt.md --json | jq '.overall')
 ```
+
+**Branch on `governance_applicable` before reading `overall`.** [Coding-agent config](#two-artifacts-two-rulesets) carries no governance grade, and since `0.3.1` the field is **absent** rather than `0` — `jq '.overall'` yields `null` there, and `jq -e '.overall >= 50'` errors:
+
+```bash
+# single file: score it only if it is judged on the governance score
+crewscore test --prompt-file ./AGENTS.md --json \
+  | jq -e 'if .governance_applicable then .overall >= 50 else true end'
+
+# scan: worst score across the files that carry one
+crewscore scan . --json \
+  | jq '[.[] | select(.governance_applicable) | .overall] | min'
+```
+
+The official Action already does this and exposes a `scored` output to guard on.
 
 ---
 
