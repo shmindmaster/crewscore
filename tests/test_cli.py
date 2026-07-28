@@ -73,6 +73,13 @@ def test_assess_vendor_json():
     assert len(payload["answers"]) == 10
 
 
+def test_fix_mentions_runtime_gates():
+    runner = CliRunner()
+    result = runner.invoke(main, ["fix", "--prompt", "You are helpful."])
+    assert result.exit_code == 0
+    assert "runtime" in result.output.lower()
+
+
 def test_version():
     runner = CliRunner()
     result = runner.invoke(main, ["--version"])

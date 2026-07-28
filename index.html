@@ -81,7 +81,8 @@ textarea:focus{outline:none;border-color:#3b82f6}
 <div class="dev-note">
   Developers: CLI with structural scoring, fix mode, and CI threshold gates<br>
   <a href="https://github.com/shmindmaster/crewscore">github.com/shmindmaster/crewscore</a>
-  · structural scan only (not live adversarial testing)
+  · structural scan only (not live adversarial testing)<br>
+  CLI is source of truth; web is demo
 </div>
 </div>
 
@@ -135,17 +136,20 @@ function tierFor(s){
   if(s>=50)return{n:'NEEDS WORK',c:'score-orange'};
   return{n:'NOT PRODUCTION READY',c:'score-red'};
 }
-function renderScorecard(el,scores,labels,title){
+function renderScorecard(el,scores,labels,title,opts){
+  opts=opts||{};
   const overall=Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
   const tier=tierFor(overall);
   let html=`<h3>${title}</h3><div class="score-big ${tier.c}">${overall}/100</div><div class="tier ${tier.c}">${tier.n}</div>`;
   scores.forEach((s,i)=>{html+=`<div class="dim-row"><span class="dim-label">${labels[i]}</span>${bar(s)}<span class="dim-score">${s}</span></div>`;});
   const flags=labels.filter((_,i)=>scores[i]===0);
   if(flags.length)html+=`<div class="flags">${flags.length} RED FLAG(S): ${flags.join(', ')}</div>`;
+  const copyFn=opts.copyFn||'copyScore';
+  const shareExtra=opts.shareExtra?`,${JSON.stringify(opts.shareExtra)}`:'';
   html+=`<div class="share-row">
-    <button class="share-btn linkedin" onclick="shareLinkedIn(${overall},'${tier.n}','${title}')">Share on LinkedIn</button>
-    <button class="share-btn x" onclick="shareX(${overall},'${tier.n}','${title}')">Share on X</button>
-    <button class="share-btn" onclick="copyScore(${overall},'${tier.n}','${title}')">Copy Score</button>
+    <button class="share-btn linkedin" onclick="shareLinkedIn(${overall},'${tier.n.replace(/'/g,"\\'")}','${title.replace(/'/g,"\\'")}'${shareExtra})">Share on LinkedIn</button>
+    <button class="share-btn x" onclick="shareX(${overall},'${tier.n.replace(/'/g,"\\'")}','${title.replace(/'/g,"\\'")}'${shareExtra})">Share on X</button>
+    <button class="share-btn" onclick="${copyFn}(${overall},'${tier.n.replace(/'/g,"\\'")}','${title.replace(/'/g,"\\'")}'${shareExtra})">Copy Score</button>
   </div>`;
   el.innerHTML=html;el.classList.add('show');
 }
@@ -172,22 +176,50 @@ function scoreAgent(){
 function scoreVendor(){
   const name=document.getElementById('vendor-name').value||'AI Vendor';
   const scores=vendorAnswers.map(a=>a==='yes'?100:a==='dk'?30:0);
-  renderScorecard(document.getElementById('vendor-scorecard'),scores,VENDOR_Q.map(q=>q.split('?')[0].substring(0,40)),`${name} — Vendor Score`);
+  const labels=VENDOR_Q.map(q=>q.split('?')[0].substring(0,40));
+  const flags=VENDOR_Q.filter((_,i)=>vendorAnswers[i]==='no'||(vendorAnswers[i]==='dk'&&[2,3,4,7,9].includes(i)))
+    .map(q=>q.replace(/\?$/,''));
+  renderScorecard(
+    document.getElementById('vendor-scorecard'),
+    scores,
+    labels,
+    `${name} — Vendor Score`,
+    {copyFn:'copyVendorScore',shareExtra:{name,flags}}
+  );
 }
 
-function shareLinkedIn(score,tier,title){
-  const text=encodeURIComponent(`${title}: ${score}/100 — ${tier}\n\nScored with CrewScore. Lint your agent prompts offline.\n\nTry it free: ${location.href}\n\n#AI #AISafety #EnterpriseAI #DueDiligence`);
+function vendorShareText(score,tier,title,extra){
+  extra=extra||{};
+  const name=extra.name||title;
+  const flags=extra.flags||[];
+  let text=`We evaluated ${name} for AI production use.\n\nScore: ${score}/100 — ${tier}\n`;
+  if(flags.length){
+    text+=`\nRed flags:\n${flags.map(f=>'- '+f).join('\n')}\n`;
+  }
+  text+=`\nSelf-attested checklist — not an independent audit.\nScored with CrewScore | ${location.href}`;
+  return text;
+}
+
+function shareLinkedIn(score,tier,title,extra){
+  const body=extra&&extra.flags!==undefined?vendorShareText(score,tier,title,extra):
+    `${title}: ${score}/100 — ${tier}\n\nScored with CrewScore. Lint your agent prompts offline.\n\nTry it free: ${location.href}\n\n#AI #AISafety #EnterpriseAI #DueDiligence`;
   window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(location.href)}`);
-  navigator.clipboard.writeText(decodeURIComponent(text));
+  navigator.clipboard.writeText(body);
   alert('Score copied to clipboard! Paste it in your LinkedIn post.');
 }
-function shareX(score,tier,title){
-  const text=encodeURIComponent(`${title}: ${score}/100 — ${tier}. Score your agent prompts free: ${location.href} #AI #AISafety`);
-  window.open(`https://x.com/intent/tweet?text=${text}`);
+function shareX(score,tier,title,extra){
+  const body=extra&&extra.flags!==undefined?
+    `${title}: ${score}/100 — ${tier}. Vendor diligence with CrewScore: ${location.href} #AI #DueDiligence`:
+    `${title}: ${score}/100 — ${tier}. Score your agent prompts free: ${location.href} #AI #AISafety`;
+  window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(body)}`);
 }
 function copyScore(score,tier,title){
   navigator.clipboard.writeText(`${title}: ${score}/100 — ${tier}\nScored with CrewScore | ${location.href}`);
   alert('Copied!');
+}
+function copyVendorScore(score,tier,title,extra){
+  navigator.clipboard.writeText(vendorShareText(score,tier,title,extra));
+  alert('Vendor score + red flags copied!');
 }
 
 buildVendorQ();
