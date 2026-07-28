@@ -147,7 +147,7 @@ Answers are `y` / `n` / `dk` for each of 10 diligence questions.
 
 ### Browser demo
 
-Open `index.html` locally (or on GitHub Pages) for a zero-install structural scan and vendor checklist UI (client-side only; not the CLI implementation).
+Open **[crewscore.ai](https://crewscore.ai)** (or `index.html` locally) for a zero-install structural scan, one-click fix, templates, and vendor checklist. Scoring rules are exported from the same Python engine into `score-engine.js` so browser and CLI stay in lockstep.
 
 ---
 

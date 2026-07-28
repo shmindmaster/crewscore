@@ -1,6 +1,6 @@
 # CrewScore PyPI publish checklist
 
-Package: **`crewscore`** · Version: **`0.2.0`** (see `pyproject.toml`)  
+Package: **`crewscore`** · Version: **`0.2.1`** (see `pyproject.toml`)  
 Build backend: **hatchling** · Do **not** upload without a human-provided token.
 
 ## Prerequisites
@@ -59,7 +59,7 @@ py -3.13 -m twine check dist/*
 
 Expected:
 
-- Artifacts: `dist/crewscore-0.2.0.tar.gz` and `dist/crewscore-0.2.0-py3-none-any.whl`
+- Artifacts: `dist/crewscore-0.2.1.tar.gz` and `dist/crewscore-0.2.1-py3-none-any.whl`
 - `twine check` reports **PASSED** for both
 
 Optional hatch path (equivalent if hatch is installed):
@@ -86,9 +86,9 @@ py -3.13 -m twine upload dist/*
 
 ```bash
 # clean venv recommended
-pip install crewscore==0.2.0
+pip install crewscore==0.2.1
 crewscore --version
-# expect: 0.2.0 (or the published version string)
+# expect: 0.2.1 (or the published version string)
 
 crewscore test --prompt "You are a helpful assistant."
 ```
@@ -96,14 +96,14 @@ crewscore test --prompt "You are a helpful assistant."
 ### Tag (only after successful PyPI publish)
 
 ```bash
-git tag -a v0.2.0 -m "crewscore 0.2.0"
-# push tag only when human approves: git push origin v0.2.0
+git tag -a v0.2.1 -m "crewscore 0.2.1"
+# push tag only when human approves: git push origin v0.2.1
 ```
 
 ### Floating GitHub Action tag `v1` (for `uses: shmindmaster/crewscore@v1`)
 
 Consumers pin the composite action with a **major floating tag** `v1`, not only the
-immutable version tag. After a successful release (PyPI live + `v0.2.0` tag pushed),
+immutable version tag. After a successful release (PyPI live + `v0.2.1` tag pushed),
 create or move `v1` to the same commit as the release:
 
 ```bash
@@ -112,12 +112,12 @@ git tag -a v1 -m "CrewScore Action v1 (tracks 0.2.x)"
 
 # Later 0.2.x / 0.3.x patches that stay on Action major 1 — move the floating tag:
 git tag -d v1                    # local only, if v1 already exists
-git tag -a v1 -m "CrewScore Action v1 → v0.2.0"
+git tag -a v1 -m "CrewScore Action v1 → v0.2.1"
 # Force-update remote floating tag only when human approves:
 # git push origin refs/tags/v1 --force
 ```
 
-- `v0.2.0` (and future `vX.Y.Z`) stay **immutable** release tags.
+- `v0.2.1` (and future `vX.Y.Z`) stay **immutable** release tags.
 - `v1` is a **movable major pointer** so workflows using
   `uses: shmindmaster/crewscore@v1` pick up compatible Action fixes without
   editing every consumer workflow.
@@ -143,4 +143,4 @@ git tag -a v1 -m "CrewScore Action v1 → v0.2.0"
 - [ ] `twine check dist/*` PASSED
 - [ ] Human approved upload + provided token
 - [ ] (After upload) clean-machine install + `crewscore --version`
-- [ ] (After upload) git tag `v0.2.0` if matching this version
+- [ ] (After upload) git tag `v0.2.1` if matching this version
