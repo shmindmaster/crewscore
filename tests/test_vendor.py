@@ -119,9 +119,11 @@ def test_index_html_hero_is_builder_first():
 
 
 def test_index_html_vendor_tab_is_secondary_self_attest():
-    """Vendor tab label is demoted: self-attest checklist, not equal hero."""
+    """Vendor path is demoted: self-attest checklist, not equal hero chrome."""
     text = Path("index.html").read_text(encoding="utf-8")
     assert "Vendor checklist (self-attest)" in text
+    # Must not be equal-weight primary tab chrome
+    assert "Secondary:" in text or "secondary" in text.lower()
     # Old equal-weight buyer framing should not remain as the tab label
     assert "I’m buying AI software" not in text
     assert "I'm buying AI software" not in text

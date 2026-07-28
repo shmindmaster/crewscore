@@ -10,330 +10,380 @@
 <meta property="og:type" content="website">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="any">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <title>CrewScore — Free AI agent prompt score (no install)</title>
 <style>
 :root{
-  --bg:#070b14;
-  --bg2:#0c1220;
-  --panel:#0f172a;
-  --panel2:#111b2e;
-  --line:#1e2a44;
-  --line2:#2a3a5c;
-  --text:#e8eef9;
-  --muted:#8b9bb8;
-  --faint:#5c6b86;
-  --accent:#38bdf8;
-  --accent2:#0ea5e9;
-  --accent-dim:rgba(14,165,233,.14);
-  --good:#34d399;
-  --good-dim:rgba(52,211,153,.12);
-  --warn:#fbbf24;
-  --bad:#f87171;
-  --bad-dim:rgba(248,113,113,.1);
-  --radius:14px;
-  --shadow:0 20px 50px rgba(0,0,0,.35);
-  --font:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  --mono:ui-monospace,SFMono-Regular,Consolas,monospace;
+  --bg:#0a0c0b;
+  --panel:#121614;
+  --panel2:#0e110f;
+  --ink:#e8ebe4;
+  --muted:#9aa396;
+  --faint:#6b7268;
+  --line:#2a322c;
+  --line2:#3a453c;
+  --amber:#e8a317;
+  --amber-dim:rgba(232,163,23,.14);
+  --amber-line:rgba(232,163,23,.4);
+  --ok:#5dbe7c;
+  --ok-dim:rgba(93,190,124,.12);
+  --bad:#e85d5d;
+  --bad-dim:rgba(232,93,93,.12);
+  --warn:#d4a017;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Consolas,monospace;
+  --sans:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --r:4px;
+  --shadow:0 18px 40px rgba(0,0,0,.45);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{
-  font-family:var(--font);
+  font-family:var(--sans);
+  color:var(--ink);
   background:
-    radial-gradient(900px 420px at 12% -8%, rgba(14,165,233,.16), transparent 55%),
-    radial-gradient(700px 360px at 92% 8%, rgba(52,211,153,.08), transparent 50%),
+    linear-gradient(180deg,rgba(232,163,23,.04),transparent 28%),
+    repeating-linear-gradient(0deg,transparent,transparent 47px,rgba(42,50,44,.35) 48px),
     var(--bg);
-  color:var(--text);
   min-height:100vh;
-  padding:1.1rem 1rem 3.5rem;
+  padding:1rem 1rem 3.5rem;
   line-height:1.45;
 }
-.wrap{max-width:720px;margin:0 auto}
-.brand{
-  display:flex;align-items:center;gap:.65rem;
-  margin-bottom:1.15rem;
+.wrap{max-width:780px;margin:0 auto}
+/* —— chrome —— */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  margin-bottom:1.25rem;padding-bottom:.85rem;border-bottom:1px solid var(--line);
 }
-.logo{
-  width:36px;height:36px;border-radius:10px;
-  background:linear-gradient(145deg,#0b1528,#12233d);
-  border:1px solid rgba(56,189,248,.45);
-  display:grid;place-items:center;
-  font-weight:800;font-size:.82rem;color:var(--accent);
-  letter-spacing:-.02em;
-  box-shadow:0 0 0 3px rgba(14,165,233,.08);
+.brand{display:flex;align-items:center;gap:.65rem}
+.mark{
+  width:34px;height:34px;border:1px solid var(--amber-line);
+  background:var(--panel);display:grid;place-items:center;
+  font-family:var(--mono);font-weight:700;font-size:.72rem;color:var(--amber);
+  letter-spacing:.04em;
 }
-.brand-name{font-weight:750;font-size:1.05rem;letter-spacing:-.02em}
-.brand-tag{font-size:.72rem;color:var(--faint);margin-top:.05rem}
-.hero h1{
-  font-size:clamp(1.7rem,4.4vw,2.35rem);
-  line-height:1.12;font-weight:780;letter-spacing:-.03em;
-  margin-bottom:.55rem;color:#fff;
+.brand h1{font-size:1rem;font-weight:700;letter-spacing:-.02em}
+.brand p{font-family:var(--mono);font-size:.65rem;color:var(--faint);text-transform:uppercase;letter-spacing:.06em}
+.cap-chip{
+  font-family:var(--mono);font-size:.68rem;color:var(--amber);
+  border:1px solid var(--amber-line);background:var(--amber-dim);
+  padding:.35rem .55rem;white-space:nowrap;
 }
-.hero .sub{
-  color:var(--muted);font-size:1.02rem;max-width:34rem;
-  margin-bottom:.85rem;line-height:1.5;
+/* —— hero —— */
+.hero{margin-bottom:1.1rem}
+.hero .eyebrow{
+  font-family:var(--mono);font-size:.7rem;color:var(--amber);
+  letter-spacing:.08em;text-transform:uppercase;margin-bottom:.45rem;
 }
-.pills{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.85rem}
-.pill{
-  font-size:.72rem;color:#c5d4ef;background:rgba(17,24,39,.7);
-  border:1px solid var(--line);padding:.32rem .6rem;border-radius:999px;
+.hero h2{
+  font-size:clamp(1.55rem,4vw,2.15rem);line-height:1.15;font-weight:700;
+  letter-spacing:-.03em;margin-bottom:.5rem;max-width:20ch;
 }
-.trust-line{
-  font-size:.78rem;color:var(--faint);margin-bottom:1.15rem;
-  max-width:38rem;line-height:1.45;
+.hero .sub{color:var(--muted);font-size:.98rem;max-width:38rem;margin-bottom:.7rem}
+.trust{
+  font-size:.8rem;color:var(--faint);max-width:40rem;line-height:1.5;
+  border-left:2px solid var(--amber-line);padding-left:.7rem;
 }
-.trust-line a,.trust-line button.linkish{
-  color:var(--accent);background:none;border:none;cursor:pointer;
-  font:inherit;padding:0;text-decoration:underline;text-underline-offset:2px;
+.trust button.linkish,.trust a{
+  color:var(--amber);background:none;border:none;cursor:pointer;
+  font:inherit;text-decoration:underline;text-underline-offset:2px;padding:0;
 }
-.tabs{
-  display:flex;gap:0;margin-bottom:.9rem;
-  background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:3px;
+/* —— stages —— */
+.stages{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:.35rem;
+  margin:1.1rem 0 .9rem;
 }
-.tab{
-  flex:1.15;padding:.7rem .5rem;text-align:center;cursor:pointer;
-  border:none;border-radius:10px;background:transparent;
-  color:var(--muted);font-size:.88rem;font-weight:650;
+.stage-pill{
+  font-family:var(--mono);font-size:.68rem;text-align:center;
+  padding:.5rem .25rem;border:1px solid var(--line);color:var(--faint);
+  background:var(--panel2);text-transform:uppercase;letter-spacing:.04em;
 }
-.tab.tab-secondary{flex:.9;font-size:.76rem;font-weight:500;color:var(--faint)}
-.tab.active{
-  background:linear-gradient(180deg,#1a2d4a,#15253d);
-  color:#fff;box-shadow:inset 0 0 0 1px rgba(56,189,248,.25);
+.stage-pill.on{border-color:var(--amber-line);color:var(--amber);background:var(--amber-dim)}
+.stage-pill.done{border-color:rgba(93,190,124,.35);color:var(--ok)}
+@media(max-width:560px){
+  .stages{grid-template-columns:repeat(2,1fr)}
+  .cap-chip{display:none}
 }
-.tab.tab-secondary.active{color:#cbd5e1}
-.panel{
-  display:none;background:linear-gradient(180deg,var(--panel),var(--panel2));
-  border:1px solid var(--line);border-radius:18px;padding:1.15rem 1.1rem 1.2rem;
-  box-shadow:var(--shadow);
+/* —— panels —— */
+.deck{
+  border:1px solid var(--line);background:var(--panel);
+  box-shadow:var(--shadow);padding:1.1rem;
 }
-.panel.active{display:block}
-label{display:block;font-size:.82rem;color:var(--muted);margin-bottom:.4rem;font-weight:650}
-.hint{font-size:.76rem;color:var(--faint);margin-bottom:.65rem;line-height:1.45}
-.chips{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.8rem}
+.deck + .deck{margin-top:.75rem}
+.deck-head{
+  display:flex;align-items:baseline;justify-content:space-between;gap:.5rem;
+  margin-bottom:.75rem;padding-bottom:.55rem;border-bottom:1px solid var(--line);
+}
+.deck-head h3{
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--muted);font-weight:600;
+}
+.deck-head .hint{font-size:.72rem;color:var(--faint)}
+label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:.35rem;font-weight:600}
+.help{font-size:.75rem;color:var(--faint);margin-bottom:.55rem;line-height:1.4}
+.chips{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.7rem}
 .chip{
-  border:1px solid var(--line2);background:rgba(8,12,22,.65);
-  color:var(--text);border-radius:999px;padding:.42rem .72rem;
-  font-size:.74rem;cursor:pointer;transition:border-color .15s,color .15s,background .15s;
+  font-family:var(--mono);font-size:.7rem;border:1px solid var(--line2);
+  background:var(--panel2);color:var(--ink);padding:.4rem .6rem;cursor:pointer;
 }
-.chip:hover,.chip:focus-visible{border-color:var(--accent);color:#bae6fd;outline:none}
-.chip.active{border-color:var(--accent);background:var(--accent-dim);color:#e0f2fe}
-textarea,input[type=url],input[type=text],.vendor-name-input{
-  width:100%;padding:.78rem .85rem;background:#060a12;
-  border:1px solid var(--line2);border-radius:12px;color:var(--text);
-  font-size:.9rem;transition:border-color .15s,box-shadow .15s;
+.chip:hover,.chip:focus-visible{border-color:var(--amber);color:var(--amber);outline:none}
+.chip.active{border-color:var(--amber);background:var(--amber-dim);color:var(--amber)}
+textarea,input[type=url],input[type=text]{
+  width:100%;padding:.7rem .75rem;background:#090b0a;
+  border:1px solid var(--line2);color:var(--ink);font-size:.88rem;
+  font-family:var(--mono);border-radius:var(--r);
 }
-textarea{
-  min-height:148px;font-family:var(--mono);font-size:.84rem;resize:vertical;line-height:1.45;
-}
-input:focus,textarea:focus{
-  outline:none;border-color:var(--accent2);
-  box-shadow:0 0 0 3px rgba(14,165,233,.15);
-}
-.row{display:flex;gap:.5rem;margin-bottom:.15rem;flex-wrap:wrap;align-items:stretch}
-.row input{flex:1;min-width:180px}
+textarea{min-height:140px;resize:vertical;line-height:1.5}
+input:focus,textarea:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 2px var(--amber-dim)}
+.row{display:flex;gap:.45rem;flex-wrap:wrap;margin-top:.55rem}
+.row input{flex:1;min-width:160px}
 .btn{
-  width:100%;padding:.92rem;border:none;border-radius:12px;
-  font-size:1rem;font-weight:750;cursor:pointer;margin-top:.7rem;
-  background:linear-gradient(180deg,#38bdf8,#0ea5e9);color:#041018;
-  box-shadow:0 8px 24px rgba(14,165,233,.22);
-  transition:transform .12s,filter .12s;
+  width:100%;margin-top:.7rem;padding:.85rem;
+  font-family:var(--mono);font-weight:700;font-size:.88rem;
+  letter-spacing:.03em;text-transform:uppercase;cursor:pointer;
+  border:1px solid var(--amber);background:var(--amber);color:#14110a;
 }
 .btn:hover{filter:brightness(1.05)}
-.btn:active{transform:translateY(1px)}
-.btn:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+.btn:disabled{opacity:.45;cursor:not-allowed}
 .btn-sec{
-  background:rgba(8,12,22,.7);border:1px solid var(--line2);color:var(--text);
-  font-weight:650;font-size:.88rem;padding:.72rem .85rem;border-radius:12px;cursor:pointer;
+  border:1px solid var(--line2);background:transparent;color:var(--ink);
+  font-family:var(--mono);font-size:.78rem;font-weight:600;
+  padding:.65rem .8rem;cursor:pointer;text-transform:uppercase;letter-spacing:.03em;
 }
-.btn-sec:hover{border-color:var(--accent);color:#bae6fd}
+.btn-sec:hover{border-color:var(--amber);color:var(--amber)}
+.btn-ok{border-color:var(--ok);background:var(--ok);color:#0a140e}
 .btn-ghost{
-  background:transparent;border:1px solid transparent;color:var(--muted);
-  font-weight:600;font-size:.84rem;padding:.55rem .4rem;cursor:pointer;border-radius:10px;
+  background:none;border:none;color:var(--muted);font-family:var(--mono);
+  font-size:.72rem;cursor:pointer;text-decoration:underline;text-underline-offset:2px;
+  padding:.35rem 0;
 }
-.btn-ghost:hover{color:var(--text);background:rgba(255,255,255,.03)}
-.btn-green{
-  background:linear-gradient(180deg,#34d399,#059669);color:#04140f;
-  border:none;box-shadow:0 8px 20px rgba(5,150,105,.2);
-}
-.btn-green:hover{filter:brightness(1.05)}
-.post-actions{display:none;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.55rem}
-.post-actions.show{display:grid}
-.error{color:var(--bad);font-size:.82rem;margin-top:.55rem;display:none}
+.btn-ghost:hover{color:var(--amber)}
+.error{display:none;margin-top:.55rem;padding:.55rem .65rem;background:var(--bad-dim);
+  border:1px solid rgba(232,93,93,.35);color:#f0a0a0;font-size:.8rem}
 .error.show{display:block}
-.scorecard{
-  display:none;margin-top:1rem;background:#060a12;
-  border:1px solid var(--line);border-radius:16px;padding:1.15rem 1rem 1.1rem;
-  text-align:center;animation:rise .28s ease-out;
-}
-.scorecard.show{display:block}
-@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.score-kicker{font-size:.78rem;color:var(--muted);font-weight:600;letter-spacing:.02em}
+/* —— inspect —— */
+.score-hero{text-align:center;padding:.5rem 0 .85rem}
+.score-kicker{font-family:var(--mono);font-size:.7rem;color:var(--faint);letter-spacing:.06em;text-transform:uppercase}
 .delta{
-  display:inline-flex;align-items:center;gap:.3rem;
-  font-size:.88rem;font-weight:750;margin:.35rem 0 .15rem;
-  padding:.25rem .55rem;border-radius:999px;background:var(--good-dim);color:var(--good);
+  display:inline-block;margin:.4rem 0 .1rem;padding:.2rem .5rem;
+  font-family:var(--mono);font-size:.75rem;font-weight:700;
+  background:var(--ok-dim);color:var(--ok);border:1px solid rgba(93,190,124,.35);
 }
 .score-big{
-  font-size:clamp(2.8rem,8vw,3.6rem);font-weight:820;letter-spacing:-.04em;
-  line-height:1;margin:.2rem 0 .15rem;
+  font-family:var(--mono);font-size:clamp(3rem,9vw,3.8rem);font-weight:700;
+  letter-spacing:-.04em;line-height:1;margin:.15rem 0;
 }
-.score-red{color:var(--bad)}.score-orange{color:#fb923c}
-.score-yellow{color:var(--warn)}.score-green{color:var(--good)}
-.tier{font-size:1rem;font-weight:750;margin-bottom:.15rem}
-.tier-soft{font-size:.78rem;color:var(--faint);font-weight:500;margin-bottom:.55rem}
-.disclaimer{
-  font-size:.72rem;color:var(--faint);margin:0 auto .85rem;line-height:1.4;max-width:28rem;
+.score-red{color:var(--bad)}.score-orange{color:#e08940}
+.score-yellow{color:var(--warn)}.score-green{color:var(--ok)}
+.soft-verdict{font-size:1.05rem;font-weight:700;margin-bottom:.15rem}
+.hard-tier{font-family:var(--mono);font-size:.72rem;color:var(--faint);margin-bottom:.55rem}
+.stamp{
+  display:inline-flex;align-items:center;gap:.4rem;
+  font-family:var(--mono);font-size:.68rem;color:var(--amber);
+  border:1px dashed var(--amber-line);padding:.35rem .55rem;margin-bottom:.7rem;
+  background:var(--amber-dim);
 }
-.disclaimer details{margin-top:.35rem;text-align:left}
-.disclaimer summary{
-  cursor:pointer;color:var(--accent);font-weight:600;list-style:none;
-}
-.disclaimer summary::-webkit-details-marker{display:none}
-.disclaimer summary::before{content:"▸ ";}
-.disclaimer details[open] summary::before{content:"▾ ";}
-.formula{
-  margin-top:.4rem;padding:.55rem .65rem;background:rgba(255,255,255,.02);
-  border:1px solid var(--line);border-radius:10px;font-family:var(--mono);
-  font-size:.68rem;color:var(--muted);line-height:1.45;
-}
-.dim-row{
-  display:flex;align-items:center;gap:.5rem;margin:.32rem 0;
-  font-size:.74rem;text-align:left;
-}
-.dim-bar{flex:1;height:8px;background:#152033;border-radius:4px;overflow:hidden}
-.dim-fill{height:100%;border-radius:4px;transition:width .35s ease}
-.dim-label{width:min(168px,36vw);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dim-score{width:36px;text-align:right;color:var(--faint);font-variant-numeric:tabular-nums}
+.stamp::before{content:"▣";font-size:.7rem}
+.dims{margin:.4rem 0 .7rem}
+.dim-row{display:flex;align-items:center;gap:.45rem;margin:.28rem 0;font-size:.74rem}
+.dim-bar{flex:1;height:7px;background:#1a1f1c;overflow:hidden}
+.dim-fill{height:100%;transition:width .35s ease}
+.dim-label{width:min(170px,36vw);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--mono);font-size:.68rem}
+.dim-score{width:34px;text-align:right;font-family:var(--mono);color:var(--faint);font-variant-numeric:tabular-nums}
 .flags{
-  margin-top:.7rem;font-size:.8rem;text-align:left;color:#fecaca;
-  background:var(--bad-dim);border:1px solid rgba(248,113,113,.2);
-  border-radius:10px;padding:.55rem .7rem;
+  text-align:left;font-size:.78rem;color:#f0b0b0;background:var(--bad-dim);
+  border:1px solid rgba(232,93,93,.3);padding:.55rem .65rem;margin:.5rem 0;
 }
-.gaps{
-  margin-top:.75rem;text-align:left;border-top:1px solid var(--line);padding-top:.7rem;
-}
-.gaps h4{font-size:.8rem;color:#dbe7ff;margin-bottom:.45rem;font-weight:700}
+.gaps{text-align:left;border-top:1px solid var(--line);padding-top:.7rem;margin-top:.5rem}
+.gaps h4{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:.45rem}
 .gap-item{
-  display:flex;gap:.55rem;align-items:flex-start;
-  padding:.45rem .5rem;border-radius:10px;margin-bottom:.3rem;
-  background:rgba(255,255,255,.02);border:1px solid transparent;
+  display:grid;grid-template-columns:auto 1fr;gap:.5rem;padding:.45rem .4rem;
+  border:1px solid transparent;margin-bottom:.25rem;background:rgba(0,0,0,.2);
 }
 .gap-item:hover{border-color:var(--line)}
-.gap-dot{width:8px;height:8px;border-radius:50%;margin-top:.35rem;flex-shrink:0;background:var(--bad)}
-.gap-body{font-size:.76rem;color:var(--muted);line-height:1.4}
-.gap-body strong{color:#e2e8f0;font-weight:650}
-.gap-body code{font-family:var(--mono);font-size:.7rem;color:#7dd3fc}
-.explain-full{display:none;margin-top:.55rem}
+.gap-dot{width:8px;height:8px;margin-top:.35rem;background:var(--bad)}
+.gap-body{font-size:.78rem;color:var(--muted);line-height:1.4}
+.gap-body strong{color:var(--ink);font-weight:600}
+.gap-body code{font-family:var(--mono);font-size:.7rem;color:var(--amber)}
+.explain-full{display:none;margin-top:.5rem}
 .explain-full.open{display:block}
-.explain h4{color:#cbd5e1;margin:.45rem 0 .15rem;font-size:.74rem}
-.matched{color:#6ee7b7;font-size:.7rem;line-height:1.4;margin-bottom:.15rem}
-.missing{color:#fca5a5;font-size:.7rem;line-height:1.4}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.95rem}
-.share-row{display:flex;gap:.4rem;margin-top:.75rem;justify-content:center;flex-wrap:wrap}
-.share-btn{
-  padding:.5rem .75rem;border-radius:10px;border:1px solid var(--line2);
-  background:rgba(8,12,22,.75);color:var(--text);cursor:pointer;
-  font-size:.78rem;font-weight:650;
+.explain h4{font-family:var(--mono);font-size:.7rem;color:var(--muted);margin:.4rem 0 .15rem}
+.matched{color:#8fd4a4;font-size:.7rem;line-height:1.4;margin-bottom:.12rem}
+.missing{color:#f0a0a0;font-size:.7rem;line-height:1.4}
+.formula{
+  margin-top:.45rem;padding:.55rem;border:1px solid var(--line);background:#0a0c0b;
+  font-family:var(--mono);font-size:.68rem;color:var(--muted);line-height:1.45;text-align:left;
 }
-.share-btn:hover{border-color:var(--accent);color:#bae6fd}
-.fixed-box{margin-top:.85rem;text-align:left}
-.fixed-box textarea{min-height:110px}
+details.how summary{
+  cursor:pointer;font-family:var(--mono);font-size:.72rem;color:var(--amber);
+  list-style:none;margin-top:.35rem;
+}
+details.how summary::-webkit-details-marker{display:none}
+/* —— act / plan —— */
+.plan-list{list-style:none;margin:.4rem 0 .7rem}
+.plan-list li{
+  font-size:.8rem;padding:.5rem .55rem;border:1px solid var(--line);
+  margin-bottom:.3rem;background:var(--panel2);display:flex;gap:.5rem;align-items:flex-start;
+}
+.plan-list .tag{
+  font-family:var(--mono);font-size:.65rem;color:var(--amber);
+  border:1px solid var(--amber-line);padding:.1rem .35rem;flex-shrink:0;
+}
+.plan-actions{display:grid;grid-template-columns:1fr 1fr;gap:.45rem}
+@media(max-width:520px){.plan-actions{grid-template-columns:1fr}}
+/* —— export —— */
+.export-grid{display:grid;grid-template-columns:1fr 1fr;gap:.45rem}
+@media(max-width:520px){.export-grid{grid-template-columns:1fr}}
+.ci-block{
+  margin-top:.7rem;padding:.65rem;border:1px solid var(--line);background:#090b0a;
+  font-family:var(--mono);font-size:.7rem;color:var(--muted);white-space:pre-wrap;line-height:1.5;
+  text-align:left;overflow:auto;
+}
+.fixed-box{margin-top:.7rem;text-align:left}
+.fixed-box textarea{min-height:100px}
+/* —— vendor demoted —— */
+.vendor-link{
+  display:block;margin-top:1rem;text-align:center;
+  font-family:var(--mono);font-size:.72rem;color:var(--faint);
+}
+.vendor-link a{color:var(--muted)}
+.vendor-link a:hover{color:var(--amber)}
+#panel-vendor{display:none;margin-top:.75rem}
+#panel-vendor.open{display:block}
+.question{margin-bottom:.6rem;padding:.6rem;border:1px solid var(--line);background:var(--panel2)}
+.question p{font-size:.8rem;margin-bottom:.4rem;color:#d5d9d0}
+.answers{display:flex;gap:.35rem}
+.answers button{
+  flex:1;padding:.4rem;border:1px solid var(--line2);background:#0a0c0b;
+  color:var(--muted);font-family:var(--mono);font-size:.7rem;cursor:pointer;
+}
+.answers button.selected-yes{border-color:var(--ok);color:var(--ok);background:var(--ok-dim)}
+.answers button.selected-no{border-color:var(--bad);color:var(--bad);background:var(--bad-dim)}
+.answers button.selected-dk{border-color:var(--warn);color:var(--warn);background:rgba(212,160,23,.1)}
 .foot{
-  margin-top:1.6rem;text-align:center;font-size:.76rem;color:var(--faint);line-height:1.55;
+  margin-top:1.5rem;text-align:center;font-size:.74rem;color:var(--faint);line-height:1.55;
+  font-family:var(--mono);
 }
-.foot a{color:var(--accent);text-decoration:none}
+.foot a{color:var(--amber);text-decoration:none}
 .foot a:hover{text-decoration:underline}
-.foot code{
-  background:rgba(17,24,39,.85);padding:.1rem .35rem;border-radius:4px;
-  color:#7dd3fc;font-size:.72rem;
-}
+.foot code{color:#c5cbbd;background:#121614;padding:.05rem .3rem;border:1px solid var(--line)}
 .toast{
-  position:fixed;bottom:1.1rem;left:50%;transform:translateX(-50%) translateY(8px);
-  background:#0f1a2e;border:1px solid rgba(56,189,248,.45);color:var(--text);
-  padding:.65rem 1rem;border-radius:12px;font-size:.85rem;opacity:0;
-  pointer-events:none;transition:opacity .2s,transform .2s;z-index:50;max-width:90vw;
+  position:fixed;bottom:1rem;left:50%;transform:translateX(-50%) translateY(6px);
+  background:var(--panel);border:1px solid var(--amber-line);color:var(--ink);
+  font-family:var(--mono);font-size:.78rem;padding:.6rem .9rem;opacity:0;
+  pointer-events:none;transition:opacity .2s,transform .2s;z-index:40;max-width:92vw;
   box-shadow:var(--shadow);
 }
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.question{margin-bottom:.7rem;padding:.7rem;background:#060a12;border-radius:10px;border:1px solid var(--line)}
-.question p{font-size:.8rem;margin-bottom:.45rem;color:#cbd5e1}
-.answers{display:flex;gap:.4rem}
-.answers button{
-  flex:1;padding:.45rem;border:1px solid var(--line2);background:rgba(8,12,22,.7);
-  color:var(--muted);border-radius:8px;cursor:pointer;font-size:.74rem;
+.hidden{display:none !important}
+.empty-invite{
+  border:1px dashed var(--line2);padding:.7rem;margin-bottom:.65rem;
+  font-size:.8rem;color:var(--muted);background:rgba(0,0,0,.15);
 }
-.answers button.selected-yes{background:#064e3b;border-color:#10b981;color:#6ee7b7}
-.answers button.selected-no{background:#7f1d1d;border-color:#ef4444;color:#fca5a5}
-.answers button.selected-dk{background:#78350f;border-color:#f59e0b;color:#fcd34d}
-@media(max-width:560px){
-  .actions,.post-actions{grid-template-columns:1fr}
-  .score-big{font-size:2.6rem}
-  .brand{margin-bottom:.9rem}
-}
+.empty-invite strong{color:var(--ink)}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header class="brand" aria-label="CrewScore">
-    <div class="logo" aria-hidden="true">CS</div>
-    <div>
-      <div class="brand-name">CrewScore</div>
-      <div class="brand-tag">Free · No signup · No install · No API key</div>
+  <header class="topbar">
+    <div class="brand">
+      <div class="mark" aria-hidden="true">CS</div>
+      <div>
+        <h1>CrewScore</h1>
+        <p>Free · no signup · no install</p>
+      </div>
     </div>
+    <div class="cap-chip" title="Deterministic structural scan — not a live model attack">Structural pre-gate · not a red-team</div>
   </header>
 
   <section class="hero">
-    <h1>Score agent prompts in your browser — structural hygiene only</h1>
-    <p class="sub">Paste a system prompt. See what’s missing. Fix gaps in one click. Offline structural scan — same rules as the CLI.</p>
-    <div class="pills">
-      <span class="pill">Under 30 seconds</span>
-      <span class="pill">Stays in your browser</span>
-      <span class="pill">Open rule IDs · not a black box</span>
-      <span class="pill">Share a score people get</span>
-    </div>
-    <p class="trust-line">
+    <div class="eyebrow">Preflight for agent instructions</div>
+    <h2>Score agent prompts in your browser — structural hygiene only</h2>
+    <p class="sub">Paste a system prompt. See missing production-hygiene signals. Apply text templates only after you approve the plan. Same open rules as the CLI.</p>
+    <p class="trust">
       Structural text scan only — <strong>not a red-team</strong> or certification.
       Templates can inflate scores; pair with runtime gates.
       <button type="button" class="linkish" id="link-how-score">How scoring works</button>
     </p>
   </section>
 
-  <div class="tabs" role="tablist">
-    <button type="button" class="tab active" role="tab" data-tab="agent" aria-selected="true">Score my agent prompt</button>
-    <button type="button" class="tab tab-secondary" role="tab" data-tab="vendor" aria-selected="false">Vendor checklist (self-attest)</button>
-  </div>
+  <nav class="stages" aria-label="Preflight stages">
+    <div class="stage-pill on" data-stage="prompt" id="stg-prompt">1 Prompt</div>
+    <div class="stage-pill" data-stage="inspect" id="stg-inspect">2 Inspect</div>
+    <div class="stage-pill" data-stage="act" id="stg-act">3 Act</div>
+    <div class="stage-pill" data-stage="export" id="stg-export">4 Export</div>
+  </nav>
 
-  <div class="panel active" id="panel-agent" role="tabpanel">
-    <label>Try a template (or paste your own)</label>
+  <!-- STAGE 1: PROMPT -->
+  <section class="deck" id="deck-prompt" aria-labelledby="prompt-head">
+    <div class="deck-head">
+      <h3 id="prompt-head">01 · Prompt artifact</h3>
+      <span class="hint">Stays in your browser</span>
+    </div>
+    <div class="empty-invite" id="empty-invite">
+      <strong>First time?</strong> Click <em>Weak demo prompt</em> — you should land near 0/100, then inspect gaps.
+    </div>
+    <label>Try a template</label>
     <div class="chips" id="template-chips"></div>
     <label for="agent-prompt">System prompt / agent instructions</label>
-    <p class="hint">ChatGPT custom instructions, Claude projects, Cursor rules, LangChain, CrewAI, AGENTS.md — anything that tells the model who it is.</p>
+    <p class="help">ChatGPT custom instructions, Claude projects, Cursor rules, LangChain, CrewAI, AGENTS.md — anything that tells the model who it is.</p>
     <textarea id="agent-prompt" placeholder="Paste your system prompt here…" spellcheck="false"></textarea>
-    <div class="row" style="margin-top:.65rem">
+    <div class="row">
       <input type="url" id="prompt-url" placeholder="Or load a public GitHub raw / gist URL" />
-      <button class="btn-sec" type="button" id="btn-load-url">Load</button>
+      <button class="btn-sec" type="button" id="btn-load-url">Load URL</button>
     </div>
-    <button class="btn" type="button" id="btn-score-agent">Score my agent — free</button>
-    <div class="post-actions" id="post-actions">
-      <button class="btn-sec btn-green" type="button" id="btn-fix-agent">Fix gaps</button>
-      <button class="btn-sec" type="button" id="btn-download-card">Save score image</button>
-    </div>
+    <button class="btn" type="button" id="btn-score-agent">Run structural score</button>
     <p class="error" id="agent-error" role="alert"></p>
-    <div class="scorecard" id="agent-scorecard" aria-live="polite"></div>
-  </div>
+  </section>
 
-  <div class="panel" id="panel-vendor" role="tabpanel" hidden>
+  <!-- STAGE 2: INSPECT -->
+  <section class="deck hidden" id="deck-inspect" aria-labelledby="inspect-head">
+    <div class="deck-head">
+      <h3 id="inspect-head">02 · Inspect</h3>
+      <span class="hint" id="inspect-meta"></span>
+    </div>
+    <div id="agent-scorecard" aria-live="polite"></div>
+  </section>
+
+  <!-- STAGE 3: ACT -->
+  <section class="deck hidden" id="deck-act" aria-labelledby="act-head">
+    <div class="deck-head">
+      <h3 id="act-head">03 · Act (plan before mutate)</h3>
+      <span class="hint">Text templates only — not runtime proof</span>
+    </div>
+    <div id="act-body"></div>
+  </section>
+
+  <!-- STAGE 4: EXPORT -->
+  <section class="deck hidden" id="deck-export" aria-labelledby="export-head">
+    <div class="deck-head">
+      <h3 id="export-head">04 · Export</h3>
+      <span class="hint">Leave with something useful</span>
+    </div>
+    <div id="export-body"></div>
+  </section>
+
+  <p class="vendor-link">
+    Secondary: <a href="#vendor" id="link-vendor">Vendor checklist (self-attest)</a> — not the primary product path.
+  </p>
+
+  <section class="deck" id="panel-vendor" aria-labelledby="vendor-head">
+    <div class="deck-head">
+      <h3 id="vendor-head">Vendor checklist (self-attest)</h3>
+      <button type="button" class="btn-ghost" id="btn-close-vendor">Close</button>
+    </div>
     <label for="vendor-name">Which AI product are you evaluating?</label>
-    <input class="vendor-name-input" id="vendor-name" placeholder="e.g. Acme AI Copilot" />
-    <p class="hint">10 diligence questions. Self-attested — not a formal audit. Get a score + red flags for a buying thread.</p>
+    <input id="vendor-name" type="text" placeholder="e.g. Acme AI Copilot" />
+    <p class="help">10 diligence questions. Self-attested — not a formal audit.</p>
     <div id="vendor-questions"></div>
     <button class="btn" type="button" id="btn-score-vendor">Get vendor score — free</button>
     <p class="error" id="vendor-error" role="alert"></p>
-    <div class="scorecard" id="vendor-scorecard" aria-live="polite"></div>
-  </div>
+    <div id="vendor-scorecard" aria-live="polite"></div>
+  </section>
 
   <footer class="foot">
-    Want this in CI? <code>pip install crewscore</code> ·
+    CI: <code>pip install crewscore</code> ·
     <code>uses: shmindmaster/crewscore@v1</code><br>
     <a href="https://github.com/shmindmaster/crewscore">Open source on GitHub</a>
     · structural scan only · templates must be paired with runtime gates<br>
@@ -341,7 +391,7 @@ input:focus,textarea:focus{
   </footer>
 </div>
 <div class="toast" id="toast" role="status"></div>
-<canvas id="share-canvas" width="900" height="480" style="display:none"></canvas>
+<canvas id="share-canvas" width="900" height="500" style="display:none"></canvas>
 
 <script src="score-engine.js"></script>
 <script>
@@ -349,36 +399,44 @@ input:focus,textarea:focus{
   const E = window.CrewScoreEngine;
   if (!E) {
     document.body.insertAdjacentHTML("afterbegin",
-      '<p style="color:#f87171;text-align:center;padding:1rem">Could not load scoring engine. Refresh the page.</p>');
+      '<p style="color:#e85d5d;text-align:center;padding:1rem;font-family:monospace">Could not load scoring engine. Refresh the page.</p>');
     return;
   }
 
   const TEMPLATES = [
-    {
-      id: "bare",
-      label: "Weak demo prompt",
-      text: "You are a helpful assistant that answers customer questions.",
-    },
-    {
-      id: "support",
-      label: "Customer support agent",
-      text: "You are a customer support agent for a SaaS product. Answer questions politely and help users resolve issues. Be friendly and efficient.",
-    },
-    {
-      id: "coding",
-      label: "Coding agent",
-      text: "You are a senior software engineer agent. Write code, explain tradeoffs, and implement features in the user's repository when asked.",
-    },
-    {
-      id: "rag",
-      label: "Docs / RAG agent",
-      text: "You are a documentation assistant. Answer using the provided knowledge base snippets. Prefer short, actionable answers for internal employees.",
-    },
+    { id: "bare", label: "Weak demo prompt", text: "You are a helpful assistant that answers customer questions." },
+    { id: "support", label: "Customer support agent", text: "You are a customer support agent for a SaaS product. Answer questions politely and help users resolve issues. Be friendly and efficient." },
+    { id: "coding", label: "Coding agent", text: "You are a senior software engineer agent. Write code, explain tradeoffs, and implement features in the user's repository when asked." },
+    { id: "rag", label: "Docs / RAG agent", text: "You are a documentation assistant. Answer using the provided knowledge base snippets. Prefer short, actionable answers for internal employees." },
   ];
+  const DIM_LABEL = {};
+  (E.dimensions || []).forEach((d) => { DIM_LABEL[d.key] = d.label; });
 
   const vendorAnswers = new Array(E.vendorQuestions.length).fill(null);
-  let lastAgent = null; // {prompt, result, fixed?}
+  let lastAgent = null; // { prompt, result, fixed, plan, delta }
+  let pendingPlan = null; // { fixes, keys, sourcePrompt }
   let activeChip = null;
+  let openHowNext = false;
+
+  /* —— privacy-safe local metrics (no prompt text) —— */
+  const METRICS_KEY = "crewscore_metrics_v1";
+  function track(event, props) {
+    try {
+      const raw = localStorage.getItem(METRICS_KEY);
+      const store = raw ? JSON.parse(raw) : { events: [] };
+      store.events.push({ e: event, t: Date.now(), p: props || {} });
+      if (store.events.length > 200) store.events = store.events.slice(-200);
+      localStorage.setItem(METRICS_KEY, JSON.stringify(store));
+    } catch (err) { /* private mode */ }
+  }
+  function bucket(n) {
+    n = Number(n) || 0;
+    if (n <= 0) return "0";
+    if (n < 50) return "1-49";
+    if (n < 70) return "50-69";
+    if (n < 90) return "70-89";
+    return "90-100";
+  }
 
   function toast(msg) {
     const el = document.getElementById("toast");
@@ -393,45 +451,33 @@ input:focus,textarea:focus{
   }
   function bar(score) {
     const pct = Math.max(0, Math.min(100, score));
-    const color = pct >= 70 ? "#34d399" : pct >= 50 ? "#fbbf24" : pct >= 30 ? "#fb923c" : "#f87171";
+    const color = pct >= 70 ? "#5dbe7c" : pct >= 50 ? "#d4a017" : pct >= 30 ? "#e08940" : "#e85d5d";
     return `<div class="dim-bar"><div class="dim-fill" style="width:${pct}%;background:${color}"></div></div>`;
   }
-  function friendlyTier(tierName, overall) {
-    // Keep structural truth; surface a human-readable line.
+  function friendlyTier(overall) {
     if (overall >= 90) return "Looks solid on paper";
     if (overall >= 70) return "Decent coverage — still gaps";
     if (overall >= 50) return "Weak hygiene — easy wins left";
     if (overall > 0) return "Critical gaps — start here";
     return "No hygiene signals found";
   }
-  function showPostActions(on) {
-    document.getElementById("post-actions").classList.toggle("show", !!on);
+  function setStage(active) {
+    const order = ["prompt", "inspect", "act", "export"];
+    const idx = order.indexOf(active);
+    order.forEach((s, i) => {
+      const el = document.getElementById("stg-" + s);
+      if (!el) return;
+      el.classList.toggle("on", s === active);
+      el.classList.toggle("done", i < idx);
+    });
+  }
+  function showDeck(id, on) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.toggle("hidden", !on);
   }
 
-  function switchTab(t) {
-    document.querySelectorAll(".tab").forEach((el) => {
-      const on = el.getAttribute("data-tab") === t;
-      el.classList.toggle("active", on);
-      el.setAttribute("aria-selected", on ? "true" : "false");
-    });
-    const agent = document.getElementById("panel-agent");
-    const vendor = document.getElementById("panel-vendor");
-    agent.classList.toggle("active", t === "agent");
-    vendor.classList.toggle("active", t === "vendor");
-    agent.hidden = t !== "agent";
-    vendor.hidden = t !== "vendor";
-  }
-  document.querySelectorAll(".tab").forEach((el) => {
-    el.addEventListener("click", () => switchTab(el.getAttribute("data-tab")));
-    el.addEventListener("keydown", (ev) => {
-      if (ev.key === "Enter" || ev.key === " ") {
-        ev.preventDefault();
-        switchTab(el.getAttribute("data-tab"));
-      }
-    });
-  });
-
-  // Templates
+  /* templates */
   const chips = document.getElementById("template-chips");
   TEMPLATES.forEach((t) => {
     const b = document.createElement("button");
@@ -444,11 +490,380 @@ input:focus,textarea:focus{
       activeChip = b;
       document.getElementById("agent-prompt").value = t.text;
       document.getElementById("agent-error").classList.remove("show");
-      scoreAgent();
+      document.getElementById("empty-invite").classList.add("hidden");
+      scoreAgent({ source: "template" });
     });
     chips.appendChild(b);
   });
 
+  function findingLabel(f) {
+    const rid = f.rule_id ? `<code>${escapeHtml(f.rule_id)}</code> ` : "";
+    return rid + escapeHtml(f.snippet || f.pattern_or_reason || "");
+  }
+  function explainHtml(findings, dimKey) {
+    const matched = findings.filter((f) => f.dimension === dimKey && f.status === "matched");
+    const missing = findings.filter((f) => f.dimension === dimKey && f.status === "missing");
+    let h = "";
+    if (matched.length) h += `<div class="matched">Matched: ${matched.map(findingLabel).join(" · ")}</div>`;
+    if (missing.length) h += `<div class="missing">Missing: ${missing.map(findingLabel).join(" · ")}</div>`;
+    return h;
+  }
+  function topGaps(findings, scores, dims, limit) {
+    const ordered = dims.slice().sort((a, b) => (scores[a.key] || 0) - (scores[b.key] || 0));
+    const gaps = [];
+    for (const d of ordered) {
+      for (const f of findings.filter((x) => x.dimension === d.key && x.status === "missing")) {
+        gaps.push({ dim: d.label, f });
+        if (gaps.length >= limit) return gaps;
+      }
+    }
+    return gaps;
+  }
+  function shareText(overall, tierName, kind) {
+    if (kind === "vendor") {
+      return `We scored an AI vendor ${overall}/100 (${tierName}) with CrewScore — free structural diligence checklist. Not an audit. Try yours: ${location.origin}`;
+    }
+    return `My AI agent scored ${overall}/100 on CrewScore (${tierName}). Structural hygiene only — not a red-team. Score yours free (no install): ${location.origin}`;
+  }
+
+  function renderInspect(result, opts) {
+    opts = opts || {};
+    const { scores, findings, overall } = result;
+    const tier = E.scoreTier(overall);
+    const dims = E.dimensions;
+    const weak = dims.filter((d) => (scores[d.key] || 0) < 50);
+    const ruleset = E.ruleset || "open ruleset";
+    const soft = friendlyTier(overall);
+    const gaps = topGaps(findings, scores, dims, 3);
+
+    let html = `<div class="score-hero">
+      <div class="score-kicker">${escapeHtml(opts.title || "Structural score")}</div>`;
+    if (opts.delta != null && opts.delta !== 0) {
+      html += `<div class="delta">${opts.delta > 0 ? "+" + opts.delta : opts.delta} after approved fix</div>`;
+    }
+    html += `<div class="score-big ${tier.c}">${overall}<span style="font-size:.4em;opacity:.7">/100</span></div>
+      <div class="soft-verdict ${tier.c}">${escapeHtml(soft)}</div>
+      <div class="hard-tier">${escapeHtml(tier.n)}</div>
+      <div class="stamp">Structural pre-gate · not a red-team · not certification</div>
+    </div>`;
+
+    html += `<div class="dims">`;
+    dims.forEach((d) => {
+      const s = scores[d.key] || 0;
+      html += `<div class="dim-row"><span class="dim-label" title="${escapeHtml(d.label)}">${escapeHtml(d.label)}</span>${bar(s)}<span class="dim-score">${s}</span></div>`;
+    });
+    html += `</div>`;
+
+    if (weak.length) {
+      html += `<div class="flags">${weak.length} weak area${weak.length === 1 ? "" : "s"}: ${weak.map((d) => escapeHtml(d.label)).join(", ")}</div>`;
+    }
+
+    html += `<div class="gaps"><h4>Top gaps to fix</h4>`;
+    if (!gaps.length) {
+      html += `<p class="help" style="margin:0">No major missing signals in the open ruleset — still not runtime proof.</p>`;
+    } else {
+      gaps.forEach((g) => {
+        const rid = g.f.rule_id ? `<code>${escapeHtml(g.f.rule_id)}</code> ` : "";
+        const why = escapeHtml(g.f.pattern_or_reason || g.f.snippet || "missing signal");
+        html += `<div class="gap-item"><span class="gap-dot"></span><div class="gap-body"><strong>${escapeHtml(g.dim)}</strong><br>${rid}${why}</div></div>`;
+      });
+    }
+    html += `<button type="button" class="btn-ghost" id="toggle-explain">Show all open rules</button>
+      <div class="explain explain-full" id="explain-full"><h4 style="margin:0 0 .2rem">All findings (open rule IDs)</h4>`;
+    dims.forEach((d) => {
+      const body = explainHtml(findings, d.key);
+      if (body) html += `<h4>${escapeHtml(d.label)}</h4>${body}`;
+    });
+    html += `</div>
+      <details class="how" id="how-score-details"${openHowNext || opts.openHow ? " open" : ""}>
+        <summary>How we score</summary>
+        <div class="formula">Ruleset <code>${escapeHtml(String(ruleset))}</code> · deterministic regex · open rule_ids<br>
+        dim = min(100, round(15+85×matches/rules)); overall = mean of 8 dims<br>
+        CLI: <code>crewscore rules --json</code> · Templates can inflate scores.</div>
+      </details>
+    </div>`;
+
+    // primary next: build plan
+    html += `<button type="button" class="btn" id="btn-plan-fix" style="margin-top:.85rem">Plan fix (preview first)</button>
+      <button type="button" class="btn-ghost" id="btn-skip-to-export" style="display:block;margin:0.5rem auto 0">Skip to export</button>`;
+
+    const el = document.getElementById("agent-scorecard");
+    el.innerHTML = html;
+    document.getElementById("inspect-meta").textContent = String(ruleset);
+    openHowNext = false;
+
+    const toggle = document.getElementById("toggle-explain");
+    if (toggle) {
+      toggle.addEventListener("click", () => {
+        const box = document.getElementById("explain-full");
+        const open = box.classList.toggle("open");
+        toggle.textContent = open ? "Hide full rule list" : "Show all open rules";
+        if (open) track("cs_rules_expand");
+      });
+    }
+    document.getElementById("btn-plan-fix").addEventListener("click", buildFixPlan);
+    document.getElementById("btn-skip-to-export").addEventListener("click", () => {
+      renderExport();
+      setStage("export");
+      showDeck("deck-export", true);
+      document.getElementById("deck-export").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  function buildFixPlan() {
+    if (!lastAgent) return;
+    const source = lastAgent.fixed || lastAgent.prompt || document.getElementById("agent-prompt").value;
+    const before = E.analyzeWithFindings(source);
+    const fixes = E.generateFixes(before.scores);
+    const keys = Object.keys(fixes || {});
+    pendingPlan = { fixes, keys, sourcePrompt: source, before };
+    track("cs_fix_plan", { dims_to_fix_count: keys.length });
+
+    const body = document.getElementById("act-body");
+    if (!keys.length) {
+      body.innerHTML = `<p class="help">No dimensions below the fix threshold (&lt;70). Structural coverage is already relatively strong — still not runtime proof.</p>
+        <button type="button" class="btn-sec" id="btn-act-export">Continue to export</button>`;
+      document.getElementById("btn-act-export").addEventListener("click", () => {
+        renderExport();
+        setStage("export");
+        showDeck("deck-export", true);
+      });
+    } else {
+      let html = `<p class="help">CrewScore will <strong>append</strong> the following guardrail sections to your prompt text. Nothing is written until you approve. Templates must be paired with runtime gates.</p><ul class="plan-list">`;
+      keys.forEach((k) => {
+        const label = DIM_LABEL[k] || k;
+        const preview = (fixes[k] || "").split("\n")[0].replace(/^#+\s*/, "");
+        html += `<li><span class="tag">${escapeHtml(k)}</span><div><strong>${escapeHtml(label)}</strong><br><span style="color:var(--faint);font-size:.75rem">${escapeHtml(preview)}</span></div></li>`;
+      });
+      html += `</ul>
+        <div class="plan-actions">
+          <button type="button" class="btn-sec btn-ok" id="btn-apply-fix">Apply plan</button>
+          <button type="button" class="btn-sec" id="btn-cancel-fix">Cancel</button>
+        </div>`;
+      body.innerHTML = html;
+      document.getElementById("btn-apply-fix").addEventListener("click", applyFixPlan);
+      document.getElementById("btn-cancel-fix").addEventListener("click", () => {
+        track("cs_fix_cancel");
+        pendingPlan = null;
+        body.innerHTML = `<p class="help">Plan cancelled. Prompt text unchanged.</p>
+          <button type="button" class="btn-sec" id="btn-replan">Plan again</button>`;
+        document.getElementById("btn-replan").addEventListener("click", buildFixPlan);
+        toast("Cancelled — original prompt kept");
+      });
+    }
+    showDeck("deck-act", true);
+    setStage("act");
+    document.getElementById("deck-act").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function applyFixPlan() {
+    if (!pendingPlan) return;
+    const { fixes, sourcePrompt } = pendingPlan;
+    const enhanced = E.applyFixes(sourcePrompt, fixes);
+    const after = E.analyzeWithFindings(enhanced);
+    const beforeOverall = pendingPlan.before.overall;
+    const delta = after.overall - beforeOverall;
+    document.getElementById("agent-prompt").value = enhanced;
+    lastAgent = {
+      prompt: lastAgent.prompt,
+      result: after,
+      fixed: enhanced,
+      delta,
+      plan: pendingPlan.keys,
+    };
+    pendingPlan = null;
+    track("cs_fix_apply", { delta_bucket: bucket(Math.abs(delta)) });
+    renderInspect(after, { title: "After approved fix", delta });
+    renderExport();
+    showDeck("deck-export", true);
+    setStage("export");
+    toast(delta > 0 ? `Applied — score +${delta}` : "Applied — little score change");
+    document.getElementById("deck-export").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function renderExport() {
+    if (!lastAgent) return;
+    const overall = lastAgent.result.overall;
+    const tier = E.scoreTier(overall);
+    const soft = friendlyTier(overall);
+    const st = shareText(overall, tier.n, "agent");
+    const ci = `# Gate agent prompt hygiene (structural only — not red-team)
+- uses: shmindmaster/crewscore@v1
+  with:
+    scan-path: "."
+    threshold: "50"
+# or: crewscore scan . --threshold 50`;
+
+    let html = `<p class="help">Take the result with you. Share text includes the honesty disclaimer.</p>
+      <div class="export-grid">
+        <button type="button" class="btn-sec" data-s="copy">Copy share text</button>
+        <button type="button" class="btn-sec" data-s="img">Save score image</button>
+        <button type="button" class="btn-sec" data-s="x">Post on X</button>
+        <button type="button" class="btn-sec" data-s="li">LinkedIn</button>
+      </div>
+      <p class="help" style="margin-top:.75rem">Gate this in CI</p>
+      <pre class="ci-block" id="ci-snippet">${escapeHtml(ci)}</pre>
+      <button type="button" class="btn-ghost" id="btn-copy-ci">Copy CI snippet</button>`;
+
+    if (lastAgent.fixed) {
+      html += `<div class="fixed-box">
+        <label for="fixed-prompt">Improved prompt (copy into your agent)</label>
+        <textarea id="fixed-prompt" readonly></textarea>
+        <p class="help">Templates must be paired with runtime gates (tool permissions, approvals, logging). Text coverage ≠ runtime safety.</p>
+        <button type="button" class="btn-sec" id="btn-dl-prompt" style="margin-top:.4rem">Download improved prompt</button>
+      </div>`;
+    } else {
+      html += `<p class="help" style="margin-top:.7rem">No fix applied yet — <button type="button" class="btn-ghost" id="btn-export-plan">plan a fix</button> if you want template coverage.</p>`;
+    }
+
+    const el = document.getElementById("export-body");
+    el.innerHTML = html;
+    if (lastAgent.fixed) {
+      document.getElementById("fixed-prompt").value = lastAgent.fixed;
+      document.getElementById("btn-dl-prompt").addEventListener("click", () => {
+        downloadText(lastAgent.fixed, "crewscore-improved-prompt.md");
+        track("cs_export", { kind: "download_prompt" });
+      });
+    } else {
+      const bp = document.getElementById("btn-export-plan");
+      if (bp) bp.addEventListener("click", buildFixPlan);
+    }
+    el.querySelectorAll("[data-s]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const k = btn.getAttribute("data-s");
+        if (k === "copy") {
+          navigator.clipboard.writeText(st).then(() => toast("Share text copied"));
+          track("cs_export", { kind: "share_text" });
+        } else if (k === "x") {
+          window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(st)}`);
+          track("cs_export", { kind: "share_text" });
+        } else if (k === "li") {
+          navigator.clipboard.writeText(st).then(() => {
+            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(location.href)}`);
+            toast("Copied — paste into LinkedIn");
+          });
+          track("cs_export", { kind: "share_text" });
+        } else if (k === "img") {
+          downloadScoreCard(overall, tier.n, soft, "AI Agent");
+          track("cs_export", { kind: "share_img" });
+        }
+      });
+    });
+    document.getElementById("btn-copy-ci").addEventListener("click", () => {
+      navigator.clipboard.writeText(ci).then(() => toast("CI snippet copied"));
+      track("cs_export", { kind: "ci_copy" });
+    });
+  }
+
+  function scoreAgent(meta) {
+    meta = meta || {};
+    const err = document.getElementById("agent-error");
+    const prompt = document.getElementById("agent-prompt").value || "";
+    if (!prompt.trim()) {
+      err.textContent = "Paste a prompt, pick a template, or load a public URL.";
+      err.classList.add("show");
+      return;
+    }
+    err.classList.remove("show");
+    document.getElementById("empty-invite").classList.add("hidden");
+    const result = E.analyzeWithFindings(prompt);
+    lastAgent = { prompt, result, fixed: null, delta: null };
+    pendingPlan = null;
+    track("cs_score", {
+      source: meta.source || "paste",
+      overall_bucket: bucket(result.overall),
+      ruleset: String(E.ruleset || ""),
+    });
+    renderInspect(result, { title: "Structural score", openHow: openHowNext });
+    showDeck("deck-inspect", true);
+    showDeck("deck-act", false);
+    showDeck("deck-export", false);
+    document.getElementById("act-body").innerHTML = "";
+    document.getElementById("export-body").innerHTML = "";
+    setStage("inspect");
+    try { history.replaceState(null, "", "#scored"); } catch (e) {}
+    requestAnimationFrame(() => {
+      document.getElementById("deck-inspect").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  function downloadText(text, filename) {
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast("Downloaded");
+  }
+
+  function downloadScoreCard(overall, tierName, softLine, label) {
+    const c = document.getElementById("share-canvas");
+    const ctx = c.getContext("2d");
+    const w = c.width, h = c.height;
+    ctx.fillStyle = "#0a0c0b";
+    ctx.fillRect(0, 0, w, h);
+    // grid
+    ctx.strokeStyle = "rgba(42,50,44,0.8)";
+    ctx.lineWidth = 1;
+    for (let y = 40; y < h; y += 48) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+    }
+    ctx.fillStyle = "#121614";
+    ctx.strokeStyle = "rgba(232,163,23,0.45)";
+    ctx.lineWidth = 2;
+    roundRect(ctx, 48, 48, w - 96, h - 96, 4);
+    ctx.fill();
+    ctx.stroke();
+    // mark
+    ctx.strokeStyle = "rgba(232,163,23,0.55)";
+    ctx.strokeRect(78, 78, 42, 42);
+    ctx.fillStyle = "#e8a317";
+    ctx.font = "700 14px IBM Plex Mono, monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("CS", 99, 104);
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#e8ebe4";
+    ctx.font = "700 22px IBM Plex Sans, sans-serif";
+    ctx.fillText("CrewScore", 136, 96);
+    ctx.fillStyle = "#6b7268";
+    ctx.font = "500 14px IBM Plex Mono, monospace";
+    ctx.fillText((label || "AI Agent") + " · structural pre-gate", 136, 118);
+    const color = overall >= 70 ? "#5dbe7c" : overall >= 50 ? "#d4a017" : overall >= 30 ? "#e08940" : "#e85d5d";
+    ctx.fillStyle = color;
+    ctx.font = "700 110px IBM Plex Mono, monospace";
+    ctx.fillText(String(overall), 78, 290);
+    ctx.fillStyle = "#6b7268";
+    ctx.font = "600 32px IBM Plex Mono, monospace";
+    ctx.fillText("/100", 78 + ctx.measureText(String(overall)).width * 0.42 + (overall >= 100 ? 90 : 70), 290);
+    // measureText on large font is wrong after font change - simpler:
+    ctx.fillStyle = color;
+    ctx.font = "700 28px IBM Plex Sans, sans-serif";
+    ctx.fillText(softLine || tierName, 78, 340);
+    ctx.fillStyle = "#6b7268";
+    ctx.font = "500 15px IBM Plex Mono, monospace";
+    ctx.fillText(tierName, 78, 368);
+    ctx.fillText("crewscore.ai · free · not a red-team", 78, 410);
+    c.toBlob((blob) => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "crewscore-" + overall + ".png";
+      a.click();
+      URL.revokeObjectURL(a.href);
+      toast("Score card image saved");
+    });
+  }
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  /* vendor secondary */
   function buildVendorQ() {
     const c = document.getElementById("vendor-questions");
     c.innerHTML = "";
@@ -472,303 +887,14 @@ input:focus,textarea:focus{
       });
     });
   }
-
-  function findingLabel(f) {
-    const rid = f.rule_id ? `<code>${escapeHtml(f.rule_id)}</code> ` : "";
-    const body = escapeHtml(f.snippet || f.pattern_or_reason || "");
-    return rid + body;
-  }
-  function explainHtml(findings, dimKey) {
-    const matched = findings.filter((f) => f.dimension === dimKey && f.status === "matched");
-    const missing = findings.filter((f) => f.dimension === dimKey && f.status === "missing");
-    let h = "";
-    if (matched.length)
-      h += `<div class="matched">Matched: ${matched.map(findingLabel).join(" · ")}</div>`;
-    if (missing.length)
-      h += `<div class="missing">Missing: ${missing.map(findingLabel).join(" · ")}</div>`;
-    return h;
-  }
-
-  function topGaps(findings, scores, dims, limit) {
-    // Prefer weakest dimensions' missing rules first.
-    const ordered = dims
-      .slice()
-      .sort((a, b) => (scores[a.key] || 0) - (scores[b.key] || 0));
-    const gaps = [];
-    for (const d of ordered) {
-      const miss = findings.filter((f) => f.dimension === d.key && f.status === "missing");
-      for (const f of miss) {
-        gaps.push({ dim: d.label, dimKey: d.key, f });
-        if (gaps.length >= limit) return gaps;
-      }
-    }
-    return gaps;
-  }
-
-  function shareText(overall, tierName, kind) {
-    if (kind === "vendor") {
-      return `We scored an AI vendor ${overall}/100 (${tierName}) with CrewScore — free structural diligence checklist. Not an audit. Try yours: ${location.origin}`;
-    }
-    return `My AI agent scored ${overall}/100 on CrewScore (${tierName}). Structural hygiene only — not a red-team. Score yours free (no install): ${location.origin}`;
-  }
-
-  function renderAgent(result, opts) {
-    opts = opts || {};
-    const { scores, findings, overall } = result;
-    const tier = E.scoreTier(overall);
-    const dims = E.dimensions;
-    const weak = dims.filter((d) => (scores[d.key] || 0) < 50);
-    const ruleset = (E.ruleset || (result && result.ruleset) || "open ruleset");
-    const soft = friendlyTier(tier.n, overall);
-    const gaps = topGaps(findings, scores, dims, 3);
-
-    let html = `<div class="score-kicker">${escapeHtml(opts.title || "Your agent score")}</div>`;
-    if (opts.delta != null && opts.delta !== 0) {
-      const d = opts.delta;
-      html += `<div class="delta">${d > 0 ? "+" + d : d} after fix</div>`;
-    }
-    html += `<div class="score-big ${tier.c}">${overall}<span style="font-size:.45em;opacity:.75">/100</span></div>
-      <div class="tier ${tier.c}">${escapeHtml(soft)}</div>
-      <div class="tier-soft">${escapeHtml(tier.n)}</div>
-      <div class="disclaimer">
-        Structural text scan · not a red-team · not certification.
-        Templates can inflate scores.
-        <details id="how-score-details">
-          <summary>How we score</summary>
-          <div class="formula">
-            Ruleset <code>${escapeHtml(String(ruleset))}</code> · deterministic regex · open rule_ids<br>
-            dim = min(100, round(15+85×matches/rules)); overall = mean of 8 dims<br>
-            CLI: <code>crewscore rules --json</code>
-          </div>
-        </details>
-      </div>`;
-
-    dims.forEach((d) => {
-      const s = scores[d.key] || 0;
-      html += `<div class="dim-row"><span class="dim-label" title="${escapeHtml(d.label)}">${escapeHtml(d.label)}</span>${bar(s)}<span class="dim-score">${s}</span></div>`;
-    });
-
-    if (weak.length)
-      html += `<div class="flags">${weak.length} weak area${weak.length === 1 ? "" : "s"}: ${weak.map((d) => escapeHtml(d.label)).join(", ")}</div>`;
-
-    // Progressive disclosure: top gaps, then full rules
-    html += `<div class="gaps"><h4>Top gaps to fix</h4>`;
-    if (!gaps.length) {
-      html += `<p class="hint" style="margin:0">No major missing signals in the open ruleset — still not runtime proof.</p>`;
-    } else {
-      gaps.forEach((g) => {
-        const rid = g.f.rule_id ? `<code>${escapeHtml(g.f.rule_id)}</code> ` : "";
-        const why = escapeHtml(g.f.pattern_or_reason || g.f.snippet || "missing signal");
-        html += `<div class="gap-item"><span class="gap-dot"></span><div class="gap-body"><strong>${escapeHtml(g.dim)}</strong><br>${rid}${why}</div></div>`;
-      });
-    }
-    html += `<button type="button" class="btn-ghost" id="toggle-explain">Show all open rules</button>`;
-    html += `<div class="explain explain-full" id="explain-full"><h4 style="margin-top:.2rem">All findings (open rule IDs)</h4>`;
-    dims.forEach((d) => {
-      const body = explainHtml(findings, d.key);
-      if (body) html += `<h4>${escapeHtml(d.label)}</h4>${body}`;
-    });
-    html += `</div></div>`;
-
-    html += `<div class="actions">
-      <button type="button" class="btn-sec btn-green" id="inline-fix">Fix gaps free</button>
-      <button type="button" class="btn-sec" id="inline-download">Download improved prompt</button>
-    </div>`;
-    html += `<div class="share-row">
-      <button type="button" class="share-btn" data-s="copy">Copy share text</button>
-      <button type="button" class="share-btn" data-s="x">Post on X</button>
-      <button type="button" class="share-btn" data-s="li">LinkedIn</button>
-      <button type="button" class="share-btn" data-s="img">Save score image</button>
-    </div>`;
-    if (opts.enhanced) {
-      html += `<div class="fixed-box"><label>Improved prompt (copy into your agent)</label>
-        <textarea id="fixed-prompt" readonly></textarea>
-        <p class="hint">Templates must be paired with runtime gates (tool permissions, approvals, logging). Text coverage ≠ runtime safety.</p></div>`;
-    }
-
-    const el = document.getElementById("agent-scorecard");
-    el.innerHTML = html;
-    el.classList.add("show");
-    showPostActions(true);
-    if (opts.enhanced) {
-      document.getElementById("fixed-prompt").value = opts.enhanced;
-    }
-    if (opts.openHow) {
-      const det = document.getElementById("how-score-details");
-      if (det) det.open = true;
-    }
-
-    const st = shareText(overall, tier.n, "agent");
-    el.querySelectorAll("[data-s]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const k = btn.getAttribute("data-s");
-        if (k === "copy") navigator.clipboard.writeText(st).then(() => toast("Share text copied"));
-        else if (k === "x") window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(st)}`);
-        else if (k === "li") {
-          navigator.clipboard.writeText(st).then(() => {
-            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(location.href)}`);
-            toast("Copied — paste into LinkedIn");
-          });
-        } else if (k === "img") downloadScoreCard(overall, tier.n, soft, "AI Agent");
-      });
-    });
-
-    const toggle = document.getElementById("toggle-explain");
-    if (toggle) {
-      toggle.addEventListener("click", () => {
-        const box = document.getElementById("explain-full");
-        const open = box.classList.toggle("open");
-        toggle.textContent = open ? "Hide full rule list" : "Show all open rules";
-      });
-    }
-
-    const fixBtn = document.getElementById("inline-fix");
-    if (fixBtn) fixBtn.addEventListener("click", fixAgent);
-    const dl = document.getElementById("inline-download");
-    if (dl) dl.addEventListener("click", () => {
-      const text = (opts.enhanced) || (lastAgent && lastAgent.fixed) || document.getElementById("agent-prompt").value;
-      if (!opts.enhanced && lastAgent && !lastAgent.fixed) {
-        fixAgent();
-        return;
-      }
-      downloadText(lastAgent && lastAgent.fixed ? lastAgent.fixed : text, "crewscore-improved-prompt.md");
-    });
-
-    // Bring result into view without fighting first paint
-    requestAnimationFrame(() => {
-      el.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    });
-  }
-
-  function scoreAgent() {
-    const err = document.getElementById("agent-error");
-    const prompt = document.getElementById("agent-prompt").value || "";
-    if (!prompt.trim()) {
-      err.textContent = "Paste a prompt, pick a template, or load a public URL.";
-      err.classList.add("show");
-      return;
-    }
-    err.classList.remove("show");
-    const result = E.analyzeWithFindings(prompt);
-    lastAgent = { prompt, result, fixed: null };
-    renderAgent(result, { title: "Your agent score" });
-    try {
-      history.replaceState(null, "", "#scored");
-    } catch (e) {}
-  }
-
-  function fixAgent() {
-    const err = document.getElementById("agent-error");
-    const prompt = document.getElementById("agent-prompt").value || "";
-    if (!prompt.trim()) {
-      err.textContent = "Paste a prompt first.";
-      err.classList.add("show");
-      return;
-    }
-    err.classList.remove("show");
-    const pack = E.fixAndRescore(prompt);
-    lastAgent = { prompt, result: pack.after, fixed: pack.enhanced, before: pack.before, delta: pack.delta };
-    document.getElementById("agent-prompt").value = pack.enhanced;
-    renderAgent(pack.after, {
-      title: "After free fix",
-      delta: pack.delta,
-      enhanced: pack.enhanced,
-    });
-    toast(pack.delta > 0 ? `Fixed — score +${pack.delta}` : "Already strong — few or no fixes needed");
-  }
-
-  function downloadText(text, filename) {
-    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(a.href);
-    toast("Downloaded");
-  }
-
-  function downloadScoreCard(overall, tierName, softLine, label) {
-    const c = document.getElementById("share-canvas");
-    const ctx = c.getContext("2d");
-    const w = c.width;
-    const h = c.height;
-    // Background
-    const grad = ctx.createLinearGradient(0, 0, w, h);
-    grad.addColorStop(0, "#070b14");
-    grad.addColorStop(0.55, "#0c1528");
-    grad.addColorStop(1, "#0a1620");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, w, h);
-    // Accent orbs
-    ctx.fillStyle = "rgba(14,165,233,0.12)";
-    ctx.beginPath(); ctx.arc(120, 80, 140, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = "rgba(52,211,153,0.08)";
-    ctx.beginPath(); ctx.arc(780, 380, 160, 0, Math.PI * 2); ctx.fill();
-    // Card
-    ctx.fillStyle = "rgba(15,23,42,0.92)";
-    ctx.strokeStyle = "rgba(56,189,248,0.35)";
-    ctx.lineWidth = 2;
-    roundRect(ctx, 48, 48, w - 96, h - 96, 24);
-    ctx.fill();
-    ctx.stroke();
-    // Logo mark
-    ctx.fillStyle = "#0b1528";
-    ctx.strokeStyle = "rgba(56,189,248,0.5)";
-    roundRect(ctx, 78, 78, 44, 44, 12);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = "#38bdf8";
-    ctx.font = "800 16px system-ui,sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("CS", 100, 106);
-    ctx.textAlign = "left";
-    ctx.fillStyle = "#e2e8f0";
-    ctx.font = "700 22px system-ui,sans-serif";
-    ctx.fillText("CrewScore", 136, 98);
-    ctx.fillStyle = "#64748b";
-    ctx.font = "500 15px system-ui,sans-serif";
-    ctx.fillText((label || "AI Agent") + " · structural hygiene", 136, 120);
-    const color = overall >= 70 ? "#34d399" : overall >= 50 ? "#fbbf24" : overall >= 30 ? "#fb923c" : "#f87171";
-    ctx.fillStyle = color;
-    ctx.font = "800 108px system-ui,sans-serif";
-    ctx.fillText(String(overall), 78, 280);
-    ctx.fillStyle = "rgba(148,163,184,0.85)";
-    ctx.font = "700 36px system-ui,sans-serif";
-    ctx.fillText("/100", 78 + ctx.measureText(String(overall)).width + (overall >= 100 ? 8 : 12), 280);
-    ctx.fillStyle = color;
-    ctx.font = "700 28px system-ui,sans-serif";
-    ctx.fillText(softLine || tierName, 78, 330);
-    ctx.fillStyle = "#64748b";
-    ctx.font = "500 16px system-ui,sans-serif";
-    ctx.fillText(tierName, 78, 358);
-    ctx.fillStyle = "#475569";
-    ctx.font = "500 15px system-ui,sans-serif";
-    ctx.fillText("crewscore.ai · free · no install · not a red-team", 78, 400);
-    c.toBlob((blob) => {
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "crewscore-" + overall + ".png";
-      a.click();
-      URL.revokeObjectURL(a.href);
-      toast("Score card image saved");
-    });
-  }
-  function roundRect(ctx, x, y, w, h, r) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + w, y, x + w, y + h, r);
-    ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r);
-    ctx.arcTo(x, y, x + w, y, r);
-    ctx.closePath();
-  }
-
   function renderVendor(name) {
     const { score, tier, redFlags } = E.scoreVendor(vendorAnswers);
-    let html = `<div class="score-kicker">${escapeHtml(name)}</div>
-      <div class="score-big ${tier.c}">${score}<span style="font-size:.45em;opacity:.75">/100</span></div>
-      <div class="tier ${tier.c}">${escapeHtml(tier.n)}</div>
-      <p class="disclaimer">Self-attested checklist — not an independent audit or certification.</p>`;
+    let html = `<div class="score-hero">
+      <div class="score-kicker">${escapeHtml(name)}</div>
+      <div class="score-big ${tier.c}">${score}<span style="font-size:.4em;opacity:.7">/100</span></div>
+      <div class="soft-verdict ${tier.c}">${escapeHtml(tier.n)}</div>
+      <div class="stamp">Self-attested checklist · not an audit</div>
+    </div>`;
     E.vendorQuestions.forEach((q, i) => {
       const a = vendorAnswers[i];
       const pts = a === "yes" ? 10 : a === "dk" ? 3 : 0;
@@ -780,26 +906,17 @@ input:focus,textarea:focus{
     const st = `We evaluated ${name} for AI production use.\n\nScore: ${score}/100 — ${tier.n}\n${
       redFlags.length ? "\nRed flags:\n" + redFlags.map((f) => "- " + f).join("\n") + "\n" : ""
     }\nSelf-attested · not an audit\nFree tool: ${location.origin}`;
-    html += `<div class="share-row">
-      <button type="button" class="share-btn" data-s="copy">Copy for buying thread</button>
-      <button type="button" class="share-btn" data-s="x">Post on X</button>
-      <button type="button" class="share-btn" data-s="li">LinkedIn</button>
-      <button type="button" class="share-btn" data-s="img">Save score image</button>
+    html += `<div class="export-grid" style="margin-top:.7rem">
+      <button type="button" class="btn-sec" data-s="copy">Copy for buying thread</button>
+      <button type="button" class="btn-sec" data-s="img">Save score image</button>
     </div>`;
     const el = document.getElementById("vendor-scorecard");
     el.innerHTML = html;
-    el.classList.add("show");
     el.querySelectorAll("[data-s]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const k = btn.getAttribute("data-s");
         if (k === "copy") navigator.clipboard.writeText(st).then(() => toast("Copied"));
-        else if (k === "x") window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(shareText(score, tier.n, "vendor"))}`);
-        else if (k === "li") {
-          navigator.clipboard.writeText(st).then(() => {
-            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(location.href)}`);
-            toast("Copied — paste into LinkedIn");
-          });
-        } else if (k === "img") downloadScoreCard(score, tier.n, tier.n, name);
+        else if (k === "img") downloadScoreCard(score, tier.n, tier.n, name);
       });
     });
   }
@@ -825,7 +942,7 @@ input:focus,textarea:focus{
       if (text.length > 500000) throw new Error("File too large");
       document.getElementById("agent-prompt").value = text;
       toast("Loaded — scoring…");
-      scoreAgent();
+      scoreAgent({ source: "url" });
     } catch (e) {
       err.textContent =
         "Could not load URL (private file, CORS, or network). Paste the prompt text instead — still free, still no install.";
@@ -833,23 +950,33 @@ input:focus,textarea:focus{
     }
   }
 
-  document.getElementById("btn-score-agent").addEventListener("click", scoreAgent);
-  document.getElementById("btn-fix-agent").addEventListener("click", fixAgent);
-  document.getElementById("btn-download-card").addEventListener("click", () => {
-    if (!lastAgent) {
-      scoreAgent();
-      setTimeout(() => {
-        if (lastAgent) {
-          const t = E.scoreTier(lastAgent.result.overall);
-          downloadScoreCard(lastAgent.result.overall, t.n, friendlyTier(t.n, lastAgent.result.overall), "AI Agent");
-        }
-      }, 50);
+  document.getElementById("btn-score-agent").addEventListener("click", () => scoreAgent({ source: "paste" }));
+  document.getElementById("btn-load-url").addEventListener("click", loadUrl);
+  document.getElementById("link-how-score").addEventListener("click", () => {
+    if (lastAgent) {
+      openHowNext = true;
+      renderInspect(lastAgent.result, {
+        title: lastAgent.fixed ? "After approved fix" : "Structural score",
+        delta: lastAgent.delta,
+        openHow: true,
+      });
+      showDeck("deck-inspect", true);
+      setStage("inspect");
+      document.getElementById("deck-inspect").scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
-    const t = E.scoreTier(lastAgent.result.overall);
-    downloadScoreCard(lastAgent.result.overall, t.n, friendlyTier(t.n, lastAgent.result.overall), "AI Agent");
+    document.getElementById("agent-prompt").focus();
+    toast("Score a prompt first — formula appears under Inspect");
   });
-  document.getElementById("btn-load-url").addEventListener("click", loadUrl);
+  document.getElementById("link-vendor").addEventListener("click", (e) => {
+    e.preventDefault();
+    document.getElementById("panel-vendor").classList.add("open");
+    track("cs_vendor_open");
+    document.getElementById("panel-vendor").scrollIntoView({ behavior: "smooth" });
+  });
+  document.getElementById("btn-close-vendor").addEventListener("click", () => {
+    document.getElementById("panel-vendor").classList.remove("open");
+  });
   document.getElementById("btn-score-vendor").addEventListener("click", () => {
     const err = document.getElementById("vendor-error");
     if (vendorAnswers.some((a) => a == null)) {
@@ -860,26 +987,14 @@ input:focus,textarea:focus{
     err.classList.remove("show");
     renderVendor((document.getElementById("vendor-name").value || "AI Vendor").trim());
   });
-  document.getElementById("link-how-score").addEventListener("click", () => {
-    // Score empty state: open details if already scored, else toast + focus prompt
-    if (lastAgent) {
-      renderAgent(lastAgent.result, {
-        title: lastAgent.fixed ? "After free fix" : "Your agent score",
-        delta: lastAgent.delta,
-        enhanced: lastAgent.fixed || undefined,
-        openHow: true,
-      });
-      return;
-    }
-    document.getElementById("agent-prompt").focus();
-    toast("Score a prompt first — formula appears under the result");
-  });
 
   buildVendorQ();
+  if (location.hash === "#vendor" || new URLSearchParams(location.search).get("tab") === "vendor") {
+    document.getElementById("panel-vendor").classList.add("open");
+  }
 
-  // Deep link: ?tab=vendor
-  const params = new URLSearchParams(location.search);
-  if (params.get("tab") === "vendor") switchTab("vendor");
+  // Keep compatibility aliases used by older tests / mental model
+  window.__crewscoreUX = { scoreAgent, buildFixPlan, track };
 })();
 </script>
 </body>
