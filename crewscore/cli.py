@@ -11,6 +11,7 @@ from rich.console import Console
 from rich.panel import Panel
 
 from crewscore import __version__
+from crewscore.report import render_badge_svg, render_html_report, share_text
 from crewscore.scoring import DIMENSIONS, build_result, tier_color
 from crewscore.scorers import structural_analysis
 from crewscore.vendor_scorecard import assess_vendor
@@ -78,7 +79,19 @@ main.add_command(assess_vendor)
     is_flag=True,
     help="Show matched vs missing guardrail signals per dimension",
 )
-def test(prompt, prompt_file, as_json, threshold, explain):
+@click.option(
+    "--report",
+    type=click.Path(),
+    default=None,
+    help="Write a self-contained HTML scorecard to this path",
+)
+@click.option(
+    "--badge",
+    type=click.Path(),
+    default=None,
+    help="Write an SVG badge to this path",
+)
+def test(prompt, prompt_file, as_json, threshold, explain, report, badge):
     """Run structural production-readiness analysis on an agent system prompt.
 
     This mode is offline and free: it scans the prompt text for guardrail
@@ -110,6 +123,11 @@ def test(prompt, prompt_file, as_json, threshold, explain):
     else:
         dimensions = structural_analysis.analyze(system_prompt)
     result = build_result(dimensions, mode="structural", source=source)
+
+    if report:
+        Path(report).write_text(render_html_report(result), encoding="utf-8")
+    if badge:
+        Path(badge).write_text(render_badge_svg(result), encoding="utf-8")
 
     if as_json:
         payload = result.to_dict()
@@ -167,6 +185,8 @@ def test(prompt, prompt_file, as_json, threshold, explain):
             _render_findings(findings)
 
         console.print()
+        console.print(f"  Share: {share_text(result)}")
+        console.print()
         console.print(
             f"  -> Run [bold]crewscore fix[/bold] to apply recommended guardrail patterns."
         )
@@ -174,6 +194,10 @@ def test(prompt, prompt_file, as_json, threshold, explain):
             "  -> Re-run with [bold]--json[/bold] for CI. "
             "Use [bold]--threshold N[/bold] to fail builds below N."
         )
+        if report:
+            console.print(f"  -> HTML report written to [bold]{report}[/bold]")
+        if badge:
+            console.print(f"  -> SVG badge written to [bold]{badge}[/bold]")
         console.print(f"  -> {HOMEPAGE}")
         console.print()
 

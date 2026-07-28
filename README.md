@@ -27,7 +27,7 @@ $ crewscore test --prompt "You are a helpful assistant that..."
 
 Score the **text** of your agent instructions. Fix gaps. Gate CI when scores drop.
 
-[Install](#install) · [Usage](#usage) · [How scoring works](#how-scoring-works) · [CI](#ci-integration) · [Limits](#what-this-is-and-is-not)
+[Install](#install) · [Usage](#usage) · [Share](#share-your-score) · [How scoring works](#how-scoring-works) · [CI](#ci-integration) · [Limits](#what-this-is-and-is-not)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11+-green.svg)](https://python.org)
@@ -90,6 +90,28 @@ crewscore test --prompt-file ./my-agent/system-prompt.md --json --threshold 50
 ```
 
 `--threshold N` exits with code `2` when overall score is below `N` (CI gate).
+
+### Share your score
+
+Export a self-contained HTML report and an SVG badge after scoring:
+
+```bash
+crewscore test --prompt-file ./system-prompt.md --report report.html --badge crewscore.svg
+```
+
+Embed the badge in a README or PR description (path relative to your repo):
+
+```markdown
+![CrewScore](./crewscore.svg)
+```
+
+Or point CI at a committed badge path after generating it in a workflow step:
+
+```markdown
+![CrewScore](./badges/crewscore.svg)
+```
+
+Human mode also prints a one-line share blurb with your overall score and [crewscore.ai](https://crewscore.ai). Reports are structural-scan artifacts only — not runtime proof of safety.
 
 ### Apply guardrail patterns
 
@@ -207,8 +229,6 @@ See [AGENTS.md](AGENTS.md) for agent/contributor operating notes.
 
 ## Roadmap (not implemented yet)
 
-- Explainable findings (which signals matched / missing)
-- Shareable HTML report for PRs and reviews
 - Official GitHub Action wrapper
 - Framework adapters that extract prompts from LangGraph / CrewAI / AutoGen graphs
 - Optional live adversarial testing (post-traction; not the default path)
