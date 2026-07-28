@@ -539,6 +539,41 @@ def test_test_json_omits_governance_grade_for_config(tmp_path: Path):
     assert payload["warnings"] == []
 
 
+def test_test_json_omits_findings_and_transparency_for_config(tmp_path: Path):
+    """`findings` and `transparency` are governance-grade apparatus.
+
+    `overall`/`dimensions` are already gone for coding-agent config, but the
+    payload still carried `findings` (matched/missing governance rules) and
+    `transparency` (the `15+85*matches/total_rules` formula) — a reader could
+    reconstruct a score from those two fields alone even with the number gone.
+    """
+    config = tmp_path / "AGENTS.md"
+    config.write_text("# Guide\n\nBuild with `make`.\n", encoding="utf-8")
+    runner = CliRunner()
+    result = runner.invoke(main, ["test", "--prompt-file", str(config), "--json"])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+
+    assert payload["governance_applicable"] is False
+    assert "findings" not in payload
+    assert "transparency" not in payload
+
+
+def test_test_json_keeps_findings_and_transparency_for_a_system_prompt(tmp_path: Path):
+    """The omission is scoped to config — a system prompt still carries both."""
+    prompt_file = tmp_path / "system-prompt.md"
+    prompt_file.write_text(BARE, encoding="utf-8")
+    runner = CliRunner()
+    result = runner.invoke(
+        main, ["test", "--prompt-file", str(prompt_file), "--json"]
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["governance_applicable"] is True
+    assert "findings" in payload
+    assert "transparency" in payload
+
+
 def test_test_json_keeps_the_score_for_a_system_prompt(tmp_path: Path):
     """The omission is scoped to config — a system prompt still carries both."""
     prompt_file = tmp_path / "system-prompt.md"
