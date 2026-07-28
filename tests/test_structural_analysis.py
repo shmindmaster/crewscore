@@ -278,3 +278,33 @@ def test_report_hex_ladder_agrees_with_the_tier_ladder(score, tier, color):
     from crewscore.report import _TIER_HEX, _score_color_hex
 
     assert _score_color_hex(score) == _TIER_HEX[color], score
+
+
+def test_apply_fixes_does_not_re_append_guardrails_it_already_added():
+    """`fix --apply` twice must not duplicate its own templates.
+
+    The guard checked for "## Guardrails" while the writer emitted
+    "# Guardrails" -- one hash -- so it never matched its own output and
+    every run appended a fresh copy. Three runs took a one-line prompt to
+    123 lines with three identical blocks.
+
+    That is the worst possible bug for this tool to have: Context Bloat is
+    the defect it exists to flag, and `fix` was generating it without bound.
+    """
+    prompt = "You are a helpful assistant."
+    once = apply_fixes(prompt, generate_fixes(analyze(prompt)))
+    twice = apply_fixes(once, generate_fixes(analyze(once)))
+    thrice = apply_fixes(twice, generate_fixes(analyze(twice)))
+
+    marker = "Prompt Injection Defense"
+    assert once.count(marker) <= 1, "first apply duplicated a section"
+    assert twice.count(marker) == once.count(marker), (
+        "second apply re-appended a section it had already written"
+    )
+    assert thrice.count(marker) == once.count(marker), (
+        "third apply re-appended a section it had already written"
+    )
+    # And the file must stop growing once the guardrails are in place.
+    assert len(thrice.splitlines()) == len(twice.splitlines()) == len(
+        once.splitlines()
+    ), "fix --apply grows the prompt without bound"
