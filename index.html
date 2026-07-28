@@ -235,6 +235,18 @@ details.how summary::-webkit-details-marker{display:none}
 /* —— export —— */
 .export-grid{display:grid;grid-template-columns:1fr 1fr;gap:.45rem}
 @media(max-width:520px){.export-grid{grid-template-columns:1fr}}
+.export-checklist{
+  list-style:none;margin:.75rem 0 .5rem;padding:0;
+  border:1px solid var(--line);background:var(--panel2);
+}
+.export-checklist li{
+  font-size:.8rem;padding:.5rem .65rem;border-bottom:1px solid var(--line);
+  color:var(--muted);display:flex;gap:.45rem;align-items:flex-start;
+}
+.export-checklist li:last-child{border-bottom:none}
+.export-checklist li::before{
+  content:"☐";font-family:var(--mono);color:var(--amber);flex-shrink:0;
+}
 .ci-block{
   margin-top:.7rem;padding:.65rem;border:1px solid var(--line);background:#090b0a;
   font-family:var(--mono);font-size:.7rem;color:var(--muted);white-space:pre-wrap;line-height:1.5;
@@ -267,6 +279,10 @@ details.how summary::-webkit-details-marker{display:none}
 }
 .foot a{color:var(--amber);text-decoration:none}
 .foot a:hover{text-decoration:underline}
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+  html { scroll-behavior: auto; }
+}
 .foot code{color:#c5cbbd;background:#121614;padding:.05rem .3rem;border:1px solid var(--line)}
 .toast{
   position:fixed;bottom:1rem;left:50%;transform:translateX(-50%) translateY(6px);
@@ -694,7 +710,15 @@ details.how summary::-webkit-details-marker{display:none}
     threshold: "50"
 # or: crewscore scan . --threshold 50`;
 
+    const promptCheck = lastAgent.fixed
+      ? "Copy or download the improved prompt"
+      : "Copy or download improved prompt (after fix)";
     let html = `<p class="help">Take the result with you. Share text includes the honesty disclaimer.</p>
+      <ul class="export-checklist" id="export-checklist" aria-label="Export completion checklist">
+        <li data-check="share">Share your score</li>
+        <li data-check="ci">Gate this prompt in CI</li>
+        <li data-check="prompt">${promptCheck}</li>
+      </ul>
       <div class="export-grid">
         <button type="button" class="btn-sec" data-s="copy">Copy share text</button>
         <button type="button" class="btn-sec" data-s="img">Save score image</button>

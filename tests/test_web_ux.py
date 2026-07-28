@@ -52,3 +52,18 @@ def test_builder_first_hero_preserved():
     assert "Score agent prompts in your browser" in html
     assert "structural" in html.lower()
     assert "hygiene" in html.lower() or "Structural pre-gate" in html
+
+
+def test_export_completion_checklist_present():
+    """Export stage has a completion checklist with share, CI, and prompt items."""
+    html = _html()
+    assert "export-checklist" in html
+    assert 'data-check="share"' in html
+    assert 'data-check="ci"' in html
+    assert 'data-check="prompt"' in html
+
+
+def test_prefers_reduced_motion():
+    """CSS respects prefers-reduced-motion for a11y."""
+    html = _html()
+    assert "prefers-reduced-motion" in html
