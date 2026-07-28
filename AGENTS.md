@@ -33,6 +33,8 @@ crewscore test --prompt-file ./system-prompt.md --json --threshold 50
 crewscore test --prompt-file ./system-prompt.md --report out.html --badge badge.svg
 
 # apply guardrail patterns
+crewscore fix --prompt-file ./system-prompt.md --plan          # dry-run: list planned dimensions, no write
+crewscore fix --prompt-file ./system-prompt.md --dry-run       # alias for --plan
 crewscore fix --prompt-file ./system-prompt.md
 crewscore fix --prompt-file ./system-prompt.md --apply
 crewscore fix --prompt-file ./system-prompt.md --output ./guarded.md --json

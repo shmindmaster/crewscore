@@ -162,7 +162,12 @@ Human mode also prints a one-line share blurb with your overall score and [crews
 ### Apply guardrail patterns
 
 ```bash
-# print enhanced prompt
+# plan only — list dimensions that would be fixed (no file write)
+crewscore fix --prompt-file ./system-prompt.md --plan
+# alias:
+crewscore fix --prompt-file ./system-prompt.md --dry-run
+
+# print enhanced prompt (stdout only)
 crewscore fix --prompt-file ./system-prompt.md
 
 # write in place and show score delta
@@ -173,9 +178,11 @@ crewscore fix --prompt-file ./system-prompt.md --output ./system-prompt-guarded.
 
 # machine-readable summary
 crewscore fix --prompt-file ./system-prompt.md --apply --json
+# plan as JSON (fixes_planned, written: false)
+crewscore fix --prompt-file ./system-prompt.md --plan --json
 ```
 
-These are **prompt text templates**. They can raise the structural score without changing runtime behavior — wire matching controls (tool gates, logging, budgets) in your application.
+`--plan` / `--dry-run` is mutually exclusive with `--apply` and `--output`. These are **prompt text templates**. They can raise the structural score without changing runtime behavior — wire matching controls (tool gates, logging, budgets) in your application.
 
 ### Vendor checklist (self-attest, secondary)
 
