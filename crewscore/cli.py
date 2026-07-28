@@ -20,6 +20,7 @@ from crewscore.scoring import DIMENSIONS, RULESET_ID, build_result, tier_color
 from crewscore.scorers import structural_analysis
 from crewscore.smells import detect_smells, find_repo_root
 from crewscore.profiles import (
+    CODING_AGENT_CONFIG,
     PROFILE_LABELS,
     PROFILES,
     classify_path,
@@ -684,12 +685,17 @@ def fix(prompt, prompt_file, apply, output, plan, as_json, profile):
         # is the same category error as grading that file 0/100 — and here it
         # would write the mistake into the user's repo. Decline loudly rather
         # than no-op: someone who ran `fix` is owed a reason and a next step.
+        smell_verdict_cmd = (
+            f"crewscore test --prompt-file {source_path}"
+            if source_path
+            else "crewscore test --prompt <your prompt text>"
+        )
         reason = (
             "coding-agent config is judged on configuration smells, not the "
             "governance dimensions these templates target. See the smell "
-            "verdict with `crewscore test --prompt-file "
-            f"{source_path}`, gate CI with `--max-smells N`, or re-run with "
-            "`--profile system_prompt` to force the templates in anyway."
+            f"verdict with `{smell_verdict_cmd}`, gate CI with "
+            "`--max-smells N`, or re-run with `--profile system_prompt` to "
+            "force the templates in anyway."
         )
         if as_json:
             click.echo(
@@ -717,8 +723,7 @@ def fix(prompt, prompt_file, apply, output, plan, as_json, profile):
                 "these templates target."
             )
             err_console.print(
-                f"  -> Smell verdict: [bold]crewscore test --prompt-file "
-                f"{source_path}[/bold]"
+                f"  -> Smell verdict: [bold]{smell_verdict_cmd}[/bold]"
             )
             err_console.print(
                 "  -> Gate CI on it: [bold]--max-smells N[/bold]"
@@ -729,6 +734,21 @@ def fix(prompt, prompt_file, apply, output, plan, as_json, profile):
             )
             err_console.print()
         sys.exit(1)
+
+    if (
+        source_path is not None
+        and classify_path(source_path) == CODING_AGENT_CONFIG
+        and resolved_profile != CODING_AGENT_CONFIG
+        and not as_json
+    ):
+        # The refusal above advertises --profile system_prompt as an escape
+        # hatch, which makes this the path a rushed user takes. It stays
+        # unblocked (the flag is explicit per invocation), but it must not
+        # be silent about what it is about to write.
+        err_console.print(
+            "  [yellow]Note:[/yellow] writing governance templates to "
+            f"{source_path}, which classifies as coding-agent config."
+        )
 
     before = structural_analysis.analyze(system_prompt)
     before_result = build_result(
@@ -816,7 +836,10 @@ def fix(prompt, prompt_file, apply, output, plan, as_json, profile):
 
     enhanced = apply_fixes(system_prompt, fixes)
     after = structural_analysis.analyze(enhanced)
-    after_result = build_result(after)
+    after_result = build_result(
+        after, source=str(source_path) if source_path else "prompt",
+        profile=resolved_profile,
+    )
     cost = fix_cost_report(system_prompt, enhanced)
 
     if apply and source_path:

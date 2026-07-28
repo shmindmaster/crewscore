@@ -122,6 +122,26 @@ def test_fix_json_raises_score(tmp_path: Path):
     assert "CrewScore" in prompt_file.read_text(encoding="utf-8")
 
 
+def test_fix_json_after_source_and_profile_match_before(tmp_path: Path):
+    """before/after must agree on source and profile — only the score should differ.
+
+    after_result was built without source=/profile=, so it silently defaulted
+    to source="prompt" even when before.source was the real file path.
+    """
+    prompt_file = tmp_path / "prompt.md"
+    prompt_file.write_text(BARE, encoding="utf-8")
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        ["fix", "--prompt-file", str(prompt_file), "--apply", "--json"],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["before"]["source"] == str(prompt_file)
+    assert payload["after"]["source"] == payload["before"]["source"]
+    assert payload["after"]["profile"] == payload["before"]["profile"]
+
+
 def test_assess_vendor_json():
     runner = CliRunner()
     result = runner.invoke(
@@ -184,6 +204,45 @@ def test_fix_refuses_to_modify_a_config_file(tmp_path: Path):
     assert "--profile system_prompt" in result.output
 
 
+def test_fix_refusal_next_step_omits_none_for_pasted_prompt():
+    """A --prompt (no file) refusal must not print an uncopyable `None` path.
+
+    `crewscore test --prompt-file None` is not a runnable next step — the
+    message must adapt when there is no source file.
+    """
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "fix",
+            "--prompt",
+            "You are helpful.",
+            "--profile",
+            "coding_agent_config",
+        ],
+    )
+    assert result.exit_code == 1
+    assert "None" not in result.output
+
+
+def test_fix_refusal_json_reason_omits_none_for_pasted_prompt():
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "fix",
+            "--prompt",
+            "You are helpful.",
+            "--profile",
+            "coding_agent_config",
+            "--json",
+        ],
+    )
+    assert result.exit_code == 1
+    payload = json.loads(result.output)
+    assert "None" not in payload["reason"]
+
+
 def test_fix_profile_override_applies_templates_to_config(tmp_path: Path):
     """The refusal has an escape hatch, for parity with test and scan."""
     config = tmp_path / "AGENTS.md"
@@ -204,6 +263,39 @@ def test_fix_profile_override_applies_templates_to_config(tmp_path: Path):
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)
     assert payload["fixes_planned"]
+
+
+def test_fix_profile_override_warns_before_writing_governance_templates(
+    tmp_path: Path,
+):
+    """--profile system_prompt on an AGENTS.md must not write silently.
+
+    The refusal message advertises this flag as a next step, which makes the
+    un-warned force the path a rushed user takes. It must not block the
+    write, but it must say so.
+    """
+    config = tmp_path / "AGENTS.md"
+    config.write_text("# Build\n\nRun make.\n", encoding="utf-8")
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "fix",
+            "--prompt-file",
+            str(config),
+            "--apply",
+            "--profile",
+            "system_prompt",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    # Collapse whitespace: rich word-wraps console output at terminal width,
+    # which can split a matched phrase across a line break.
+    lower = " ".join(result.output.split()).lower()
+    assert "coding-agent config" in lower
+    assert "governance" in lower
+    # Not blocked — the write still happens.
+    assert "HIPAA" in config.read_text(encoding="utf-8")
 
 
 def test_fix_pasted_string_is_still_treated_as_a_prompt():
