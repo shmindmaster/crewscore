@@ -12,137 +12,336 @@
 <link rel="icon" href="favicon.ico" sizes="any">
 <title>CrewScore — Free AI agent prompt score (no install)</title>
 <style>
+:root{
+  --bg:#070b14;
+  --bg2:#0c1220;
+  --panel:#0f172a;
+  --panel2:#111b2e;
+  --line:#1e2a44;
+  --line2:#2a3a5c;
+  --text:#e8eef9;
+  --muted:#8b9bb8;
+  --faint:#5c6b86;
+  --accent:#38bdf8;
+  --accent2:#0ea5e9;
+  --accent-dim:rgba(14,165,233,.14);
+  --good:#34d399;
+  --good-dim:rgba(52,211,153,.12);
+  --warn:#fbbf24;
+  --bad:#f87171;
+  --bad-dim:rgba(248,113,113,.1);
+  --radius:14px;
+  --shadow:0 20px 50px rgba(0,0,0,.35);
+  --font:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Consolas,monospace;
+}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#0b0f1a;color:#e2e8f0;min-height:100vh;padding:1.25rem 1rem 3rem}
-.wrap{max-width:760px;margin:0 auto}
-.badge-free{display:inline-block;font-size:0.7rem;letter-spacing:0.04em;text-transform:uppercase;color:#86efac;background:#052e1a;border:1px solid #166534;padding:0.25rem 0.55rem;border-radius:999px;margin-bottom:0.75rem}
-h1{font-size:clamp(1.75rem,4vw,2.35rem);line-height:1.15;color:#fff;margin-bottom:0.5rem;font-weight:750}
-.sub{color:#94a3b8;font-size:1.05rem;line-height:1.5;margin-bottom:0.75rem;max-width:38rem}
-.zero{display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1.25rem}
-.pill{font-size:0.78rem;color:#cbd5e1;background:#111827;border:1px solid #1f2937;padding:0.35rem 0.65rem;border-radius:999px}
-.tabs{display:flex;gap:0;margin-bottom:1rem}
-.tab{flex:1.2;padding:0.85rem;text-align:center;cursor:pointer;border:1px solid #334155;background:#111827;color:#94a3b8;font-size:0.9rem;font-weight:600}
-.tab.tab-secondary{flex:0.85;font-size:0.78rem;font-weight:500;color:#64748b}
-.tab:first-child{border-radius:12px 0 0 12px}
-.tab:last-child{border-radius:0 12px 12px 0}
-.tab.active{background:#2563eb;color:#fff;border-color:#2563eb}
-.tab.tab-secondary.active{background:#1e3a5f;border-color:#1e3a5f;color:#cbd5e1}
-.panel{display:none;background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:1.15rem}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font);
+  background:
+    radial-gradient(900px 420px at 12% -8%, rgba(14,165,233,.16), transparent 55%),
+    radial-gradient(700px 360px at 92% 8%, rgba(52,211,153,.08), transparent 50%),
+    var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  padding:1.1rem 1rem 3.5rem;
+  line-height:1.45;
+}
+.wrap{max-width:720px;margin:0 auto}
+.brand{
+  display:flex;align-items:center;gap:.65rem;
+  margin-bottom:1.15rem;
+}
+.logo{
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(145deg,#0b1528,#12233d);
+  border:1px solid rgba(56,189,248,.45);
+  display:grid;place-items:center;
+  font-weight:800;font-size:.82rem;color:var(--accent);
+  letter-spacing:-.02em;
+  box-shadow:0 0 0 3px rgba(14,165,233,.08);
+}
+.brand-name{font-weight:750;font-size:1.05rem;letter-spacing:-.02em}
+.brand-tag{font-size:.72rem;color:var(--faint);margin-top:.05rem}
+.hero h1{
+  font-size:clamp(1.7rem,4.4vw,2.35rem);
+  line-height:1.12;font-weight:780;letter-spacing:-.03em;
+  margin-bottom:.55rem;color:#fff;
+}
+.hero .sub{
+  color:var(--muted);font-size:1.02rem;max-width:34rem;
+  margin-bottom:.85rem;line-height:1.5;
+}
+.pills{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.85rem}
+.pill{
+  font-size:.72rem;color:#c5d4ef;background:rgba(17,24,39,.7);
+  border:1px solid var(--line);padding:.32rem .6rem;border-radius:999px;
+}
+.trust-line{
+  font-size:.78rem;color:var(--faint);margin-bottom:1.15rem;
+  max-width:38rem;line-height:1.45;
+}
+.trust-line a,.trust-line button.linkish{
+  color:var(--accent);background:none;border:none;cursor:pointer;
+  font:inherit;padding:0;text-decoration:underline;text-underline-offset:2px;
+}
+.tabs{
+  display:flex;gap:0;margin-bottom:.9rem;
+  background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:3px;
+}
+.tab{
+  flex:1.15;padding:.7rem .5rem;text-align:center;cursor:pointer;
+  border:none;border-radius:10px;background:transparent;
+  color:var(--muted);font-size:.88rem;font-weight:650;
+}
+.tab.tab-secondary{flex:.9;font-size:.76rem;font-weight:500;color:var(--faint)}
+.tab.active{
+  background:linear-gradient(180deg,#1a2d4a,#15253d);
+  color:#fff;box-shadow:inset 0 0 0 1px rgba(56,189,248,.25);
+}
+.tab.tab-secondary.active{color:#cbd5e1}
+.panel{
+  display:none;background:linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid var(--line);border-radius:18px;padding:1.15rem 1.1rem 1.2rem;
+  box-shadow:var(--shadow);
+}
 .panel.active{display:block}
-label{display:block;font-size:0.85rem;color:#94a3b8;margin-bottom:0.4rem;font-weight:600}
-.hint{font-size:0.78rem;color:#64748b;margin-bottom:0.65rem;line-height:1.45}
-.chips{display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:0.75rem}
-.chip{border:1px solid #334155;background:#111827;color:#e2e8f0;border-radius:999px;padding:0.4rem 0.7rem;font-size:0.75rem;cursor:pointer}
-.chip:hover,.chip:focus{border-color:#3b82f6;color:#93c5fd;outline:none}
-.row{display:flex;gap:0.5rem;margin-bottom:0.65rem;flex-wrap:wrap}
-input[type=url],input[type=text],.vendor-name-input{width:100%;padding:0.7rem 0.8rem;background:#020617;border:1px solid #334155;border-radius:10px;color:#e2e8f0;font-size:0.9rem}
-input:focus,textarea:focus{outline:none;border-color:#3b82f6}
-textarea{width:100%;min-height:150px;background:#020617;border:1px solid #334155;border-radius:10px;color:#e2e8f0;padding:0.85rem;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:0.85rem;resize:vertical}
-.btn{width:100%;padding:0.9rem;background:#2563eb;color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;margin-top:0.65rem}
-.btn:hover{background:#1d4ed8}
-.btn:disabled{opacity:0.5;cursor:not-allowed}
-.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.5rem}
-.btn-sec{background:#111827;border:1px solid #334155;color:#e2e8f0;font-weight:600;font-size:0.9rem;padding:0.75rem;border-radius:12px;cursor:pointer}
-.btn-sec:hover{border-color:#3b82f6;color:#93c5fd}
-.btn-green{background:#059669}
-.btn-green:hover{background:#047857}
-.question{margin-bottom:0.75rem;padding:0.75rem;background:#020617;border-radius:10px;border:1px solid #1e293b}
-.question p{font-size:0.82rem;margin-bottom:0.45rem;color:#cbd5e1}
-.answers{display:flex;gap:0.4rem}
-.answers button{flex:1;padding:0.45rem;border:1px solid #334155;background:#111827;color:#94a3b8;border-radius:8px;cursor:pointer;font-size:0.75rem}
+label{display:block;font-size:.82rem;color:var(--muted);margin-bottom:.4rem;font-weight:650}
+.hint{font-size:.76rem;color:var(--faint);margin-bottom:.65rem;line-height:1.45}
+.chips{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.8rem}
+.chip{
+  border:1px solid var(--line2);background:rgba(8,12,22,.65);
+  color:var(--text);border-radius:999px;padding:.42rem .72rem;
+  font-size:.74rem;cursor:pointer;transition:border-color .15s,color .15s,background .15s;
+}
+.chip:hover,.chip:focus-visible{border-color:var(--accent);color:#bae6fd;outline:none}
+.chip.active{border-color:var(--accent);background:var(--accent-dim);color:#e0f2fe}
+textarea,input[type=url],input[type=text],.vendor-name-input{
+  width:100%;padding:.78rem .85rem;background:#060a12;
+  border:1px solid var(--line2);border-radius:12px;color:var(--text);
+  font-size:.9rem;transition:border-color .15s,box-shadow .15s;
+}
+textarea{
+  min-height:148px;font-family:var(--mono);font-size:.84rem;resize:vertical;line-height:1.45;
+}
+input:focus,textarea:focus{
+  outline:none;border-color:var(--accent2);
+  box-shadow:0 0 0 3px rgba(14,165,233,.15);
+}
+.row{display:flex;gap:.5rem;margin-bottom:.15rem;flex-wrap:wrap;align-items:stretch}
+.row input{flex:1;min-width:180px}
+.btn{
+  width:100%;padding:.92rem;border:none;border-radius:12px;
+  font-size:1rem;font-weight:750;cursor:pointer;margin-top:.7rem;
+  background:linear-gradient(180deg,#38bdf8,#0ea5e9);color:#041018;
+  box-shadow:0 8px 24px rgba(14,165,233,.22);
+  transition:transform .12s,filter .12s;
+}
+.btn:hover{filter:brightness(1.05)}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+.btn-sec{
+  background:rgba(8,12,22,.7);border:1px solid var(--line2);color:var(--text);
+  font-weight:650;font-size:.88rem;padding:.72rem .85rem;border-radius:12px;cursor:pointer;
+}
+.btn-sec:hover{border-color:var(--accent);color:#bae6fd}
+.btn-ghost{
+  background:transparent;border:1px solid transparent;color:var(--muted);
+  font-weight:600;font-size:.84rem;padding:.55rem .4rem;cursor:pointer;border-radius:10px;
+}
+.btn-ghost:hover{color:var(--text);background:rgba(255,255,255,.03)}
+.btn-green{
+  background:linear-gradient(180deg,#34d399,#059669);color:#04140f;
+  border:none;box-shadow:0 8px 20px rgba(5,150,105,.2);
+}
+.btn-green:hover{filter:brightness(1.05)}
+.post-actions{display:none;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.55rem}
+.post-actions.show{display:grid}
+.error{color:var(--bad);font-size:.82rem;margin-top:.55rem;display:none}
+.error.show{display:block}
+.scorecard{
+  display:none;margin-top:1rem;background:#060a12;
+  border:1px solid var(--line);border-radius:16px;padding:1.15rem 1rem 1.1rem;
+  text-align:center;animation:rise .28s ease-out;
+}
+.scorecard.show{display:block}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.score-kicker{font-size:.78rem;color:var(--muted);font-weight:600;letter-spacing:.02em}
+.delta{
+  display:inline-flex;align-items:center;gap:.3rem;
+  font-size:.88rem;font-weight:750;margin:.35rem 0 .15rem;
+  padding:.25rem .55rem;border-radius:999px;background:var(--good-dim);color:var(--good);
+}
+.score-big{
+  font-size:clamp(2.8rem,8vw,3.6rem);font-weight:820;letter-spacing:-.04em;
+  line-height:1;margin:.2rem 0 .15rem;
+}
+.score-red{color:var(--bad)}.score-orange{color:#fb923c}
+.score-yellow{color:var(--warn)}.score-green{color:var(--good)}
+.tier{font-size:1rem;font-weight:750;margin-bottom:.15rem}
+.tier-soft{font-size:.78rem;color:var(--faint);font-weight:500;margin-bottom:.55rem}
+.disclaimer{
+  font-size:.72rem;color:var(--faint);margin:0 auto .85rem;line-height:1.4;max-width:28rem;
+}
+.disclaimer details{margin-top:.35rem;text-align:left}
+.disclaimer summary{
+  cursor:pointer;color:var(--accent);font-weight:600;list-style:none;
+}
+.disclaimer summary::-webkit-details-marker{display:none}
+.disclaimer summary::before{content:"▸ ";}
+.disclaimer details[open] summary::before{content:"▾ ";}
+.formula{
+  margin-top:.4rem;padding:.55rem .65rem;background:rgba(255,255,255,.02);
+  border:1px solid var(--line);border-radius:10px;font-family:var(--mono);
+  font-size:.68rem;color:var(--muted);line-height:1.45;
+}
+.dim-row{
+  display:flex;align-items:center;gap:.5rem;margin:.32rem 0;
+  font-size:.74rem;text-align:left;
+}
+.dim-bar{flex:1;height:8px;background:#152033;border-radius:4px;overflow:hidden}
+.dim-fill{height:100%;border-radius:4px;transition:width .35s ease}
+.dim-label{width:min(168px,36vw);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dim-score{width:36px;text-align:right;color:var(--faint);font-variant-numeric:tabular-nums}
+.flags{
+  margin-top:.7rem;font-size:.8rem;text-align:left;color:#fecaca;
+  background:var(--bad-dim);border:1px solid rgba(248,113,113,.2);
+  border-radius:10px;padding:.55rem .7rem;
+}
+.gaps{
+  margin-top:.75rem;text-align:left;border-top:1px solid var(--line);padding-top:.7rem;
+}
+.gaps h4{font-size:.8rem;color:#dbe7ff;margin-bottom:.45rem;font-weight:700}
+.gap-item{
+  display:flex;gap:.55rem;align-items:flex-start;
+  padding:.45rem .5rem;border-radius:10px;margin-bottom:.3rem;
+  background:rgba(255,255,255,.02);border:1px solid transparent;
+}
+.gap-item:hover{border-color:var(--line)}
+.gap-dot{width:8px;height:8px;border-radius:50%;margin-top:.35rem;flex-shrink:0;background:var(--bad)}
+.gap-body{font-size:.76rem;color:var(--muted);line-height:1.4}
+.gap-body strong{color:#e2e8f0;font-weight:650}
+.gap-body code{font-family:var(--mono);font-size:.7rem;color:#7dd3fc}
+.explain-full{display:none;margin-top:.55rem}
+.explain-full.open{display:block}
+.explain h4{color:#cbd5e1;margin:.45rem 0 .15rem;font-size:.74rem}
+.matched{color:#6ee7b7;font-size:.7rem;line-height:1.4;margin-bottom:.15rem}
+.missing{color:#fca5a5;font-size:.7rem;line-height:1.4}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.95rem}
+.share-row{display:flex;gap:.4rem;margin-top:.75rem;justify-content:center;flex-wrap:wrap}
+.share-btn{
+  padding:.5rem .75rem;border-radius:10px;border:1px solid var(--line2);
+  background:rgba(8,12,22,.75);color:var(--text);cursor:pointer;
+  font-size:.78rem;font-weight:650;
+}
+.share-btn:hover{border-color:var(--accent);color:#bae6fd}
+.fixed-box{margin-top:.85rem;text-align:left}
+.fixed-box textarea{min-height:110px}
+.foot{
+  margin-top:1.6rem;text-align:center;font-size:.76rem;color:var(--faint);line-height:1.55;
+}
+.foot a{color:var(--accent);text-decoration:none}
+.foot a:hover{text-decoration:underline}
+.foot code{
+  background:rgba(17,24,39,.85);padding:.1rem .35rem;border-radius:4px;
+  color:#7dd3fc;font-size:.72rem;
+}
+.toast{
+  position:fixed;bottom:1.1rem;left:50%;transform:translateX(-50%) translateY(8px);
+  background:#0f1a2e;border:1px solid rgba(56,189,248,.45);color:var(--text);
+  padding:.65rem 1rem;border-radius:12px;font-size:.85rem;opacity:0;
+  pointer-events:none;transition:opacity .2s,transform .2s;z-index:50;max-width:90vw;
+  box-shadow:var(--shadow);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.question{margin-bottom:.7rem;padding:.7rem;background:#060a12;border-radius:10px;border:1px solid var(--line)}
+.question p{font-size:.8rem;margin-bottom:.45rem;color:#cbd5e1}
+.answers{display:flex;gap:.4rem}
+.answers button{
+  flex:1;padding:.45rem;border:1px solid var(--line2);background:rgba(8,12,22,.7);
+  color:var(--muted);border-radius:8px;cursor:pointer;font-size:.74rem;
+}
 .answers button.selected-yes{background:#064e3b;border-color:#10b981;color:#6ee7b7}
 .answers button.selected-no{background:#7f1d1d;border-color:#ef4444;color:#fca5a5}
 .answers button.selected-dk{background:#78350f;border-color:#f59e0b;color:#fcd34d}
-.scorecard{display:none;margin-top:1rem;background:#020617;border:1px solid #1e293b;border-radius:14px;padding:1.15rem;text-align:center}
-.scorecard.show{display:block}
-.delta{font-size:0.95rem;font-weight:700;margin:0.25rem 0 0.5rem}
-.score-big{font-size:3.1rem;font-weight:800;margin:0.25rem 0}
-.score-red{color:#ef4444}.score-orange{color:#f59e0b}.score-yellow{color:#eab308}.score-green{color:#10b981}
-.tier{font-size:1.05rem;font-weight:700;margin-bottom:0.35rem}
-.disclaimer{font-size:0.72rem;color:#64748b;margin-bottom:0.85rem;line-height:1.4}
-.dim-row{display:flex;align-items:center;gap:0.5rem;margin:0.35rem 0;font-size:0.75rem;text-align:left}
-.dim-bar{flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden}
-.dim-fill{height:100%;border-radius:4px}
-.dim-label{width:min(180px,38vw);color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dim-score{width:42px;text-align:right;color:#64748b}
-.explain{margin-top:0.85rem;text-align:left;font-size:0.72rem;color:#94a3b8;border-top:1px solid #1e293b;padding-top:0.65rem}
-.explain h4{color:#cbd5e1;margin:0.5rem 0 0.2rem;font-size:0.75rem}
-.matched{color:#34d399}.missing{color:#f87171}
-.flags{margin-top:0.65rem;font-size:0.8rem;text-align:left;color:#f87171}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:1rem}
-.share-row{display:flex;gap:0.5rem;margin-top:0.75rem;justify-content:center;flex-wrap:wrap}
-.share-btn{padding:0.55rem 0.85rem;border-radius:10px;border:1px solid #334155;background:#111827;color:#e2e8f0;cursor:pointer;font-size:0.8rem;font-weight:600}
-.share-btn:hover{border-color:#3b82f6}
-.fixed-box{margin-top:0.85rem;text-align:left}
-.fixed-box textarea{min-height:120px}
-.foot{margin-top:1.5rem;text-align:center;font-size:0.78rem;color:#64748b;line-height:1.55}
-.foot a{color:#60a5fa;text-decoration:none}
-.foot code{background:#111827;padding:0.1rem 0.35rem;border-radius:4px;color:#93c5fd;font-size:0.75rem}
-.error{color:#f87171;font-size:0.82rem;margin-top:0.55rem;display:none}
-.error.show{display:block}
-.toast{position:fixed;bottom:1.1rem;left:50%;transform:translateX(-50%);background:#111827;border:1px solid #3b82f6;color:#e2e8f0;padding:0.65rem 1rem;border-radius:10px;font-size:0.85rem;opacity:0;pointer-events:none;transition:opacity .2s;z-index:50;max-width:90vw}
-.toast.show{opacity:1}
-.social-proof{font-size:0.8rem;color:#64748b;margin-bottom:1rem}
-@media(max-width:560px){.btn-row,.actions{grid-template-columns:1fr}.score-big{font-size:2.5rem}}
+@media(max-width:560px){
+  .actions,.post-actions{grid-template-columns:1fr}
+  .score-big{font-size:2.6rem}
+  .brand{margin-bottom:.9rem}
+}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="badge-free">Free · No signup · No install · No API key</div>
-  <h1>Score agent prompts in your browser — structural hygiene only</h1>
-  <p class="sub">Paste a system prompt. Get a structural score in seconds. Fix gaps in one click. Built for builders who want a fast offline check before CI or live eval.</p>
-  <div class="zero">
-    <span class="pill">⏱ Under 30 seconds</span>
-    <span class="pill">🔒 Stays in your browser</span>
-    <span class="pill">📤 Share a number people understand</span>
-    <span class="pill">🛠 Fix without installing anything</span>
-  </div>
-  <p class="social-proof">Not a black box: open <code>rule_id</code>s + regex (CLI: <code>crewscore rules --json</code>). Structural scan only — not a red-team or certification. Templates can inflate scores; pair with runtime gates.</p>
+  <header class="brand" aria-label="CrewScore">
+    <div class="logo" aria-hidden="true">CS</div>
+    <div>
+      <div class="brand-name">CrewScore</div>
+      <div class="brand-tag">Free · No signup · No install · No API key</div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1>Score agent prompts in your browser — structural hygiene only</h1>
+    <p class="sub">Paste a system prompt. See what’s missing. Fix gaps in one click. Offline structural scan — same rules as the CLI.</p>
+    <div class="pills">
+      <span class="pill">Under 30 seconds</span>
+      <span class="pill">Stays in your browser</span>
+      <span class="pill">Open rule IDs · not a black box</span>
+      <span class="pill">Share a score people get</span>
+    </div>
+    <p class="trust-line">
+      Structural text scan only — <strong>not a red-team</strong> or certification.
+      Templates can inflate scores; pair with runtime gates.
+      <button type="button" class="linkish" id="link-how-score">How scoring works</button>
+    </p>
+  </section>
 
   <div class="tabs" role="tablist">
-    <div class="tab active" role="tab" data-tab="agent" tabindex="0">Score my agent prompt</div>
-    <div class="tab tab-secondary" role="tab" data-tab="vendor" tabindex="0">Vendor checklist (self-attest)</div>
+    <button type="button" class="tab active" role="tab" data-tab="agent" aria-selected="true">Score my agent prompt</button>
+    <button type="button" class="tab tab-secondary" role="tab" data-tab="vendor" aria-selected="false">Vendor checklist (self-attest)</button>
   </div>
 
-  <div class="panel active" id="panel-agent">
-    <label>Start with a common template (or paste your own)</label>
+  <div class="panel active" id="panel-agent" role="tabpanel">
+    <label>Try a template (or paste your own)</label>
     <div class="chips" id="template-chips"></div>
     <label for="agent-prompt">System prompt / agent instructions</label>
-    <p class="hint">From ChatGPT custom instructions, Claude projects, Cursor rules, LangChain, CrewAI, internal agents — anything that tells the model who it is.</p>
-    <textarea id="agent-prompt" placeholder="Paste your system prompt here…"></textarea>
-    <div class="row" style="margin-top:0.65rem">
-      <input type="url" id="prompt-url" placeholder="Or paste a public GitHub raw / gist URL to a prompt file" style="flex:1;min-width:200px" />
-      <button class="btn-sec" type="button" id="btn-load-url" style="width:auto;padding:0.7rem 0.9rem">Load URL</button>
+    <p class="hint">ChatGPT custom instructions, Claude projects, Cursor rules, LangChain, CrewAI, AGENTS.md — anything that tells the model who it is.</p>
+    <textarea id="agent-prompt" placeholder="Paste your system prompt here…" spellcheck="false"></textarea>
+    <div class="row" style="margin-top:.65rem">
+      <input type="url" id="prompt-url" placeholder="Or load a public GitHub raw / gist URL" />
+      <button class="btn-sec" type="button" id="btn-load-url">Load</button>
     </div>
     <button class="btn" type="button" id="btn-score-agent">Score my agent — free</button>
-    <div class="btn-row">
-      <button class="btn-sec" type="button" id="btn-fix-agent">Fix gaps (no install)</button>
-      <button class="btn-sec" type="button" id="btn-download-card">Download score card</button>
+    <div class="post-actions" id="post-actions">
+      <button class="btn-sec btn-green" type="button" id="btn-fix-agent">Fix gaps</button>
+      <button class="btn-sec" type="button" id="btn-download-card">Save score image</button>
     </div>
     <p class="error" id="agent-error" role="alert"></p>
     <div class="scorecard" id="agent-scorecard" aria-live="polite"></div>
   </div>
 
-  <div class="panel" id="panel-vendor">
+  <div class="panel" id="panel-vendor" role="tabpanel" hidden>
     <label for="vendor-name">Which AI product are you evaluating?</label>
     <input class="vendor-name-input" id="vendor-name" placeholder="e.g. Acme AI Copilot" />
-    <p class="hint">10 diligence questions. Self-attested — not a formal audit. Get a score + red flags you can paste into LinkedIn or a buying thread.</p>
+    <p class="hint">10 diligence questions. Self-attested — not a formal audit. Get a score + red flags for a buying thread.</p>
     <div id="vendor-questions"></div>
     <button class="btn" type="button" id="btn-score-vendor">Get vendor score — free</button>
     <p class="error" id="vendor-error" role="alert"></p>
     <div class="scorecard" id="vendor-scorecard" aria-live="polite"></div>
   </div>
 
-  <div class="foot">
+  <footer class="foot">
     Want this in CI? <code>pip install crewscore</code> ·
     <code>uses: shmindmaster/crewscore@v1</code><br>
     <a href="https://github.com/shmindmaster/crewscore">Open source on GitHub</a>
     · structural scan only · templates must be paired with runtime gates<br>
     Same scoring rules in the browser and the CLI.
-  </div>
+  </footer>
 </div>
 <div class="toast" id="toast" role="status"></div>
-<canvas id="share-canvas" width="800" height="420" style="display:none"></canvas>
+<canvas id="share-canvas" width="900" height="480" style="display:none"></canvas>
 
 <script src="score-engine.js"></script>
 <script>
@@ -179,6 +378,7 @@ textarea{width:100%;min-height:150px;background:#020617;border:1px solid #334155
 
   const vendorAnswers = new Array(E.vendorQuestions.length).fill(null);
   let lastAgent = null; // {prompt, result, fixed?}
+  let activeChip = null;
 
   function toast(msg) {
     const el = document.getElementById("toast");
@@ -193,17 +393,33 @@ textarea{width:100%;min-height:150px;background:#020617;border:1px solid #334155
   }
   function bar(score) {
     const pct = Math.max(0, Math.min(100, score));
-    const color = pct >= 70 ? "#10b981" : pct >= 50 ? "#eab308" : pct >= 30 ? "#f59e0b" : "#ef4444";
+    const color = pct >= 70 ? "#34d399" : pct >= 50 ? "#fbbf24" : pct >= 30 ? "#fb923c" : "#f87171";
     return `<div class="dim-bar"><div class="dim-fill" style="width:${pct}%;background:${color}"></div></div>`;
+  }
+  function friendlyTier(tierName, overall) {
+    // Keep structural truth; surface a human-readable line.
+    if (overall >= 90) return "Looks solid on paper";
+    if (overall >= 70) return "Decent coverage — still gaps";
+    if (overall >= 50) return "Weak hygiene — easy wins left";
+    if (overall > 0) return "Critical gaps — start here";
+    return "No hygiene signals found";
+  }
+  function showPostActions(on) {
+    document.getElementById("post-actions").classList.toggle("show", !!on);
   }
 
   function switchTab(t) {
     document.querySelectorAll(".tab").forEach((el) => {
       const on = el.getAttribute("data-tab") === t;
       el.classList.toggle("active", on);
+      el.setAttribute("aria-selected", on ? "true" : "false");
     });
-    document.getElementById("panel-agent").classList.toggle("active", t === "agent");
-    document.getElementById("panel-vendor").classList.toggle("active", t === "vendor");
+    const agent = document.getElementById("panel-agent");
+    const vendor = document.getElementById("panel-vendor");
+    agent.classList.toggle("active", t === "agent");
+    vendor.classList.toggle("active", t === "vendor");
+    agent.hidden = t !== "agent";
+    vendor.hidden = t !== "vendor";
   }
   document.querySelectorAll(".tab").forEach((el) => {
     el.addEventListener("click", () => switchTab(el.getAttribute("data-tab")));
@@ -223,6 +439,9 @@ textarea{width:100%;min-height:150px;background:#020617;border:1px solid #334155
     b.className = "chip";
     b.textContent = t.label;
     b.addEventListener("click", () => {
+      if (activeChip) activeChip.classList.remove("active");
+      b.classList.add("active");
+      activeChip = b;
       document.getElementById("agent-prompt").value = t.text;
       document.getElementById("agent-error").classList.remove("show");
       scoreAgent();
@@ -255,7 +474,7 @@ textarea{width:100%;min-height:150px;background:#020617;border:1px solid #334155
   }
 
   function findingLabel(f) {
-    const rid = f.rule_id ? `<code style="color:#93c5fd">${escapeHtml(f.rule_id)}</code> ` : "";
+    const rid = f.rule_id ? `<code>${escapeHtml(f.rule_id)}</code> ` : "";
     const body = escapeHtml(f.snippet || f.pattern_or_reason || "");
     return rid + body;
   }
@@ -268,6 +487,22 @@ textarea{width:100%;min-height:150px;background:#020617;border:1px solid #334155
     if (missing.length)
       h += `<div class="missing">Missing: ${missing.map(findingLabel).join(" · ")}</div>`;
     return h;
+  }
+
+  function topGaps(findings, scores, dims, limit) {
+    // Prefer weakest dimensions' missing rules first.
+    const ordered = dims
+      .slice()
+      .sort((a, b) => (scores[a.key] || 0) - (scores[b.key] || 0));
+    const gaps = [];
+    for (const d of ordered) {
+      const miss = findings.filter((f) => f.dimension === d.key && f.status === "missing");
+      for (const f of miss) {
+        gaps.push({ dim: d.label, dimKey: d.key, f });
+        if (gaps.length >= limit) return gaps;
+      }
+    }
+    return gaps;
   }
 
   function shareText(overall, tierName, kind) {
@@ -283,29 +518,58 @@ textarea{width:100%;min-height:150px;background:#020617;border:1px solid #334155
     const tier = E.scoreTier(overall);
     const dims = E.dimensions;
     const weak = dims.filter((d) => (scores[d.key] || 0) < 50);
-    let html = `<h3 style="font-size:0.95rem;color:#94a3b8;font-weight:600">${escapeHtml(opts.title || "Your agent score")}</h3>`;
-    if (opts.delta != null) {
-      const d = opts.delta;
-      html += `<div class="delta ${d > 0 ? "score-green" : ""}">${d > 0 ? "+" + d : d} points after fix</div>`;
-    }
     const ruleset = (E.ruleset || (result && result.ruleset) || "open ruleset");
-    html += `<div class="score-big ${tier.c}">${overall}/100</div>
-      <div class="tier ${tier.c}">${escapeHtml(tier.n)}</div>
-      <p class="disclaimer">Ruleset <code>${escapeHtml(String(ruleset))}</code> · deterministic regex · not a black box.
-      Each finding shows an open <code>rule_id</code>. Not red-team / not runtime proof / not a certification.
-      Formula: dim = min(100, round(15+85×matches/rules)); overall = mean of 8 dims.</p>`;
+    const soft = friendlyTier(tier.n, overall);
+    const gaps = topGaps(findings, scores, dims, 3);
+
+    let html = `<div class="score-kicker">${escapeHtml(opts.title || "Your agent score")}</div>`;
+    if (opts.delta != null && opts.delta !== 0) {
+      const d = opts.delta;
+      html += `<div class="delta">${d > 0 ? "+" + d : d} after fix</div>`;
+    }
+    html += `<div class="score-big ${tier.c}">${overall}<span style="font-size:.45em;opacity:.75">/100</span></div>
+      <div class="tier ${tier.c}">${escapeHtml(soft)}</div>
+      <div class="tier-soft">${escapeHtml(tier.n)}</div>
+      <div class="disclaimer">
+        Structural text scan · not a red-team · not certification.
+        Templates can inflate scores.
+        <details id="how-score-details">
+          <summary>How we score</summary>
+          <div class="formula">
+            Ruleset <code>${escapeHtml(String(ruleset))}</code> · deterministic regex · open rule_ids<br>
+            dim = min(100, round(15+85×matches/rules)); overall = mean of 8 dims<br>
+            CLI: <code>crewscore rules --json</code>
+          </div>
+        </details>
+      </div>`;
+
     dims.forEach((d) => {
       const s = scores[d.key] || 0;
       html += `<div class="dim-row"><span class="dim-label" title="${escapeHtml(d.label)}">${escapeHtml(d.label)}</span>${bar(s)}<span class="dim-score">${s}</span></div>`;
     });
+
     if (weak.length)
-      html += `<div class="flags">${weak.length} weak area(s): ${weak.map((d) => escapeHtml(d.label)).join(", ")}</div>`;
-    html += `<div class="explain"><h4>Why this score</h4>`;
+      html += `<div class="flags">${weak.length} weak area${weak.length === 1 ? "" : "s"}: ${weak.map((d) => escapeHtml(d.label)).join(", ")}</div>`;
+
+    // Progressive disclosure: top gaps, then full rules
+    html += `<div class="gaps"><h4>Top gaps to fix</h4>`;
+    if (!gaps.length) {
+      html += `<p class="hint" style="margin:0">No major missing signals in the open ruleset — still not runtime proof.</p>`;
+    } else {
+      gaps.forEach((g) => {
+        const rid = g.f.rule_id ? `<code>${escapeHtml(g.f.rule_id)}</code> ` : "";
+        const why = escapeHtml(g.f.pattern_or_reason || g.f.snippet || "missing signal");
+        html += `<div class="gap-item"><span class="gap-dot"></span><div class="gap-body"><strong>${escapeHtml(g.dim)}</strong><br>${rid}${why}</div></div>`;
+      });
+    }
+    html += `<button type="button" class="btn-ghost" id="toggle-explain">Show all open rules</button>`;
+    html += `<div class="explain explain-full" id="explain-full"><h4 style="margin-top:.2rem">All findings (open rule IDs)</h4>`;
     dims.forEach((d) => {
       const body = explainHtml(findings, d.key);
       if (body) html += `<h4>${escapeHtml(d.label)}</h4>${body}`;
     });
-    html += `</div>`;
+    html += `</div></div>`;
+
     html += `<div class="actions">
       <button type="button" class="btn-sec btn-green" id="inline-fix">Fix gaps free</button>
       <button type="button" class="btn-sec" id="inline-download">Download improved prompt</button>
@@ -319,14 +583,21 @@ textarea{width:100%;min-height:150px;background:#020617;border:1px solid #334155
     if (opts.enhanced) {
       html += `<div class="fixed-box"><label>Improved prompt (copy into your agent)</label>
         <textarea id="fixed-prompt" readonly></textarea>
-        <p class="hint">Templates must be paired with runtime gates (tool permissions, approvals, logging).</p></div>`;
+        <p class="hint">Templates must be paired with runtime gates (tool permissions, approvals, logging). Text coverage ≠ runtime safety.</p></div>`;
     }
+
     const el = document.getElementById("agent-scorecard");
     el.innerHTML = html;
     el.classList.add("show");
+    showPostActions(true);
     if (opts.enhanced) {
       document.getElementById("fixed-prompt").value = opts.enhanced;
     }
+    if (opts.openHow) {
+      const det = document.getElementById("how-score-details");
+      if (det) det.open = true;
+    }
+
     const st = shareText(overall, tier.n, "agent");
     el.querySelectorAll("[data-s]").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -338,9 +609,19 @@ textarea{width:100%;min-height:150px;background:#020617;border:1px solid #334155
             window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(location.href)}`);
             toast("Copied — paste into LinkedIn");
           });
-        } else if (k === "img") downloadScoreCard(overall, tier.n, "AI Agent");
+        } else if (k === "img") downloadScoreCard(overall, tier.n, soft, "AI Agent");
       });
     });
+
+    const toggle = document.getElementById("toggle-explain");
+    if (toggle) {
+      toggle.addEventListener("click", () => {
+        const box = document.getElementById("explain-full");
+        const open = box.classList.toggle("open");
+        toggle.textContent = open ? "Hide full rule list" : "Show all open rules";
+      });
+    }
+
     const fixBtn = document.getElementById("inline-fix");
     if (fixBtn) fixBtn.addEventListener("click", fixAgent);
     const dl = document.getElementById("inline-download");
@@ -351,6 +632,11 @@ textarea{width:100%;min-height:150px;background:#020617;border:1px solid #334155
         return;
       }
       downloadText(lastAgent && lastAgent.fixed ? lastAgent.fixed : text, "crewscore-improved-prompt.md");
+    });
+
+    // Bring result into view without fighting first paint
+    requestAnimationFrame(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "nearest" });
     });
   }
 
@@ -401,32 +687,63 @@ textarea{width:100%;min-height:150px;background:#020617;border:1px solid #334155
     toast("Downloaded");
   }
 
-  function downloadScoreCard(overall, tierName, label) {
+  function downloadScoreCard(overall, tierName, softLine, label) {
     const c = document.getElementById("share-canvas");
     const ctx = c.getContext("2d");
-    ctx.fillStyle = "#0b0f1a";
-    ctx.fillRect(0, 0, c.width, c.height);
-    ctx.fillStyle = "#0f172a";
-    ctx.strokeStyle = "#1e293b";
+    const w = c.width;
+    const h = c.height;
+    // Background
+    const grad = ctx.createLinearGradient(0, 0, w, h);
+    grad.addColorStop(0, "#070b14");
+    grad.addColorStop(0.55, "#0c1528");
+    grad.addColorStop(1, "#0a1620");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+    // Accent orbs
+    ctx.fillStyle = "rgba(14,165,233,0.12)";
+    ctx.beginPath(); ctx.arc(120, 80, 140, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "rgba(52,211,153,0.08)";
+    ctx.beginPath(); ctx.arc(780, 380, 160, 0, Math.PI * 2); ctx.fill();
+    // Card
+    ctx.fillStyle = "rgba(15,23,42,0.92)";
+    ctx.strokeStyle = "rgba(56,189,248,0.35)";
     ctx.lineWidth = 2;
-    roundRect(ctx, 40, 40, 720, 340, 20);
+    roundRect(ctx, 48, 48, w - 96, h - 96, 24);
     ctx.fill();
     ctx.stroke();
-    ctx.fillStyle = "#94a3b8";
-    ctx.font = "600 22px system-ui,sans-serif";
-    ctx.fillText("CrewScore", 70, 100);
+    // Logo mark
+    ctx.fillStyle = "#0b1528";
+    ctx.strokeStyle = "rgba(56,189,248,0.5)";
+    roundRect(ctx, 78, 78, 44, 44, 12);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#38bdf8";
+    ctx.font = "800 16px system-ui,sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("CS", 100, 106);
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#e2e8f0";
+    ctx.font = "700 22px system-ui,sans-serif";
+    ctx.fillText("CrewScore", 136, 98);
     ctx.fillStyle = "#64748b";
-    ctx.font = "16px system-ui,sans-serif";
-    ctx.fillText(label + " · structural hygiene", 70, 130);
-    const color = overall >= 70 ? "#10b981" : overall >= 50 ? "#eab308" : overall >= 30 ? "#f59e0b" : "#ef4444";
+    ctx.font = "500 15px system-ui,sans-serif";
+    ctx.fillText((label || "AI Agent") + " · structural hygiene", 136, 120);
+    const color = overall >= 70 ? "#34d399" : overall >= 50 ? "#fbbf24" : overall >= 30 ? "#fb923c" : "#f87171";
     ctx.fillStyle = color;
-    ctx.font = "800 96px system-ui,sans-serif";
-    ctx.fillText(overall + "/100", 70, 240);
+    ctx.font = "800 108px system-ui,sans-serif";
+    ctx.fillText(String(overall), 78, 280);
+    ctx.fillStyle = "rgba(148,163,184,0.85)";
+    ctx.font = "700 36px system-ui,sans-serif";
+    ctx.fillText("/100", 78 + ctx.measureText(String(overall)).width + (overall >= 100 ? 8 : 12), 280);
+    ctx.fillStyle = color;
     ctx.font = "700 28px system-ui,sans-serif";
-    ctx.fillText(tierName, 70, 290);
+    ctx.fillText(softLine || tierName, 78, 330);
     ctx.fillStyle = "#64748b";
-    ctx.font = "16px system-ui,sans-serif";
-    ctx.fillText("crewscore.ai · free · no install · not a red-team", 70, 340);
+    ctx.font = "500 16px system-ui,sans-serif";
+    ctx.fillText(tierName, 78, 358);
+    ctx.fillStyle = "#475569";
+    ctx.font = "500 15px system-ui,sans-serif";
+    ctx.fillText("crewscore.ai · free · no install · not a red-team", 78, 400);
     c.toBlob((blob) => {
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
@@ -448,8 +765,8 @@ textarea{width:100%;min-height:150px;background:#020617;border:1px solid #334155
 
   function renderVendor(name) {
     const { score, tier, redFlags } = E.scoreVendor(vendorAnswers);
-    let html = `<h3 style="font-size:0.95rem;color:#94a3b8">${escapeHtml(name)}</h3>
-      <div class="score-big ${tier.c}">${score}/100</div>
+    let html = `<div class="score-kicker">${escapeHtml(name)}</div>
+      <div class="score-big ${tier.c}">${score}<span style="font-size:.45em;opacity:.75">/100</span></div>
       <div class="tier ${tier.c}">${escapeHtml(tier.n)}</div>
       <p class="disclaimer">Self-attested checklist — not an independent audit or certification.</p>`;
     E.vendorQuestions.forEach((q, i) => {
@@ -482,7 +799,7 @@ textarea{width:100%;min-height:150px;background:#020617;border:1px solid #334155
             window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(location.href)}`);
             toast("Copied — paste into LinkedIn");
           });
-        } else if (k === "img") downloadScoreCard(score, tier.n, name);
+        } else if (k === "img") downloadScoreCard(score, tier.n, tier.n, name);
       });
     });
   }
@@ -495,7 +812,6 @@ textarea{width:100%;min-height:150px;background:#020617;border:1px solid #334155
       err.classList.add("show");
       return;
     }
-    // Normalize github blob → raw
     url = url.replace(
       /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)$/,
       "https://raw.githubusercontent.com/$1/$2/$3/$4"
@@ -525,13 +841,13 @@ textarea{width:100%;min-height:150px;background:#020617;border:1px solid #334155
       setTimeout(() => {
         if (lastAgent) {
           const t = E.scoreTier(lastAgent.result.overall);
-          downloadScoreCard(lastAgent.result.overall, t.n, "AI Agent");
+          downloadScoreCard(lastAgent.result.overall, t.n, friendlyTier(t.n, lastAgent.result.overall), "AI Agent");
         }
       }, 50);
       return;
     }
     const t = E.scoreTier(lastAgent.result.overall);
-    downloadScoreCard(lastAgent.result.overall, t.n, "AI Agent");
+    downloadScoreCard(lastAgent.result.overall, t.n, friendlyTier(t.n, lastAgent.result.overall), "AI Agent");
   });
   document.getElementById("btn-load-url").addEventListener("click", loadUrl);
   document.getElementById("btn-score-vendor").addEventListener("click", () => {
@@ -543,6 +859,20 @@ textarea{width:100%;min-height:150px;background:#020617;border:1px solid #334155
     }
     err.classList.remove("show");
     renderVendor((document.getElementById("vendor-name").value || "AI Vendor").trim());
+  });
+  document.getElementById("link-how-score").addEventListener("click", () => {
+    // Score empty state: open details if already scored, else toast + focus prompt
+    if (lastAgent) {
+      renderAgent(lastAgent.result, {
+        title: lastAgent.fixed ? "After free fix" : "Your agent score",
+        delta: lastAgent.delta,
+        enhanced: lastAgent.fixed || undefined,
+        openHow: true,
+      });
+      return;
+    }
+    document.getElementById("agent-prompt").focus();
+    toast("Score a prompt first — formula appears under the result");
   });
 
   buildVendorQ();
