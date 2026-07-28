@@ -11,22 +11,28 @@ pre-1.0 and are listed under **Breaking** below.
 
 ## [0.4.0] — 2026-07-28
 
-The honest reframe. CrewScore measures **coverage**, not quality — we tested
-that claim against 1,368 real system prompts, it did not hold, and this release
-publishes the study rather than the marketing.
+The honest reframe. CrewScore measures **coverage**, not quality — and that is
+provable from the shipped rule catalog, without any corpus: a prompt that states
+all eight governance controls clearly, once each, scores **28/100**, below the
+lowest tier. This release publishes that rather than the marketing.
 
 ### Added
 
-- **`docs/validation.md` — the validation study.** Against 283 production
-  prompts and 1,085 amateur ones, the scorer does not separate the two once
-  length is controlled (Cliff's delta +0.061, 95% CI −0.050 to +0.172, p=0.36).
-  Character count alone is the better classifier (AUC 0.863 vs 0.800). No file
-  in the corpus scores above 50/100. The document also reports the aggregation
-  defect behind the empty upper scale, the regex precision problem behind the
-  discrimination failure, and per-dimension construct validity — including the
-  three dimensions (`cost`, `compliance`, `audit`) now shipping with **known-poor
-  validity, disclosed rather than quietly dropped**. No prompt text is
-  redistributed; aggregate statistics only.
+- **`docs/validation.md` — what the number does and does not measure.** Its
+  central proof is deterministic and reproducible against the installed package:
+  each dimension scores `min(100, round(15 + 85 × matches / total_rules))`, so a
+  control stated once and clearly scores **24–32**, all eight stated once each
+  average **28/100**, and stating every one of them twice still reaches only
+  **41/100**. Reaching 70 requires restating the same control four to six
+  different ways — the exact redundancy the Context Bloat detector flags. A
+  metric a well-written prompt cannot pass is coverage, not quality. The document
+  also carries the per-dimension caveats that follow from the catalog — including
+  the three dimensions (`cost`, `compliance`, `audit`) now shipping with
+  **known-poor validity, disclosed rather than quietly dropped** — and records a
+  corpus study that was **withdrawn** before publication after our own audit
+  found arithmetic in it that did not survive scrutiny. Those figures are not
+  cited anywhere, not even as preliminary; the coverage-not-quality conclusion
+  never depended on them.
 - **Artifact profiles.** Coding-agent config (`AGENTS.md`, `CLAUDE.md`,
   `.cursorrules`) is now classified as `CODING_AGENT_CONFIG` and judged on
   configuration smells instead of being handed a governance grade it was never
@@ -96,7 +102,7 @@ rank prompts, teams, or vendors by this number, and do not treat a threshold as
 a safety bar. Use the per-rule findings — which rule fired, which did not.
 
 The aggregation formula (a control stated once clearly scores 24–32, because
-scoring high requires restating the same rule five or six ways) and the regex
+scoring high requires restating the same rule four to six ways) and the regex
 precision pass are both known defects, deliberately **not** fixed here: they
 change every score, and bundling a scoring change into the release headlined
 "we corrected our claims" would muddle both messages.

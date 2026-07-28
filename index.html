@@ -497,7 +497,7 @@ body.sheet-open{overflow:hidden}
     <p class="sub">Paste a prompt in your browser, get the eight controls it states and the ones it never mentions. Same open rules as the CLI. <strong>Not a red-team.</strong>
       <button type="button" class="linkish" id="link-how-score">How the number is computed</button>
     </p>
-    <p class="trust"><strong>Coverage, not a quality ranking.</strong> We scored 1,368 real system prompts and published the result: once length is controlled, this number does not separate production prompts from amateur ones (Cliff's delta +0.061, 95% CI -0.050 to +0.172, p=0.36), and character count alone classifies them better (AUC 0.863 vs 0.800). A low score tells you what you have not written down. A high score means the text is present - nothing more. <a href="https://github.com/shmindmaster/crewscore/blob/main/docs/validation.md" target="_blank" rel="noopener">Read the validation study</a>.</p>
+    <p class="trust"><strong>Coverage, not a quality ranking.</strong> You can prove that from the shipped rules: a prompt that states all eight governance controls clearly, once each, scores <strong>28/100</strong> - below the lowest tier. Stating every one of them twice reaches only 41/100. A high score is unreachable by clear writing; it needs the same control restated four to six different ways, which is exactly the redundancy our own Context Bloat detector flags. A low score tells you what you have not written down. A high score means the text is present - nothing more. <a href="https://github.com/shmindmaster/crewscore/blob/main/docs/validation.md" target="_blank" rel="noopener">Read the validation study</a>.</p>
   </section>
 
   <nav class="stages" aria-label="Preflight stages">
@@ -572,7 +572,8 @@ body.sheet-open{overflow:hidden}
     <code>uses: shmindmaster/crewscore@v1</code><br>
     <a href="https://github.com/shmindmaster/crewscore">Open source on GitHub</a>
     · structural scan only · templates must be paired with runtime gates<br>
-    Same rules in the browser and the CLI. The number is coverage, not quality:
+    Same rules in the browser and the CLI. The number is coverage, not quality -
+    stating all eight controls clearly, once each, scores 28/100:
     <a href="https://github.com/shmindmaster/crewscore/blob/main/docs/validation.md" target="_blank" rel="noopener">read the validation study</a>.
   </footer>
 </div>
@@ -695,8 +696,9 @@ body.sheet-open{overflow:hidden}
     if (head) head.textContent = c.head;
   }
   /* Verdict wording describes coverage of stated controls only. It must not
-     read as a judgment of the prompt: the length-matched study found no
-     evidence this number ranks prompts against each other. */
+     read as a judgment of the prompt: the formula makes a high score
+     unreachable by clear writing, so it cannot rank prompts against each
+     other. See docs/validation.md. */
   function friendlyTier(overall) {
     if (overall >= 90) return "Nearly every control stated in text";
     if (overall >= 70) return "Most controls stated - gaps remain";
@@ -851,7 +853,7 @@ body.sheet-open{overflow:hidden}
     if (kind === "vendor") {
       return `We scored an AI vendor ${overall}/100 (${tierName}) with CrewScore — free structural diligence checklist. Not an audit. Try yours: ${location.origin}`;
     }
-    return `My agent prompt covers ${overall}/100 of CrewScore's governance checklist (${tierName}). That is coverage, not a quality ranking - CrewScore is a checklist, not a benchmark, and its own validation study says so. Check yours free (no install): ${location.origin}`;
+    return `My agent prompt covers ${overall}/100 of CrewScore's governance checklist (${tierName}). That is coverage, not a quality ranking - CrewScore is a checklist, not a benchmark: stating all eight controls clearly, once each, only scores 28/100. Check yours free (no install): ${location.origin}`;
   }
 
   /**
@@ -958,12 +960,13 @@ body.sheet-open{overflow:hidden}
 
     /* The disclosure has to sit with the number, not only in the hero: this
        is the element people screenshot, and it is read with nothing else on
-       screen. Figures are from docs/validation.md. */
+       screen. Figures are from docs/validation.md and pinned by tests. */
     html += `<p class="trust" style="margin:.2rem 0 .7rem">
       <strong>This number is coverage, not quality.</strong> It counts how many of
-      the 8 governance controls this text states. Across 1,368 real prompts,
-      length-matched, it did not separate production prompts from amateur ones
-      (Cliff's delta +0.061, p=0.36). A high number means the text is present -
+      the 8 governance controls this text states, and how many different ways.
+      Stating all eight clearly, once each, scores only 28/100 - the top of the
+      scale is reachable solely by restating the same control four to six ways.
+      A high number means the text is present -
       not that the agent will obey it, and not that this prompt beats one scoring
       lower. Read the missing rules below, not the total.
       <a href="https://github.com/shmindmaster/crewscore/blob/main/docs/validation.md" target="_blank" rel="noopener">Validation study</a>.
@@ -1003,7 +1006,8 @@ body.sheet-open{overflow:hidden}
         <div class="formula">Ruleset <code>${escapeHtml(String(ruleset))}</code> · deterministic regex · open rule_ids<br>
         dim = min(100, round(15+85×matches/rules)); overall = mean of 8 dims<br>
         Coverage of stated controls only - never validated as a ranking of prompt quality.<br>
-        cost, compliance and audit ship with known-poor construct validity - read a 0 there with suspicion.<br>
+        All 8 controls stated clearly, once each = 28/100; twice = 41/100. Clear writing cannot reach the top tiers.<br>
+        cost, compliance and audit ship with known-poor construct validity (5 patterns each for cost and audit; compliance is keyword detection, graded author-intuition) - read a 0 there with suspicion.<br>
         CLI: <code>crewscore rules --json</code> · Templates can inflate this number.</div>
       </details>
     </div>`;
@@ -1188,6 +1192,8 @@ body.sheet-open{overflow:hidden}
     const ci = `# Gate governance-checklist coverage (structural only - not a red-team)
 # This gates whether controls are stated in the prompt text. It is not a
 # quality bar and not a safety bar - see docs/validation.md.
+# Stating all 8 controls clearly, once each, scores 28/100, so set the
+# threshold against what your files actually score, not against the tier ladder.
 - uses: shmindmaster/crewscore@v1
   with:
     scan-path: "."

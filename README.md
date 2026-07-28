@@ -24,11 +24,11 @@ crewscore test --prompt "You are a helpful assistant."
 #   deterministic · offline · no API key, no LLM
 ```
 
-**Coverage, not quality** — [we tested whether this number ranks prompts, and it does not](docs/validation.md).  
+**Coverage, not quality** — [stating all eight controls clearly, once each, scores 28/100](docs/validation.md).  
 **CI:** `crewscore scan . --threshold 50` · Action `shmindmaster/crewscore@v1`  
 Structural hygiene only — **not a red-team**, not a certification.
 
-[Read the validation study](docs/validation.md) · [Install](#install) · [Usage](#usage) · [Scoring charter](#scoring-charter) · [Two rulesets](#two-artifacts-two-rulesets) · [Config smells](#configuration-smells) · [How scoring works](#how-scoring-works) · [What changed](#what-changed-in-040) · [CI](#ci-integration) · [Limits](#what-this-is-and-is-not)
+[Read the validation study](docs/validation.md) · [Install](#install) · [Usage](#usage) · [Scoring charter](#scoring-charter-not-a-black-box) · [Two rulesets](#two-artifacts-two-rulesets) · [Config smells](#configuration-smells) · [How scoring works](#how-scoring-works) · [What changed](#what-changed-in-040) · [CI](#ci-integration) · [Limits](#what-this-is-and-is-not)
 
 </div>
 
@@ -38,35 +38,44 @@ Structural hygiene only — **not a red-team**, not a certification.
 
 **CrewScore is a checklist, not a benchmark.** A checklist answers *"have you
 written down a rule for X?"* A benchmark answers *"is this prompt better than
-that one?"* CrewScore answers the first question. We tested whether it answers
-the second, and it does not.
+that one?"* CrewScore answers the first question — and the scoring formula makes
+the second one unanswerable.
 
-We scored **1,368 real system prompts** — 283 from shipped commercial products,
-1,085 from the GPT Store. Once you control for length, the eight-dimension score
-does **not** separate production prompts from amateur ones:
+You do not have to take our word for that; you can prove it from the shipped
+rule catalog. Each dimension scores
+`min(100, round(15 + 85 × matches / total_rules))`, where `total_rules` is the
+number of near-synonymous patterns that dimension holds. Stating a control once,
+unambiguously, matches roughly one pattern:
 
-| Measure | Result |
+| What the prompt does | What it scores |
 | --- | --- |
-| Length-matched Cliff's delta | **+0.061** |
-| 95% CI | **−0.050 to +0.172** (crosses zero) |
-| p | **0.36** |
-| Best classifier of the two arms | **`wc -c`** — character count alone, AUC **0.863** vs CrewScore's **0.800** |
-| Highest score by any real prompt in the corpus | **50 / 100** |
+| States all eight governance controls clearly, **once each** | **28 / 100** |
+| States every one of them **twice** | **41 / 100** |
+| Lowest tier boundary (`STRUCTURAL: WEAK`) | **50** |
+| Reaching **70** | the same control restated **4–6 different ways** |
+| A single clear statement, per dimension | **24–32** |
+
+**A high score is unreachable by clear writing.** It is reachable by saying the
+same thing five or six ways — exactly the redundancy our own
+[Context Bloat detector](#configuration-smells) flags as a defect. Those numbers
+are pinned by tests in `tests/test_rules_catalog.py` and reproducible against the
+installed package in about ten seconds.
 
 So: **a low score is actionable** — you probably have not written down an
 explicit injection policy, human gate, or safe-stop rule, and writing those down
-is worth doing. **A high score means the text is present.** It does not mean the
-agent will obey it, that the prompt is good, or that it beats a prompt scoring
-lower. Do not rank prompts, teams, or vendors by this number, and do not treat a
-threshold as a safety bar. Use the findings — which rule fired, which did not —
-rather than the total.
+is worth doing. **A high score means the text is verbose about a control.** It
+does not mean the agent will obey it, that the prompt is good, or that it beats a
+prompt scoring lower. Do not rank prompts, teams, or vendors by this number, and
+do not treat a threshold as a safety bar. Use the findings — which rule fired,
+which did not — rather than the total.
 
 Three of the eight dimensions (**Cost**, **Compliance**, **Audit**) ship with
 known-poor construct validity and are disclosed as such below.
 
-**[Read the full validation study →](docs/validation.md)** — method, corpora,
-per-dimension recall, and the sensitivity checks that all made the tool look
-*better* than the number we published.
+**[Read the full validation study →](docs/validation.md)** — the proof above in
+full, the per-dimension caveats that follow from the rule catalog, and the corpus
+study we **withdrew** after auditing our own arithmetic and finding numbers that
+did not survive scrutiny.
 
 None of this touches the [configuration-smell detectors](#configuration-smells),
 which are a separate feature with separate grounding.
@@ -90,7 +99,7 @@ Most teams never inspect those instructions systematically. **CrewScore** walks 
 
 | Is | Is not |
 |----|--------|
-| A **checklist**: *"have you written down a rule for X?"* | A **benchmark**: *"is this prompt better than that one?"* — [measured, and it is not](docs/validation.md) |
+| A **checklist**: *"have you written down a rule for X?"* | A **benchmark**: *"is this prompt better than that one?"* — [the formula rules it out](docs/validation.md) |
 | Offline structural scan of system-prompt text | Live adversarial LLM red-teaming |
 | Fix mode that appends guardrail sections | Proof that the runtime will obey the text |
 | JSON output + exit threshold for CI | LangGraph / CrewAI graph execution analysis |
@@ -109,16 +118,16 @@ not a guarantee of runtime safety.
 Honest principles we ship by:
 
 1. CrewScore measures **coverage: presence of hygiene signals in text**, not agent behavior and not prompt quality.
-2. **The number does not rank prompts, and we published the study that shows it.** Across 1,368 real prompts, length-matched Cliff's delta is **+0.061** (95% CI −0.050 to +0.172, p=0.36) — the CI crosses zero — and character count alone classifies the two arms better than we do (AUC **0.863** vs **0.800**). No real prompt in the corpus scored above **50/100**. Full method and caveats: [`docs/validation.md`](docs/validation.md).
-3. **Three dimensions ship with known-poor construct validity**, disclosed rather than quietly removed, because removing dimensions changes every score and belongs in a release that changes scoring on purpose:
+2. **The number does not rank prompts, and the formula is the reason.** A prompt that states all eight controls clearly, once each, scores **28/100** — below the lowest tier boundary of 50; stating every one of them *twice* still reaches only **41/100**. Reaching 70 requires restating the same control four to six different ways, which is precisely the redundancy our own Context Bloat detector flags. That is a scoring defect, and it is enough on its own: the number is **coverage, not quality**. Reproduce it from the shipped catalog — [`docs/validation.md`](docs/validation.md).
+3. **Three dimensions ship with known-poor construct validity**, disclosed rather than quietly removed, because removing dimensions changes every score and belongs in a release that changes scoring on purpose. The reasons come straight from the rule catalog (`crewscore rules --json`):
 
    | Dimension | Why it is weak | Status |
    |-----------|----------------|--------|
-   | Cost Runaway Protection | 50% recall but **0% on-target** — it fires on text that is not a budget rule | Re-specification planned |
-   | Compliance Readiness | Only **4.2%** of production prompts name a regime at all | Re-specification planned |
-   | Audit Trail | Present in **1 prompt of 283**; recall not estimable | Removal under consideration |
+   | Cost Runaway Protection | Holds only **five patterns**, aimed at budget language that is rare and highly variable in real prompts | Re-specification planned |
+   | Compliance Readiness | **Keyword detection**: it looks for regime names — HIPAA, GDPR, SOC 2. Naming a regulation is not implementing it, and the catalog grades this dimension `author-intuition` for exactly that reason | Re-specification planned |
+   | Audit Trail | Holds only **five patterns**, for logging and immutable-trail language that real prompts phrase many different ways | Re-specification planned |
 
-   **Read `audit` and `cost` results with suspicion.** A `0` there mostly means the rules did not find something, not that you failed to write it.
+   **Read `audit` and `cost` results with suspicion.** A `0` there means the rules did not find something, not that you failed to write it.
 4. Scores are **rule-pack versioned** (`crewscore-hygiene@0.4.0`) and **deterministic** — no LLM, no hidden model.
 5. **Every rule is public.** List them anytime:
    ```bash
@@ -127,11 +136,11 @@ Honest principles we ship by:
    ```
 6. Findings show **open `rule_id`s**, match snippets, or explicit missing labels (default in CLI and JSON). **Prefer the findings to the total** — the findings are the part we can defend.
 7. **Every rule declares where it came from.** Each dimension is graded `evidence-backed`, `plausible`, or `author-intuition`, with citations. Three of the eight are evidence-backed; one (Compliance Readiness) is explicitly author-intuition, because detecting the word "HIPAA" is not detecting compliance.
-8. **Length is never a score.** Long files cost tokens on every run — see [configuration smells](#configuration-smells) below. (The measured length correlation is an artifact of imprecise patterns, not a length term; we tested length normalization as a fix and rejected it — it made the correlation worse.)
+8. **Length is never a score.** There is no length term in the formula — see [how scoring works](#how-scoring-works). Long files cost tokens on every run, which is a defect, not a virtue; see [configuration smells](#configuration-smells) below.
 9. `fix` improves **text coverage**, not runtime safety; it reports its own context cost, and template boilerplate triggers a warning.
 10. We never call a score a **certification**, **audit**, or **red-team result**.
 11. When in doubt, **under-score** rather than inflate.
-12. Source of truth: [`crewscore/scorers/structural_analysis.py`](crewscore/scorers/structural_analysis.py). How to reproduce the study for yourself: [`docs/validation.md`](docs/validation.md).
+12. Source of truth: [`crewscore/scorers/structural_analysis.py`](crewscore/scorers/structural_analysis.py). What the number does and does not measure, with the proof: [`docs/validation.md`](docs/validation.md).
 
 > **Removed before `0.4.0`:** CrewScore used to award up to +10 per dimension for prompts over 500 words. That rewarded the exact thing the research penalizes — and it was never in the published formula. It is gone. See [what changed and why](#what-changed-in-040).
 
@@ -293,15 +302,16 @@ Eight dimensions, equal weight, each 0–100:
 
 Labels describe **prompt-text coverage**, not production certification.
 
-**The top half of this ladder is empty.** Across 1,368 real system prompts, the
-highest score any of them reached was **50/100**, and 99.3% of production
-prompts landed in the worst tier. That is a defect in the aggregation formula,
-not a finding about the industry: because each dimension holds several
-near-synonymous patterns, a control stated *once, clearly* matches one pattern
-and scores 24–32. To score high you must restate the same rule five or six
-different ways — which is exactly the redundancy our own Context Bloat detector
-flags. It is [tracked for repair](docs/validation.md). Set thresholds against
-what real files actually score, not against this ladder.
+**The top half of this ladder is unreachable by clear writing.** A prompt that
+states all eight controls plainly, once each, scores **28/100**; stating every
+one of them *twice* still reaches only **41/100**. That is a defect in the
+aggregation formula, not a finding about the industry: because each dimension
+holds several near-synonymous patterns, a control stated *once, clearly* matches
+one pattern and scores **24–32**. To land in the top two tiers you must restate
+the same rule four to six different ways — which is exactly the redundancy our
+own Context Bloat detector flags. It is
+[tracked for repair](docs/validation.md). Set thresholds against what your files
+actually score, not against this ladder.
 
 ---
 
@@ -354,14 +364,14 @@ The paper's other three smells (Skill Leakage, Blind References, Conflicting Ins
 
 Smells are **advisory. They never change the score.** Folding them in would silently change what every existing `--threshold N` means in someone's CI. Whether they *should* affect the score is a question for corpus validation, not something to slip into a patch release.
 
-**Not affected by the validation study.** The [validation study](docs/validation.md) covers the eight governance dimensions only. The smell detectors are a separate feature with separate grounding — they replicate published work ([arXiv:2606.15828](https://arxiv.org/abs/2606.15828)) on a 2,000-repository corpus, and on the paper's own 100-repo corpus our Context Bloat labels match theirs exactly. Nothing in that study bears on them.
+**Not affected by the governance findings.** The [validation study](docs/validation.md) covers the eight governance dimensions only. The smell detectors are a separate feature with separate grounding — they replicate published work ([arXiv:2606.15828](https://arxiv.org/abs/2606.15828)) on a 2,000-repository corpus, and on the paper's own 100-repo corpus our Context Bloat labels match theirs exactly. Nothing in that study bears on them.
 
 ---
 
 ## What changed in 0.4.0
 
-Defects found by testing CrewScore against the published research — and against
-our own corpus — rather than waiting for someone else to.
+Defects found by testing CrewScore against its own rule catalog and against the
+published research, rather than waiting for someone else to.
 
 > **If you are upgrading, you are coming from `0.2.7`.** That is the newest
 > version on PyPI. `0.3.0` and `0.3.1` were built and tagged in this repo but
@@ -371,7 +381,7 @@ our own corpus — rather than waiting for someone else to.
 
 ### 0.4.0 — the validation release (breaking for `--json` consumers)
 
-**0. We published the study that says the number does not rank prompts.** [`docs/validation.md`](docs/validation.md) reports a length-matched Cliff's delta of **+0.061** (95% CI −0.050 to +0.172, p=0.36) across 1,368 real system prompts, an `wc -c` baseline that classifies them better than we do (AUC 0.863 vs 0.800), and per-dimension construct validity — including three dimensions (Cost, Compliance, Audit) that ship known-weak. The positioning changed with it: CrewScore is a **checklist, not a benchmark**, and the number is **coverage, not quality**. The rules and the formula are unchanged in this release; what changed is what we claim they mean.
+**0. We say what the number means, and prove it from the rule catalog.** [`docs/validation.md`](docs/validation.md) shows that a prompt stating all eight controls clearly, once each, scores **28/100** — below the lowest tier — and that reaching 70 requires restating the same control four to six different ways. A metric a well-written prompt cannot pass is not a quality ranking; it is coverage. The document also carries the per-dimension caveats, including three dimensions (Cost, Compliance, Audit) that ship known-weak, and records a corpus study that was **withdrawn** after our own audit found arithmetic in it that did not survive scrutiny. The positioning changed with all of it: CrewScore is a **checklist, not a benchmark**, and the number is **coverage, not quality**. The rules and the formula are unchanged in this release; what changed is what we claim they mean.
 
 **1. `AGENTS.md` files were being judged by the wrong ruleset.** Validated against the [arXiv:2606.15828](https://arxiv.org/abs/2606.15828) corpus of the 100 most-starred repos with an agent config file, CrewScore scored them at a median of **0/100** — all 100 in the worst tier. `crewscore scan` targeted exactly those files by default, so the headline command pointed the governance ruleset at the one artifact it can't assess. Fixed by [splitting the rulesets](#two-artifacts-two-rulesets): 0 of those 100 files now receive a governance grade, and the 42 flagged for Context Bloat match the paper's labels exactly.
 
