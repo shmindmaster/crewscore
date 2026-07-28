@@ -15,7 +15,7 @@ from crewscore import __version__
 from crewscore.export_eval import write_eval_stubs
 from crewscore.report import render_badge_svg, render_html_report, share_text
 from crewscore.rules_catalog import SCORING_METHOD, catalog_payload, scoring_transparency_block
-from crewscore.scan import discover_prompt_files, score_paths
+from crewscore.scan import MAX_FILE_BYTES, discover_prompt_files, score_paths
 from crewscore.scoring import DIMENSIONS, RULESET_ID, build_result, tier_color
 from crewscore.scorers import structural_analysis
 from crewscore.smells import detect_smells, find_repo_root
@@ -51,6 +51,38 @@ def _make_output_encodable() -> None:
 
 
 _make_output_encodable()
+
+def _read_prompt_file(path: Path) -> str:
+    """Read a prompt file without letting a bad file take the command down.
+
+    `scan` has always been defensive here - a size cap plus errors="replace" -
+    while `test`, `fix` and `export-eval` used a bare read_text. So the same
+    bytes either scored or produced a raw UnicodeDecodeError traceback
+    depending on which command you reached for, and that traceback appeared
+    even under --json, where the caller is a machine that cannot read one.
+    """
+    try:
+        size = path.stat().st_size
+    except OSError as exc:
+        err_console.print(f"[red]Error: cannot read {path}: {exc.strerror or exc}[/red]")
+        sys.exit(1)
+    if size > MAX_FILE_BYTES:
+        err_console.print(
+            f"[red]Error: {path} is {size // 1024} KB; the size limit is "
+            f"{MAX_FILE_BYTES // 1024} KB.[/red]"
+        )
+        err_console.print(
+            "[dim]A prompt this large is usually a whole directory concatenated. "
+            "Point --prompt-file at the prompt itself, or use `crewscore scan`.[/dim]"
+        )
+        sys.exit(1)
+    try:
+        # errors="replace" matches scan: one mangled glyph beats losing the run.
+        return path.read_text(encoding="utf-8", errors="replace")
+    except OSError as exc:
+        err_console.print(f"[red]Error: cannot read {path}: {exc.strerror or exc}[/red]")
+        sys.exit(1)
+
 
 console = Console()
 err_console = Console(stderr=True)
@@ -181,7 +213,7 @@ def test(
         source = "prompt"
     elif prompt_file:
         prompt_path = Path(prompt_file)
-        system_prompt = prompt_path.read_text(encoding="utf-8")
+        system_prompt = _read_prompt_file(prompt_path)
         source = str(prompt_file)
     else:
         err_console.print("[red]Error: Provide --prompt or --prompt-file[/red]")
@@ -580,7 +612,7 @@ def export_eval(prompt, prompt_file, output_dir):
         system_prompt = prompt
         source = "prompt"
     elif prompt_file:
-        system_prompt = Path(prompt_file).read_text(encoding="utf-8")
+        system_prompt = _read_prompt_file(Path(prompt_file))
         source = str(prompt_file)
     else:
         err_console.print("[red]Error: Provide --prompt or --prompt-file[/red]")
@@ -669,7 +701,7 @@ def fix(prompt, prompt_file, apply, output, plan, as_json, profile):
         system_prompt = prompt
     elif prompt_file:
         source_path = Path(prompt_file)
-        system_prompt = source_path.read_text(encoding="utf-8")
+        system_prompt = _read_prompt_file(source_path)
     else:
         err_console.print("[red]Error: Provide --prompt or --prompt-file[/red]")
         err_console.print(
