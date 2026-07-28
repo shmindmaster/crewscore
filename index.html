@@ -3,25 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="CrewScore — offline structural production-readiness scorecard for AI agent system prompts. Score in seconds. No API key.">
 <title>CrewScore — Score your AI agent prompts</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;background:#0f0f1a;color:#e2e8f0;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
-h1{font-size:2rem;text-align:center;margin-bottom:0.5rem;color:#fff}
-.subtitle{text-align:center;color:#94a3b8;margin-bottom:2rem;font-size:0.9rem}
-.container{max-width:700px;width:100%}
+h1{font-size:2rem;text-align:center;margin-bottom:0.35rem;color:#fff}
+.subtitle{text-align:center;color:#94a3b8;margin-bottom:0.75rem;font-size:0.9rem;max-width:36rem;margin-left:auto;margin-right:auto;line-height:1.45}
+.install{text-align:center;margin-bottom:1.5rem;font-size:0.8rem;color:#64748b}
+.install code{background:#1e293b;padding:0.2rem 0.5rem;border-radius:4px;color:#93c5fd}
+.container{max-width:720px;width:100%}
 .tabs{display:flex;gap:0;margin-bottom:1.5rem}
 .tab{flex:1;padding:0.75rem;text-align:center;cursor:pointer;border:1px solid #334155;background:#1e293b;color:#94a3b8;font-size:0.85rem;transition:all 0.2s}
 .tab:first-child{border-radius:8px 0 0 8px}
 .tab:last-child{border-radius:0 8px 8px 0}
 .tab.active{background:#3b82f6;color:#fff;border-color:#3b82f6}
+.tab:focus-visible{outline:2px solid #60a5fa;outline-offset:2px}
 .panel{display:none;background:#1a1f2e;border:1px solid #334155;border-radius:12px;padding:1.5rem}
 .panel.active{display:block}
 label{display:block;font-size:0.85rem;color:#94a3b8;margin-bottom:0.5rem}
-textarea{width:100%;height:120px;background:#0f0f1a;border:1px solid #334155;border-radius:8px;color:#e2e8f0;padding:0.75rem;font-family:inherit;font-size:0.85rem;resize:vertical}
+.hint{font-size:0.75rem;color:#64748b;margin-bottom:0.75rem;line-height:1.4}
+textarea{width:100%;height:140px;background:#0f0f1a;border:1px solid #334155;border-radius:8px;color:#e2e8f0;padding:0.75rem;font-family:inherit;font-size:0.85rem;resize:vertical}
 textarea:focus{outline:none;border-color:#3b82f6}
 .btn{width:100%;padding:0.75rem;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-size:0.9rem;cursor:pointer;font-family:inherit;margin-top:1rem;transition:background 0.2s}
 .btn:hover{background:#2563eb}
+.btn:disabled{opacity:0.5;cursor:not-allowed}
+.btn-secondary{background:#1e293b;border:1px solid #334155;margin-top:0.5rem}
+.btn-secondary:hover{border-color:#3b82f6;color:#93c5fd;background:#1e293b}
 .question{margin-bottom:1rem;padding:0.75rem;background:#0f0f1a;border-radius:8px;border:1px solid #1e293b}
 .question p{font-size:0.8rem;margin-bottom:0.5rem;color:#cbd5e1}
 .answers{display:flex;gap:0.5rem}
@@ -34,241 +42,327 @@ textarea:focus{outline:none;border-color:#3b82f6}
 .scorecard.show{display:block}
 .score-big{font-size:3rem;font-weight:bold;margin:0.5rem 0}
 .score-red{color:#ef4444}.score-orange{color:#f59e0b}.score-yellow{color:#eab308}.score-green{color:#10b981}
-.tier{font-size:1.1rem;margin-bottom:1rem;font-weight:bold}
+.tier{font-size:1.1rem;margin-bottom:0.5rem;font-weight:bold}
+.disclaimer{font-size:0.7rem;color:#64748b;margin-bottom:1rem;line-height:1.4}
 .dim-row{display:flex;align-items:center;gap:0.5rem;margin:0.4rem 0;font-size:0.75rem;text-align:left}
 .dim-bar{flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden}
 .dim-fill{height:100%;border-radius:4px;transition:width 0.5s}
 .dim-label{width:180px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dim-score{width:50px;text-align:right;color:#64748b}
-.share-row{display:flex;gap:0.75rem;margin-top:1.5rem;justify-content:center}
+.explain{margin-top:1rem;text-align:left;font-size:0.72rem;color:#94a3b8;border-top:1px solid #1e293b;padding-top:0.75rem}
+.explain h4{color:#cbd5e1;margin:0.6rem 0 0.25rem;font-size:0.75rem}
+.explain ul{margin:0 0 0.4rem 1.1rem}
+.explain .matched{color:#10b981}
+.explain .missing{color:#f87171}
+.share-row{display:flex;gap:0.75rem;margin-top:1.5rem;justify-content:center;flex-wrap:wrap}
 .share-btn{padding:0.5rem 1rem;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;cursor:pointer;font-size:0.8rem;font-family:inherit;transition:all 0.2s}
 .share-btn:hover{border-color:#3b82f6;color:#3b82f6}
 .share-btn.linkedin:hover{border-color:#0a66c2;color:#0a66c2}
 .share-btn.x:hover{border-color:#000;color:#fff;background:#000}
-.dev-note{margin-top:2rem;text-align:center;font-size:0.75rem;color:#475569}
+.dev-note{margin-top:2rem;text-align:center;font-size:0.75rem;color:#475569;line-height:1.55}
 .dev-note a{color:#3b82f6;text-decoration:none}
 .flags{margin-top:0.75rem;font-size:0.8rem;text-align:left;color:#ef4444}
 .vendor-name-input{width:100%;padding:0.6rem;background:#0f0f1a;border:1px solid #334155;border-radius:8px;color:#e2e8f0;font-family:inherit;font-size:0.85rem;margin-bottom:1rem}
 .vendor-name-input:focus{outline:none;border-color:#3b82f6}
+.error{color:#f87171;font-size:0.8rem;margin-top:0.75rem;display:none}
+.error.show{display:block}
+.toast{position:fixed;bottom:1.25rem;left:50%;transform:translateX(-50%);background:#1e293b;border:1px solid #3b82f6;color:#e2e8f0;padding:0.6rem 1rem;border-radius:8px;font-size:0.8rem;opacity:0;pointer-events:none;transition:opacity 0.2s;z-index:50}
+.toast.show{opacity:1}
+@media (max-width:560px){
+  .dim-label{width:120px}
+  h1{font-size:1.5rem}
+}
 </style>
 </head>
 <body>
 <div class="container">
 <h1>CrewScore</h1>
-<p class="subtitle">Offline structural scorecard for AI agent prompts. Fix gaps. Gate CI. No signup. No API key.</p>
+<p class="subtitle">Offline structural scorecard for AI agent system prompts. Score in seconds. Fix gaps. Gate CI. Not a red-team or certification.</p>
+<p class="install">Developers: <code>pip install crewscore</code> · <a href="https://github.com/shmindmaster/crewscore" style="color:#3b82f6">GitHub</a></p>
 
-<div class="tabs">
-  <div class="tab active" onclick="switchTab('agent')">Score Your AI Agent</div>
-  <div class="tab" onclick="switchTab('vendor')">Score Your AI Vendor</div>
+<div class="tabs" role="tablist">
+  <div class="tab active" role="tab" tabindex="0" aria-selected="true" data-tab="agent" id="tab-agent">Score Your AI Agent</div>
+  <div class="tab" role="tab" tabindex="0" aria-selected="false" data-tab="vendor" id="tab-vendor">Score Your AI Vendor</div>
 </div>
 
-<!-- AGENT PANEL -->
-<div class="panel active" id="panel-agent">
-  <label>Paste your AI agent's system prompt (instructions):</label>
+<div class="panel active" id="panel-agent" role="tabpanel">
+  <label for="agent-prompt">Paste your agent’s system prompt</label>
+  <p class="hint">Same 8-dimension structural scanner as the CLI (<code>score-engine.js</code> is generated from Python). Structural text signals only — not proof the model will obey.</p>
   <textarea id="agent-prompt" placeholder="You are a helpful assistant that..."></textarea>
-  <button class="btn" onclick="scoreAgent()">Score My Agent</button>
-  <div class="scorecard" id="agent-scorecard"></div>
+  <button class="btn" type="button" id="btn-score-agent">Score My Agent</button>
+  <button class="btn btn-secondary" type="button" id="btn-sample">Try sample bare prompt</button>
+  <p class="error" id="agent-error" role="alert"></p>
+  <div class="scorecard" id="agent-scorecard" aria-live="polite"></div>
 </div>
 
-<!-- VENDOR PANEL -->
-<div class="panel" id="panel-vendor">
-  <input class="vendor-name-input" id="vendor-name" placeholder="Vendor/product name (e.g., Acme AI)" />
+<div class="panel" id="panel-vendor" role="tabpanel">
+  <label for="vendor-name">Vendor / product name</label>
+  <input class="vendor-name-input" id="vendor-name" placeholder="e.g., Acme AI" />
+  <p class="hint">10 diligence questions. Self-attested answers — not an independent audit. Same scoring math as <code>crewscore assess-vendor</code>.</p>
   <div id="vendor-questions"></div>
-  <button class="btn" onclick="scoreVendor()">Get Vendor Scorecard</button>
-  <div class="scorecard" id="vendor-scorecard"></div>
+  <button class="btn" type="button" id="btn-score-vendor">Get Vendor Scorecard</button>
+  <p class="error" id="vendor-error" role="alert"></p>
+  <div class="scorecard" id="vendor-scorecard" aria-live="polite"></div>
 </div>
 
 <div class="dev-note">
-  Developers: CLI with structural scoring, fix mode, and CI threshold gates<br>
+  Same structural engine as CLI · offline · no signup · no API key<br>
   <a href="https://github.com/shmindmaster/crewscore">github.com/shmindmaster/crewscore</a>
   · structural scan only (not live adversarial testing)<br>
-  CLI is source of truth; web is demo
+  Install: <code style="color:#93c5fd">pip install crewscore</code>
+  · <code style="color:#93c5fd">crewscore fix</code> appends guardrail templates (pair with runtime gates)
 </div>
 </div>
+<div class="toast" id="toast" role="status"></div>
 
+<script src="score-engine.js"></script>
 <script>
-const DIMS = ["Prompt Injection Defense","Anti-Hallucination","Source Citations","Cost Controls","Human-in-the-Loop","Safe-Stop Behavior","Audit Trail","Compliance (HIPAA/SOC2)"];
-const VENDOR_Q = [
-  "Can you demo it with YOUR data, not their cherry-picked showcase?",
-  "Published accuracy benchmark from an independent third party?",
-  "SOC2 / HIPAA / ISO 27001 certified (not 'in progress')?",
-  "Full audit trail — you can see what the AI did and why?",
-  "Documented human-override for critical decisions?",
-  "Can export your data if you leave (no lock-in)?",
-  "Transparent, predictable pricing (no surprise token costs)?",
-  "Published security audit or pen test in last 12 months?",
-  "3+ customers in YOUR industry running in production (not pilots)?",
-  "Documented failure/escalation process when it breaks?"
-];
-let vendorAnswers = new Array(10).fill(null);
-// Critical Q indices: certification, audit, human_override, security_audit, incident
-const VENDOR_CRITICAL = [2, 3, 4, 7, 9];
+(function () {
+  const E = window.CrewScoreEngine;
+  if (!E) {
+    document.body.insertAdjacentHTML(
+      "afterbegin",
+      '<p style="color:#f87171;text-align:center;padding:1rem">score-engine.js failed to load. Refresh or open via GitHub Pages.</p>'
+    );
+    return;
+  }
 
-function switchTab(t){
-  document.querySelectorAll('.tab').forEach((el,i)=>{el.classList.toggle('active',i===(t==='agent'?0:1))});
-  document.getElementById('panel-agent').classList.toggle('active',t==='agent');
-  document.getElementById('panel-vendor').classList.toggle('active',t==='vendor');
-}
+  const vendorAnswers = new Array(E.vendorQuestions.length).fill(null);
 
-// Build vendor questions
-function buildVendorQ(){
-  const c=document.getElementById('vendor-questions');
-  VENDOR_Q.forEach((q,i)=>{
-    c.innerHTML+=`<div class="question"><p>${i+1}. ${q}</p><div class="answers">
-      <button onclick="setAnswer(${i},'yes',this)">Yes</button>
-      <button onclick="setAnswer(${i},'dk',this)">Don't Know</button>
-      <button onclick="setAnswer(${i},'no',this)">No</button>
-    </div></div>`;
-  });
-}
-function setAnswer(i,v,btn){
-  vendorAnswers[i]=v;
-  btn.parentElement.querySelectorAll('button').forEach(b=>b.className='');
-  btn.className=v==='yes'?'selected-yes':v==='no'?'selected-no':'selected-dk';
-}
+  function toast(msg) {
+    const el = document.getElementById("toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    setTimeout(() => el.classList.remove("show"), 2200);
+  }
 
-function collectVendorFlags(){
-  // NO on any Q, or DK on critical keys — same rule as CLI red_flags
-  return VENDOR_Q.filter((_,i)=>
-    vendorAnswers[i]==='no' ||
-    (vendorAnswers[i]==='dk' && VENDOR_CRITICAL.includes(i))
-  ).map(q=>q.replace(/\?$/,''));
-}
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
 
-function escapeHtml(s){
-  return String(s)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;')
-    .replace(/'/g,'&#39;');
-}
-function bar(score){
-  const pct=Math.max(0,Math.min(100,score));
-  const color=pct>=70?'#10b981':pct>=50?'#eab308':pct>=30?'#f59e0b':'#ef4444';
-  return `<div class="dim-bar"><div class="dim-fill" style="width:${pct}%;background:${color}"></div></div>`;
-}
-function tierFor(s){
-  if(s>=90)return{n:'PRODUCTION READY',c:'score-green'};
-  if(s>=70)return{n:'SHIP WITH MONITORING',c:'score-yellow'};
-  if(s>=50)return{n:'NEEDS WORK',c:'score-orange'};
-  return{n:'NOT PRODUCTION READY',c:'score-red'};
-}
-// Vendor tiers align with CLI vendor_scorecard.get_tier (80/50/30/0)
-function vendorTierFor(s){
-  if(s>=80)return{n:'TRUSTED',c:'score-green'};
-  if(s>=50)return{n:'CAUTION',c:'score-yellow'};
-  if(s>=30)return{n:'HIGH RISK',c:'score-orange'};
-  return{n:'RED FLAG',c:'score-red'};
-}
-function renderScorecard(el,scores,labels,title,opts){
-  opts=opts||{};
-  const overall=Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
-  const tierFn=opts.tierFor||tierFor;
-  const tier=tierFn(overall);
-  let html=`<h3>${escapeHtml(title)}</h3><div class="score-big ${tier.c}">${overall}/100</div><div class="tier ${tier.c}">${escapeHtml(tier.n)}</div>`;
-  scores.forEach((s,i)=>{html+=`<div class="dim-row"><span class="dim-label">${escapeHtml(labels[i])}</span>${bar(s)}<span class="dim-score">${s}</span></div>`;});
-  // Prefer opts.flags (shared with share) when provided; else score===0 labels
-  const flags = opts.flags !== undefined
-    ? opts.flags
-    : labels.filter((_,i)=>scores[i]===0);
-  if(flags.length)html+=`<div class="flags">${flags.length} RED FLAG(S): ${flags.map(escapeHtml).join(', ')}</div>`;
-  html+=`<div class="share-row">
-    <button type="button" class="share-btn linkedin" data-share="linkedin">Share on LinkedIn</button>
-    <button type="button" class="share-btn x" data-share="x">Share on X</button>
-    <button type="button" class="share-btn" data-share="copy">Copy Score</button>
-  </div>`;
-  el.innerHTML=html;
-  el.classList.add('show');
-  // Bind handlers via addEventListener — no JSON inside onclick attributes
-  const ctx={
-    overall,
-    tier:tier.n,
-    title,
-    copyFn:opts.copyFn||'copyScore',
-    extra:opts.shareExtra||null
-  };
-  el.querySelectorAll('[data-share]').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      const kind=btn.getAttribute('data-share');
-      if(kind==='linkedin') shareLinkedIn(ctx.overall,ctx.tier,ctx.title,ctx.extra);
-      else if(kind==='x') shareX(ctx.overall,ctx.tier,ctx.title,ctx.extra);
-      else if(kind==='copy'){
-        if(ctx.copyFn==='copyVendorScore') copyVendorScore(ctx.overall,ctx.tier,ctx.title,ctx.extra);
-        else copyScore(ctx.overall,ctx.tier,ctx.title);
+  function bar(score) {
+    const pct = Math.max(0, Math.min(100, score));
+    const color = pct >= 70 ? "#10b981" : pct >= 50 ? "#eab308" : pct >= 30 ? "#f59e0b" : "#ef4444";
+    return `<div class="dim-bar"><div class="dim-fill" style="width:${pct}%;background:${color}"></div></div>`;
+  }
+
+  function switchTab(t) {
+    document.querySelectorAll(".tab").forEach((el) => {
+      const on = el.getAttribute("data-tab") === t;
+      el.classList.toggle("active", on);
+      el.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    document.getElementById("panel-agent").classList.toggle("active", t === "agent");
+    document.getElementById("panel-vendor").classList.toggle("active", t === "vendor");
+  }
+
+  document.querySelectorAll(".tab").forEach((el) => {
+    el.addEventListener("click", () => switchTab(el.getAttribute("data-tab")));
+    el.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter" || ev.key === " ") {
+        ev.preventDefault();
+        switchTab(el.getAttribute("data-tab"));
       }
     });
   });
-}
 
-function scoreAgent(){
-  const p=(document.getElementById('agent-prompt').value||'').toLowerCase();
-  const patterns=[
-    [/ignore.*(previous|above)|never\s+follow|reject.*instruct|injection|do\s+not\s+reveal.*system|cannot\s+be\s+(told|asked)\s+to/],
-    [/do\s+not\s+(fabricat|invent|make\s+up)|if\s+you\s+(do\s+not\s+know|are\s+unsure)|only\s+(cite|use|reference)\s+provided|hallucin|say.*don.t\s+know/i],
-    [/cit(e|ation|ing)|source|reference|attribut|every\s+claim/],
-    [/token|cost|budget|limit|max.*(length|token|response)|truncat/],
-    [/(human|user|supervisor).*(must|shall|should|approve|review|confirm)|human.in.the.loop|manual\s+approv|before.*(execut|send|publish|submit)/],
-    [/(stop|halt|pause|refuse|decline).*(if|when)|insufficient|missing.*(data|evidence|information)|cannot\s+proceed|escalat/],
-    [/log|record|track|audit|trace|every\s+(action|decision|step)|append.only|immutable/],
-    [/hipaa|phi|gdpr|soc.?2|compliance|regulat|encrypt|redact|data\s+protection|tenant|isolation/]
-  ];
-  const scores=patterns.map(pat=>{
-    let m=0;pat[0].forEach(re=>{if(re.test(p))m++;});
-    return m===0?0:Math.min(100,15+m*28);
-  });
-  renderScorecard(document.getElementById('agent-scorecard'),scores,DIMS,'AI Agent Safety Score');
-}
-
-function scoreVendor(){
-  const name=document.getElementById('vendor-name').value||'AI Vendor';
-  const scores=vendorAnswers.map(a=>a==='yes'?100:a==='dk'?30:0);
-  const labels=VENDOR_Q.map(q=>q.split('?')[0].substring(0,40));
-  const flags=collectVendorFlags();
-  renderScorecard(
-    document.getElementById('vendor-scorecard'),
-    scores,
-    labels,
-    `${name} — Vendor Score`,
-    {copyFn:'copyVendorScore',shareExtra:{name,flags},flags,tierFor:vendorTierFor}
-  );
-}
-
-function vendorShareText(score,tier,title,extra){
-  extra=extra||{};
-  const name=extra.name||title;
-  const flags=extra.flags||[];
-  let text=`We evaluated ${name} for AI production use.\n\nScore: ${score}/100 — ${tier}\n`;
-  if(flags.length){
-    text+=`\nRed flags:\n${flags.map(f=>'- '+f).join('\n')}\n`;
+  function buildVendorQ() {
+    const c = document.getElementById("vendor-questions");
+    c.innerHTML = "";
+    E.vendorQuestions.forEach((q, i) => {
+      const div = document.createElement("div");
+      div.className = "question";
+      div.innerHTML = `<p>${i + 1}. ${escapeHtml(q)}</p><div class="answers" data-i="${i}">
+        <button type="button" data-v="yes">Yes</button>
+        <button type="button" data-v="dk">Don't Know</button>
+        <button type="button" data-v="no">No</button>
+      </div>`;
+      c.appendChild(div);
+    });
+    c.querySelectorAll(".answers button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const wrap = btn.parentElement;
+        const i = Number(wrap.getAttribute("data-i"));
+        const v = btn.getAttribute("data-v");
+        vendorAnswers[i] = v;
+        wrap.querySelectorAll("button").forEach((b) => (b.className = ""));
+        btn.className =
+          v === "yes" ? "selected-yes" : v === "no" ? "selected-no" : "selected-dk";
+      });
+    });
   }
-  text+=`\nSelf-attested checklist — not an independent audit.\nScored with CrewScore | ${location.href}`;
-  return text;
-}
 
-function shareLinkedIn(score,tier,title,extra){
-  const body=extra&&extra.flags!==undefined?vendorShareText(score,tier,title,extra):
-    `${title}: ${score}/100 — ${tier}\n\nScored with CrewScore. Lint your agent prompts offline.\n\nTry it free: ${location.href}\n\n#AI #AISafety #EnterpriseAI #DueDiligence`;
-  window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(location.href)}`);
-  navigator.clipboard.writeText(body);
-  alert('Score copied to clipboard! Paste it in your LinkedIn post.');
-}
-function shareX(score,tier,title,extra){
-  const body=extra&&extra.flags!==undefined?
-    `${title}: ${score}/100 — ${tier}. Vendor diligence with CrewScore: ${location.href} #AI #DueDiligence`:
-    `${title}: ${score}/100 — ${tier}. Score your agent prompts free: ${location.href} #AI #AISafety`;
-  window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(body)}`);
-}
-function copyScore(score,tier,title){
-  navigator.clipboard.writeText(`${title}: ${score}/100 — ${tier}\nScored with CrewScore | ${location.href}`);
-  alert('Copied!');
-}
-function copyVendorScore(score,tier,title,extra){
-  navigator.clipboard.writeText(vendorShareText(score,tier,title,extra));
-  alert('Vendor score + red flags copied!');
-}
+  function explainHtml(findings, dimKey) {
+    const matched = findings.filter((f) => f.dimension === dimKey && f.status === "matched");
+    const missing = findings.filter((f) => f.dimension === dimKey && f.status === "missing");
+    if (!matched.length && !missing.length) return "";
+    let h = "";
+    if (matched.length) {
+      h += `<div class="matched">Matched: ${matched
+        .map((f) => escapeHtml(f.snippet || f.pattern_or_reason))
+        .join(" · ")}</div>`;
+    }
+    if (missing.length) {
+      h += `<div class="missing">Missing: ${missing
+        .map((f) => escapeHtml(f.pattern_or_reason))
+        .join(" · ")}</div>`;
+    }
+    return h;
+  }
 
-buildVendorQ();
+  function renderAgentScorecard(prompt) {
+    const { scores, findings, overall } = E.analyzeWithFindings(prompt);
+    const tier = E.scoreTier(overall);
+    const dims = E.dimensions;
+    const weak = dims.filter((d) => (scores[d.key] || 0) < 50);
+
+    let html = `<h3>Agent structural score</h3>
+      <div class="score-big ${tier.c}">${overall}/100</div>
+      <div class="tier ${tier.c}">${escapeHtml(tier.n)}</div>
+      <p class="disclaimer">Structural scan only — not runtime proof, not a security certification.</p>`;
+
+    dims.forEach((d) => {
+      const s = scores[d.key] || 0;
+      html += `<div class="dim-row"><span class="dim-label" title="${escapeHtml(d.label)}">${escapeHtml(
+        d.label
+      )}</span>${bar(s)}<span class="dim-score">${s}</span></div>`;
+    });
+
+    if (weak.length) {
+      html += `<div class="flags">${weak.length} weak dimension(s): ${weak
+        .map((d) => escapeHtml(d.label))
+        .join(", ")}</div>`;
+    }
+
+    html += `<div class="explain"><h4>Why (matched / missing signals)</h4>`;
+    dims.forEach((d) => {
+      const body = explainHtml(findings, d.key);
+      if (body) html += `<h4>${escapeHtml(d.label)}</h4>${body}`;
+    });
+    html += `</div>`;
+
+    const share = `My agent scored ${overall}/100 on CrewScore (${tier.n}). Structural hygiene only — not a red-team. Score yours: ${location.origin}/ · pip install crewscore`;
+    html += `<div class="share-row">
+      <button type="button" class="share-btn linkedin" data-share="li">Share LinkedIn</button>
+      <button type="button" class="share-btn x" data-share="x">Share on X</button>
+      <button type="button" class="share-btn" data-share="copy">Copy score</button>
+    </div>`;
+
+    const el = document.getElementById("agent-scorecard");
+    el.innerHTML = html;
+    el.classList.add("show");
+    el.querySelectorAll("[data-share]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const kind = btn.getAttribute("data-share");
+        if (kind === "li") {
+          navigator.clipboard.writeText(share).then(() => {
+            window.open(
+              `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(location.href)}`
+            );
+            toast("Score copied — paste into LinkedIn");
+          });
+        } else if (kind === "x") {
+          window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(share)}`);
+        } else {
+          navigator.clipboard.writeText(share).then(() => toast("Copied!"));
+        }
+      });
+    });
+  }
+
+  function renderVendorScorecard(name) {
+    const { score, tier, redFlags } = E.scoreVendor(vendorAnswers);
+    let html = `<h3>${escapeHtml(name)} — Vendor score</h3>
+      <div class="score-big ${tier.c}">${score}/100</div>
+      <div class="tier ${tier.c}">${escapeHtml(tier.n)}</div>
+      <p class="disclaimer">Self-attested checklist — not an independent audit or certification.</p>`;
+
+    E.vendorQuestions.forEach((q, i) => {
+      const a = vendorAnswers[i];
+      const pts = a === "yes" ? 10 : a === "dk" ? 3 : 0;
+      const label = a === "yes" ? "YES" : a === "dk" ? "DK" : "NO";
+      html += `<div class="dim-row"><span class="dim-label" title="${escapeHtml(q)}">${escapeHtml(
+        q.slice(0, 42)
+      )}</span>${bar(pts * 10)}<span class="dim-score">${label}</span></div>`;
+    });
+
+    if (redFlags.length) {
+      html += `<div class="flags">${redFlags.length} RED FLAG(S): ${redFlags
+        .map(escapeHtml)
+        .join("; ")}</div>`;
+    }
+
+    const share = `We evaluated ${name} for AI production use.\n\nScore: ${score}/100 — ${tier.n}\n${
+      redFlags.length ? "\nRed flags:\n" + redFlags.map((f) => "- " + f).join("\n") + "\n" : ""
+    }\nSelf-attested checklist — not an independent audit.\nScored with CrewScore | ${location.href}`;
+
+    html += `<div class="share-row">
+      <button type="button" class="share-btn linkedin" data-share="li">Share LinkedIn</button>
+      <button type="button" class="share-btn x" data-share="x">Share on X</button>
+      <button type="button" class="share-btn" data-share="copy">Copy score</button>
+    </div>`;
+
+    const el = document.getElementById("vendor-scorecard");
+    el.innerHTML = html;
+    el.classList.add("show");
+    el.querySelectorAll("[data-share]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const kind = btn.getAttribute("data-share");
+        if (kind === "li") {
+          navigator.clipboard.writeText(share).then(() => {
+            window.open(
+              `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(location.href)}`
+            );
+            toast("Score copied — paste into LinkedIn");
+          });
+        } else if (kind === "x") {
+          const short = `${name}: ${score}/100 — ${tier.n}. Vendor diligence with CrewScore: ${location.href}`;
+          window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(short)}`);
+        } else {
+          navigator.clipboard.writeText(share).then(() => toast("Copied!"));
+        }
+      });
+    });
+  }
+
+  document.getElementById("btn-score-agent").addEventListener("click", () => {
+    const err = document.getElementById("agent-error");
+    const prompt = document.getElementById("agent-prompt").value || "";
+    if (!prompt.trim()) {
+      err.textContent = "Paste a system prompt first (or click Try sample).";
+      err.classList.add("show");
+      return;
+    }
+    err.classList.remove("show");
+    renderAgentScorecard(prompt);
+  });
+
+  document.getElementById("btn-sample").addEventListener("click", () => {
+    document.getElementById("agent-prompt").value =
+      "You are a helpful assistant that answers customer questions.";
+    document.getElementById("agent-error").classList.remove("show");
+    renderAgentScorecard(document.getElementById("agent-prompt").value);
+  });
+
+  document.getElementById("btn-score-vendor").addEventListener("click", () => {
+    const err = document.getElementById("vendor-error");
+    if (vendorAnswers.some((a) => a == null)) {
+      err.textContent = "Answer all 10 questions (Yes / Don't know / No).";
+      err.classList.add("show");
+      return;
+    }
+    err.classList.remove("show");
+    const name = (document.getElementById("vendor-name").value || "AI Vendor").trim();
+    renderVendorScorecard(name);
+  });
+
+  buildVendorQ();
+})();
 </script>
 </body>
 </html>

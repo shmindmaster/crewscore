@@ -80,42 +80,35 @@ def test_index_html_share_uses_data_attrs_not_json_onclick():
     assert "addEventListener" in text
 
 
-def test_index_html_onpage_flags_use_shared_vendor_logic():
-    """On-page RED FLAG list must use same NO + critical-DK logic as share."""
+def test_index_html_uses_shared_engine_for_vendor_and_agent():
+    """Web must load generated score-engine.js (Python parity), not a private dual scorer."""
     text = Path("index.html").read_text(encoding="utf-8")
-    # Display path must prefer opts.flags (shared with shareExtra) over score===0 only
-    assert "opts.flags" in text
-    # Critical indices for certification, audit, human_override, security_audit, incident
-    assert "VENDOR_CRITICAL" in text
+    assert 'src="score-engine.js"' in text
+    assert "CrewScoreEngine" in text
+    assert "scoreVendor" in text
+    assert "analyzeWithFindings" in text
+    assert "redFlags" in text
 
 
 def test_index_html_escapes_user_titles_before_innerhtml():
     """Vendor/agent titles and flags must be HTML-escaped before innerHTML."""
     text = Path("index.html").read_text(encoding="utf-8")
     assert "function escapeHtml" in text
-    assert "escapeHtml(title)" in text
-    # Flags and dim labels also go into innerHTML
+    assert "escapeHtml(name)" in text
     assert "escapeHtml" in text
-    # Must not interpolate raw title into template without escape
-    assert "${title}" not in text or "escapeHtml(title)" in text
 
 
 def test_index_html_vendor_uses_cli_vendor_tiers_not_agent_tiers():
-    """Web vendor results must use TRUSTED/CAUTION/HIGH RISK/RED FLAG (80/50/30)."""
+    """Web vendor results must use engine vendor tiers (TRUSTED/CAUTION/…)."""
     text = Path("index.html").read_text(encoding="utf-8")
-    assert "function vendorTierFor" in text
-    assert "TRUSTED" in text
-    assert "CAUTION" in text
-    assert "HIGH RISK" in text
-    assert "RED FLAG" in text
-    # Thresholds aligned with vendor_scorecard.get_tier
-    assert "s>=80" in text.replace(" ", "") or "s >= 80" in text
-    assert "s>=50" in text.replace(" ", "") or "s >= 50" in text
-    assert "s>=30" in text.replace(" ", "") or "s >= 30" in text
-    # Vendor path must use vendorTierFor, not agent PRODUCTION READY tiers
-    assert "vendorTierFor" in text
-    # scoreVendor must pass vendor tier function into renderScorecard
-    assert "tierFor:vendorTierFor" in text.replace(" ", "") or "tierFor: vendorTierFor" in text
+    assert "E.scoreVendor" in text or "scoreVendor(vendorAnswers)" in text
+    assert "tier.n" in text
+    # Agent path must not claim vendor uses PRODUCTION READY labels for checklist
+    engine = Path("score-engine.js").read_text(encoding="utf-8")
+    assert "TRUSTED" in engine
+    assert "CAUTION" in engine
+    assert "HIGH RISK" in engine
+    assert "vendorTier" in engine
 
 
 def test_vendor_get_tier_thresholds():

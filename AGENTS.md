@@ -23,9 +23,10 @@ pip install -e ".[dev]"
 
 # score a prompt
 crewscore test --prompt "You are a helpful assistant..."
-crewscore test --prompt-file ./system-prompt.md
-crewscore test --prompt-file ./system-prompt.md --json
+crewscore test --prompt-file ./system-prompt.md --explain
+crewscore test --prompt-file ./system-prompt.md --json --explain
 crewscore test --prompt-file ./system-prompt.md --json --threshold 50
+crewscore test --prompt-file ./system-prompt.md --report out.html --badge badge.svg
 
 # apply guardrail patterns
 crewscore fix --prompt-file ./system-prompt.md
@@ -34,6 +35,9 @@ crewscore fix --prompt-file ./system-prompt.md --output ./guarded.md --json
 
 # vendor checklist
 crewscore assess-vendor --name "Acme AI" --answers "y,y,n,dk,y,y,n,y,n,y" --json
+
+# after pattern changes: keep web in lockstep
+python scripts/export_web_engine.py
 
 # tests
 pytest
@@ -48,11 +52,17 @@ crewscore/
   cli.py                 # click entry (test, fix)
   scoring.py             # shared result model / tiers
   vendor_scorecard.py    # assess-vendor command
+  web_export.py          # builds score-engine.js payload
+  report.py              # HTML report + SVG badge
   scorers/
     structural_analysis.py
     fix_patterns.py
+scripts/export_web_engine.py
+score-engine.js          # generated — commit after pattern changes
+index.html               # dual-tab site (uses score-engine.js)
+action.yml               # composite GH Action
+docs/launch/             # launch copy kit
 tests/
-index.html               # static browser demo (client-side structural scan)
 ```
 
 ## Product constraints
