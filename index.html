@@ -400,6 +400,48 @@ details.how summary::-webkit-details-marker{display:none}
 @media(min-width:641px){
   #mobile-score-bar{display:none !important}
 }
+/* —— wizard-lite sheets (plan / export over mounted score) —— */
+.sheet-backdrop{
+  position:fixed;inset:0;z-index:50;
+  background:rgba(0,0,0,.55);
+  opacity:0;pointer-events:none;
+  transition:opacity .18s ease;
+}
+.sheet-backdrop.open{opacity:1;pointer-events:auto}
+.sheet{
+  position:fixed;left:50%;bottom:0;z-index:51;
+  width:min(540px,100%);max-height:min(85vh,720px);
+  transform:translateX(-50%) translateY(110%);
+  transition:transform .2s ease;
+  background:var(--panel);border:1px solid var(--line2);border-bottom:none;
+  border-radius:10px 10px 0 0;box-shadow:var(--shadow);
+  padding:1rem 1rem max(1rem, env(safe-area-inset-bottom));
+  overflow:auto;
+}
+.sheet.open{transform:translateX(-50%) translateY(0)}
+.sheet-head{
+  display:flex;align-items:center;justify-content:space-between;gap:.5rem;
+  margin-bottom:.55rem;padding-bottom:.45rem;border-bottom:1px solid var(--line);
+}
+.sheet-head h3{
+  font-family:var(--sans);font-size:var(--fs-sm);font-weight:700;
+  letter-spacing:.02em;color:var(--ink);margin:0;
+}
+.sheet .help{margin-bottom:.65rem}
+/* After score: prompt collapses so score is the product */
+#deck-prompt.is-scored{
+  padding:.75rem 1rem;
+}
+#deck-prompt.is-scored .empty-invite,
+#deck-prompt.is-scored .help,
+#deck-prompt.is-scored label[for="agent-prompt"] + .help{display:none}
+#deck-prompt.is-scored textarea{min-height:72px}
+#deck-prompt.is-scored .deck-head h3::after{content:" · re-score anytime";font-weight:500;color:var(--faint)}
+.stages{grid-template-columns:repeat(3,1fr)}
+@media(max-width:640px){
+  .stages{grid-template-columns:repeat(3,1fr)}
+}
+body.sheet-open{overflow:hidden}
 </style>
 </head>
 <body>
@@ -425,9 +467,8 @@ details.how summary::-webkit-details-marker{display:none}
 
   <nav class="stages" aria-label="Preflight stages">
     <button type="button" class="stage-pill on" data-stage="prompt" id="stg-prompt" aria-current="step">1 Prompt</button>
-    <button type="button" class="stage-pill" data-stage="inspect" id="stg-inspect" disabled>2 Inspect</button>
-    <button type="button" class="stage-pill" data-stage="act" id="stg-act" disabled>3 Act</button>
-    <button type="button" class="stage-pill" data-stage="export" id="stg-export" disabled>4 Export</button>
+    <button type="button" class="stage-pill" data-stage="inspect" id="stg-inspect" disabled>2 Score</button>
+    <button type="button" class="stage-pill" data-stage="export" id="stg-export" disabled>3 Export</button>
   </nav>
 
   <!-- STAGE 1: PROMPT -->
@@ -452,31 +493,13 @@ details.how summary::-webkit-details-marker{display:none}
     <p class="error" id="agent-error" role="alert"></p>
   </section>
 
-  <!-- STAGE 2: INSPECT -->
+  <!-- STAGE 2: SCORE (stays mounted — primary product surface) -->
   <section class="deck deck-instrument hidden" id="deck-inspect" aria-labelledby="inspect-head">
     <div class="deck-head">
-      <h3 id="inspect-head">02 · Inspect</h3>
+      <h3 id="inspect-head">02 · Score</h3>
       <span class="hint" id="inspect-meta"></span>
     </div>
     <div id="agent-scorecard" aria-live="polite"></div>
-  </section>
-
-  <!-- STAGE 3: ACT -->
-  <section class="deck deck-instrument hidden" id="deck-act" aria-labelledby="act-head">
-    <div class="deck-head">
-      <h3 id="act-head">03 · Act (plan before mutate)</h3>
-      <span class="hint">Text templates only — not runtime proof</span>
-    </div>
-    <div id="act-body"></div>
-  </section>
-
-  <!-- STAGE 4: EXPORT -->
-  <section class="deck deck-instrument hidden" id="deck-export" aria-labelledby="export-head">
-    <div class="deck-head">
-      <h3 id="export-head">04 · Export</h3>
-      <span class="hint">Leave with something useful</span>
-    </div>
-    <div id="export-body"></div>
   </section>
 
   <p class="vendor-link">
@@ -508,6 +531,23 @@ details.how summary::-webkit-details-marker{display:none}
 <div id="mobile-score-bar" aria-hidden="true">
   <button class="btn" type="button" id="btn-score-agent-mobile">Run structural score</button>
 </div>
+<!-- Plan + export sheets (score stays on page underneath) -->
+<div id="sheet-backdrop" class="sheet-backdrop" aria-hidden="true"></div>
+<aside id="sheet-plan" class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-plan-title" aria-hidden="true">
+  <div class="sheet-head">
+    <h3 id="sheet-plan-title">Plan fix (preview first)</h3>
+    <button type="button" class="btn-ghost" id="btn-close-plan">Close</button>
+  </div>
+  <p class="help">Text templates only — not runtime proof. Nothing is written until you approve.</p>
+  <div id="act-body"></div>
+</aside>
+<aside id="sheet-export" class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-export-title" aria-hidden="true">
+  <div class="sheet-head">
+    <h3 id="sheet-export-title">Export · take it with you</h3>
+    <button type="button" class="btn-ghost" id="btn-close-export">Close</button>
+  </div>
+  <div id="export-body"></div>
+</aside>
 <div class="toast" id="toast" role="status"></div>
 <canvas id="share-canvas" width="900" height="500" style="display:none"></canvas>
 
@@ -582,10 +622,10 @@ details.how summary::-webkit-details-marker{display:none}
     if (overall > 0) return "Critical gaps — start here";
     return "No hygiene signals found";
   }
-  let reached = { prompt: true, inspect: false, act: false, export: false };
+  let reached = { prompt: true, inspect: false, export: false };
 
   function setStage(active) {
-    const order = ["prompt", "inspect", "act", "export"];
+    const order = ["prompt", "inspect", "export"];
     const idx = order.indexOf(active);
     if (idx >= 0) {
       for (let i = 0; i <= idx; i++) reached[order[i]] = true;
@@ -607,34 +647,77 @@ details.how summary::-webkit-details-marker{display:none}
     if (!el) return;
     el.classList.toggle("hidden", !on);
   }
+  function openSheet(which) {
+    closeSheets();
+    const sheet = document.getElementById(which === "export" ? "sheet-export" : "sheet-plan");
+    const back = document.getElementById("sheet-backdrop");
+    if (!sheet || !back) return;
+    back.classList.add("open");
+    back.setAttribute("aria-hidden", "false");
+    sheet.classList.add("open");
+    sheet.setAttribute("aria-hidden", "false");
+    document.body.classList.add("sheet-open");
+  }
+  function closeSheets() {
+    ["sheet-plan", "sheet-export"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove("open");
+      el.setAttribute("aria-hidden", "true");
+    });
+    const back = document.getElementById("sheet-backdrop");
+    if (back) {
+      back.classList.remove("open");
+      back.setAttribute("aria-hidden", "true");
+    }
+    document.body.classList.remove("sheet-open");
+  }
   function updateMobileScoreBar(active) {
     const bar = document.getElementById("mobile-score-bar");
     if (!bar) return;
-    const onPrompt = !active || active === "prompt";
+    // Sticky score CTA only before first score (prompt-only)
+    const onPrompt = !lastAgent && (!active || active === "prompt");
     bar.classList.toggle("show-mobile", onPrompt);
     bar.setAttribute("aria-hidden", onPrompt ? "false" : "true");
   }
   function jumpToStage(stage) {
     if (!reached[stage]) return;
-    const map = {
-      prompt: "deck-prompt",
-      inspect: "deck-inspect",
-      act: "deck-act",
-      export: "deck-export",
-    };
-    const deckId = map[stage];
-    if (!deckId) return;
-    if (stage !== "prompt" && document.getElementById(deckId).classList.contains("hidden")) {
-      showDeck(deckId, true);
+    if (stage === "export") {
+      if (!lastAgent) return;
+      renderExport();
+      openSheet("export");
+      setStage("export");
+      return;
     }
-    setStage(stage);
-    document.getElementById(deckId).scrollIntoView({ behavior: "smooth", block: "start" });
+    closeSheets();
+    if (stage === "inspect") {
+      if (!lastAgent) return;
+      showDeck("deck-inspect", true);
+      setStage("inspect");
+      document.getElementById("deck-inspect").scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    // prompt
+    setStage("prompt");
+    document.getElementById("deck-prompt").scrollIntoView({ behavior: "smooth", block: "start" });
   }
   document.querySelectorAll(".stage-pill").forEach((btn) => {
     btn.addEventListener("click", () => {
       const stage = btn.getAttribute("data-stage");
       if (stage) jumpToStage(stage);
     });
+  });
+  const closePlan = document.getElementById("btn-close-plan");
+  const closeExport = document.getElementById("btn-close-export");
+  const backdrop = document.getElementById("sheet-backdrop");
+  if (closePlan) closePlan.addEventListener("click", () => { closeSheets(); setStage(lastAgent ? "inspect" : "prompt"); });
+  if (closeExport) closeExport.addEventListener("click", () => { closeSheets(); setStage(lastAgent ? "inspect" : "prompt"); });
+  if (backdrop) backdrop.addEventListener("click", () => { closeSheets(); setStage(lastAgent ? "inspect" : "prompt"); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeSheets();
+      if (lastAgent) setStage("inspect");
+    }
   });
   updateMobileScoreBar("prompt");
 
@@ -782,8 +865,7 @@ details.how summary::-webkit-details-marker{display:none}
     const goExport = () => {
       renderExport();
       setStage("export");
-      showDeck("deck-export", true);
-      document.getElementById("deck-export").scrollIntoView({ behavior: "smooth", block: "start" });
+      openSheet("export");
     };
     if (skip) skip.addEventListener("click", goExport);
     if (cont) cont.addEventListener("click", goExport);
@@ -805,7 +887,7 @@ details.how summary::-webkit-details-marker{display:none}
       document.getElementById("btn-act-export").addEventListener("click", () => {
         renderExport();
         setStage("export");
-        showDeck("deck-export", true);
+        openSheet("export");
       });
     } else {
       let html = `<p class="help">CrewScore will <strong>append</strong> the following guardrail sections to your prompt text. Nothing is written until you approve. Templates must be paired with runtime gates.</p><ul class="plan-list">`;
@@ -824,15 +906,15 @@ details.how summary::-webkit-details-marker{display:none}
       document.getElementById("btn-cancel-fix").addEventListener("click", () => {
         track("cs_fix_cancel");
         pendingPlan = null;
-        body.innerHTML = `<p class="help">Plan cancelled. Prompt text unchanged.</p>
-          <button type="button" class="btn-sec" id="btn-replan">Plan again</button>`;
-        document.getElementById("btn-replan").addEventListener("click", buildFixPlan);
+        closeSheets();
+        setStage("inspect");
         toast("Cancelled — original prompt kept");
       });
     }
-    showDeck("deck-act", true);
-    setStage("act");
-    document.getElementById("deck-act").scrollIntoView({ behavior: "smooth", block: "start" });
+    // Score stays mounted; plan is a sheet over it
+    showDeck("deck-inspect", true);
+    setStage("inspect");
+    openSheet("plan");
   }
 
   function applyFixPlan() {
@@ -852,15 +934,14 @@ details.how summary::-webkit-details-marker{display:none}
     };
     pendingPlan = null;
     track("cs_fix_apply", { delta_bucket: bucket(Math.abs(delta)) });
-    // Hero moment: hold Inspect with before→after delta (do not skip to Export)
+    closeSheets();
+    // Hero moment: score surface updates in place under the closed sheet
     renderInspect(after, {
       title: "After approved fix",
       delta,
       beforeOverall,
     });
     showDeck("deck-inspect", true);
-    showDeck("deck-act", false);
-    showDeck("deck-export", false);
     setStage("inspect");
     toast(delta > 0 ? `Applied — score +${delta}` : "Applied — little score change");
     document.getElementById("deck-inspect").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -972,10 +1053,10 @@ details.how summary::-webkit-details-marker{display:none}
       overall_bucket: bucket(result.overall),
       ruleset: String(E.ruleset || ""),
     });
+    closeSheets();
+    document.getElementById("deck-prompt").classList.add("is-scored");
     renderInspect(result, { title: "Structural score", openHow: openHowNext });
     showDeck("deck-inspect", true);
-    showDeck("deck-act", false);
-    showDeck("deck-export", false);
     document.getElementById("act-body").innerHTML = "";
     document.getElementById("export-body").innerHTML = "";
     setStage("inspect");
@@ -1152,6 +1233,7 @@ details.how summary::-webkit-details-marker{display:none}
   document.getElementById("link-how-score").addEventListener("click", () => {
     if (lastAgent) {
       openHowNext = true;
+      closeSheets();
       renderInspect(lastAgent.result, {
         title: lastAgent.fixed ? "After approved fix" : "Structural score",
         delta: lastAgent.delta,
@@ -1163,7 +1245,7 @@ details.how summary::-webkit-details-marker{display:none}
       return;
     }
     document.getElementById("agent-prompt").focus();
-    toast("Score a prompt first — formula appears under Inspect");
+    toast("Score a prompt first — formula appears under Score");
   });
   document.getElementById("link-vendor").addEventListener("click", (e) => {
     e.preventDefault();

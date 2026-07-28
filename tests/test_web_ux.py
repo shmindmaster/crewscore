@@ -11,12 +11,13 @@ def _html() -> str:
 
 
 def test_preflight_stages_present():
-    """Four preflight stage ids: Prompt, Inspect, Act, Export."""
+    """Wizard-lite: three stages — Prompt, Score, Export (plan is a sheet)."""
     html = _html()
     assert 'id="stg-prompt"' in html
     assert 'id="stg-inspect"' in html
-    assert 'id="stg-act"' in html
     assert 'id="stg-export"' in html
+    assert 'id="stg-act"' not in html
+    assert "2 Score" in html or ">2 Score<" in html
 
 
 def test_plan_before_mutate_controls():
@@ -25,6 +26,24 @@ def test_plan_before_mutate_controls():
     assert "Plan fix" in html
     assert "Apply plan" in html
     assert "cancel" in html.lower()
+
+
+def test_wizard_lite_sheets_over_score():
+    """Plan and export are sheets; score deck stays the mounted product surface."""
+    html = _html()
+    assert 'id="sheet-plan"' in html
+    assert 'id="sheet-export"' in html
+    assert 'id="sheet-backdrop"' in html
+    assert 'id="deck-inspect"' in html
+    assert 'id="deck-act"' not in html
+    assert 'id="deck-export"' not in html
+    assert "openSheet" in html
+    assert "closeSheets" in html
+    # Apply closes sheet and re-renders score in place
+    apply_idx = html.find("function applyFixPlan")
+    chunk = html[apply_idx : apply_idx + 1400]
+    assert "closeSheets()" in chunk
+    assert 'setStage("inspect")' in chunk
 
 
 def test_capability_stamp_structural_pregate():
@@ -131,14 +150,10 @@ def test_stage_nav_are_buttons():
     html = _html()
     assert 'id="stg-prompt"' in html
     assert "<button" in html
-    # Each stage control is a button element.
-    for sid in ("stg-prompt", "stg-inspect", "stg-act", "stg-export"):
-        assert f'id="{sid}"' in html
-        # button ... id="stg-..."
+    for sid in ("stg-prompt", "stg-inspect", "stg-export"):
         assert f'id="{sid}"' in html
     assert 'type="button"' in html
     assert "stage-pill" in html
-    # Explicit marker that stages are navigable controls
     assert 'aria-label="Preflight stages"' in html
     assert "stg-prompt" in html and "button" in html[html.find("stg-prompt") - 80 : html.find("stg-prompt") + 20]
 
