@@ -1,5 +1,7 @@
 """Unit tests for structural scoring and fix application."""
 
+import re
+
 from crewscore.scoring import RULESET_ID, build_result, overall_score, score_tier
 from crewscore.scorers.fix_patterns import apply_fixes, generate_fixes
 from crewscore.scorers.structural_analysis import analyze, analyze_with_findings
@@ -118,6 +120,81 @@ def test_bare_safety_word_does_not_inflate_injection():
     scores = analyze(bare_safety)
     # Without specific injection signals, injection should stay low
     assert scores["injection"] < 40
+
+
+def test_fix_stays_well_under_the_bloat_threshold():
+    """A full fix must not eat the context budget it is meant to protect."""
+    from crewscore.smells import CONTEXT_BLOAT_MAX_LINES
+
+    enhanced = apply_fixes(BARE_PROMPT, generate_fixes(analyze(BARE_PROMPT)))
+    lines = len(enhanced.splitlines())
+    # All 8 templates at once must stay a small fraction of the 200-line budget.
+    assert lines < CONTEXT_BLOAT_MAX_LINES // 2, (
+        f"full fix produced {lines} lines; templates have regrown"
+    )
+
+
+def test_fix_cost_report_measures_added_lines():
+    from crewscore.scorers.fix_patterns import fix_cost_report
+
+    enhanced = apply_fixes(BARE_PROMPT, generate_fixes(analyze(BARE_PROMPT)))
+    cost = fix_cost_report(BARE_PROMPT, enhanced)
+    assert cost["lines_before"] == 1
+    assert cost["lines_after"] == len(enhanced.splitlines())
+    assert cost["lines_added"] == cost["lines_after"] - 1
+
+
+def test_fix_warns_when_result_crosses_bloat_threshold():
+    from crewscore.scorers.fix_patterns import fix_cost_report
+    from crewscore.smells import CONTEXT_BLOAT_MAX_LINES
+
+    big = "\n".join(f"- rule {i}" for i in range(CONTEXT_BLOAT_MAX_LINES + 50))
+    enhanced = apply_fixes(big, generate_fixes(analyze(big)))
+    cost = fix_cost_report(big, enhanced)
+    assert any(w.startswith("context_bloat:") for w in cost["warnings"])
+
+
+def test_fix_warns_when_generic_text_dominates():
+    """Appending more boilerplate than the file's own content is a smell."""
+    from crewscore.scorers.fix_patterns import fix_cost_report
+
+    enhanced = apply_fixes(BARE_PROMPT, generate_fixes(analyze(BARE_PROMPT)))
+    cost = fix_cost_report(BARE_PROMPT, enhanced)
+    assert any(w.startswith("generic_dominates:") for w in cost["warnings"])
+
+
+def test_fix_cost_quiet_when_proportionate():
+    from crewscore.scorers.fix_patterns import fix_cost_report
+
+    substantial = "\n".join(f"Project rule {i}." for i in range(120))
+    enhanced = substantial + "\n\n## Added\n- one line\n"
+    assert fix_cost_report(substantial, enhanced)["warnings"] == []
+
+
+def test_length_alone_earns_no_points():
+    """Padding must never raise a score.
+
+    Ruleset 0.3.0 removed the old length bonus: file length is a cost
+    (Context Bloat, arXiv:2606.15828), never evidence of hygiene.
+    """
+    padded = BARE_PROMPT + "\n" + ("lorem ipsum dolor sit amet " * 400)
+    assert len(padded.split()) > 500  # would have triggered the old bonus
+    assert analyze(padded) == analyze(BARE_PROMPT)
+
+
+def test_published_formula_matches_implementation():
+    """The documented formula is the whole formula — no hidden terms."""
+    from crewscore.rules_catalog import demo_formula
+    from crewscore.scorers.structural_analysis import SCORER_MAP
+
+    scores = analyze(GUARDED_PROMPT)
+    for dimension, patterns in SCORER_MAP.items():
+        matches = sum(
+            1
+            for _, pattern in patterns
+            if re.search(pattern, GUARDED_PROMPT.lower(), re.IGNORECASE)
+        )
+        assert scores[dimension] == demo_formula(matches, len(patterns))
 
 
 def test_matched_findings_include_rule_id():

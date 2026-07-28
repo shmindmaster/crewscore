@@ -7,6 +7,7 @@ from typing import Any
 
 from crewscore.scoring import build_result
 from crewscore.scorers import structural_analysis
+from crewscore.smells import detect_smells, find_repo_root
 
 # Exact basenames always treated as agent instruction files.
 KNOWN_NAMES = frozenset(
@@ -159,15 +160,27 @@ def score_paths(paths: list[Path]) -> list[dict[str, Any]]:
     when available on the ScoreResult / module.
     """
     results: list[dict[str, Any]] = []
+    repo_roots: dict[Path, Any] = {}
     for path in paths:
         text = Path(path).read_text(encoding="utf-8", errors="replace")
         dimensions = structural_analysis.analyze(text)
-        result = build_result(dimensions, mode="structural", source=str(path))
+        # Repo root is per-directory, and a scan usually walks one repo —
+        # cache it rather than climbing the tree once per file.
+        parent = Path(path).parent
+        if parent not in repo_roots:
+            repo_roots[parent] = find_repo_root(path)
+        result = build_result(
+            dimensions,
+            mode="structural",
+            source=str(path),
+            smells=detect_smells(text, path=path, repo_root=repo_roots[parent]),
+        )
         item: dict[str, Any] = {
             "path": str(path),
             "overall": result.overall,
             "tier": result.tier,
             "dimensions": result.dimensions,
+            "smells": result.smells,
         }
         # Include ruleset when workstream A has shipped it.
         ruleset = getattr(result, "ruleset", None)

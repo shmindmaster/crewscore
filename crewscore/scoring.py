@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
-RULESET_ID = "crewscore-hygiene@0.2.3"
+RULESET_ID = "crewscore-hygiene@0.3.0"
 
 DIMENSIONS: list[tuple[str, str]] = [
     ("Prompt Injection Resistance", "injection"),
@@ -32,6 +32,9 @@ class ScoreResult:
     source: str = "prompt"
     ruleset: str = RULESET_ID
     warnings: list[str] = field(default_factory=list)
+    # Advisory configuration smells (arXiv:2606.15828). Reported, never scored —
+    # see crewscore/smells.py for why they stay out of the number.
+    smells: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -100,6 +103,7 @@ def build_result(
     source: str = "prompt",
     prompt_text: str | None = None,
     warnings: list[str] | None = None,
+    smells: list[dict[str, Any]] | None = None,
 ) -> ScoreResult:
     overall = overall_score(dimensions)
     resolved_warnings = list(warnings) if warnings is not None else []
@@ -113,4 +117,5 @@ def build_result(
         source=source,
         ruleset=RULESET_ID,
         warnings=resolved_warnings,
+        smells=list(smells) if smells else [],
     )

@@ -73,16 +73,9 @@ JS_RUNTIME = r"""
     return [];
   }
 
-  function applyLengthBonus(scores, promptLower) {
-    const words = promptLower.trim() ? promptLower.trim().split(/\s+/).length : 0;
-    if (words > 500) {
-      const bonus = Math.min(10, Math.floor((words - 500) / 200));
-      for (const k of Object.keys(scores)) {
-        scores[k] = Math.min(100, scores[k] + bonus);
-      }
-    }
-    return scores;
-  }
+  // The length bonus was removed in ruleset 0.3.0 — length is a cost, not a
+  // virtue, and it was never part of the published formula. See
+  // crewscore/scorers/structural_analysis.py for the full rationale.
 
   function analyzeWithFindings(systemPrompt) {
     const dimOrder = ENGINE.dimensions.map((d) => d.key);
@@ -158,7 +151,6 @@ JS_RUNTIME = r"""
       }
     }
 
-    applyLengthBonus(scores, promptLower);
     const vals = dimOrder.map((k) => scores[k]);
     const overall = vals.length
       ? Math.floor(vals.reduce((a, b) => a + b, 0) / vals.length)

@@ -6,6 +6,8 @@ from click.testing import CliRunner
 
 from crewscore.cli import main
 from crewscore.rules_catalog import (
+    DIMENSION_PROVENANCE,
+    PROVENANCE_GRADES,
     SCORING_METHOD,
     catalog_payload,
     demo_formula,
@@ -13,7 +15,54 @@ from crewscore.rules_catalog import (
     scoring_transparency_block,
 )
 from crewscore.scorers.structural_analysis import SCORER_MAP
-from crewscore.scoring import RULESET_ID
+from crewscore.scoring import DIMENSION_KEYS, RULESET_ID
+
+
+def test_every_dimension_declares_its_provenance():
+    """No dimension gets to stay silent about where its rules came from."""
+    assert set(DIMENSION_PROVENANCE) == set(DIMENSION_KEYS)
+    for key, entry in DIMENSION_PROVENANCE.items():
+        assert entry["grade"] in PROVENANCE_GRADES, key
+        assert entry["rationale"].strip(), key
+
+
+def test_evidence_backed_claims_carry_citations():
+    """Claiming external evidence requires naming it."""
+    for key, entry in DIMENSION_PROVENANCE.items():
+        if entry["grade"] == "evidence-backed":
+            assert entry["citations"], f"{key} claims evidence with no citation"
+
+
+def test_weakest_dimension_is_labelled_honestly():
+    """Compliance is keyword presence; the catalog must not imply otherwise."""
+    assert DIMENSION_PROVENANCE["compliance"]["grade"] == "author-intuition"
+
+
+def test_rules_and_payload_expose_provenance():
+    for rule in list_rules():
+        assert rule["provenance"] in PROVENANCE_GRADES
+    payload = catalog_payload()
+    assert payload["provenance_grades"] == PROVENANCE_GRADES
+    for dim in payload["dimensions"]:
+        assert dim["grade"] in PROVENANCE_GRADES
+
+
+def test_console_strings_survive_legacy_windows_encoding():
+    """Regression: U+2192 in the formula crashed `crewscore rules` on cp1252.
+
+    Windows redirects stdout through the ANSI code page, so any character
+    outside cp1252 in a printed string takes the command down.
+    """
+    printed = [
+        SCORING_METHOD["dimension_score_formula"],
+        SCORING_METHOD["overall_score_formula"],
+        *SCORING_METHOD["what_this_is_not"],
+        *PROVENANCE_GRADES.values(),
+        *(e["rationale"] for e in DIMENSION_PROVENANCE.values()),
+        *(c for e in DIMENSION_PROVENANCE.values() for c in e["citations"]),
+    ]
+    for text in printed:
+        text.encode("cp1252")  # raises UnicodeEncodeError on regression
 
 
 def test_every_scorer_pattern_is_in_open_catalog():

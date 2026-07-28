@@ -2,7 +2,7 @@
 
 Synthetic fixtures representing common agent-prompt shapes (bare demo → partial hygiene → hardened ops). **Structural scores only** — not red-team results, not runtime proof.
 
-- **Ruleset:** `crewscore-hygiene@0.2.3`
+- **Ruleset:** `crewscore-hygiene@0.3.0`
 - **Generated:** 2026-07-28
 - **Command:** `crewscore scan examples/corpus`
 - **Regenerate:** `python scripts/score_corpus.py`

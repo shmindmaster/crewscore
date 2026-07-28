@@ -18,8 +18,32 @@ from crewscore.rules_catalog import SCORING_METHOD, catalog_payload, scoring_tra
 from crewscore.scan import discover_prompt_files, score_paths
 from crewscore.scoring import DIMENSIONS, RULESET_ID, build_result, tier_color
 from crewscore.scorers import structural_analysis
+from crewscore.smells import detect_smells, find_repo_root
 from crewscore.summary import format_scan_markdown, format_score_markdown
 from crewscore.vendor_scorecard import assess_vendor
+
+def _make_output_encodable() -> None:
+    """Stop a stray non-ASCII character from crashing the CLI on Windows.
+
+    When stdout is redirected on Windows it defaults to the ANSI code page
+    (cp1252), and rich's legacy renderer writes straight through it — so a
+    character like U+2192 raises UnicodeEncodeError and takes the whole
+    command down. `crewscore rules --json > catalog.json` is a documented
+    workflow, and Windows CI runners hit the same path.
+
+    Degrading one glyph is always better than losing the command.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:
+            continue
+        try:
+            reconfigure(encoding="utf-8", errors="replace")
+        except (OSError, ValueError):  # closed or non-reconfigurable stream
+            pass
+
+
+_make_output_encodable()
 
 console = Console()
 err_console = Console(stderr=True)
@@ -111,12 +135,14 @@ def test(prompt, prompt_file, as_json, threshold, explain, report, badge, summar
     """
     system_prompt = None
     source = "prompt"
+    prompt_path = None
 
     if prompt:
         system_prompt = prompt
         source = "prompt"
     elif prompt_file:
-        system_prompt = Path(prompt_file).read_text(encoding="utf-8")
+        prompt_path = Path(prompt_file)
+        system_prompt = prompt_path.read_text(encoding="utf-8")
         source = str(prompt_file)
     else:
         err_console.print("[red]Error: Provide --prompt or --prompt-file[/red]")
@@ -127,11 +153,18 @@ def test(prompt, prompt_file, as_json, threshold, explain, report, badge, summar
 
     # Always compute findings so JSON is never a black box.
     dimensions, findings = structural_analysis.analyze_with_findings(system_prompt)
+    # Smells need file context; a --prompt string only supports Context Bloat.
+    smells = detect_smells(
+        system_prompt,
+        path=prompt_path,
+        repo_root=find_repo_root(prompt_path),
+    )
     result = build_result(
         dimensions,
         mode="structural",
         source=source,
         prompt_text=system_prompt,
+        smells=smells,
     )
 
     if report:
@@ -204,8 +237,10 @@ def test(prompt, prompt_file, as_json, threshold, explain, report, badge, summar
                 if w == "template_boilerplate_detected":
                     console.print(
                         "  [dim]Score may be inflated by pasted CrewScore fix "
-                        "templates — text coverage ≠ runtime safety.[/dim]"
+                        "templates — text coverage is not runtime safety.[/dim]"
                     )
+
+        _render_smells(result.smells)
 
         critical = [
             (label, key)
@@ -257,6 +292,53 @@ def test(prompt, prompt_file, as_json, threshold, explain, report, badge, summar
                 f"  [red]Threshold failure: {result.overall} < {threshold}[/red]"
             )
         sys.exit(2)
+
+
+_PROVENANCE_COLOR = {
+    "evidence-backed": "green",
+    "plausible": "yellow",
+    "author-intuition": "dark_orange",
+}
+
+
+def _render_dimension_provenance(dim: dict) -> None:
+    """Print a dimension's provenance grade, rationale, and citations."""
+    grade = dim.get("grade")
+    if not grade:
+        return
+    color = _PROVENANCE_COLOR.get(grade, "white")
+    console.print(f"    provenance: [{color}]{grade}[/{color}]")
+    rationale = dim.get("rationale")
+    if rationale:
+        console.print(f"    [dim]{rationale}[/dim]")
+    for citation in dim.get("citations") or []:
+        console.print(f"    [dim]· {citation}[/dim]")
+
+
+def _render_smells(smells: list[dict]) -> None:
+    """Print advisory configuration smells (never folded into the score)."""
+    if not smells:
+        return
+    console.print()
+    console.print(
+        "[bold]Configuration smells[/bold] "
+        "[dim](advisory — not part of the score)[/dim]"
+    )
+    for s in smells:
+        console.print()
+        console.print(
+            f"  [yellow]{s['name']}[/yellow] [cyan]{s['smell_id']}[/cyan]"
+        )
+        console.print(f"    {s['detail']}")
+        approx = " · approximation of the paper's LLM detector" if s.get(
+            "approximates_paper"
+        ) else ""
+        console.print(
+            f"    [dim]heuristic: {s['heuristic']} · "
+            f"{s['paper_prevalence']}{approx}[/dim]"
+        )
+    console.print()
+    console.print(f"  [dim]Source: {smells[0]['citation']}[/dim]")
 
 
 def _render_findings(findings: list[dict]) -> None:
@@ -335,8 +417,15 @@ def rules_cmd(as_json: bool, dimension: str | None):
     console.print("[bold]This is NOT[/bold]")
     for line in payload["method"]["what_this_is_not"]:
         console.print(f"  · {line}")
+
+    console.print()
+    console.print("[bold]Provenance — where these rules come from[/bold]")
+    for grade, meaning in payload["provenance_grades"].items():
+        console.print(f"  [{_PROVENANCE_COLOR.get(grade, 'white')}]{grade}[/] — {meaning}")
+
     console.print()
     console.print(f"[bold]Rules ({payload['rule_count']})[/bold]")
+    provenance_by_dim = {d["key"]: d for d in payload["dimensions"]}
     current_dim = None
     for r in payload["rules"]:
         if r["dimension"] != current_dim:
@@ -345,6 +434,7 @@ def rules_cmd(as_json: bool, dimension: str | None):
             console.print(
                 f"  [bold]{r['dimension_label']}[/bold] ({r['dimension']})"
             )
+            _render_dimension_provenance(provenance_by_dim.get(current_dim, {}))
         label = r.get("label") or ""
         label_s = f" — {label}" if label else ""
         console.print(f"    [cyan]{r['rule_id']}[/cyan]{label_s}")
@@ -445,7 +535,12 @@ def export_eval(prompt, prompt_file, output_dir):
 )
 def fix(prompt, prompt_file, apply, output, plan, as_json):
     """Append recommended guardrail patterns to a system prompt."""
-    from crewscore.scorers.fix_patterns import apply_fixes, explain_fixes, generate_fixes
+    from crewscore.scorers.fix_patterns import (
+        apply_fixes,
+        explain_fixes,
+        fix_cost_report,
+        generate_fixes,
+    )
 
     system_prompt = None
     source_path = None
@@ -553,6 +648,7 @@ def fix(prompt, prompt_file, apply, output, plan, as_json):
     enhanced = apply_fixes(system_prompt, fixes)
     after = structural_analysis.analyze(enhanced)
     after_result = build_result(after)
+    cost = fix_cost_report(system_prompt, enhanced)
 
     if apply and source_path:
         source_path.write_text(enhanced, encoding="utf-8")
@@ -566,6 +662,7 @@ def fix(prompt, prompt_file, apply, output, plan, as_json):
                     "fixes_applied": list(fixes.keys()),
                     "before": before_result.to_dict(),
                     "after": after_result.to_dict(),
+                    "context_cost": cost,
                     "written": bool(apply and source_path) or bool(output),
                     "path": str(source_path)
                     if apply and source_path
@@ -590,9 +687,19 @@ def fix(prompt, prompt_file, apply, output, plan, as_json):
     console.print(explain_fixes(fixes))
     console.print()
     console.print(
+        f"  [bold]Context cost:[/bold] +{cost['lines_added']} lines "
+        f"({cost['lines_before']} -> {cost['lines_after']}). "
+        "Every line is re-read on every run."
+    )
+    for warning in cost["warnings"]:
+        console.print(f"  [yellow]WARNING:[/yellow] {warning}")
+    console.print()
+    console.print(
         "[yellow]Honesty note:[/yellow] These are prompt templates — "
         "they must be paired with runtime gates (tool allowlists, human "
-        "approval hooks, logging, and policy enforcement) to have real effect."
+        "approval hooks, logging, and policy enforcement) to have real effect. "
+        "They are also generic: measured value comes from project-specific "
+        "guidance, so specialise them rather than shipping them verbatim."
     )
     console.print()
 
@@ -721,21 +828,36 @@ def scan(path, as_json, threshold, explain, summary):
         )
         console.print()
 
+        any_smells = any(item.get("smells") for item in scored)
+
         table = Table(show_header=True, header_style="bold")
         table.add_column("Path", style="cyan", overflow="fold")
         table.add_column("Overall", justify="right")
         table.add_column("Tier")
+        if any_smells:
+            table.add_column("Smells")
 
         for item in scored:
             color = tier_color(item["overall"])
-            table.add_row(
+            row = [
                 item["path"],
                 f"[{color}]{item['overall']}[/{color}]",
                 f"[{color}]{item['tier']}[/{color}]",
-            )
+            ]
+            if any_smells:
+                names = [s["name"] for s in item.get("smells", [])]
+                row.append(f"[yellow]{', '.join(names)}[/yellow]" if names else "")
+            table.add_row(*row)
 
         console.print(table)
         console.print()
+
+        if any_smells:
+            console.print(
+                "  [dim]Smells are advisory and do not affect the score. "
+                "Detail: [bold]crewscore test --prompt-file <path>[/bold][/dim]"
+            )
+            console.print()
 
         if explain and scored:
             worst = min(scored, key=lambda r: r["overall"])
