@@ -106,6 +106,44 @@ def test_index_loads_shared_engine():
     assert "Structural pre-gate" in html or "not a red-team" in html.lower()
 
 
+def test_index_declares_artifact_type_instead_of_guessing():
+    """No filename in a browser, so the user declares the artifact type."""
+    html = (ROOT / "index.html").read_text(encoding="utf-8")
+    assert 'name="artifact-type"' in html
+    assert f'value="{SYSTEM_PROMPT}"' in html
+    assert f'value="{CODING_AGENT_CONFIG}"' in html
+    # System prompt is the default, matching classify_path's fallback.
+    default_radio = html.split(f'value="{SYSTEM_PROMPT}"')[1].split(">")[0]
+    assert "checked" in default_radio
+    # The old help text invited AGENTS.md into an unlabeled governance box.
+    assert "anything that tells the model who it is" not in html
+    assert "artifact-type" in html
+
+
+def test_index_branches_on_governance_applicable():
+    """AGENTS.md invariant: every output surface branches on the profile."""
+    html = (ROOT / "index.html").read_text(encoding="utf-8")
+    assert "analyzeArtifact" in html
+    assert "governance_applicable" in html
+    # A config verdict is rendered on its own path, not through scoreTier.
+    assert "renderConfigVerdict" in html
+
+
+def test_index_admits_the_browser_runs_one_of_three_detectors():
+    """A browser-clean config must not read as a full check."""
+    html = (ROOT / "index.html").read_text(encoding="utf-8")
+    # Rendered from the engine's own counts, so the sentence cannot drift from
+    # what actually ran; the counts themselves are asserted in the Node test.
+    assert "${ran} of ${total} detectors" in html
+    assert "Context Bloat" in html
+    # The two names it cannot run come from the engine payload rather than
+    # being duplicated here, so they cannot drift from crewscore/smells.py.
+    assert "undetectable" in html
+    assert "crewscore scan" in html or "pip install crewscore" in html
+    names = {s["name"] for s in build_payload()["browser_undetectable_smells"]}
+    assert names == {"Init Fossilization", "Lint Leakage"}
+
+
 def _run_engine(body: str):
     """Load score-engine.js in Node and return whatever `body` writes as JSON.
 
@@ -219,6 +257,9 @@ def test_js_config_verdict_declares_what_it_cannot_check_when_node_present():
         "smell.init_fossilization",
         "smell.lint_leakage",
     }
+    # The UI renders "<run> of <total> detectors" from these.
+    assert out["detectors_run"] == 1
+    assert out["detectors_total"] == 3
 
 
 def test_js_python_score_parity_when_node_present():
