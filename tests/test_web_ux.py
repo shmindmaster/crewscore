@@ -180,6 +180,33 @@ def test_ci_gate_export_markers():
     assert "shmindmaster/crewscore@v1" in html
 
 
+def test_config_ci_snippet_does_not_pin_partial_browser_smell_count():
+    """The config-mode CI snippet must not gate on the browser's partial smell
+    count. Only 1 of 3 detectors runs in-browser (Init Fossilization and Lint
+    Leakage need git history / repo access the browser doesn't have) — if the
+    copy-paste snippet bakes in `smells.length` from that partial scan, a
+    visitor who copies it without reading gets a CI gate pinned to a count
+    the full CLI will immediately exceed, red-building the very file the
+    site just called clean. The snippet must use a fixed, scan-independent
+    default and must carry its own disclosure so a reader who copies the
+    snippet out of the page is not misled by the snippet text alone."""
+    html = _html()
+    match = re.search(r"function renderConfigExport\(\) \{.*?\n  \}", html, re.S)
+    assert match, "renderConfigExport function not found"
+    body = match.group(0)
+    ci_match = re.search(r"const ci = `([\s\S]*?)`;", body)
+    assert ci_match, "ci template literal not found in renderConfigExport"
+    ci = ci_match.group(1)
+    # No interpolation of the browser's partial smell count into the gate.
+    assert "smells.length" not in ci
+    # A fixed, scan-independent default is used instead.
+    assert 'max-smells: "0"' in ci
+    assert "--max-smells 0" in ci
+    # Disclosure travels with the copied text itself, not just the page around it.
+    assert "browser" in ci.lower()
+    assert "may find more" in ci.lower() or "full cli" in ci.lower()
+
+
 def test_preflight_aesthetic_tokens():
     """Instrument/preflight visual tokens stay distinctive (not generic AI cyan)."""
     html = _html()
