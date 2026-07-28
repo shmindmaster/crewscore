@@ -254,6 +254,31 @@ def test_test_max_smells_gates_system_prompts_too(tmp_path: Path):
     assert result.exit_code == 2
 
 
+def test_test_max_smells_gates_coding_agent_config(tmp_path: Path):
+    """The config half of the same gate — the profile it was written for.
+
+    Without this, the check could be re-nested under `if
+    result.governance_applicable:` and CI would stay green.
+    """
+    config = tmp_path / "AGENTS.md"
+    config.write_text(
+        "# Guide\n" + "\n".join(f"- rule {i}" for i in range(250)), encoding="utf-8"
+    )
+    runner = CliRunner()
+    failing = runner.invoke(
+        main, ["test", "--prompt-file", str(config), "--json", "--max-smells", "0"]
+    )
+    payload = json.loads(failing.output)
+    assert payload["governance_applicable"] is False
+    assert any(s["smell_id"] == "smell.context_bloat" for s in payload["smells"])
+    assert failing.exit_code == 2
+
+    passing = runner.invoke(
+        main, ["test", "--prompt-file", str(config), "--json", "--max-smells", "5"]
+    )
+    assert passing.exit_code == 0, passing.output
+
+
 def test_test_max_smells_passes_when_under_limit(tmp_path: Path):
     prompt_file = tmp_path / "system-prompt.md"
     prompt_file.write_text(BARE, encoding="utf-8")
