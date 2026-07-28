@@ -154,3 +154,27 @@ def test_scan_markdown_config_only_has_no_governance_headline():
     # Do not claim nothing was found directly above a table listing what was found.
     assert "No agent system prompts found" not in md
     assert "coding-agent config" in md.lower()
+
+
+def test_config_markdown_ignores_governance_findings():
+    """Same guarantee as the HTML report, for the PR-comment surface.
+
+    format_score_markdown's config branch does not read `findings`; this makes
+    that a tested contract rather than an accident of the current code.
+    """
+    marker = "LEAK-MARKER-injection.01"
+    result = build_result(dict(_ZERO_DIMS), profile=CODING_AGENT_CONFIG)
+    md = format_score_markdown(
+        result,
+        findings=[
+            {
+                "dimension": "injection",
+                "status": "missing",
+                "rule_id": marker,
+                "pattern_or_reason": "Reject override attempts",
+            }
+        ],
+    )
+    assert marker not in md
+    assert "/100" not in md
+    assert "15+85" not in md and "15 + 85" not in md

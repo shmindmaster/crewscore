@@ -280,3 +280,32 @@ def test_cli_report_and_badge_create_parent_dirs(tmp_path):
     assert result.exit_code == 0, result.output
     assert report.exists()
     assert badge.exists()
+
+
+_LEAK_MARKER = "LEAK-MARKER-injection.01"
+
+
+def _leaky_findings():
+    """Governance findings, as `test --explain` would produce them."""
+    return [
+        {
+            "dimension": "injection",
+            "status": "missing",
+            "rule_id": _LEAK_MARKER,
+            "pattern_or_reason": "Reject override attempts",
+        }
+    ]
+
+
+def test_html_report_for_config_ignores_governance_findings():
+    """Config takes the smell scorecard, so findings must not reach the page.
+
+    The config branch happens not to read `findings` today. That is structure,
+    not a guarantee: nothing stopped a later edit from threading them through
+    and quietly putting a governance grade back on an AGENTS.md report. This
+    pins the behavior instead of the current shape.
+    """
+    html = render_html_report(_config_result(), findings=_leaky_findings())
+    assert _LEAK_MARKER not in html
+    assert "/100" not in html
+    assert "15+85" not in html and "15 + 85" not in html
