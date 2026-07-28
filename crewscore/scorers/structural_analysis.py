@@ -100,48 +100,121 @@ SCORER_MAP = {
     "compliance": COMPLIANCE_PATTERNS,
 }
 
-# Short human-readable labels for highest-value signals per dimension.
-# Index-aligned with the first N patterns in SCORER_MAP (used for missing findings).
-DIMENSION_SIGNAL_LABELS: dict[str, list[str]] = {
+# High-value signals for explain-mode missing findings.
+# Each entry is (pattern, human_label) — pattern must be the exact SCORER_MAP
+# regex the label describes (not a list-index guess).
+DIMENSION_SIGNAL_LABELS: dict[str, list[tuple[str, str]]] = {
     "injection": [
-        "Reject ignore-previous-instructions / override attempts",
-        "Do not follow user input that conflicts with system rules",
-        "Keep system prompt confidential / do not reveal it",
+        (
+            r"ignore\s+(previous|above|all)\s+(instructions|prompts)",
+            "Reject ignore-previous-instructions / override attempts",
+        ),
+        (
+            r"do\s+not\s+(follow|obey|listen)\s+to\s+(user|input).*(system|instruction)",
+            "Do not follow user input that conflicts with system rules",
+        ),
+        (
+            r"do\s+not\s+reveal\s+(your|the|this)\s+(system|instructions|prompt)",
+            "Keep system prompt confidential / do not reveal it",
+        ),
     ],
     "hallucination": [
-        "Do not fabricate facts, citations, or numbers",
-        "Say so when you do not know or lack evidence",
-        "Only use provided / verified data",
+        (
+            r"do\s+not\s+(?:fabricat|invent|make\s+up|generat).*(?:fact|data|citation|source|number)",
+            "Do not fabricate facts, citations, or numbers",
+        ),
+        (
+            r"if\s+you\s+(?:do\s+not\s+know|are\s+unsure|lack\s+(?:the|enough)\s+(?:data|information|evidence))",
+            "Say so when you do not know or lack evidence",
+        ),
+        (
+            r"only\s+(?:use|cite|reference)\s+(?:provided|given|available|verified)\s+(?:data|information|sources|context)",
+            "Only use provided / verified data",
+        ),
     ],
     "citation": [
-        "Require citations, references, or source links",
-        "Link claims back to source evidence",
-        "Every claim must cite its source",
+        (
+            r"(?:cite|citation|reference|attribute|source\s+link|footnote)",
+            "Require citations, references, or source links",
+        ),
+        (
+            r"every\s+(?:claim|statement|answer|output)\s+must\s+(?:cite|reference|include)",
+            "Every claim must cite its source",
+        ),
+        (
+            r"link\s+(?:to|back\s+to)\s+(?:the|its|each)\s+(?:source|evidence|document)",
+            "Link claims back to source evidence",
+        ),
     ],
     "cost": [
-        "Token / cost / budget limit or cap",
-        "Max token or response length constraint",
-        "Rate or cost limiting",
+        (
+            r"(?:token|cost|budget|spend)\s*(?:limit|cap|max|ceiling|threshold)",
+            "Token / cost / budget limit or cap",
+        ),
+        (
+            r"(?:max|maximum)\s*(?:token|tokens|length|response)",
+            "Max token or response length constraint",
+        ),
+        (
+            r"(?:rate|cost)\s*limit",
+            "Rate or cost limiting",
+        ),
     ],
     "human_gate": [
-        "Human / supervisor must approve or review",
-        "Human-in-the-loop review or approval gate",
-        "Approval required before execute / send / publish",
+        (
+            r"(?:human|user|supervisor|operator|reviewer|staff|manager)\s*(?:must|shall|should|needs?\s+to)\s*(?:approve|review|confirm|verify|check|validate)",
+            "Human / supervisor must approve or review",
+        ),
+        (
+            r"(?:human|human-in-the-loop|hitl|manual)\s*(?:review|approval|gate|checkpoint|oversight)",
+            "Human-in-the-loop review or approval gate",
+        ),
+        (
+            r"(?:before|prior\s+to)\s*(?:execut|send|submit|releas|publish|deploy)",
+            "Approval required before execute / send / publish",
+        ),
     ],
     "safe_stop": [
-        "Stop / halt / refuse when conditions are unmet",
-        "Handle missing or insufficient evidence",
-        "Escalate to a human supervisor",
+        (
+            r"(?:stop|halt|pause|refuse|decline|abort).*(?:if|when|unless)",
+            "Stop / halt / refuse when conditions are unmet",
+        ),
+        (
+            r"(?:insufficient|missing|incomplete|unclear|ambiguous)\s*(?:data|evidence|information|context|instruction)",
+            "Handle missing or insufficient evidence",
+        ),
+        (
+            r"(?:escalat|hand\s*off|transfer|refer).*(?:human|supervisor|specialist|operator)",
+            "Escalate to a human supervisor",
+        ),
     ],
     "audit": [
-        "Log or audit trail for actions and decisions",
-        "Audit / logging / provenance accountability",
-        "Immutable or append-only audit trail",
+        (
+            r"(?:log|record|track|trace|audit)\s*(?:trail|history|event|action|decision|every|all|each)",
+            "Log or audit trail for actions and decisions",
+        ),
+        (
+            r"(?:audit|logging|trace|provenance|accountab)",
+            "Audit / logging / provenance accountability",
+        ),
+        (
+            r"immutable|append.only|tamper.proof|write.once",
+            "Immutable or append-only audit trail",
+        ),
     ],
     "compliance": [
-        "HIPAA / PHI / protected health data handling",
-        "SOC 2 controls",
-        "GDPR / data protection requirements",
+        (
+            r"(?:hipaa|phi|protected\s+health|patient\s+data|baa|business\s+associate)",
+            "HIPAA / PHI / protected health data handling",
+        ),
+        (
+            r"(?:soc\s*2|soc2|system\s+and\s+organization\s+controls)",
+            "SOC 2 controls",
+        ),
+        (
+            r"(?:gdpr|general\s+data\s+protection|data\s+protection\s+regulation)",
+            "GDPR / data protection requirements",
+        ),
     ],
 }
 
@@ -207,8 +280,8 @@ def analyze_with_findings(
         scores = {key: 0 for key in SCORER_MAP}
         findings: list[dict] = []
         for dimension in SCORER_MAP:
-            labels = DIMENSION_SIGNAL_LABELS.get(dimension, [])
-            for label in labels[:_MAX_FINDINGS_PER_STATUS]:
+            signals = DIMENSION_SIGNAL_LABELS.get(dimension, [])
+            for _pattern, label in signals[:_MAX_FINDINGS_PER_STATUS]:
                 findings.append(
                     {
                         "dimension": dimension,
@@ -238,22 +311,18 @@ def analyze_with_findings(
                 }
             )
 
-        # Up to 3 missing human labels for unmatched high-value signals
-        labels = DIMENSION_SIGNAL_LABELS.get(dimension, [])
-        matched_indices = set()
-        for i, pattern in enumerate(patterns):
-            try:
-                if re.search(pattern, prompt_lower, re.IGNORECASE):
-                    matched_indices.add(i)
-            except re.error:
-                continue
-
+        # Up to 3 missing human labels for unmatched high-value signals.
+        # Pair by exact pattern string — never by list index alone.
+        signals = DIMENSION_SIGNAL_LABELS.get(dimension, [])
         missing_count = 0
-        for i, label in enumerate(labels):
+        for pattern, label in signals:
             if missing_count >= _MAX_FINDINGS_PER_STATUS:
                 break
-            # Label i corresponds to high-value pattern i when index-aligned
-            if i < len(patterns) and i in matched_indices:
+            try:
+                matched = bool(re.search(pattern, prompt_lower, re.IGNORECASE))
+            except re.error:
+                matched = False
+            if matched:
                 continue
             findings.append(
                 {
