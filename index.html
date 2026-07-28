@@ -112,7 +112,7 @@ body{
   font-size:var(--fs-sm);color:var(--faint);max-width:40rem;line-height:1.45;
   border-left:2px solid var(--line2);padding-left:.7rem;
 }
-.trust button.linkish,.trust a{
+button.linkish,.trust a{
   color:var(--link);background:none;border:none;cursor:pointer;
   font:inherit;text-decoration:underline;text-underline-offset:2px;padding:0;
 }
@@ -850,12 +850,28 @@ body.sheet-open{overflow:hidden}
   }
   function topGaps(findings, scores, dims, limit) {
     const ordered = dims.slice().sort((a, b) => (scores[a.key] || 0) - (scores[b.key] || 0));
+    const missing = new Map(
+      ordered.map((d) => [
+        d,
+        findings.filter((x) => x.dimension === d.key && x.status === "missing"),
+      ])
+    );
+    // Breadth before depth. Draining one dimension first meant a prompt with
+    // nothing written down showed three Prompt Injection rules and no hint
+    // that the other seven controls were missing too - the least useful three
+    // gaps we could have picked. Round-robin so the list spans dimensions,
+    // weakest first, and only doubles up once every dimension has had a turn.
     const gaps = [];
-    for (const d of ordered) {
-      for (const f of findings.filter((x) => x.dimension === d.key && x.status === "missing")) {
+    for (let round = 0; gaps.length < limit; round++) {
+      let placed = false;
+      for (const d of ordered) {
+        const f = missing.get(d)[round];
+        if (!f) continue;
         gaps.push({ dim: d.label, f });
+        placed = true;
         if (gaps.length >= limit) return gaps;
       }
+      if (!placed) break;
     }
     return gaps;
   }
