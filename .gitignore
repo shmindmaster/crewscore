@@ -8,3 +8,7 @@ build/
 *.sqlite3
 agent-guard-report-*.html
 .DS_Store
+
+.superpowers/
+.worktrees/
+
