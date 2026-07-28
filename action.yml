@@ -64,14 +64,15 @@ runs:
     - name: Run CrewScore
       id: run
       shell: bash
+      env:
+        PROMPT_FILE: ${{ inputs.prompt-file }}
+        SCAN_PATH: ${{ inputs.scan-path }}
+        THRESHOLD: ${{ inputs.threshold }}
+        MAX_SMELLS: ${{ inputs.max-smells }}
+        EXPLAIN: ${{ inputs.explain }}
+        SUMMARY: ${{ inputs.summary }}
       run: |
         set -euo pipefail
-        PROMPT_FILE="${{ inputs.prompt-file }}"
-        SCAN_PATH="${{ inputs.scan-path }}"
-        THRESHOLD="${{ inputs.threshold }}"
-        MAX_SMELLS="${{ inputs.max-smells }}"
-        EXPLAIN="${{ inputs.explain }}"
-        SUMMARY="${{ inputs.summary }}"
 
         if [ -z "$SCAN_PATH" ] && [ -z "$PROMPT_FILE" ]; then
           echo "Either prompt-file or scan-path is required" >&2
