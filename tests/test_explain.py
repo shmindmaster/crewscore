@@ -138,7 +138,9 @@ def test_cli_json_explain_includes_findings():
     assert isinstance(payload["findings"], list)
     assert payload["overall"] is not None
     assert "dimensions" in payload  # backward compatible
-    assert payload["ruleset"] == "crewscore-hygiene@0.2.2"
+    from crewscore.scoring import RULESET_ID
+
+    assert payload["ruleset"] == RULESET_ID
     assert "warnings" in payload
     # labeled missing findings should carry rule_id
     with_id = [f for f in payload["findings"] if f.get("rule_id")]

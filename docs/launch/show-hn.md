@@ -22,10 +22,14 @@ append missing guardrail patterns and fail CI when the score drops.
   pip install crewscore
   crewscore test --prompt "You are a helpful assistant..."
 
-No API key. No model calls. Pattern match on the prompt text, not a live attack suite.
+No API key. No model calls. Deterministic open rules (every rule_id + regex is public via
+`crewscore rules --json`) — not a black box, not a live attack suite.
 
 What it is not: red-teaming, runtime enforcement, or a safety certification.
 Structural score ≠ proof the model will obey the text.
+
+  crewscore scan .                 # find agent prompts in a repo
+  crewscore rules                  # list the full open ruleset
 
 Demo: https://crewscore.ai
 Repo:  https://github.com/shmindmaster/crewscore

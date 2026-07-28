@@ -13,18 +13,33 @@ KNOWN_NAMES = frozenset(
     {
         "AGENTS.md",
         "CLAUDE.md",
+        "GEMINI.md",
+        "SYSTEM.md",
         "system-prompt.md",
         "system_prompt.md",
+        "system.prompt.md",
         "AGENT.md",
         "prompts.md",
+        "agent-prompt.md",
+        "agent_prompt.md",
     }
 )
 
 # Directory names that mark a tree as containing prompt/agent files.
-PROMPT_DIR_NAMES = frozenset({"agents", "prompts", "prompt"})
+PROMPT_DIR_NAMES = frozenset(
+    {
+        "agents",
+        "prompts",
+        "prompt",
+        "system-prompts",
+        "system_prompts",
+        ".cursor",
+        "rules",
+    }
+)
 
 # Extensions collected under prompt/agent directories.
-PROMPT_DIR_EXTENSIONS = frozenset({".md", ".txt", ".yaml", ".yml"})
+PROMPT_DIR_EXTENSIONS = frozenset({".md", ".txt", ".yaml", ".yml", ".mdc"})
 
 # Directories never traversed during discovery.
 SKIP_DIRS = frozenset(
@@ -37,6 +52,9 @@ SKIP_DIRS = frozenset(
         "__pycache__",
         ".tox",
         "site-packages",
+        ".pytest_cache",
+        "build",
+        ".mypy_cache",
     }
 )
 
@@ -69,6 +87,21 @@ def _should_include(path: Path, root: Path) -> bool:
 
     if path.name in KNOWN_NAMES:
         return True
+
+    # Case-insensitive known basenames (Windows-friendly + Linux clones)
+    if path.name.lower() in {n.lower() for n in KNOWN_NAMES}:
+        return True
+
+    # Common *system*prompt* / *agent*prompt* patterns at any depth
+    lower = path.name.lower()
+    if path.suffix.lower() in {".md", ".txt"} and (
+        "system-prompt" in lower
+        or "system_prompt" in lower
+        or lower.endswith("prompt.md")
+        and "readme" not in lower
+    ):
+        if "system" in lower or lower.startswith("agent"):
+            return True
 
     if _is_under_prompt_dir(path, root) and path.suffix.lower() in PROMPT_DIR_EXTENSIONS:
         return True

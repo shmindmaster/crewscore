@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -11,11 +12,13 @@ from rich.console import Console
 from rich.panel import Panel
 
 from crewscore import __version__
+from crewscore.export_eval import write_eval_stubs
 from crewscore.report import render_badge_svg, render_html_report, share_text
 from crewscore.rules_catalog import SCORING_METHOD, catalog_payload, scoring_transparency_block
 from crewscore.scan import discover_prompt_files, score_paths
 from crewscore.scoring import DIMENSIONS, RULESET_ID, build_result, tier_color
 from crewscore.scorers import structural_analysis
+from crewscore.summary import format_scan_markdown, format_score_markdown
 from crewscore.vendor_scorecard import assess_vendor
 
 console = Console()
@@ -94,7 +97,13 @@ main.add_command(assess_vendor)
     default=None,
     help="Write an SVG badge to this path",
 )
-def test(prompt, prompt_file, as_json, threshold, explain, report, badge):
+@click.option(
+    "--summary",
+    type=click.Path(),
+    default=None,
+    help="Write GitHub-flavored markdown summary (PR/step comment body) to this path",
+)
+def test(prompt, prompt_file, as_json, threshold, explain, report, badge, summary):
     """Run structural production-readiness analysis on an agent system prompt.
 
     Offline, deterministic regex scan — not live red-teaming.
@@ -136,6 +145,17 @@ def test(prompt, prompt_file, as_json, threshold, explain, report, badge):
         badge_path = Path(badge)
         badge_path.parent.mkdir(parents=True, exist_ok=True)
         badge_path.write_text(render_badge_svg(result), encoding="utf-8")
+
+    md_body = format_score_markdown(result, findings=findings)
+    if summary:
+        summary_path = Path(summary)
+        summary_path.parent.mkdir(parents=True, exist_ok=True)
+        summary_path.write_text(md_body, encoding="utf-8")
+    # Always append to GitHub Actions job summary when running in GHA.
+    if os.environ.get("GITHUB_STEP_SUMMARY"):
+        with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a", encoding="utf-8") as fh:
+            fh.write(md_body)
+            fh.write("\n")
 
     if as_json:
         payload = result.to_dict()
@@ -335,6 +355,59 @@ def rules_cmd(as_json: bool, dimension: str | None):
     )
     console.print()
 
+
+@main.command("export-eval")
+@click.option("--prompt", "-p", help="System prompt string to export")
+@click.option(
+    "--prompt-file",
+    "-f",
+    type=click.Path(exists=True),
+    help="Path to system prompt file",
+)
+@click.option(
+    "--output-dir",
+    "-o",
+    type=click.Path(),
+    default="./crewscore-eval",
+    help="Directory for Promptfoo / garak handoff stubs (default: ./crewscore-eval)",
+)
+def export_eval(prompt, prompt_file, output_dir):
+    """Write live-eval stubs (Promptfoo config + garak notes) after structural gate.
+
+    Does not run Promptfoo or garak. Honest handoff only.
+    """
+    if prompt:
+        system_prompt = prompt
+        source = "prompt"
+    elif prompt_file:
+        system_prompt = Path(prompt_file).read_text(encoding="utf-8")
+        source = str(prompt_file)
+    else:
+        err_console.print("[red]Error: Provide --prompt or --prompt-file[/red]")
+        sys.exit(1)
+
+    paths = write_eval_stubs(
+        Path(output_dir),
+        system_prompt=system_prompt,
+        prompt_source=source,
+    )
+    console.print()
+    console.print(
+        Panel(
+            "[bold]Live eval handoff stubs[/bold]",
+            border_style="cyan",
+            expand=False,
+        )
+    )
+    console.print()
+    for p in paths:
+        console.print(f"  [green]wrote[/green] {p}")
+    console.print()
+    console.print(
+        "  [dim]CrewScore remains structural only. "
+        "Run Promptfoo/garak yourself — see README-EVAL.md[/dim]"
+    )
+    console.print()
 
 
 @main.command()
@@ -548,6 +621,12 @@ def scan(path, as_json, threshold, explain):
 
     if as_json:
         click.echo(json.dumps(scored, indent=2, sort_keys=True))
+        if os.environ.get("GITHUB_STEP_SUMMARY"):
+            with Path(os.environ["GITHUB_STEP_SUMMARY"]).open(
+                "a", encoding="utf-8"
+            ) as fh:
+                fh.write(format_scan_markdown(scored))
+                fh.write("\n")
     else:
         from rich.table import Table
 
@@ -593,6 +672,13 @@ def scan(path, as_json, threshold, explain):
             )
             _render_findings(findings)
             console.print()
+
+        if os.environ.get("GITHUB_STEP_SUMMARY"):
+            with Path(os.environ["GITHUB_STEP_SUMMARY"]).open(
+                "a", encoding="utf-8"
+            ) as fh:
+                fh.write(format_scan_markdown(scored))
+                fh.write("\n")
 
         console.print(
             "  -> Re-run with [bold]--json[/bold] for CI. "

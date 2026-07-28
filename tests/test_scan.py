@@ -45,6 +45,8 @@ def test_discover_known_names(tmp_path: Path):
     _write(tmp_path / "nested" / "deep" / "system_prompt.md")
     _write(tmp_path / "AGENT.md")
     _write(tmp_path / "config" / "prompts.md")
+    _write(tmp_path / "SYSTEM.md")
+    _write(tmp_path / "GEMINI.md")
     # unrelated
     _write(tmp_path / "README.md")
     _write(tmp_path / "notes.txt")
@@ -58,6 +60,8 @@ def test_discover_known_names(tmp_path: Path):
         "system_prompt.md",
         "AGENT.md",
         "prompts.md",
+        "SYSTEM.md",
+        "GEMINI.md",
     }
     assert (tmp_path / "README.md") not in found
 
