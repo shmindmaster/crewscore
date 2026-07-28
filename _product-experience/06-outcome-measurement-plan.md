@@ -38,6 +38,8 @@ No prompt text, no URLs of private gists content, no PII.
 
 **Implementation default for OSS launch:** localStorage counters only (`crewscore_metrics_v1`) + optional `console.debug` — no third-party by default. Document how to wire Plausible/Umami later with same events.
 
+**Schema authority:** Python module `crewscore/metrics.py` (`bucket_score`, `append_event`, `validate_props`) is the testable source of truth for event buckets and forbidden prop keys; web localStorage must keep matching event names/buckets.
+
 ## Decision thresholds (pre-commit)
 
 | Signal | Green | Yellow | Red |
