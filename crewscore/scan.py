@@ -154,11 +154,16 @@ def discover_prompt_files(root: Path) -> list[Path]:
     return sorted(found)
 
 
-def score_paths(paths: list[Path]) -> list[dict[str, Any]]:
+def score_paths(
+    paths: list[Path], *, profile: str | None = None
+) -> list[dict[str, Any]]:
     """Score each path with structural analysis; return result dicts.
 
     Each dict has: path, overall, tier, dimensions, and optionally ruleset
     when available on the ScoreResult / module.
+
+    `profile` forces every path onto one ruleset (the `--profile` escape hatch
+    for a misclassified file). None keeps per-path classification.
     """
     results: list[dict[str, Any]] = []
     repo_roots: dict[Path, Any] = {}
@@ -175,7 +180,7 @@ def score_paths(paths: list[Path]) -> list[dict[str, Any]]:
             mode="structural",
             source=str(path),
             smells=detect_smells(text, path=path, repo_root=repo_roots[parent]),
-            profile=classify_path(path),
+            profile=profile or classify_path(path),
         )
         item: dict[str, Any] = {
             "path": str(path),

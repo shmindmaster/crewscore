@@ -265,6 +265,77 @@ def test_scan_max_smells_gates_config_files(tmp_path: Path):
     )
 
 
+def test_scan_profile_override_governs_config_files(tmp_path: Path):
+    """`scan --profile` exists — the human output advertises it as the escape hatch.
+
+    Without it, "Override with --profile" was advice for an option that did
+    not exist on this command (exit 2, "no such option").
+    """
+    _write(tmp_path / "AGENTS.md", BARE)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        main, ["scan", str(tmp_path), "--json", "--profile", "system_prompt"]
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert all(item["profile"] == "system_prompt" for item in payload)
+    assert all(item["governance_applicable"] is True for item in payload)
+    assert all(item["tier"].startswith("STRUCTURAL:") for item in payload)
+
+
+def test_scan_profile_override_applies_to_every_file(tmp_path: Path):
+    """The override applies to every file the scan visits, not just the first."""
+    _write(tmp_path / "system-prompt.md", BARE)
+    _write(tmp_path / "prompts" / "sys.md", GUARDED)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        ["scan", str(tmp_path), "--json", "--profile", "coding_agent_config"],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert len(payload) == 2
+    assert all(item["profile"] == "coding_agent_config" for item in payload)
+    assert all(item["tier"].startswith("CONFIG:") for item in payload)
+
+
+def test_scan_profile_override_makes_threshold_apply_to_config(tmp_path: Path):
+    """Forcing system_prompt re-arms --threshold for a misclassified file."""
+    _write(tmp_path / "AGENTS.md", BARE)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "scan",
+            str(tmp_path),
+            "--json",
+            "--profile",
+            "system_prompt",
+            "--threshold",
+            "90",
+        ],
+    )
+    assert result.exit_code == 2
+    payload = json.loads(result.output)
+    assert all(item["governance_applicable"] is True for item in payload)
+    assert any(item["overall"] < 90 for item in payload)
+
+
+def test_scan_profile_defaults_to_auto(tmp_path: Path):
+    _write(tmp_path / "AGENTS.md", BARE)
+    _write(tmp_path / "system-prompt.md", BARE)
+
+    runner = CliRunner()
+    result = runner.invoke(main, ["scan", str(tmp_path), "--json", "--profile", "auto"])
+    assert result.exit_code == 0, result.output
+    by_name = {Path(i["path"]).name: i for i in json.loads(result.output)}
+    assert by_name["AGENTS.md"]["profile"] == "coding_agent_config"
+    assert by_name["system-prompt.md"]["profile"] == "system_prompt"
+
+
 def test_scan_cli_threshold_passes(tmp_path: Path):
     _write(tmp_path / "AGENTS.md", BARE)
 
