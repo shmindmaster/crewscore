@@ -430,12 +430,20 @@ def export_eval(prompt, prompt_file, output_dir):
     help="Write enhanced prompt to a new file",
 )
 @click.option(
+    "--plan",
+    "--dry-run",
+    "plan",
+    is_flag=True,
+    default=False,
+    help="List planned fix dimensions without writing (dry-run)",
+)
+@click.option(
     "--json",
     "as_json",
     is_flag=True,
     help="Emit JSON summary of applied dimensions and score delta",
 )
-def fix(prompt, prompt_file, apply, output, as_json):
+def fix(prompt, prompt_file, apply, output, plan, as_json):
     """Append recommended guardrail patterns to a system prompt."""
     from crewscore.scorers.fix_patterns import apply_fixes, explain_fixes, generate_fixes
 
@@ -454,6 +462,13 @@ def fix(prompt, prompt_file, apply, output, as_json):
         )
         sys.exit(1)
 
+    if plan and (apply or output):
+        err_console.print(
+            "[red]Error: --plan/--dry-run is mutually exclusive with "
+            "--apply and --output[/red]"
+        )
+        sys.exit(1)
+
     before = structural_analysis.analyze(system_prompt)
     before_result = build_result(before)
     fixes = generate_fixes(before)
@@ -462,6 +477,51 @@ def fix(prompt, prompt_file, apply, output, as_json):
         "Templates must be paired with runtime gates "
         "(tool allowlists, human approval hooks, logging, and policy enforcement)"
     )
+
+    if plan:
+        planned = list(fixes.keys())
+        if as_json:
+            click.echo(
+                json.dumps(
+                    {
+                        "fixes_planned": planned,
+                        "before": before_result.to_dict(),
+                        "written": False,
+                        "note": honesty_note,
+                    },
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
+            return
+        console.print()
+        console.print(
+            Panel(
+                f"[bold]{BRAND.upper()} — Fix Plan (dry-run)[/bold]",
+                border_style="cyan",
+                expand=False,
+            )
+        )
+        console.print()
+        if not planned:
+            console.print(
+                "  [green]No fixes needed — structural score is already strong.[/green]"
+            )
+        else:
+            console.print(
+                f"  [cyan]Would apply[/cyan] templates for {len(planned)} dimension(s):"
+            )
+            for key in planned:
+                console.print(f"    · {key}")
+            console.print()
+            console.print(explain_fixes(fixes))
+            console.print()
+            console.print(
+                "[dim]Plan only — file not modified. "
+                "Re-run without --plan and with --apply or --output to write.[/dim]"
+            )
+        console.print()
+        return
 
     if not fixes:
         if as_json:

@@ -167,3 +167,86 @@ def test_version():
     from crewscore import __version__
 
     assert __version__ in result.output
+
+
+def test_fix_plan_json_lists_dimensions_without_writing(tmp_path: Path):
+    """--plan --json lists planned dimensions and never mutates the file."""
+    prompt_file = tmp_path / "prompt.md"
+    prompt_file.write_text(BARE, encoding="utf-8")
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        ["fix", "--prompt-file", str(prompt_file), "--plan", "--json"],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert "fixes_planned" in payload
+    assert isinstance(payload["fixes_planned"], list)
+    assert len(payload["fixes_planned"]) > 0
+    assert prompt_file.read_text(encoding="utf-8") == BARE
+    assert payload.get("written") is not True
+
+
+def test_fix_plan_does_not_write_with_apply_ignored_or_explicit(tmp_path: Path):
+    """--plan is mutually exclusive with --apply and --output."""
+    prompt_file = tmp_path / "prompt.md"
+    prompt_file.write_text(BARE, encoding="utf-8")
+    out_file = tmp_path / "out.md"
+    runner = CliRunner()
+
+    with_apply = runner.invoke(
+        main,
+        [
+            "fix",
+            "--prompt-file",
+            str(prompt_file),
+            "--plan",
+            "--apply",
+        ],
+    )
+    assert with_apply.exit_code == 1
+    assert "plan" in with_apply.output.lower() or "mutually" in with_apply.output.lower()
+    assert prompt_file.read_text(encoding="utf-8") == BARE
+
+    with_output = runner.invoke(
+        main,
+        [
+            "fix",
+            "--prompt-file",
+            str(prompt_file),
+            "--plan",
+            "--output",
+            str(out_file),
+        ],
+    )
+    assert with_output.exit_code == 1
+    assert "plan" in with_output.output.lower() or "mutually" in with_output.output.lower()
+    assert prompt_file.read_text(encoding="utf-8") == BARE
+    assert not out_file.exists()
+
+
+def test_fix_plan_human_mentions_plan(tmp_path: Path):
+    """Human --plan output uses plan language and names at least one dimension."""
+    prompt_file = tmp_path / "prompt.md"
+    prompt_file.write_text(BARE, encoding="utf-8")
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        ["fix", "--prompt-file", str(prompt_file), "--plan"],
+    )
+    assert result.exit_code == 0, result.output
+    lower = result.output.lower()
+    assert "plan" in lower or "would apply" in lower
+    # At least one known fix dimension name appears in human output
+    dimension_names = [
+        "injection",
+        "hallucination",
+        "citation",
+        "cost",
+        "human_gate",
+        "safe_stop",
+        "audit",
+        "compliance",
+    ]
+    assert any(name in lower for name in dimension_names)
+    assert prompt_file.read_text(encoding="utf-8") == BARE
