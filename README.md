@@ -17,23 +17,13 @@
 
 <br/>
 
-**Everyone:** open **[crewscore.ai](https://crewscore.ai)** → paste prompt or pick a template → score → **fix gaps** → share.
-
-**Teams / CI:** `pip install crewscore` · GitHub Action `shmindmaster/crewscore@v1`
-
-```
-$ pip install crewscore
-$ crewscore scan .
-
-  path                              overall  tier
-  --------------------------------  -------  ---------------------------
-  ./AGENTS.md                            42  STRUCTURAL: CRITICAL GAPS
-  ./agents/system-prompt.md              61  STRUCTURAL: WEAK
-
-  worst: 42  (gate with --threshold)
+```bash
+pip install crewscore
+crewscore test --prompt "You are a helpful assistant."
+# → 0/100  STRUCTURAL: CRITICAL GAPS  ·  8 dimensions  ·  offline, no API key
 ```
 
-Score the **text** of your agent instructions. Fix gaps. Gate CI when scores drop.  
+**CI:** `crewscore scan . --threshold 50` · Action `shmindmaster/crewscore@v1`  
 Structural hygiene only — **not a red-team**, not a certification.
 
 [Install](#install) · [Usage](#usage) · [Scoring charter](#scoring-charter) · [Share](#share-your-score) · [How scoring works](#how-scoring-works) · [CI](#ci-integration) · [After CrewScore](#after-crewscore) · [Limits](#what-this-is-and-is-not)

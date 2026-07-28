@@ -87,19 +87,19 @@ body{
   padding:.35rem .55rem;line-height:1.25;max-width:100%;
   white-space:normal;text-align:right;
 }
-/* —— hero —— */
-.hero{margin-bottom:1.1rem}
+/* —— hero (compact for camera density) —— */
+.hero{margin-bottom:.85rem}
 .hero .eyebrow{
   font-family:var(--sans);font-size:var(--fs-xs);color:var(--faint);
-  letter-spacing:.08em;text-transform:uppercase;margin-bottom:.45rem;
+  letter-spacing:.08em;text-transform:uppercase;margin-bottom:.35rem;
 }
 .hero h2{
   font-size:var(--fs-hero);line-height:1.15;font-weight:700;
-  letter-spacing:-.03em;margin-bottom:.5rem;max-width:20ch;
+  letter-spacing:-.03em;margin-bottom:.4rem;max-width:22ch;
 }
-.hero .sub{color:var(--muted);font-size:var(--fs-md);max-width:38rem;margin-bottom:.7rem}
+.hero .sub{color:var(--muted);font-size:var(--fs-md);max-width:36rem;margin-bottom:.45rem}
 .trust{
-  font-size:var(--fs-sm);color:var(--faint);max-width:40rem;line-height:1.5;
+  font-size:var(--fs-sm);color:var(--faint);max-width:40rem;line-height:1.45;
   border-left:2px solid var(--line2);padding-left:.7rem;
 }
 .trust button.linkish,.trust a{
@@ -227,13 +227,29 @@ input:focus,textarea:focus{outline:none;border-color:var(--line2);box-shadow:0 0
   display:grid;place-items:center;
   box-shadow:0 0 0 6px var(--panel2),0 0 0 7px var(--line);
 }
+.score-ring.is-critical{
+  border-color:rgba(232,93,93,.55);
+  box-shadow:0 0 0 6px var(--panel2),0 0 0 7px rgba(232,93,93,.25),0 0 28px rgba(232,93,93,.12);
+}
+.score-ring.is-improved{
+  border-color:rgba(93,190,124,.5);
+  box-shadow:0 0 0 6px var(--panel2),0 0 0 7px rgba(93,190,124,.22),0 0 28px rgba(93,190,124,.1);
+}
 .score-ring .score-big{margin:0}
 .score-kicker{font-family:var(--sans);font-size:var(--fs-xs);color:var(--faint);letter-spacing:.06em;text-transform:uppercase}
 .delta{
-  display:inline-block;margin:.4rem 0 .1rem;padding:.2rem .5rem;
-  font-family:var(--mono);font-size:.75rem;font-weight:700;
-  background:var(--ok-dim);color:var(--ok);border:1px solid rgba(93,190,124,.35);
+  display:inline-block;margin:.45rem 0 .25rem;padding:.35rem .7rem;
+  font-family:var(--mono);font-size:.9rem;font-weight:700;
+  background:var(--ok-dim);color:var(--ok);border:1px solid rgba(93,190,124,.45);
+  letter-spacing:.02em;
 }
+.delta-compare{
+  display:flex;justify-content:center;align-items:center;gap:.65rem;
+  margin:.35rem auto .5rem;font-family:var(--mono);font-size:.85rem;
+}
+.delta-compare .was{color:var(--bad);text-decoration:line-through;opacity:.85}
+.delta-compare .arrow{color:var(--faint)}
+.delta-compare .now{color:var(--ok);font-weight:700;font-size:1.05rem}
 .score-big{
   font-family:var(--mono);font-size:var(--fs-score);font-weight:700;
   letter-spacing:-.04em;line-height:1;margin:.15rem 0;
@@ -250,11 +266,14 @@ input:focus,textarea:focus{outline:none;border-color:var(--line2);box-shadow:0 0
 }
 .stamp::before{content:"▣";font-size:.7rem;color:var(--amber)}
 .dims{margin:.4rem 0 .7rem}
-.dim-row{display:flex;align-items:center;gap:.45rem;margin:.28rem 0;font-size:.74rem}
-.dim-bar{flex:1;height:7px;background:#1a1f1c;overflow:hidden}
-.dim-fill{height:100%;transition:width .35s ease}
+.dim-row{display:flex;align-items:center;gap:.45rem;margin:.32rem 0;font-size:.74rem}
+.dim-bar{flex:1;height:10px;background:#1a1f1c;overflow:hidden;border:1px solid var(--line);border-radius:1px}
+.dim-bar.is-empty{background:rgba(232,93,93,.12);border-color:rgba(232,93,93,.35)}
+.dim-fill{height:100%;transition:width .35s ease;min-width:0}
+.dim-fill.is-empty-marker{width:100% !important;background:repeating-linear-gradient(90deg,rgba(232,93,93,.22),rgba(232,93,93,.22) 4px,transparent 4px,transparent 8px);opacity:.9}
 .dim-label{width:min(170px,36vw);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--sans);font-size:var(--fs-xs)}
 .dim-score{width:34px;text-align:right;font-family:var(--mono);color:var(--faint);font-variant-numeric:tabular-nums}
+.dim-score.is-zero{color:var(--bad);font-weight:700}
 .flags{
   text-align:left;font-size:.78rem;color:#f0b0b0;background:var(--bad-dim);
   border:1px solid rgba(232,93,93,.3);padding:.55rem .65rem;margin:.5rem 0;
@@ -399,10 +418,7 @@ details.how summary::-webkit-details-marker{display:none}
   <section class="hero">
     <div class="eyebrow">Preflight for agent instructions</div>
     <h2>Score agent prompts in your browser — structural hygiene only</h2>
-    <p class="sub">Paste a system prompt. See missing production-hygiene signals. Apply text templates only after you approve the plan. Same open rules as the CLI.</p>
-    <p class="trust">
-      Structural text scan only — <strong>not a red-team</strong> or certification.
-      Templates can inflate scores; pair with runtime gates.
+    <p class="sub">Paste a prompt → see gaps → plan text fixes. Same open rules as the CLI. <strong>Not a red-team.</strong>
       <button type="button" class="linkish" id="link-how-score">How scoring works</button>
     </p>
   </section>
@@ -553,6 +569,9 @@ details.how summary::-webkit-details-marker{display:none}
   }
   function bar(score) {
     const pct = Math.max(0, Math.min(100, score));
+    if (pct === 0) {
+      return `<div class="dim-bar is-empty" title="0 — no signals matched"><div class="dim-fill is-empty-marker"></div></div>`;
+    }
     const color = pct >= 70 ? "#5dbe7c" : pct >= 50 ? "#d4a017" : pct >= 30 ? "#e08940" : "#e85d5d";
     return `<div class="dim-bar"><div class="dim-fill" style="width:${pct}%;background:${color}"></div></div>`;
   }
@@ -678,21 +697,29 @@ details.how summary::-webkit-details-marker{display:none}
     const soft = friendlyTier(overall);
     const gaps = topGaps(findings, scores, dims, 3);
 
+    const ringClass = opts.delta != null && opts.delta > 0
+      ? "score-ring is-improved"
+      : overall < 30
+        ? "score-ring is-critical"
+        : "score-ring";
     let html = `<div class="score-hero">
       <div class="score-kicker">${escapeHtml(opts.title || "Structural score")}</div>`;
     if (opts.delta != null && opts.delta !== 0) {
-      html += `<div class="delta">${opts.delta > 0 ? "+" + opts.delta : opts.delta} after approved fix</div>`;
+      const before = opts.beforeOverall != null ? opts.beforeOverall : overall - opts.delta;
+      html += `<div class="delta" id="hero-delta">${opts.delta > 0 ? "+" + opts.delta : opts.delta} after approved fix</div>
+        <div class="delta-compare" aria-label="Score change"><span class="was">${before}/100</span><span class="arrow">→</span><span class="now">${overall}/100</span></div>`;
     }
-    html += `<div class="score-ring" aria-hidden="true"><div class="score-big ${tier.c}">${overall}<span style="font-size:.4em;opacity:.7">/100</span></div></div>
+    html += `<div class="${ringClass}" aria-hidden="true"><div class="score-big ${tier.c}">${overall}<span style="font-size:.4em;opacity:.7">/100</span></div></div>
       <div class="soft-verdict ${tier.c}">${escapeHtml(soft)}</div>
       <div class="hard-tier">${escapeHtml(tier.n)}</div>
       <div class="stamp">Structural pre-gate · not a red-team · not certification</div>
     </div>`;
 
-    html += `<div class="dims">`;
+    html += `<div class="dims" id="dim-bars">`;
     dims.forEach((d) => {
       const s = scores[d.key] || 0;
-      html += `<div class="dim-row"><span class="dim-label" title="${escapeHtml(d.label)}">${escapeHtml(d.label)}</span>${bar(s)}<span class="dim-score">${s}</span></div>`;
+      const z = s === 0 ? " is-zero" : "";
+      html += `<div class="dim-row"><span class="dim-label" title="${escapeHtml(d.label)}">${escapeHtml(d.label)}</span>${bar(s)}<span class="dim-score${z}">${s}</span></div>`;
     });
     html += `</div>`;
 
@@ -725,9 +752,14 @@ details.how summary::-webkit-details-marker{display:none}
       </details>
     </div>`;
 
-    // primary next: build plan
-    html += `<button type="button" class="btn" id="btn-plan-fix" style="margin-top:.85rem">Plan fix (preview first)</button>
-      <button type="button" class="btn-ghost" id="btn-skip-to-export" style="display:block;margin:0.5rem auto 0">Skip to export</button>`;
+    // primary next: plan (or continue after delta hero moment)
+    if (opts.delta != null && opts.delta !== 0) {
+      html += `<button type="button" class="btn" id="btn-continue-export" style="margin-top:.85rem">Continue to export</button>
+        <button type="button" class="btn-ghost" id="btn-plan-fix" style="display:block;margin:0.5rem auto 0">Plan more fixes</button>`;
+    } else {
+      html += `<button type="button" class="btn" id="btn-plan-fix" style="margin-top:.85rem">Plan fix (preview first)</button>
+        <button type="button" class="btn-ghost" id="btn-skip-to-export" style="display:block;margin:0.5rem auto 0">Skip to export</button>`;
+    }
 
     const el = document.getElementById("agent-scorecard");
     el.innerHTML = html;
@@ -743,13 +775,18 @@ details.how summary::-webkit-details-marker{display:none}
         if (open) track("cs_rules_expand");
       });
     }
-    document.getElementById("btn-plan-fix").addEventListener("click", buildFixPlan);
-    document.getElementById("btn-skip-to-export").addEventListener("click", () => {
+    const planBtn = document.getElementById("btn-plan-fix");
+    if (planBtn) planBtn.addEventListener("click", buildFixPlan);
+    const skip = document.getElementById("btn-skip-to-export");
+    const cont = document.getElementById("btn-continue-export");
+    const goExport = () => {
       renderExport();
       setStage("export");
       showDeck("deck-export", true);
       document.getElementById("deck-export").scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+    };
+    if (skip) skip.addEventListener("click", goExport);
+    if (cont) cont.addEventListener("click", goExport);
   }
 
   function buildFixPlan() {
@@ -815,12 +852,18 @@ details.how summary::-webkit-details-marker{display:none}
     };
     pendingPlan = null;
     track("cs_fix_apply", { delta_bucket: bucket(Math.abs(delta)) });
-    renderInspect(after, { title: "After approved fix", delta });
-    renderExport();
-    showDeck("deck-export", true);
-    setStage("export");
+    // Hero moment: hold Inspect with before→after delta (do not skip to Export)
+    renderInspect(after, {
+      title: "After approved fix",
+      delta,
+      beforeOverall,
+    });
+    showDeck("deck-inspect", true);
+    showDeck("deck-act", false);
+    showDeck("deck-export", false);
+    setStage("inspect");
     toast(delta > 0 ? `Applied — score +${delta}` : "Applied — little score change");
-    document.getElementById("deck-export").scrollIntoView({ behavior: "smooth", block: "start" });
+    document.getElementById("deck-inspect").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function renderExport() {
