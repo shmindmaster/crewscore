@@ -50,15 +50,43 @@ def share_text(result: ScoreResult) -> str:
     )
 
 
+def _smell_value(smell_count: int) -> str:
+    """Badge/headline text for coding-agent config — a count, never a grade."""
+    if smell_count <= 0:
+        return "config: clean"
+    if smell_count == 1:
+        return "config: 1 smell"
+    return f"config: {smell_count} smells"
+
+
+def _smell_color_hex(smell_count: int) -> str:
+    """Smells are advisory, so the scale stops at amber — never a red fail."""
+    if smell_count <= 0:
+        return _TIER_HEX["green"]
+    if smell_count <= 2:
+        return _TIER_HEX["yellow"]
+    return _TIER_HEX["dark_orange"]
+
+
 def render_badge_svg(result: ScoreResult) -> str:
-    """Shields-style SVG badge: CrewScore | {score}/100 colored by tier."""
+    """Shields-style SVG badge: CrewScore | {score}/100 colored by tier.
+
+    Coding-agent config gets `config: N smells` instead — a badge reading
+    `0/100` on an AGENTS.md is the governance grade this artifact is exempt from.
+    """
     label = "CrewScore"
-    value = f"{result.overall}/100"
-    color = _score_color_hex(result.overall)
+    if result.governance_applicable:
+        value = f"{result.overall}/100"
+        color = _score_color_hex(result.overall)
+        value_w = 54
+    else:
+        value = _smell_value(len(result.smells))
+        color = _smell_color_hex(len(result.smells))
+        # Verdana at 11px runs ~7px/char; pad so the longer text still fits.
+        value_w = max(54, 7 * len(value) + 16)
 
     # Approximate widths for monospace-ish badge layout
     label_w = 78
-    value_w = 54
     total_w = label_w + value_w
     label_x = label_w / 2
     value_x = label_w + value_w / 2
@@ -90,6 +118,140 @@ def render_badge_svg(result: ScoreResult) -> str:
     )
 
 
+_BASE_CSS = """*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;
+background:#0f0f1a;color:#e2e8f0;min-height:100vh;padding:2rem 1rem;
+display:flex;flex-direction:column;align-items:center}
+.container{max-width:640px;width:100%}
+h1{font-size:1.75rem;color:#fff;text-align:center;margin-bottom:0.25rem}
+.subtitle{text-align:center;color:#94a3b8;font-size:0.85rem;margin-bottom:1.5rem}
+.card{background:#1a1f2e;border:1px solid #334155;border-radius:12px;padding:1.5rem}
+.score-big{font-size:3rem;font-weight:bold;text-align:center;margin:0.5rem 0}
+.tier{text-align:center;font-size:1.05rem;font-weight:bold;margin-bottom:1rem}
+.meta{text-align:center;font-size:0.75rem;color:#64748b;margin-bottom:1.25rem}
+.disclaimer{margin-top:1.25rem;padding:0.75rem;background:#0f0f1a;border:1px solid #334155;
+border-radius:8px;font-size:0.75rem;color:#94a3b8;line-height:1.45}
+.footer{margin-top:1.25rem;text-align:center;font-size:0.7rem;color:#475569;line-height:1.5}
+.footer a{color:#3b82f6;text-decoration:none}"""
+
+_DIM_CSS = """.dim-row{display:flex;align-items:center;gap:0.5rem;margin:0.45rem 0;font-size:0.75rem}
+.dim-label{width:200px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dim-bar{flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden}
+.dim-fill{height:100%;border-radius:4px}
+.dim-score{width:55px;text-align:right;color:#64748b}
+.findings{margin-top:1rem;font-size:0.72rem;color:#94a3b8;text-align:left}
+.findings h2{color:#e2e8f0;font-size:0.85rem;margin-bottom:0.5rem}
+.findings h3{color:#cbd5e1;font-size:0.78rem;margin:0.65rem 0 0.25rem}
+.findings ul{padding-left:1.1rem;margin:0.2rem 0}
+.findings li{margin:0.2rem 0}
+.findings .matched{color:#34d399}
+.findings .missing{color:#f87171}
+.findings code{color:#93c5fd;font-size:0.7rem}"""
+
+_SMELL_CSS = """.smells{margin-top:1rem;font-size:0.75rem;color:#94a3b8;text-align:left}
+.smells h2{color:#e2e8f0;font-size:0.85rem;margin-bottom:0.5rem}
+.smells ul{padding-left:1.1rem;margin:0.2rem 0}
+.smells li{margin:0.55rem 0}
+.smells strong{color:#eab308}
+.smells code{color:#93c5fd;font-size:0.7rem}
+.smell-meta{color:#64748b;font-size:0.68rem}"""
+
+
+def _document(
+    *,
+    head_title: str,
+    subtitle: str,
+    extra_css: str,
+    card_html: str,
+    ruleset: str,
+    version: str,
+    ts: str,
+) -> str:
+    """Shared self-contained page shell (inline CSS, no scripts, no CDN)."""
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{head_title}</title>
+<style>
+{_BASE_CSS}
+{extra_css}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>CrewScore</h1>
+  <p class="subtitle">{subtitle}</p>
+  <div class="card">
+{card_html}
+  </div>
+  <div class="footer">
+    CrewScore v{version} · {ruleset} · Generated {ts}<br>
+    <a href="{HOMEPAGE}">crewscore.ai</a>
+  </div>
+</div>
+</body>
+</html>
+"""
+
+
+def _render_config_html(result: ScoreResult, *, ts: str) -> str:
+    """Scorecard for coding-agent config: smells only, no governance grade.
+
+    No dimension bars, no 0-100 headline, and no `15+85*matches` formula —
+    none of those describe how this artifact was judged.
+    """
+    count = len(result.smells)
+    color = _smell_color_hex(count)
+    headline = escape(_smell_value(count).removeprefix("config: "))
+    tier = escape(result.tier)
+    source = escape(result.source)
+    ruleset = escape(getattr(result, "ruleset", None) or RULESET_ID)
+
+    if result.smells:
+        parts = ['<div class="smells"><h2>Configuration smells</h2><ul>']
+        for s in result.smells:
+            parts.append(
+                f"<li><strong>{escape(str(s.get('name', '?')))}</strong> "
+                f"<code>{escape(str(s.get('smell_id', '')))}</code><br>"
+                f"{escape(str(s.get('detail', '')))}<br>"
+                f'<span class="smell-meta">heuristic: '
+                f"{escape(str(s.get('heuristic', '')))} · "
+                f"{escape(str(s.get('paper_prevalence', '')))}</span></li>"
+            )
+        parts.append("</ul></div>")
+        smells_html = "\n".join(parts)
+    else:
+        smells_html = (
+            '<div class="smells"><h2>Configuration smells</h2>'
+            "<p>No configuration smells detected.</p></div>"
+        )
+
+    card_html = f"""    <div class="score-big" style="color:{color}">{headline}</div>
+    <div class="tier" style="color:{color}">{tier}</div>
+    <div class="meta">Ruleset: {ruleset} · Artifact: coding-agent config · Source: {source}</div>
+    {smells_html}
+    <div class="disclaimer">
+      <strong>Not a governance grade.</strong> This is repo guidance for a coding
+      agent, so it is judged on configuration smells
+      (<a href="https://arxiv.org/abs/2606.15828">arXiv:2606.15828</a>), not the
+      8 production-governance dimensions. Across that paper's 100-repo corpus the
+      governance ruleset put every such file in the worst tier — the number says
+      nothing here. Smells are advisory and never folded into a score.
+    </div>"""
+
+    return _document(
+        head_title=f"CrewScore — {tier}",
+        subtitle="Coding-agent config report (configuration smells)",
+        extra_css=_SMELL_CSS,
+        card_html=card_html,
+        ruleset=ruleset,
+        version=escape(__version__),
+        ts=escape(ts),
+    )
+
+
 def render_html_report(
     result: ScoreResult,
     *,
@@ -99,11 +261,16 @@ def render_html_report(
     """Self-contained dark HTML scorecard (inline CSS, no scripts/CDN).
 
     Includes ruleset, formula, and optional open rule-id findings — not a black box.
+    Coding-agent config takes the smell scorecard instead; the governance
+    dimensions are not a verdict on that artifact.
     """
     if generated_at is None:
         generated_at = (
             datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
         )
+
+    if not result.governance_applicable:
+        return _render_config_html(result, ts=generated_at)
 
     color = _score_color_hex(result.overall)
     overall = result.overall
@@ -156,50 +323,8 @@ def render_html_report(
         parts.append("</div>")
         findings_html = "\n".join(parts)
 
-    return f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CrewScore — {overall}/100</title>
-<style>
-*{{box-sizing:border-box;margin:0;padding:0}}
-body{{font-family:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;
-background:#0f0f1a;color:#e2e8f0;min-height:100vh;padding:2rem 1rem;
-display:flex;flex-direction:column;align-items:center}}
-.container{{max-width:640px;width:100%}}
-h1{{font-size:1.75rem;color:#fff;text-align:center;margin-bottom:0.25rem}}
-.subtitle{{text-align:center;color:#94a3b8;font-size:0.85rem;margin-bottom:1.5rem}}
-.card{{background:#1a1f2e;border:1px solid #334155;border-radius:12px;padding:1.5rem}}
-.score-big{{font-size:3rem;font-weight:bold;text-align:center;color:{color};margin:0.5rem 0}}
-.tier{{text-align:center;font-size:1.05rem;font-weight:bold;color:{color};margin-bottom:1rem}}
-.meta{{text-align:center;font-size:0.75rem;color:#64748b;margin-bottom:1.25rem}}
-.dim-row{{display:flex;align-items:center;gap:0.5rem;margin:0.45rem 0;font-size:0.75rem}}
-.dim-label{{width:200px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
-.dim-bar{{flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden}}
-.dim-fill{{height:100%;border-radius:4px}}
-.dim-score{{width:55px;text-align:right;color:#64748b}}
-.disclaimer{{margin-top:1.25rem;padding:0.75rem;background:#0f0f1a;border:1px solid #334155;
-border-radius:8px;font-size:0.75rem;color:#94a3b8;line-height:1.45}}
-.findings{{margin-top:1rem;font-size:0.72rem;color:#94a3b8;text-align:left}}
-.findings h2{{color:#e2e8f0;font-size:0.85rem;margin-bottom:0.5rem}}
-.findings h3{{color:#cbd5e1;font-size:0.78rem;margin:0.65rem 0 0.25rem}}
-.findings ul{{padding-left:1.1rem;margin:0.2rem 0}}
-.findings li{{margin:0.2rem 0}}
-.findings .matched{{color:#34d399}}
-.findings .missing{{color:#f87171}}
-.findings code{{color:#93c5fd;font-size:0.7rem}}
-.footer{{margin-top:1.25rem;text-align:center;font-size:0.7rem;color:#475569;line-height:1.5}}
-.footer a{{color:#3b82f6;text-decoration:none}}
-</style>
-</head>
-<body>
-<div class="container">
-  <h1>CrewScore</h1>
-  <p class="subtitle">Structural hygiene report (open rules)</p>
-  <div class="card">
-    <div class="score-big">{overall}/100</div>
-    <div class="tier">{tier}</div>
+    card_html = f"""    <div class="score-big" style="color:{color}">{overall}/100</div>
+    <div class="tier" style="color:{color}">{tier}</div>
     <div class="meta">Ruleset: {ruleset} · Mode: {mode} · Source: {source}</div>
     {dim_html}
     <div class="disclaimer">
@@ -208,13 +333,14 @@ border-radius:8px;font-size:0.75rem;color:#94a3b8;line-height:1.45}}
       List every rule with <code>crewscore rules --json</code>.
       Not live red-teaming, not runtime proof, not a certification.
     </div>
-    {findings_html}
-  </div>
-  <div class="footer">
-    CrewScore v{version} · {ruleset} · Generated {ts}<br>
-    <a href="{HOMEPAGE}">crewscore.ai</a>
-  </div>
-</div>
-</body>
-</html>
-"""
+    {findings_html}"""
+
+    return _document(
+        head_title=f"CrewScore — {overall}/100",
+        subtitle="Structural hygiene report (open rules)",
+        extra_css=_DIM_CSS,
+        card_html=card_html,
+        ruleset=ruleset,
+        version=version,
+        ts=ts,
+    )
