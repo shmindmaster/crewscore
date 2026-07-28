@@ -131,7 +131,7 @@ Honest principles we ship by:
 9. `fix` improves **text coverage**, not runtime safety; it reports its own context cost, and template boilerplate triggers a warning.
 10. We never call a score a **certification**, **audit**, or **red-team result**.
 11. When in doubt, **under-score** rather than inflate.
-12. Source of truth: [`crewscore/scorers/structural_analysis.py`](crewscore/scorers/structural_analysis.py). Validation harness: `scripts/`.
+12. Source of truth: [`crewscore/scorers/structural_analysis.py`](crewscore/scorers/structural_analysis.py). How to reproduce the study for yourself: [`docs/validation.md`](docs/validation.md).
 
 > **Changed in `0.3.0`:** CrewScore used to award up to +10 per dimension for prompts over 500 words. That rewarded the exact thing the research penalizes — and it was never in the published formula. It is gone. See [what changed and why](#what-changed-in-040).
 
