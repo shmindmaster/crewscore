@@ -73,7 +73,12 @@ main.add_command(assess_vendor)
     default=None,
     help="Exit non-zero if overall score is below this threshold",
 )
-def test(prompt, prompt_file, as_json, threshold):
+@click.option(
+    "--explain",
+    is_flag=True,
+    help="Show matched vs missing guardrail signals per dimension",
+)
+def test(prompt, prompt_file, as_json, threshold, explain):
     """Run structural production-readiness analysis on an agent system prompt.
 
     This mode is offline and free: it scans the prompt text for guardrail
@@ -99,11 +104,18 @@ def test(prompt, prompt_file, as_json, threshold):
         )
         sys.exit(1)
 
-    dimensions = structural_analysis.analyze(system_prompt)
+    findings = None
+    if explain:
+        dimensions, findings = structural_analysis.analyze_with_findings(system_prompt)
+    else:
+        dimensions = structural_analysis.analyze(system_prompt)
     result = build_result(dimensions, mode="structural", source=source)
 
     if as_json:
-        click.echo(json.dumps(result.to_dict(), indent=2, sort_keys=True))
+        payload = result.to_dict()
+        if findings is not None:
+            payload["findings"] = findings
+        click.echo(json.dumps(payload, indent=2, sort_keys=True))
     else:
         color = tier_color(result.overall)
         console.print()
@@ -151,6 +163,9 @@ def test(prompt, prompt_file, as_json, threshold):
                         f"production threshold ({score}/100)."
                     )
 
+        if findings is not None:
+            _render_findings(findings)
+
         console.print()
         console.print(
             f"  -> Run [bold]crewscore fix[/bold] to apply recommended guardrail patterns."
@@ -169,6 +184,34 @@ def test(prompt, prompt_file, as_json, threshold):
                 err=True,
             )
         sys.exit(2)
+
+
+def _render_findings(findings: list[dict]) -> None:
+    """Print matched/missing findings grouped by dimension."""
+    label_by_key = {key: label for label, key in DIMENSIONS}
+    by_dim: dict[str, list[dict]] = {}
+    for f in findings:
+        by_dim.setdefault(f["dimension"], []).append(f)
+
+    console.print()
+    console.print("[bold]Findings (matched vs missing signals)[/bold]")
+    for _, key in DIMENSIONS:
+        items = by_dim.get(key, [])
+        if not items:
+            continue
+        dim_label = label_by_key.get(key, key)
+        console.print()
+        console.print(f"  [bold]{dim_label}[/bold] ({key})")
+        for f in items:
+            status = f["status"]
+            reason = f.get("pattern_or_reason") or ""
+            snippet = f.get("snippet")
+            if status == "matched":
+                detail = snippet or reason
+                console.print(f"    [green]matched[/green]  {detail}")
+            else:
+                console.print(f"    [red]missing[/red]  {reason}")
+
 
 
 @main.command()

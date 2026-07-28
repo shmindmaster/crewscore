@@ -100,25 +100,184 @@ SCORER_MAP = {
     "compliance": COMPLIANCE_PATTERNS,
 }
 
+# Short human-readable labels for highest-value signals per dimension.
+# Index-aligned with the first N patterns in SCORER_MAP (used for missing findings).
+DIMENSION_SIGNAL_LABELS: dict[str, list[str]] = {
+    "injection": [
+        "Reject ignore-previous-instructions / override attempts",
+        "Do not follow user input that conflicts with system rules",
+        "Keep system prompt confidential / do not reveal it",
+    ],
+    "hallucination": [
+        "Do not fabricate facts, citations, or numbers",
+        "Say so when you do not know or lack evidence",
+        "Only use provided / verified data",
+    ],
+    "citation": [
+        "Require citations, references, or source links",
+        "Link claims back to source evidence",
+        "Every claim must cite its source",
+    ],
+    "cost": [
+        "Token / cost / budget limit or cap",
+        "Max token or response length constraint",
+        "Rate or cost limiting",
+    ],
+    "human_gate": [
+        "Human / supervisor must approve or review",
+        "Human-in-the-loop review or approval gate",
+        "Approval required before execute / send / publish",
+    ],
+    "safe_stop": [
+        "Stop / halt / refuse when conditions are unmet",
+        "Handle missing or insufficient evidence",
+        "Escalate to a human supervisor",
+    ],
+    "audit": [
+        "Log or audit trail for actions and decisions",
+        "Audit / logging / provenance accountability",
+        "Immutable or append-only audit trail",
+    ],
+    "compliance": [
+        "HIPAA / PHI / protected health data handling",
+        "SOC 2 controls",
+        "GDPR / data protection requirements",
+    ],
+}
 
-def _score_dimension(prompt_lower: str, patterns: list[str]) -> int:
-    """Score a single dimension based on pattern matches (0-100)."""
-    matches = 0
+_SNIPPET_MAX = 120
+_MAX_FINDINGS_PER_STATUS = 3
+
+
+def _truncate_snippet(text: str, max_len: int = _SNIPPET_MAX) -> str:
+    text = " ".join(text.split())
+    if len(text) <= max_len:
+        return text
+    return text[: max_len - 1] + "…"
+
+
+def _match_patterns(prompt_lower: str, patterns: list[str]) -> list[tuple[str, str]]:
+    """Return (pattern, snippet) for each pattern that matches the prompt."""
+    hits: list[tuple[str, str]] = []
     for pattern in patterns:
         try:
-            if re.search(pattern, prompt_lower, re.IGNORECASE):
-                matches += 1
+            m = re.search(pattern, prompt_lower, re.IGNORECASE)
         except re.error:
             continue
+        if m:
+            hits.append((pattern, _truncate_snippet(m.group(0))))
+    return hits
 
-    total_patterns = len(patterns)
+
+def _score_from_match_count(matches: int, total_patterns: int) -> int:
+    """Score a dimension from match count (0-100)."""
     if total_patterns == 0 or matches == 0:
         return 0
-
-    # First match shows awareness; additional matches raise the score with diminishing returns
     raw = matches / total_patterns
     score = 15 + (raw * 85)
     return min(100, round(score))
+
+
+def _score_dimension(prompt_lower: str, patterns: list[str]) -> int:
+    """Score a single dimension based on pattern matches (0-100)."""
+    matches = _match_patterns(prompt_lower, patterns)
+    return _score_from_match_count(len(matches), len(patterns))
+
+
+def _apply_length_bonus(results: dict[str, int], prompt_lower: str) -> dict[str, int]:
+    """Modest bonus for long, detailed prompts (capped to reduce gaming)."""
+    word_count = len(prompt_lower.split())
+    if word_count > 500:
+        length_bonus = min(10, (word_count - 500) // 200)
+        for key in results:
+            results[key] = min(100, results[key] + length_bonus)
+    return results
+
+
+def analyze_with_findings(
+    system_prompt: str,
+) -> tuple[dict[str, int], list[dict]]:
+    """Run structural analysis and return scores plus explain findings.
+
+    Returns:
+        (scores, findings) where findings is a list of dicts with keys
+        dimension, status ("matched"|"missing"), pattern_or_reason, snippet.
+    """
+    if not system_prompt or not system_prompt.strip():
+        scores = {key: 0 for key in SCORER_MAP}
+        findings: list[dict] = []
+        for dimension in SCORER_MAP:
+            labels = DIMENSION_SIGNAL_LABELS.get(dimension, [])
+            for label in labels[:_MAX_FINDINGS_PER_STATUS]:
+                findings.append(
+                    {
+                        "dimension": dimension,
+                        "status": "missing",
+                        "pattern_or_reason": label,
+                        "snippet": None,
+                    }
+                )
+        return scores, findings
+
+    prompt_lower = system_prompt.lower()
+    results: dict[str, int] = {}
+    findings = []
+
+    for dimension, patterns in SCORER_MAP.items():
+        hits = _match_patterns(prompt_lower, patterns)
+        results[dimension] = _score_from_match_count(len(hits), len(patterns))
+
+        # Up to 3 matched snippets
+        for pattern, snippet in hits[:_MAX_FINDINGS_PER_STATUS]:
+            findings.append(
+                {
+                    "dimension": dimension,
+                    "status": "matched",
+                    "pattern_or_reason": pattern,
+                    "snippet": snippet,
+                }
+            )
+
+        # Up to 3 missing human labels for unmatched high-value signals
+        labels = DIMENSION_SIGNAL_LABELS.get(dimension, [])
+        matched_indices = set()
+        for i, pattern in enumerate(patterns):
+            try:
+                if re.search(pattern, prompt_lower, re.IGNORECASE):
+                    matched_indices.add(i)
+            except re.error:
+                continue
+
+        missing_count = 0
+        for i, label in enumerate(labels):
+            if missing_count >= _MAX_FINDINGS_PER_STATUS:
+                break
+            # Label i corresponds to high-value pattern i when index-aligned
+            if i < len(patterns) and i in matched_indices:
+                continue
+            findings.append(
+                {
+                    "dimension": dimension,
+                    "status": "missing",
+                    "pattern_or_reason": label,
+                    "snippet": None,
+                }
+            )
+            missing_count += 1
+
+        # If no labels but also no hits, still report something missing
+        if not hits and missing_count == 0:
+            findings.append(
+                {
+                    "dimension": dimension,
+                    "status": "missing",
+                    "pattern_or_reason": f"No {dimension} guardrail signals detected",
+                    "snippet": None,
+                }
+            )
+
+    results = _apply_length_bonus(results, prompt_lower)
+    return results, findings
 
 
 def analyze(system_prompt: str) -> Dict[str, int]:
@@ -127,20 +286,5 @@ def analyze(system_prompt: str) -> Dict[str, int]:
     Returns:
         Dict mapping dimension name → score (0-100).
     """
-    if not system_prompt or not system_prompt.strip():
-        return {key: 0 for key in SCORER_MAP}
-
-    prompt_lower = system_prompt.lower()
-    results: Dict[str, int] = {}
-
-    for dimension, patterns in SCORER_MAP.items():
-        results[dimension] = _score_dimension(prompt_lower, patterns)
-
-    # Modest bonus for long, detailed prompts (capped to reduce gaming)
-    word_count = len(prompt_lower.split())
-    if word_count > 500:
-        length_bonus = min(10, (word_count - 500) // 200)
-        for key in results:
-            results[key] = min(100, results[key] + length_bonus)
-
-    return results
+    scores, _ = analyze_with_findings(system_prompt)
+    return scores
