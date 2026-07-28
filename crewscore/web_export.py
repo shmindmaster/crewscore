@@ -10,6 +10,8 @@ from crewscore.profiles import (
     PROFILE_LABELS,
     PROFILES,
     SYSTEM_PROMPT,
+    _CONFIG_BASENAMES,
+    _CONFIG_DIR_NAMES,
 )
 from crewscore.scoring import DIMENSIONS, RULESET_ID
 from crewscore.scorers.fix_patterns import FIX_TEMPLATES
@@ -240,6 +242,34 @@ JS_RUNTIME = r"""
     return "CONFIG: " + smellCount + " SMELLS";
   }
 
+  /**
+   * Mirrors crewscore.profiles.classify_path — filename and path only.
+   *
+   * Only useful where a real filename exists (a loaded URL). Pasted text has
+   * no name and must be declared by the user instead; guessing from content
+   * is what this whole split exists to avoid.
+   */
+  function classifyFilename(pathOrName) {
+    const fallback = ENGINE.default_profile;
+    if (!pathOrName) return fallback;
+    const parts = String(pathOrName).split(/[\\/]/).filter((p) => p !== "");
+    if (!parts.length) return fallback;
+    const name = parts[parts.length - 1].toLowerCase();
+    if ((ENGINE.config_basenames || []).indexOf(name) !== -1) {
+      return ENGINE.config_profile;
+    }
+    // `.cursor/rules/*.mdc` and friends are config whatever the leaf is named.
+    const dot = name.lastIndexOf(".");
+    const suffix = dot > 0 ? name.slice(dot) : "";
+    if (suffix === ".mdc") {
+      const dirs = ENGINE.config_dir_names || [];
+      for (const part of parts.slice(0, -1)) {
+        if (dirs.indexOf(part.toLowerCase()) !== -1) return ENGINE.config_profile;
+      }
+    }
+    return fallback;
+  }
+
   /** Mirrors crewscore.profiles.governance_applies. */
   function governanceApplies(profile) {
     return profile !== ENGINE.config_profile;
@@ -367,6 +397,7 @@ JS_RUNTIME = r"""
     analyzeWithFindings,
     analyzeArtifact,
     detectContextBloat,
+    classifyFilename,
     configTier,
     governanceApplies,
     profileLabel,
@@ -431,6 +462,11 @@ def build_payload() -> dict:
         ],
         "default_profile": SYSTEM_PROMPT,
         "config_profile": CODING_AGENT_CONFIG,
+        # Filename-only classification, mirroring profiles.classify_path. A URL
+        # load *does* carry a real filename, so it gets the same treatment the
+        # CLI gives a path — still no content sniffing anywhere.
+        "config_basenames": sorted(_CONFIG_BASENAMES),
+        "config_dir_names": sorted(_CONFIG_DIR_NAMES),
         "context_bloat_max_lines": CONTEXT_BLOAT_MAX_LINES,
         "smell_citation": CITATION,
         "smell_catalog": {

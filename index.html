@@ -1419,7 +1419,15 @@ body.sheet-open{overflow:hidden}
       if (!text.trim()) throw new Error("Empty file");
       if (text.length > 500000) throw new Error("File too large");
       document.getElementById("agent-prompt").value = text;
-      toast("Loaded — scoring…");
+      // A URL carries a real filename, so classify it exactly as the CLI does
+      // — still filename-only, never a guess at the content. The user sees the
+      // result in the radiogroup and can override it.
+      let named = null;
+      try { named = E.classifyFilename(new URL(url, location.href).pathname); } catch (e) {}
+      if (named) setProfile(named);
+      toast(named === E.configProfile
+        ? "Loaded as coding-agent config — change above if that is wrong"
+        : "Loaded — scoring…");
       scoreAgent({ source: "url" });
     } catch (e) {
       err.textContent =

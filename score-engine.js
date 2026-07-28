@@ -430,6 +430,26 @@
   ],
   "default_profile": "system_prompt",
   "config_profile": "coding_agent_config",
+  "config_basenames": [
+    ".aider.conf.yml",
+    ".clinerules",
+    ".cursorrules",
+    ".windsurfrules",
+    "agent.md",
+    "agents.md",
+    "claude.md",
+    "conventions.md",
+    "copilot-instructions.md",
+    "gemini.md",
+    "soul.md",
+    "warp.md"
+  ],
+  "config_dir_names": [
+    ".clinerules",
+    ".cursor",
+    ".github",
+    ".windsurf"
+  ],
   "context_bloat_max_lines": 200,
   "smell_citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
   "smell_catalog": {
@@ -693,6 +713,34 @@
     return "CONFIG: " + smellCount + " SMELLS";
   }
 
+  /**
+   * Mirrors crewscore.profiles.classify_path — filename and path only.
+   *
+   * Only useful where a real filename exists (a loaded URL). Pasted text has
+   * no name and must be declared by the user instead; guessing from content
+   * is what this whole split exists to avoid.
+   */
+  function classifyFilename(pathOrName) {
+    const fallback = ENGINE.default_profile;
+    if (!pathOrName) return fallback;
+    const parts = String(pathOrName).split(/[\\/]/).filter((p) => p !== "");
+    if (!parts.length) return fallback;
+    const name = parts[parts.length - 1].toLowerCase();
+    if ((ENGINE.config_basenames || []).indexOf(name) !== -1) {
+      return ENGINE.config_profile;
+    }
+    // `.cursor/rules/*.mdc` and friends are config whatever the leaf is named.
+    const dot = name.lastIndexOf(".");
+    const suffix = dot > 0 ? name.slice(dot) : "";
+    if (suffix === ".mdc") {
+      const dirs = ENGINE.config_dir_names || [];
+      for (const part of parts.slice(0, -1)) {
+        if (dirs.indexOf(part.toLowerCase()) !== -1) return ENGINE.config_profile;
+      }
+    }
+    return fallback;
+  }
+
   /** Mirrors crewscore.profiles.governance_applies. */
   function governanceApplies(profile) {
     return profile !== ENGINE.config_profile;
@@ -820,6 +868,7 @@
     analyzeWithFindings,
     analyzeArtifact,
     detectContextBloat,
+    classifyFilename,
     configTier,
     governanceApplies,
     profileLabel,

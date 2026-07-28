@@ -7,7 +7,12 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from crewscore.profiles import CODING_AGENT_CONFIG, PROFILE_LABELS, SYSTEM_PROMPT
+from crewscore.profiles import (
+    CODING_AGENT_CONFIG,
+    PROFILE_LABELS,
+    SYSTEM_PROMPT,
+    classify_path,
+)
 from crewscore.scorers.structural_analysis import analyze, analyze_with_findings
 from crewscore.scoring import config_tier, overall_score
 from crewscore.smells import CITATION, CONTEXT_BLOAT_MAX_LINES, detect_context_bloat
@@ -260,6 +265,36 @@ def test_js_config_verdict_declares_what_it_cannot_check_when_node_present():
     # The UI renders "<run> of <total> detectors" from these.
     assert out["detectors_run"] == 1
     assert out["detectors_total"] == 3
+
+
+def test_js_classifies_a_real_filename_like_the_cli_when_node_present():
+    """A loaded URL carries a real filename, so classify it — never sniff text."""
+    if not shutil.which("node"):
+        return
+    names = [
+        "AGENTS.md",
+        "CLAUDE.md",
+        ".cursorrules",
+        "copilot-instructions.md",
+        "system-prompt.md",
+        "prompt.txt",
+        "",
+        ".cursor/rules/testing.mdc",
+        "docs/testing.mdc",
+    ]
+    out = _run_engine(
+        "const n = "
+        + json.dumps(names)
+        + ";const o = {};n.forEach((x) => { o[x] = E.classifyFilename(x); });emit(o);"
+    )
+    for name in names:
+        assert out[name] == classify_path(name or None), f"profile mismatch on {name!r}"
+
+
+def test_index_classifies_loaded_urls_by_filename():
+    """The URL loader must not leave a config file declared as a system prompt."""
+    html = (ROOT / "index.html").read_text(encoding="utf-8")
+    assert "classifyFilename" in html
 
 
 def test_js_python_score_parity_when_node_present():
