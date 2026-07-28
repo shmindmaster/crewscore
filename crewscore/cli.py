@@ -350,6 +350,12 @@ def fix(prompt, prompt_file, apply, output, as_json):
     console.print()
     console.print(explain_fixes(fixes))
     console.print()
+    console.print(
+        "[yellow]Honesty note:[/yellow] These are prompt templates — "
+        "they must be paired with runtime gates (tool allowlists, human "
+        "approval hooks, logging, and policy enforcement) to have real effect."
+    )
+    console.print()
 
     if apply and source_path:
         console.print(f"  [green]Fixes applied in-place to {source_path}[/green]")
