@@ -199,3 +199,46 @@ def test_scoring_method_constant_honest():
     assert "certification" in " ".join(SCORING_METHOD["what_this_is_not"]).lower()
     block = scoring_transparency_block()
     assert block["open_rules"].startswith("crewscore rules")
+
+
+def _dim_score(matches, total):
+    """The published per-dimension formula, restated independently."""
+    if not total or matches == 0:
+        return 0
+    return min(100, round(15 + 85 * matches / total))
+
+
+def test_a_prompt_stating_every_control_once_scores_below_the_lowest_tier():
+    """docs/validation.md's central, self-contained proof.
+
+    A prompt that states all eight governance controls clearly, once each,
+    scores 28/100 -- under the lowest tier boundary of 50. Reaching 70 needs
+    the same control restated 4-6 different ways, which is exactly the
+    redundancy the Context Bloat detector calls a defect.
+
+    This is the evidence the coverage-not-quality claim rests on, so it is
+    pinned here: if a rule count changes, this number moves and the document
+    must be updated with it.
+    """
+    from crewscore.scoring import overall_score
+
+    per = {k: _dim_score(1, len(SCORER_MAP[k])) for k in DIMENSION_KEYS}
+    assert overall_score(per) == 28, per
+    twice = {k: _dim_score(2, len(SCORER_MAP[k])) for k in DIMENSION_KEYS}
+    assert overall_score(twice) == 41, twice
+    # The documented per-dimension range for a single clear statement.
+    assert min(per.values()) == 24 and max(per.values()) == 32, per
+
+
+def test_validation_doc_does_not_cite_the_withdrawn_corpus_statistics():
+    """The corpus study was withdrawn after our own audit found impossible
+    numbers in it (60% recall from n=2; a line total below its own minimum;
+    a CI inconsistent with its p-value). Those figures must not survive
+    anywhere, because a withdrawn statistic quoted in a summary table is
+    still a published claim.
+    """
+    doc = Path("docs/validation.md").read_text(encoding="utf-8")
+    withdrawn = ["+0.061", "0.863", "0.800", "+0.601", "p=0.36", "99.3%"]
+    for stat in withdrawn:
+        assert stat not in doc, stat + " is a withdrawn statistic"
+    assert "withdrawn" in doc.lower()

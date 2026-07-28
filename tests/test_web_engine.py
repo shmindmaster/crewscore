@@ -441,3 +441,66 @@ process.stdout.write(JSON.stringify({{
     assert data["hasFixes"]
     assert data["after"] > data["before"]
     assert data["hasCrewScore"]
+
+
+# Real bilingual prose, not contrived edge cases: CJK has no inter-word
+# spaces, so an English compliance acronym sitting flush against native
+# script is simply how these prompts are written.
+UNICODE_BOUNDARY_CASES = [
+    "确保hipaa合规性。",
+    "每个答案都要citation来源。",
+    "Ελεγχοςhipaaσυμμόρφωσης",
+    "Проверьтеhipaaтребования",
+]
+
+
+def test_word_boundaries_agree_across_engines_on_non_ascii_text():
+    r"""Python's \b is Unicode-aware; JavaScript's is ASCII-only.
+
+    JS treats every CJK/Greek/Cyrillic character as a non-word character, so
+    `\bhipaa\b` fires inside "确保hipaa合规性" in the browser and does not in
+    the CLI. A user pastes a Chinese prompt on crewscore.ai, gets one score,
+    puts the CLI in CI, and gets another. The `u` flag does NOT fix this --
+    JS `\w` stays ASCII-only in unicode mode -- so the patterns have to be
+    rewritten with explicit Unicode lookarounds.
+    """
+    if not shutil.which("node"):
+        pytest.skip("node not installed; skipping JS engine parity test")
+    mismatches = []
+    for text in UNICODE_BOUNDARY_CASES:
+        py_dims = analyze(text)
+        js = _run_engine(
+            "emit(E.analyzeArtifact("
+            + json.dumps(text)
+            + ", "
+            + json.dumps(SYSTEM_PROMPT)
+            + "));"
+        )
+        js_dims = js["scores"]
+        for key in sorted(py_dims):
+            if int(py_dims[key]) != int(js_dims[key]):
+                mismatches.append(
+                    (text[:20], key, int(py_dims[key]), int(js_dims[key]))
+                )
+    assert not mismatches, "python/js disagree: " + repr(mismatches)
+
+
+def test_ascii_word_boundaries_still_match_after_the_unicode_rewrite():
+    """The Unicode rewrite must not break ordinary English matching.
+
+    A boundary rewrite that stops `\bhipaa\b` from firing on plain English
+    would "fix" parity by making both engines equally wrong.
+    """
+    if not shutil.which("node"):
+        pytest.skip("node not installed; skipping JS engine parity test")
+    text = "Handle PHI under HIPAA. Every claim must cite its source."
+    py_dims = analyze(text)
+    js = _run_engine(
+        "emit(E.analyzeArtifact("
+        + json.dumps(text)
+        + ", "
+        + json.dumps(SYSTEM_PROMPT)
+        + "));"
+    )
+    assert py_dims["compliance"] > 0, "control case lost its ASCII match"
+    assert js["scores"]["compliance"] == py_dims["compliance"]

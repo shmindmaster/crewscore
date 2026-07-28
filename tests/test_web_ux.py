@@ -470,11 +470,23 @@ def test_readme_config_smells_marked_unaffected_by_the_study():
     assert "arxiv.org/abs/2606.15828" in section
 
 
-def test_readme_has_no_stale_031_references():
-    """0.3.1 was never released (latest tag is v0.2.7); its notes ship as
-    0.4.0. A lingering 0.3.1 points a reader at a version that never existed."""
+def test_readme_never_presents_an_unpublished_version_as_released():
+    """Neither 0.3.0 nor 0.3.1 was ever published; PyPI stops at 0.2.7.
+
+    The rule is not "never say 0.3.x" — saying it is *fine and useful* when
+    the point being made is that it never shipped, which is what an upgrading
+    user needs to know. What must never happen is presenting it as something
+    the reader could have, install, or be upgrading from.
+    """
     md = _readme()
-    assert "0.3.1" not in md
+    if "0.3.1" in md or "0.3.0" in md:
+        assert "never published" in md.lower(), (
+            "README mentions a 0.3.x version without saying it never shipped"
+        )
+        assert "0.2.7" in md, "README must name the real last public release"
+    # No instruction anywhere can point at an unpublished version.
+    for bad in ("pip install crewscore==0.3", "crewscore==0.3.0", "crewscore==0.3.1"):
+        assert bad not in md, bad
 
 
 def test_panel_lifted_from_bg():
