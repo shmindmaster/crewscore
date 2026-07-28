@@ -64,10 +64,15 @@ def test_index_loads_shared_engine():
     assert 'src="score-engine.js"' in html
     assert "CrewScoreEngine" in html
     assert "analyzeWithFindings" in html
-    assert "fixAndRescore" in html
+    # Fix path uses plan → generateFixes/applyFixes (or legacy fixAndRescore)
+    assert "generateFixes" in html or "fixAndRescore" in html
+    assert "applyFixes" in html or "fixAndRescore" in html
     assert "No signup" in html or "no install" in html.lower()
     assert "template-chips" in html
     assert "downloadScoreCard" in html or "share-canvas" in html
+    # Preflight workflow stages (product experience redesign)
+    assert "Plan fix" in html or "plan" in html.lower()
+    assert "Structural pre-gate" in html or "not a red-team" in html.lower()
 
 
 def test_js_python_score_parity_when_node_present():
