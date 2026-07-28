@@ -151,10 +151,28 @@ def test_test_human_shows_ruleset_and_method_without_explain_flag():
 def test_ruleset_id_is_0_4_0():
     """The ruleset moves alongside the package to 0.4.0.
 
-    0.3.1 was never published (the last public release is 0.3.0) and this
-    branch is unpushed, so there is no comparison history to invalidate.
+    No 0.3.x was ever published — the last release on PyPI is 0.2.7 — so
+    there is no comparison history for the renumber to invalidate.
     """
     assert RULESET_ID == "crewscore-hygiene@0.4.0"
+
+
+def test_docs_do_not_claim_an_unpublished_version_was_released():
+    """0.3.0 and 0.3.1 were tagged in development but never shipped to PyPI.
+
+    The CHANGELOG originally called 0.3.0 the "last publicly released
+    version", which is false: PyPI has 0.2.0 through 0.2.7 and nothing else.
+    A release whose entire premise is "we corrected our overclaims" cannot
+    ship a wrong claim about its own release history, so this pins it.
+    """
+    changelog = Path("CHANGELOG.md").read_text(encoding="utf-8")
+    # The upgrade section must name the version users actually have.
+    assert "0.2.7" in changelog
+    for wrong in (
+        "## [0.3.0]",
+        "## [0.3.1]",
+    ):
+        assert wrong not in changelog, wrong + " is not a released version"
 
 
 def test_pyproject_description_does_not_overclaim_production_readiness():
