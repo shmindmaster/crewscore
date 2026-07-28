@@ -298,6 +298,122 @@ def test_fix_profile_override_warns_before_writing_governance_templates(
     assert "HIPAA" in config.read_text(encoding="utf-8")
 
 
+def _write_config(tmp_path: Path) -> Path:
+    config = tmp_path / "AGENTS.md"
+    config.write_text("# Build\n\nRun make.\n", encoding="utf-8")
+    return config
+
+
+def test_fix_json_records_the_forced_governance_write(tmp_path: Path):
+    """--json must carry the override, not only the human console.
+
+    The refusal path advertises `--profile system_prompt` as the next step, so
+    an automated retry loop takes it. Without a field in the payload it would
+    rewrite every config file in a repo with no record of having done so.
+    """
+    config = _write_config(tmp_path)
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "fix",
+            "--prompt-file",
+            str(config),
+            "--apply",
+            "--profile",
+            "system_prompt",
+            "--json",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["forced_governance_write"] is True
+    assert payload["written"] is True
+    assert "HIPAA" in config.read_text(encoding="utf-8")
+
+
+def test_fix_json_forced_flag_is_false_for_an_ordinary_prompt(tmp_path: Path):
+    prompt_file = tmp_path / "system-prompt.md"
+    prompt_file.write_text(BARE, encoding="utf-8")
+    runner = CliRunner()
+    result = runner.invoke(
+        main, ["fix", "--prompt-file", str(prompt_file), "--apply", "--json"]
+    )
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.output)["forced_governance_write"] is False
+
+
+def test_fix_forced_warning_does_not_claim_a_write_in_plan_mode(tmp_path: Path):
+    """--plan writes nothing, so the note must not say it is writing."""
+    config = _write_config(tmp_path)
+    original = config.read_text(encoding="utf-8")
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "fix",
+            "--prompt-file",
+            str(config),
+            "--plan",
+            "--profile",
+            "system_prompt",
+        ],
+        env={"COLUMNS": "300"},
+    )
+    assert result.exit_code == 0, result.output
+    lower = " ".join(result.output.split()).lower()
+    assert "coding-agent config" in lower
+    assert "writing governance templates" not in lower
+    assert "nothing is written" in lower
+    assert config.read_text(encoding="utf-8") == original
+
+
+def test_fix_forced_warning_does_not_claim_a_write_in_preview_mode(tmp_path: Path):
+    """Plain preview prints to stdout only — nothing reaches disk."""
+    config = _write_config(tmp_path)
+    original = config.read_text(encoding="utf-8")
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        ["fix", "--prompt-file", str(config), "--profile", "system_prompt"],
+        env={"COLUMNS": "300"},
+    )
+    assert result.exit_code == 0, result.output
+    lower = " ".join(result.output.split()).lower()
+    assert "coding-agent config" in lower
+    assert "writing governance templates" not in lower
+    assert "nothing is written" in lower
+    assert config.read_text(encoding="utf-8") == original
+
+
+def test_fix_forced_warning_names_the_output_file_not_the_source(tmp_path: Path):
+    """--output leaves the config file alone; the note must name the real target."""
+    config = _write_config(tmp_path)
+    original = config.read_text(encoding="utf-8")
+    out_file = tmp_path / "guarded.md"
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "fix",
+            "--prompt-file",
+            str(config),
+            "--output",
+            str(out_file),
+            "--profile",
+            "system_prompt",
+        ],
+        env={"COLUMNS": "300"},
+    )
+    assert result.exit_code == 0, result.output
+    lower = " ".join(result.output.split()).lower()
+    # The whole phrase: `--output` never touches the source file, so naming it
+    # as the write target is the same wrong sentence --plan used to print.
+    assert f"writing governance templates to {out_file}".lower() in lower
+    assert config.read_text(encoding="utf-8") == original
+    assert "HIPAA" in out_file.read_text(encoding="utf-8")
+
+
 def test_fix_pasted_string_is_still_treated_as_a_prompt():
     """A --prompt string has no path, so it stays governed and fixable."""
     runner = CliRunner()

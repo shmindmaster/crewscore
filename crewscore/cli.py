@@ -735,19 +735,36 @@ def fix(prompt, prompt_file, apply, output, plan, as_json, profile):
             err_console.print()
         sys.exit(1)
 
-    if (
+    # The refusal above advertises --profile system_prompt as an escape hatch,
+    # which makes this the path a rushed user takes. It stays unblocked (the
+    # flag is explicit per invocation), but it must not be silent — on the
+    # console *or* in the payload an automated retry loop reads.
+    forced_governance_write = (
         source_path is not None
         and classify_path(source_path) == CODING_AGENT_CONFIG
         and resolved_profile != CODING_AGENT_CONFIG
-        and not as_json
-    ):
-        # The refusal above advertises --profile system_prompt as an escape
-        # hatch, which makes this the path a rushed user takes. It stays
-        # unblocked (the flag is explicit per invocation), but it must not
-        # be silent about what it is about to write.
+    )
+    if forced_governance_write and not as_json:
+        # Say what this mode actually does. --plan and plain preview write
+        # nothing, and --output writes somewhere else entirely; claiming a
+        # write to the config file in those modes is simply false.
+        if apply:
+            action = f"writing governance templates to {source_path}"
+        elif output:
+            action = f"writing governance templates to {output}"
+        elif plan:
+            action = (
+                f"planning governance templates for {source_path} "
+                "(nothing is written in --plan mode)"
+            )
+        else:
+            action = (
+                f"previewing governance templates for {source_path} "
+                "(nothing is written without --apply or --output)"
+            )
         err_console.print(
-            "  [yellow]Note:[/yellow] writing governance templates to "
-            f"{source_path}, which classifies as coding-agent config."
+            f"  [yellow]Note:[/yellow] {action}, which classifies as "
+            "coding-agent config."
         )
 
     before = structural_analysis.analyze(system_prompt)
@@ -855,6 +872,10 @@ def fix(prompt, prompt_file, apply, output, plan, as_json, profile):
                     "before": before_result.to_dict(),
                     "after": after_result.to_dict(),
                     "context_cost": cost,
+                    # Mirrors the `refused: true` precedent above: a retry loop
+                    # that took the advertised --profile system_prompt escape
+                    # hatch gets a record that it overrode the classification.
+                    "forced_governance_write": forced_governance_write,
                     "written": bool(apply and source_path) or bool(output),
                     "path": str(source_path)
                     if apply and source_path
