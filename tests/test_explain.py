@@ -54,6 +54,31 @@ def test_guarded_prompt_has_matched_findings():
         assert len(f["snippet"]) <= 120
 
 
+def test_guarded_does_not_report_present_signals_as_missing():
+    """Labels must track their real patterns, not naive list indices.
+
+    GUARDED contains escalate, immutable/append-only, and link-back phrases.
+    Those must not appear as missing findings.
+    """
+    _, findings = analyze_with_findings(GUARDED)
+    missing_reasons = [
+        f["pattern_or_reason"].lower()
+        for f in findings
+        if f["status"] == "missing"
+    ]
+    joined = " ".join(missing_reasons)
+    assert "escalat" not in joined, missing_reasons
+    assert "immutable" not in joined, missing_reasons
+    assert "append-only" not in joined and "append only" not in joined, missing_reasons
+    assert "link" not in joined or "link back" not in joined, missing_reasons
+    # Explicit phrase checks on each missing reason
+    for reason in missing_reasons:
+        assert "escalate" not in reason
+        assert "immutable" not in reason
+        assert "link back" not in reason
+        assert "link claims back" not in reason
+
+
 def test_findings_schema_keys():
     _, findings = analyze_with_findings(BARE)
     for f in findings:
