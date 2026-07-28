@@ -2,9 +2,11 @@
 
 # CrewScore
 
-### Structural production-readiness scorecard for AI agent system prompts
+### Free structural score for AI agent prompts — no signup, no install required
 
-**Site:** [crewscore.ai](https://crewscore.ai) · **Install:** `pip install crewscore`
+**Everyone (zero friction):** open **[crewscore.ai](https://crewscore.ai)** → paste prompt or pick a template → score → **fix gaps** → share image.
+
+**Teams / CI:** `pip install crewscore` · GitHub Action `shmindmaster/crewscore@v1`
 
 ```
 $ pip install crewscore

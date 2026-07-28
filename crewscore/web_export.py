@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 
 from crewscore.scoring import DIMENSIONS
+from crewscore.scorers.fix_patterns import FIX_TEMPLATES
 from crewscore.scorers.structural_analysis import DIMENSION_SIGNAL_LABELS, SCORER_MAP
 from crewscore.vendor_scorecard import QUESTIONS
 
@@ -160,6 +161,47 @@ JS_RUNTIME = r"""
     return { score: total, tier: vendorTier(total), redFlags };
   }
 
+  /** Same threshold as CLI generate_fixes: score < 70. */
+  function generateFixes(scores) {
+    const fixes = {};
+    const templates = ENGINE.fix_templates || {};
+    Object.keys(scores || {}).forEach((dim) => {
+      if ((scores[dim] || 0) < 70 && templates[dim]) {
+        fixes[dim] = templates[dim];
+      }
+    });
+    return fixes;
+  }
+
+  function applyFixes(systemPrompt, fixes) {
+    const keys = Object.keys(fixes || {});
+    if (!keys.length) return systemPrompt || "";
+    const block = keys.map((k) => fixes[k]).join("\n\n");
+    let enhanced = (systemPrompt || "").replace(/\s+$/, "");
+    if (!enhanced.includes("## Guardrails") && !enhanced.includes("## Safety")) {
+      enhanced +=
+        "\n\n---\n\n# Guardrails (Applied by CrewScore)\n\n" + block + "\n";
+    } else {
+      enhanced +=
+        "\n\n## Additional Guardrails (Applied by CrewScore)\n\n" + block + "\n";
+    }
+    return enhanced;
+  }
+
+  function fixAndRescore(systemPrompt) {
+    const before = analyzeWithFindings(systemPrompt);
+    const fixes = generateFixes(before.scores);
+    const enhanced = applyFixes(systemPrompt, fixes);
+    const after = analyzeWithFindings(enhanced);
+    return {
+      before,
+      after,
+      fixes,
+      enhanced,
+      delta: after.overall - before.overall,
+    };
+  }
+
   global.CrewScoreEngine = {
     ENGINE,
     analyze,
@@ -167,6 +209,9 @@ JS_RUNTIME = r"""
     scoreTier,
     vendorTier,
     scoreVendor,
+    generateFixes,
+    applyFixes,
+    fixAndRescore,
     dimensions: ENGINE.dimensions,
     vendorQuestions: ENGINE.vendor_questions,
   };
@@ -186,6 +231,11 @@ def build_payload() -> dict:
                 for p, lab in DIMENSION_SIGNAL_LABELS.get(key, [])
             ]
             for key in dim_order
+        },
+        "fix_templates": {
+            key: FIX_TEMPLATES[key].strip()
+            for key in dim_order
+            if key in FIX_TEMPLATES
         },
         "vendor_questions": [q for q, _ in QUESTIONS],
         "vendor_keys": [k for _, k in QUESTIONS],
