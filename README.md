@@ -10,26 +10,19 @@
 
 ```
 $ pip install crewscore
-$ crewscore test --prompt "You are a helpful assistant that..."
+$ crewscore scan .
 
-  CREWSCORE — Structural Production Readiness Report
-  ====================================================
+  path                              overall  tier
+  --------------------------------  -------  ---------------------------
+  ./AGENTS.md                            42  STRUCTURAL: CRITICAL GAPS
+  ./agents/system-prompt.md              61  STRUCTURAL: WEAK
 
-  Prompt Injection Resistance      [----------]   0/100  MISSING
-  Hallucination Guardrails         [----------]   0/100  MISSING
-  Source Citation Requirements     [----------]   0/100  MISSING
-  Cost Runaway Protection          [----------]   0/100  MISSING
-  Human-in-the-Loop Gates          [----------]   0/100  MISSING
-  Safe-Stop Behavior               [----------]   0/100  MISSING
-  Audit Trail & Provenance         [----------]   0/100  MISSING
-  Compliance Readiness             [----------]   0/100  MISSING
-
-  OVERALL SCORE:  0/100  NOT PRODUCTION READY
+  worst: 42  (gate with --threshold)
 ```
 
-Score the **text** of your agent instructions. Fix gaps. Gate CI when scores drop.
+Score the **text** of your agent instructions. Fix gaps. Gate CI when scores drop. Not a red-team, not a certification.
 
-[Install](#install) · [Usage](#usage) · [Share](#share-your-score) · [How scoring works](#how-scoring-works) · [CI](#ci-integration) · [Limits](#what-this-is-and-is-not)
+[Install](#install) · [Usage](#usage) · [Scoring charter](#scoring-charter) · [Share](#share-your-score) · [How scoring works](#how-scoring-works) · [CI](#ci-integration) · [After CrewScore](#after-crewscore) · [Limits](#what-this-is-and-is-not)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11+-green.svg)](https://python.org)
@@ -64,11 +57,27 @@ Most teams never inspect those instructions systematically. **CrewScore** does a
 | Offline structural scan of system-prompt text | Live adversarial LLM red-teaming |
 | Fix mode that appends guardrail sections | Proof that the runtime will obey the text |
 | JSON output + exit threshold for CI | LangGraph / CrewAI graph execution analysis |
-| Vendor checklist (`assess-vendor`) for procurement diligence | Independent security certification |
+| Optional vendor self-attest checklist | Independent security certification |
 
 Scores reflect **prompt-text signals**. They are a useful smoke test, not a guarantee of runtime safety.
 
 > **Name note:** PyPI package `agent-guard` is an unrelated third-party CrewAI monitoring library. This project is **CrewScore** (`pip install crewscore`). The CLI also accepts the legacy alias `agent-guard` after install.
+
+---
+
+## Scoring charter
+
+Honest principles we ship by:
+
+1. CrewScore measures **presence of hygiene signals in text**, not agent behavior.
+2. Scores are **rule-pack versioned** and deterministic for a given pack.
+3. Every finding should show **match evidence or an explicit missing rule**.
+4. `fix` improves **text coverage**, not runtime safety; output always says so.
+5. We never call a score a **certification**, **audit**, or **red-team result**.
+6. When in doubt, **under-score** rather than inflate. Templates and boilerplate can raise the number without raising real safety.
+7. Rules change only with changelog; CI consumers can pin pack versions later.
+
+See also [docs/next-steps-eval.md](docs/next-steps-eval.md) for when to graduate to live eval tools.
 
 ---
 
@@ -87,7 +96,25 @@ No API key for structural mode.
 
 ## Usage
 
-### Score a system prompt
+### Scan a repo for agent prompts (recommended)
+
+Discover and score likely agent instruction files (`AGENTS.md`, `CLAUDE.md`, `system-prompt.md`, paths under `prompts/` / `agents/`, and similar):
+
+```bash
+crewscore scan .
+crewscore scan ./agents --json
+crewscore scan . --threshold 50
+crewscore scan . --json --threshold 50
+```
+
+- Prints a table of path → overall → tier (JSON with `--json`).
+- `--threshold N` exits `2` if **any** file scores below `N`.
+- Exit `1` if no candidate files are found.
+- Skips `node_modules`, `.git`, `venv`, `dist`, `__pycache__`, `.venv`.
+
+Use this as the default CI gate for monorepos with multiple agent artifacts.
+
+### Score a single system prompt
 
 ```bash
 crewscore test --prompt "You are a customer service agent for..."
@@ -136,18 +163,22 @@ crewscore fix --prompt-file ./system-prompt.md --output ./system-prompt-guarded.
 crewscore fix --prompt-file ./system-prompt.md --apply --json
 ```
 
-### Score an AI vendor (checklist)
+These are **prompt text templates**. They can raise the structural score without changing runtime behavior — wire matching controls (tool gates, logging, budgets) in your application.
+
+### Vendor checklist (self-attest, secondary)
+
+Optional procurement diligence checklist — not the main product path:
 
 ```bash
 crewscore assess-vendor --name "Acme AI" --answers "y,y,n,dk,y,y,n,y,n,y"
 crewscore assess-vendor --name "Acme AI" --answers "y,y,n,dk,y,y,n,y,n,y" --json
 ```
 
-Answers are `y` / `n` / `dk` for each of 10 diligence questions.
+Answers are `y` / `n` / `dk` for each of 10 diligence questions. Self-attested only — not an audit.
 
 ### Browser demo
 
-Open **[crewscore.ai](https://crewscore.ai)** (or `index.html` locally) for a zero-install structural scan, one-click fix, templates, and vendor checklist. Scoring rules are exported from the same Python engine into `score-engine.js` so browser and CLI stay in lockstep.
+Open **[crewscore.ai](https://crewscore.ai)** (or `index.html` locally) for a zero-install structural scan, one-click fix, and templates. Scoring rules are exported from the same Python engine into `score-engine.js` so browser and CLI stay in lockstep.
 
 ---
 
@@ -168,14 +199,16 @@ Eight dimensions, equal weight, each 0–100:
 | Audit Trail | Log decisions / immutable trail language |
 | Compliance Readiness | HIPAA/SOC2/GDPR/EU AI Act style handling language |
 
-### Score tiers
+### Score tiers (structural framing)
 
 | Score | Verdict |
 |-------|---------|
-| 90–100 | PRODUCTION READY (structurally) |
-| 70–89 | SHIP WITH MONITORING |
-| 50–69 | NEEDS WORK |
-| 0–49 | NOT PRODUCTION READY |
+| 90–100 | `STRUCTURAL: STRONG` |
+| 70–89 | `STRUCTURAL: OK WITH GAPS` |
+| 50–69 | `STRUCTURAL: WEAK` |
+| 0–49 | `STRUCTURAL: CRITICAL GAPS` |
+
+Labels describe **prompt-text coverage**, not production certification.
 
 ---
 
@@ -198,6 +231,8 @@ jobs:
         id: crewscore
         uses: shmindmaster/crewscore@v1
         with:
+          # Prefer repo scan when you have multiple agent artifacts:
+          # scan-path: "."
           prompt-file: ./agents/system-prompt.md
           threshold: "50"
           # explain: "true"   # optional: matched vs missing signals
@@ -212,9 +247,12 @@ jobs:
 
 | Input | Required | Default | Description |
 |-------|----------|---------|-------------|
-| `prompt-file` | yes | — | Path to the system prompt file |
+| `prompt-file` | one of | — | Path to a single system prompt file |
+| `scan-path` | one of | — | Path for `crewscore scan` (worst score becomes the output) |
 | `threshold` | no | `50` | Fail the step (exit 2) when overall score is below this |
 | `explain` | no | `false` | Pass `true` to include matched/missing signals |
+
+Provide **either** `prompt-file` **or** `scan-path` (not neither). For scan mode, outputs use the **minimum** overall across discovered files.
 
 **Outputs:** `score` (0–100), `tier` (label string).
 
@@ -239,7 +277,9 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install crewscore
-      - run: crewscore test --prompt-file ./agents/system-prompt.md --json --threshold 50
+      - run: crewscore scan . --json --threshold 50
+      # or single file:
+      # - run: crewscore test --prompt-file ./agents/system-prompt.md --json --threshold 50
 ```
 
 Or parse JSON yourself:
@@ -247,6 +287,20 @@ Or parse JSON yourself:
 ```bash
 SCORE=$(crewscore test --prompt-file ./agents/system-prompt.md --json | jq '.overall')
 ```
+
+---
+
+## After CrewScore
+
+CrewScore is the cheap lint / structural pre-gate. When you need **live** behavior:
+
+| Need | Tool |
+|------|------|
+| Prompt eval suites, YAML scenarios, CI assertions | [Promptfoo](https://www.promptfoo.dev/) |
+| LLM vulnerability / jailbreak scanning | [garak](https://github.com/NVIDIA/garak) (NVIDIA) |
+| Deeper agent red-team | Promptfoo agents / PyRIT / your own harness |
+
+Structural scores do **not** measure jailbreak resistance or multi-turn tool abuse. Use those tools after the prompt text has basic hygiene. Details: [docs/next-steps-eval.md](docs/next-steps-eval.md).
 
 ---
 

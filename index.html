@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="CrewScore — free structural score for AI agent prompts and AI vendors. No signup. No install. Paste and score in seconds.">
-<meta property="og:title" content="CrewScore — free AI agent prompt scorecard">
-<meta property="og:description" content="Paste a system prompt. Get a score. Fix gaps. Share. No signup, no API key.">
+<meta name="description" content="CrewScore — free structural score for AI agent prompts. Score in your browser — structural hygiene only. No signup. No install.">
+<meta property="og:title" content="CrewScore — score agent prompts in your browser">
+<meta property="og:description" content="Structural hygiene score for agent system prompts. Not a red-team. Fix gaps. Share. No signup, no API key.">
 <meta property="og:url" content="https://crewscore.ai">
 <meta property="og:type" content="website">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -21,10 +21,12 @@ h1{font-size:clamp(1.75rem,4vw,2.35rem);line-height:1.15;color:#fff;margin-botto
 .zero{display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1.25rem}
 .pill{font-size:0.78rem;color:#cbd5e1;background:#111827;border:1px solid #1f2937;padding:0.35rem 0.65rem;border-radius:999px}
 .tabs{display:flex;gap:0;margin-bottom:1rem}
-.tab{flex:1;padding:0.85rem;text-align:center;cursor:pointer;border:1px solid #334155;background:#111827;color:#94a3b8;font-size:0.9rem;font-weight:600}
+.tab{flex:1.2;padding:0.85rem;text-align:center;cursor:pointer;border:1px solid #334155;background:#111827;color:#94a3b8;font-size:0.9rem;font-weight:600}
+.tab.tab-secondary{flex:0.85;font-size:0.78rem;font-weight:500;color:#64748b}
 .tab:first-child{border-radius:12px 0 0 12px}
 .tab:last-child{border-radius:0 12px 12px 0}
 .tab.active{background:#2563eb;color:#fff;border-color:#2563eb}
+.tab.tab-secondary.active{background:#1e3a5f;border-color:#1e3a5f;color:#cbd5e1}
 .panel{display:none;background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:1.15rem}
 .panel.active{display:block}
 label{display:block;font-size:0.85rem;color:#94a3b8;margin-bottom:0.4rem;font-weight:600}
@@ -87,19 +89,19 @@ textarea{width:100%;min-height:150px;background:#020617;border:1px solid #334155
 <body>
 <div class="wrap">
   <div class="badge-free">Free · No signup · No install · No API key</div>
-  <h1>Is your AI agent actually ready — or just a demo that talks well?</h1>
-  <p class="sub">Paste a system prompt. Get a structural production score in seconds. Fix gaps in one click. Works for builders <em>and</em> buyers checking AI vendors.</p>
+  <h1>Score agent prompts in your browser — structural hygiene only</h1>
+  <p class="sub">Paste a system prompt. Get a structural score in seconds. Fix gaps in one click. Built for builders who want a fast offline check before CI or live eval.</p>
   <div class="zero">
     <span class="pill">⏱ Under 30 seconds</span>
     <span class="pill">🔒 Stays in your browser</span>
     <span class="pill">📤 Share a number people understand</span>
     <span class="pill">🛠 Fix without installing anything</span>
   </div>
-  <p class="social-proof">Structural hygiene only — not a red-team or certification. Same engine as the free CLI for teams that want CI later.</p>
+  <p class="social-proof">Structural text scan only — not a red-team or certification. Templates and boilerplate can inflate scores; pair fixes with runtime gates. Same engine as the free CLI for teams that want CI later.</p>
 
   <div class="tabs" role="tablist">
-    <div class="tab active" role="tab" data-tab="agent" tabindex="0">I have an AI agent</div>
-    <div class="tab" role="tab" data-tab="vendor" tabindex="0">I’m buying AI software</div>
+    <div class="tab active" role="tab" data-tab="agent" tabindex="0">Score my agent prompt</div>
+    <div class="tab tab-secondary" role="tab" data-tab="vendor" tabindex="0">Vendor checklist (self-attest)</div>
   </div>
 
   <div class="panel active" id="panel-agent">

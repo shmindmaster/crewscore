@@ -111,6 +111,31 @@ def test_index_html_vendor_uses_cli_vendor_tiers_not_agent_tiers():
     assert "vendorTier" in engine
 
 
+def test_index_html_hero_is_builder_first():
+    """Hero positions structural agent-prompt scoring for builders, not vendor quiz."""
+    text = Path("index.html").read_text(encoding="utf-8")
+    assert "Score agent prompts in your browser" in text
+    assert "structural hygiene only" in text.lower() or "Structural hygiene only" in text
+
+
+def test_index_html_vendor_tab_is_secondary_self_attest():
+    """Vendor tab label is demoted: self-attest checklist, not equal hero."""
+    text = Path("index.html").read_text(encoding="utf-8")
+    assert "Vendor checklist (self-attest)" in text
+    # Old equal-weight buyer framing should not remain as the tab label
+    assert "I’m buying AI software" not in text
+    assert "I'm buying AI software" not in text
+
+
+def test_index_html_authenticity_line_warns_templates_and_not_red_team():
+    """Short authenticity: structural text scan, not red-team; templates can inflate."""
+    text = Path("index.html").read_text(encoding="utf-8")
+    lower = text.lower()
+    assert "not a red-team" in lower or "not red-team" in lower
+    assert "structural" in lower and ("text scan" in lower or "structural scan" in lower or "structural hygiene" in lower)
+    assert "template" in lower and ("inflate" in lower or "boost" in lower or "game" in lower)
+
+
 def test_vendor_get_tier_thresholds():
     """CLI vendor tiers: 80 TRUSTED, 50 CAUTION, 30 HIGH RISK, else RED FLAG."""
     from crewscore.vendor_scorecard import get_tier

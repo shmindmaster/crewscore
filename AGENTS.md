@@ -2,11 +2,11 @@
 
 ## What this is
 
-Offline CLI that **structurally** scores AI agent system prompts for production-readiness signals (injection defense, hallucination policy, citations, cost limits, human gates, safe-stop, audit, compliance), applies fix patterns, and runs a non-technical AI vendor checklist.
+Offline CLI that **structurally** scores AI agent system prompts for production-readiness signals (injection defense, hallucination policy, citations, cost limits, human gates, safe-stop, audit, compliance), applies fix patterns, and optionally runs a non-technical AI vendor checklist (self-attest only).
 
 Public brand: **CrewScore** · Domain: **https://crewscore.ai** · PyPI: **`crewscore`** · Repo: **shmindmaster/crewscore**
 
-It does **not** (yet) run live adversarial LLM attacks or parse LangGraph/CrewAI runtimes.
+It does **not** (yet) run live adversarial LLM attacks or parse LangGraph/CrewAI runtimes. For live testing, hand off to Promptfoo / garak — see `docs/next-steps-eval.md`.
 
 ## Stack
 
@@ -21,7 +21,11 @@ It does **not** (yet) run live adversarial LLM attacks or parse LangGraph/CrewAI
 # install (editable)
 pip install -e ".[dev]"
 
-# score a prompt
+# repo scan (preferred for CI / monorepos)
+crewscore scan .
+crewscore scan . --json --threshold 50
+
+# score a single prompt
 crewscore test --prompt "You are a helpful assistant..."
 crewscore test --prompt-file ./system-prompt.md --explain
 crewscore test --prompt-file ./system-prompt.md --json --explain
@@ -33,7 +37,7 @@ crewscore fix --prompt-file ./system-prompt.md
 crewscore fix --prompt-file ./system-prompt.md --apply
 crewscore fix --prompt-file ./system-prompt.md --output ./guarded.md --json
 
-# vendor checklist
+# vendor checklist (secondary / self-attest)
 crewscore assess-vendor --name "Acme AI" --answers "y,y,n,dk,y,y,n,y,n,y" --json
 
 # after pattern changes: keep web in lockstep
@@ -49,7 +53,7 @@ Legacy CLI entry point `agent-guard` still maps to the same `crewscore.cli:main`
 
 ```
 crewscore/
-  cli.py                 # click entry (test, fix)
+  cli.py                 # click entry (test, fix, scan)
   scoring.py             # shared result model / tiers
   vendor_scorecard.py    # assess-vendor command
   web_export.py          # builds score-engine.js payload
@@ -59,9 +63,10 @@ crewscore/
     fix_patterns.py
 scripts/export_web_engine.py
 score-engine.js          # generated — commit after pattern changes
-index.html               # dual-tab site (uses score-engine.js)
-action.yml               # composite GH Action
+index.html               # builder-first site (uses score-engine.js)
+action.yml               # composite GH Action (prompt-file or scan-path)
 docs/launch/             # launch copy kit
+docs/next-steps-eval.md  # Promptfoo / garak handoff
 tests/
 ```
 
@@ -69,6 +74,8 @@ tests/
 
 - Prefer honest capability claims over roadmap theater.
 - Structural scores are pattern matches on prompt text, not proof of runtime behavior.
+- **Honesty scoring:** do not claim certification, audit, or red-team results; templates can inflate scores; under-score rather than over-claim.
+- Prefer `crewscore scan .` / Action `scan-path` for repo-native hygiene; demote vendor checklist in UX and docs.
 - Keep the package dependency-light (no LLM SDKs required for the core path).
 - Fame follows usefulness: explainable findings, fix, CI gate before launch theater.
 - Breaking CLI flags are acceptable if all docs and tests update in the same change.
@@ -80,3 +87,4 @@ tests/
 - Link to non-existent report hosts or wrong GitHub/PyPI names.
 - Add empty `examples/` / `evaluator/` / `patterns/` directories without content.
 - Overclaim “production safety certification” or “7 regulated systems” beyond structural scanning.
+- Elevate the vendor self-attest checklist to equal primary product surface.
