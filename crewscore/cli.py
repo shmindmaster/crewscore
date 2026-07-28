@@ -868,7 +868,17 @@ def fix(prompt, prompt_file, apply, output, plan, as_json):
     default=None,
     help="Write GitHub-flavored markdown summary (PR/step comment body) to this path",
 )
-def scan(path, as_json, threshold, max_smells, explain, summary):
+@click.option(
+    "--profile",
+    type=click.Choice(["auto", *PROFILES], case_sensitive=False),
+    default="auto",
+    help=(
+        "Ruleset to judge every scanned file by. auto (default) classifies each "
+        "path: coding-agent config (AGENTS.md, CLAUDE.md, .cursorrules) is judged "
+        "on configuration smells, everything else on the 8 governance dimensions."
+    ),
+)
+def scan(path, as_json, threshold, max_smells, explain, summary, profile):
     """Discover and score agent prompt files under PATH (default: .).
 
     Looks for AGENTS.md, CLAUDE.md, system-prompt.md, and files under
@@ -888,7 +898,8 @@ def scan(path, as_json, threshold, max_smells, explain, summary):
         )
         sys.exit(1)
 
-    scored = score_paths(files)
+    forced_profile = None if profile == "auto" else profile.lower()
+    scored = score_paths(files, profile=forced_profile)
 
     # Prefer paths relative to scan root for display; keep abs for --explain.
     abs_by_rel: dict[str, Path] = {}
