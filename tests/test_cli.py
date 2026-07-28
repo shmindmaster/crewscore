@@ -80,6 +80,16 @@ def test_fix_mentions_runtime_gates():
     assert "runtime" in result.output.lower()
 
 
+def test_fix_json_includes_honesty_note():
+    runner = CliRunner()
+    result = runner.invoke(main, ["fix", "--prompt", "You are helpful.", "--json"])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    note = payload.get("note", "")
+    assert "runtime" in note.lower()
+    assert "template" in note.lower() or "Templates" in note
+
+
 def test_version():
     runner = CliRunner()
     result = runner.invoke(main, ["--version"])

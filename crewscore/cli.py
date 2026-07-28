@@ -125,9 +125,13 @@ def test(prompt, prompt_file, as_json, threshold, explain, report, badge):
     result = build_result(dimensions, mode="structural", source=source)
 
     if report:
-        Path(report).write_text(render_html_report(result), encoding="utf-8")
+        report_path = Path(report)
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        report_path.write_text(render_html_report(result), encoding="utf-8")
     if badge:
-        Path(badge).write_text(render_badge_svg(result), encoding="utf-8")
+        badge_path = Path(badge)
+        badge_path.parent.mkdir(parents=True, exist_ok=True)
+        badge_path.write_text(render_badge_svg(result), encoding="utf-8")
 
     if as_json:
         payload = result.to_dict()
@@ -290,6 +294,11 @@ def fix(prompt, prompt_file, apply, output, as_json):
     before_result = build_result(before)
     fixes = generate_fixes(before)
 
+    honesty_note = (
+        "Templates must be paired with runtime gates "
+        "(tool allowlists, human approval hooks, logging, and policy enforcement)"
+    )
+
     if not fixes:
         if as_json:
             click.echo(
@@ -299,6 +308,7 @@ def fix(prompt, prompt_file, apply, output, as_json):
                         "before": before_result.to_dict(),
                         "after": before_result.to_dict(),
                         "message": "No fixes needed",
+                        "note": honesty_note,
                     },
                     indent=2,
                     sort_keys=True,
@@ -332,6 +342,7 @@ def fix(prompt, prompt_file, apply, output, as_json):
                     "path": str(source_path)
                     if apply and source_path
                     else (output or None),
+                    "note": honesty_note,
                 },
                 indent=2,
                 sort_keys=True,

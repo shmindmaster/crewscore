@@ -87,3 +87,66 @@ def test_index_html_onpage_flags_use_shared_vendor_logic():
     assert "opts.flags" in text
     # Critical indices for certification, audit, human_override, security_audit, incident
     assert "VENDOR_CRITICAL" in text
+
+
+def test_index_html_escapes_user_titles_before_innerhtml():
+    """Vendor/agent titles and flags must be HTML-escaped before innerHTML."""
+    text = Path("index.html").read_text(encoding="utf-8")
+    assert "function escapeHtml" in text
+    assert "escapeHtml(title)" in text
+    # Flags and dim labels also go into innerHTML
+    assert "escapeHtml" in text
+    # Must not interpolate raw title into template without escape
+    assert "${title}" not in text or "escapeHtml(title)" in text
+
+
+def test_index_html_vendor_uses_cli_vendor_tiers_not_agent_tiers():
+    """Web vendor results must use TRUSTED/CAUTION/HIGH RISK/RED FLAG (80/50/30)."""
+    text = Path("index.html").read_text(encoding="utf-8")
+    assert "function vendorTierFor" in text
+    assert "TRUSTED" in text
+    assert "CAUTION" in text
+    assert "HIGH RISK" in text
+    assert "RED FLAG" in text
+    # Thresholds aligned with vendor_scorecard.get_tier
+    assert "s>=80" in text.replace(" ", "") or "s >= 80" in text
+    assert "s>=50" in text.replace(" ", "") or "s >= 50" in text
+    assert "s>=30" in text.replace(" ", "") or "s >= 30" in text
+    # Vendor path must use vendorTierFor, not agent PRODUCTION READY tiers
+    assert "vendorTierFor" in text
+    # scoreVendor must pass vendor tier function into renderScorecard
+    assert "tierFor:vendorTierFor" in text.replace(" ", "") or "tierFor: vendorTierFor" in text
+
+
+def test_vendor_get_tier_thresholds():
+    """CLI vendor tiers: 80 TRUSTED, 50 CAUTION, 30 HIGH RISK, else RED FLAG."""
+    from crewscore.vendor_scorecard import get_tier
+
+    assert get_tier(100)[0] == "TRUSTED"
+    assert get_tier(80)[0] == "TRUSTED"
+    assert get_tier(79)[0] == "CAUTION"
+    assert get_tier(50)[0] == "CAUTION"
+    assert get_tier(49)[0] == "HIGH RISK"
+    assert get_tier(30)[0] == "HIGH RISK"
+    assert get_tier(29)[0] == "RED FLAG"
+    assert get_tier(0)[0] == "RED FLAG"
+
+
+def test_assess_vendor_report_creates_parent_dirs(tmp_path: Path):
+    report = tmp_path / "nested" / "out" / "vendor.html"
+    runner = CliRunner()
+    result = runner.invoke(
+        main,
+        [
+            "assess-vendor",
+            "--name",
+            "Acme AI",
+            "--answers",
+            "y,y,n,dk,y,y,n,y,n,y",
+            "--report",
+            str(report),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert report.exists()
+    assert "Acme AI" in report.read_text(encoding="utf-8")

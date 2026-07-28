@@ -135,6 +135,14 @@ function collectVendorFlags(){
   ).map(q=>q.replace(/\?$/,''));
 }
 
+function escapeHtml(s){
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
 function bar(score){
   const pct=Math.max(0,Math.min(100,score));
   const color=pct>=70?'#10b981':pct>=50?'#eab308':pct>=30?'#f59e0b':'#ef4444';
@@ -146,17 +154,25 @@ function tierFor(s){
   if(s>=50)return{n:'NEEDS WORK',c:'score-orange'};
   return{n:'NOT PRODUCTION READY',c:'score-red'};
 }
+// Vendor tiers align with CLI vendor_scorecard.get_tier (80/50/30/0)
+function vendorTierFor(s){
+  if(s>=80)return{n:'TRUSTED',c:'score-green'};
+  if(s>=50)return{n:'CAUTION',c:'score-yellow'};
+  if(s>=30)return{n:'HIGH RISK',c:'score-orange'};
+  return{n:'RED FLAG',c:'score-red'};
+}
 function renderScorecard(el,scores,labels,title,opts){
   opts=opts||{};
   const overall=Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
-  const tier=tierFor(overall);
-  let html=`<h3>${title}</h3><div class="score-big ${tier.c}">${overall}/100</div><div class="tier ${tier.c}">${tier.n}</div>`;
-  scores.forEach((s,i)=>{html+=`<div class="dim-row"><span class="dim-label">${labels[i]}</span>${bar(s)}<span class="dim-score">${s}</span></div>`;});
+  const tierFn=opts.tierFor||tierFor;
+  const tier=tierFn(overall);
+  let html=`<h3>${escapeHtml(title)}</h3><div class="score-big ${tier.c}">${overall}/100</div><div class="tier ${tier.c}">${escapeHtml(tier.n)}</div>`;
+  scores.forEach((s,i)=>{html+=`<div class="dim-row"><span class="dim-label">${escapeHtml(labels[i])}</span>${bar(s)}<span class="dim-score">${s}</span></div>`;});
   // Prefer opts.flags (shared with share) when provided; else score===0 labels
   const flags = opts.flags !== undefined
     ? opts.flags
     : labels.filter((_,i)=>scores[i]===0);
-  if(flags.length)html+=`<div class="flags">${flags.length} RED FLAG(S): ${flags.join(', ')}</div>`;
+  if(flags.length)html+=`<div class="flags">${flags.length} RED FLAG(S): ${flags.map(escapeHtml).join(', ')}</div>`;
   html+=`<div class="share-row">
     <button type="button" class="share-btn linkedin" data-share="linkedin">Share on LinkedIn</button>
     <button type="button" class="share-btn x" data-share="x">Share on X</button>
@@ -214,7 +230,7 @@ function scoreVendor(){
     scores,
     labels,
     `${name} — Vendor Score`,
-    {copyFn:'copyVendorScore',shareExtra:{name,flags},flags}
+    {copyFn:'copyVendorScore',shareExtra:{name,flags},flags,tierFor:vendorTierFor}
   );
 }
 

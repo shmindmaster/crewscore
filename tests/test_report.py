@@ -30,7 +30,10 @@ def test_html_contains_score_and_disclaimer():
     assert "Structural" in html or "structural" in html
     assert "crewscore.ai" in html
     assert "<script" not in html.lower()  # no external/runtime scripts required
-    assert "http" not in html.split("crewscore.ai")[0][-20:] or True  # self-contained CSS inline
+    # Self-contained: inline CSS present, no external stylesheet link
+    assert "<style" in html.lower()
+    assert 'rel="stylesheet"' not in html.lower()
+    assert "http://" not in html  # no insecure external assets
 
 
 def test_html_has_inline_css_and_dimensions():
@@ -87,3 +90,25 @@ def test_cli_writes_report_and_badge(tmp_path):
     assert "CrewScore" in report.read_text(encoding="utf-8")
     assert badge.exists()
     assert "svg" in badge.read_text(encoding="utf-8").lower()
+
+
+def test_cli_report_and_badge_create_parent_dirs(tmp_path):
+    runner = CliRunner()
+    report = tmp_path / "nested" / "out" / "report.html"
+    badge = tmp_path / "nested" / "out" / "badge.svg"
+    result = runner.invoke(
+        main,
+        [
+            "test",
+            "--prompt",
+            "You are helpful.",
+            "--report",
+            str(report),
+            "--badge",
+            str(badge),
+            "--json",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert report.exists()
+    assert badge.exists()
