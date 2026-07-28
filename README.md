@@ -1,14 +1,16 @@
 <div align="center">
 
-# agent-guard
+# CrewScore
 
 ### Structural production-readiness scorecard for AI agent system prompts
 
-```
-$ pip install -e .
-$ agent-guard test --prompt "You are a helpful assistant that..."
+**Site:** [crewscore.ai](https://crewscore.ai) · **Install:** `pip install crewscore`
 
-  AGENT GUARD — Structural Production Readiness Report
+```
+$ pip install crewscore
+$ crewscore test --prompt "You are a helpful assistant that..."
+
+  CREWSCORE — Structural Production Readiness Report
   ====================================================
 
   Prompt Injection Resistance      [----------]   0/100  MISSING
@@ -29,6 +31,7 @@ Score the **text** of your agent instructions. Fix gaps. Gate CI when scores dro
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11+-green.svg)](https://python.org)
+[![PyPI](https://img.shields.io/badge/PyPI-crewscore-blue.svg)](https://pypi.org/project/crewscore/)
 
 </div>
 
@@ -43,7 +46,7 @@ You shipped an agent that works in a demo. Before production you still need to a
 - Are writes, sends, and publishes gated on human approval?
 - Is there any cost, audit, or compliance language at all?
 
-Most teams never inspect those instructions systematically. **agent-guard** does a fast structural scan and can append proven guardrail patterns.
+Most teams never inspect those instructions systematically. **CrewScore** does a fast structural scan and can append proven guardrail patterns.
 
 ---
 
@@ -58,16 +61,17 @@ Most teams never inspect those instructions systematically. **agent-guard** does
 
 Scores reflect **prompt-text signals**. They are a useful smoke test, not a guarantee of runtime safety.
 
+> **Name note:** PyPI package `agent-guard` is an unrelated third-party CrewAI monitoring library. This project is **CrewScore** (`pip install crewscore`). The CLI also accepts the legacy alias `agent-guard` after install.
+
 ---
 
 ## Install
 
 ```bash
-# from source (recommended while pre-PyPI)
-pip install -e ".[dev]"
+pip install crewscore
 
-# or once published
-pip install agent-guard
+# from source (development)
+pip install -e ".[dev]"
 ```
 
 No API key for structural mode.
@@ -79,10 +83,10 @@ No API key for structural mode.
 ### Score a system prompt
 
 ```bash
-agent-guard test --prompt "You are a customer service agent for..."
-agent-guard test --prompt-file ./my-agent/system-prompt.md
-agent-guard test --prompt-file ./my-agent/system-prompt.md --json
-agent-guard test --prompt-file ./my-agent/system-prompt.md --json --threshold 50
+crewscore test --prompt "You are a customer service agent for..."
+crewscore test --prompt-file ./my-agent/system-prompt.md
+crewscore test --prompt-file ./my-agent/system-prompt.md --json
+crewscore test --prompt-file ./my-agent/system-prompt.md --json --threshold 50
 ```
 
 `--threshold N` exits with code `2` when overall score is below `N` (CI gate).
@@ -91,30 +95,30 @@ agent-guard test --prompt-file ./my-agent/system-prompt.md --json --threshold 50
 
 ```bash
 # print enhanced prompt
-agent-guard fix --prompt-file ./system-prompt.md
+crewscore fix --prompt-file ./system-prompt.md
 
 # write in place and show score delta
-agent-guard fix --prompt-file ./system-prompt.md --apply
+crewscore fix --prompt-file ./system-prompt.md --apply
 
 # write to a new file
-agent-guard fix --prompt-file ./system-prompt.md --output ./system-prompt-guarded.md
+crewscore fix --prompt-file ./system-prompt.md --output ./system-prompt-guarded.md
 
 # machine-readable summary
-agent-guard fix --prompt-file ./system-prompt.md --apply --json
+crewscore fix --prompt-file ./system-prompt.md --apply --json
 ```
 
 ### Score an AI vendor (checklist)
 
 ```bash
-agent-guard assess-vendor --name "Acme AI" --answers "y,y,n,dk,y,y,n,y,n,y"
-agent-guard assess-vendor --name "Acme AI" --answers "y,y,n,dk,y,y,n,y,n,y" --json
+crewscore assess-vendor --name "Acme AI" --answers "y,y,n,dk,y,y,n,y,n,y"
+crewscore assess-vendor --name "Acme AI" --answers "y,y,n,dk,y,y,n,y,n,y" --json
 ```
 
 Answers are `y` / `n` / `dk` for each of 10 diligence questions.
 
 ### Browser demo
 
-Open `index.html` locally for a zero-install structural scan and vendor checklist UI (client-side only; not the CLI implementation).
+Open `index.html` locally (or on GitHub Pages) for a zero-install structural scan and vendor checklist UI (client-side only; not the CLI implementation).
 
 ---
 
@@ -158,21 +162,21 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install .
-      - run: agent-guard test --prompt-file ./agents/system-prompt.md --json --threshold 50
+      - run: pip install crewscore
+      - run: crewscore test --prompt-file ./agents/system-prompt.md --json --threshold 50
 ```
 
 Or parse JSON yourself:
 
 ```bash
-SCORE=$(agent-guard test --prompt-file ./agents/system-prompt.md --json | jq '.overall')
+SCORE=$(crewscore test --prompt-file ./agents/system-prompt.md --json | jq '.overall')
 ```
 
 ---
 
 ## Fix patterns
 
-When dimensions score below threshold, `agent-guard fix` appends production-style guardrail sections for:
+When dimensions score below threshold, `crewscore fix` appends production-style guardrail sections for:
 
 - Injection defense
 - Anti-hallucination
@@ -190,11 +194,11 @@ These are **prompt text templates**. Wire matching runtime controls (tool gates,
 ## Development
 
 ```bash
-git clone https://github.com/shmindmaster/agent-guard.git
-cd agent-guard
+git clone https://github.com/shmindmaster/crewscore.git
+cd crewscore
 pip install -e ".[dev]"
 pytest
-agent-guard test --prompt "You are a helpful assistant"
+crewscore test --prompt "You are a helpful assistant"
 ```
 
 See [AGENTS.md](AGENTS.md) for agent/contributor operating notes.
@@ -203,10 +207,11 @@ See [AGENTS.md](AGENTS.md) for agent/contributor operating notes.
 
 ## Roadmap (not implemented yet)
 
-- Live adversarial testing against a real model endpoint
-- Framework adapters that extract prompts from LangGraph / CrewAI / AutoGen graphs
-- Hosted shareable HTML reports
+- Explainable findings (which signals matched / missing)
+- Shareable HTML report for PRs and reviews
 - Official GitHub Action wrapper
+- Framework adapters that extract prompts from LangGraph / CrewAI / AutoGen graphs
+- Optional live adversarial testing (post-traction; not the default path)
 
 ---
 

@@ -7,13 +7,15 @@ Non-technical. No API key. Produces a score and optional shareable copy.
 from __future__ import annotations
 
 import json
-from typing import Literal
 
 import click
 from rich.console import Console
 from rich.panel import Panel
 
 console = Console()
+
+HOMEPAGE = "https://crewscore.ai"
+REPO = "https://github.com/shmindmaster/crewscore"
 
 QUESTIONS = [
     ("Can you demo it with YOUR data, not their cherry-picked showcase?", "vapor_demo"),
@@ -86,7 +88,8 @@ def generate_linkedin_post(
 
     lines.append("Before signing that contract, ask these 10 questions.")
     lines.append("")
-    lines.append("Score yours: pip install agent-guard && agent-guard assess-vendor")
+    lines.append(f"Score yours: pip install crewscore && crewscore assess-vendor")
+    lines.append(HOMEPAGE)
     lines.append("")
     lines.append("#AI #AIVendors #DueDiligence #EnterpriseAI #AIProcurement")
 
@@ -119,7 +122,7 @@ def assess_vendor(name: str, answers: str | None, as_json: bool):
                 err=True,
             )
             console.print(
-                "[dim]Example: agent-guard assess-vendor --name 'Acme AI' "
+                "[dim]Example: crewscore assess-vendor --name 'Acme AI' "
                 "--answers 'y,y,n,dk,y,y,n,y,n,y'[/dim]",
                 err=True,
             )
@@ -137,7 +140,7 @@ def assess_vendor(name: str, answers: str | None, as_json: bool):
         console.print()
         console.print(
             Panel(
-                f"[bold]AGENT GUARD — AI Vendor Scorecard[/bold]\n"
+                f"[bold]CREWSCORE — AI Vendor Scorecard[/bold]\n"
                 f"Assessing: [bold]{name}[/bold]",
                 border_style="blue",
                 expand=False,
@@ -180,7 +183,7 @@ def assess_vendor(name: str, answers: str | None, as_json: bool):
     console.print()
     console.print(
         Panel(
-            f"[bold]AGENT GUARD — AI Vendor Scorecard[/bold]\n"
+            f"[bold]CREWSCORE — AI Vendor Scorecard[/bold]\n"
             f"Assessing: [bold]{name}[/bold]",
             border_style="blue",
             expand=False,
@@ -219,8 +222,8 @@ def assess_vendor(name: str, answers: str | None, as_json: bool):
         )
 
     console.print()
-    console.print("  Scored with agent-guard | pip install agent-guard")
-    console.print("  https://github.com/shmindmaster/agent-guard")
+    console.print("  Scored with CrewScore | pip install crewscore")
+    console.print(f"  {HOMEPAGE} · {REPO}")
     console.print()
 
     console.print(f"  [{'=' * 54}]")

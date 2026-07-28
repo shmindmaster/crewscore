@@ -1,7 +1,7 @@
 """
 Fix mode: apply recommended guardrail patterns to an AI agent's system prompt.
 
-When agent-guard finds gaps, this module prescribes and applies fixes.
+When CrewScore finds gaps, this module prescribes and applies fixes.
 Each failed dimension maps to a production-proven pattern.
 """
 
@@ -146,9 +146,9 @@ def apply_fixes(system_prompt: str, fixes: Dict[str, str]) -> str:
     enhanced = system_prompt.rstrip()
     
     if "## Guardrails" not in enhanced and "## Safety" not in enhanced:
-        enhanced += f"\n\n---\n\n# Guardrails (Applied by agent-guard)\n\n{guardrails_block}\n"
+        enhanced += f"\n\n---\n\n# Guardrails (Applied by CrewScore)\n\n{guardrails_block}\n"
     else:
-        enhanced += f"\n\n## Additional Guardrails (Applied by agent-guard)\n\n{guardrails_block}\n"
+        enhanced += f"\n\n## Additional Guardrails (Applied by CrewScore)\n\n{guardrails_block}\n"
     
     return enhanced
 
@@ -159,7 +159,7 @@ def explain_fixes(fixes: Dict[str, str]) -> str:
         return "[OK] No fixes needed - your agent is production-ready."
     
     lines = [
-        "[FIX] agent-guard applied the following fixes:",
+        "[FIX] CrewScore applied the following fixes:",
         "",
     ]
     
@@ -179,6 +179,6 @@ def explain_fixes(fixes: Dict[str, str]) -> str:
         lines.append(f"  [OK] {desc}")
     
     lines.append("")
-    lines.append("Re-run `agent-guard test` to see your improved score.")
+    lines.append("Re-run `crewscore test` to see your improved score.")
     
     return "\n".join(lines)

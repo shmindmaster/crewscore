@@ -1,4 +1,4 @@
-"""agent-guard CLI — structural production-readiness scoring for AI agents."""
+"""CrewScore CLI — structural production-readiness scoring for AI agents."""
 
 from __future__ import annotations
 
@@ -10,12 +10,16 @@ import click
 from rich.console import Console
 from rich.panel import Panel
 
-from agent_guard import __version__
-from agent_guard.scoring import DIMENSIONS, build_result, tier_color
-from agent_guard.scorers import structural_analysis
-from agent_guard.vendor_scorecard import assess_vendor
+from crewscore import __version__
+from crewscore.scoring import DIMENSIONS, build_result, tier_color
+from crewscore.scorers import structural_analysis
+from crewscore.vendor_scorecard import assess_vendor
 
 console = Console()
+
+BRAND = "CrewScore"
+HOMEPAGE = "https://crewscore.ai"
+REPO = "https://github.com/shmindmaster/crewscore"
 
 
 def render_score_bar(score: int) -> str:
@@ -40,9 +44,9 @@ def render_score_bar(score: int) -> str:
 
 
 @click.group()
-@click.version_option(version=__version__, prog_name="agent-guard")
+@click.version_option(version=__version__, prog_name="crewscore")
 def main():
-    """agent-guard — structural production-readiness scorecard for AI agents."""
+    """CrewScore — offline structural scorecard for AI agent system prompts."""
     pass
 
 
@@ -90,7 +94,7 @@ def test(prompt, prompt_file, as_json, threshold):
             err=True,
         )
         console.print(
-            '[dim]Example: agent-guard test --prompt "You are a helpful assistant..."[/dim]',
+            '[dim]Example: crewscore test --prompt "You are a helpful assistant..."[/dim]',
             err=True,
         )
         sys.exit(1)
@@ -105,7 +109,7 @@ def test(prompt, prompt_file, as_json, threshold):
         console.print()
         console.print(
             Panel(
-                "[bold]AGENT GUARD — Structural Production Readiness Report[/bold]",
+                f"[bold]{BRAND.upper()} — Structural Production Readiness Report[/bold]",
                 border_style="blue",
                 expand=False,
             )
@@ -149,12 +153,13 @@ def test(prompt, prompt_file, as_json, threshold):
 
         console.print()
         console.print(
-            "  -> Run [bold]agent-guard fix[/bold] to apply recommended guardrail patterns."
+            f"  -> Run [bold]crewscore fix[/bold] to apply recommended guardrail patterns."
         )
         console.print(
             "  -> Re-run with [bold]--json[/bold] for CI. "
             "Use [bold]--threshold N[/bold] to fail builds below N."
         )
+        console.print(f"  -> {HOMEPAGE}")
         console.print()
 
     if threshold is not None and result.overall < threshold:
@@ -193,7 +198,7 @@ def test(prompt, prompt_file, as_json, threshold):
 )
 def fix(prompt, prompt_file, apply, output, as_json):
     """Append recommended guardrail patterns to a system prompt."""
-    from agent_guard.scorers.fix_patterns import apply_fixes, explain_fixes, generate_fixes
+    from crewscore.scorers.fix_patterns import apply_fixes, explain_fixes, generate_fixes
 
     system_prompt = None
     source_path = None
@@ -209,7 +214,7 @@ def fix(prompt, prompt_file, apply, output, as_json):
             err=True,
         )
         console.print(
-            "[dim]Example: agent-guard fix --prompt-file ./system-prompt.md --apply[/dim]",
+            "[dim]Example: crewscore fix --prompt-file ./system-prompt.md --apply[/dim]",
             err=True,
         )
         sys.exit(1)
@@ -270,7 +275,7 @@ def fix(prompt, prompt_file, apply, output, as_json):
     console.print()
     console.print(
         Panel(
-            "[bold]AGENT GUARD — Applying Fixes[/bold]",
+            f"[bold]{BRAND.upper()} — Applying Fixes[/bold]",
             border_style="green",
             expand=False,
         )

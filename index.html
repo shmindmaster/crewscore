@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>agent-guard — Is your AI production-safe?</title>
+<title>CrewScore — Score your AI agent prompts</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;background:#0f0f1a;color:#e2e8f0;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
@@ -54,8 +54,8 @@ textarea:focus{outline:none;border-color:#3b82f6}
 </head>
 <body>
 <div class="container">
-<h1>agent-guard</h1>
-<p class="subtitle">Is your AI production-safe? Score it in 30 seconds. No signup. No install. Free.</p>
+<h1>CrewScore</h1>
+<p class="subtitle">Offline structural scorecard for AI agent prompts. Fix gaps. Gate CI. No signup. No API key.</p>
 
 <div class="tabs">
   <div class="tab active" onclick="switchTab('agent')">Score Your AI Agent</div>
@@ -80,7 +80,7 @@ textarea:focus{outline:none;border-color:#3b82f6}
 
 <div class="dev-note">
   Developers: CLI with structural scoring, fix mode, and CI threshold gates<br>
-  <a href="https://github.com/shmindmaster/agent-guard">github.com/shmindmaster/agent-guard</a>
+  <a href="https://github.com/shmindmaster/crewscore">github.com/shmindmaster/crewscore</a>
   · structural scan only (not live adversarial testing)
 </div>
 </div>
@@ -176,17 +176,17 @@ function scoreVendor(){
 }
 
 function shareLinkedIn(score,tier,title){
-  const text=encodeURIComponent(`${title}: ${score}/100 — ${tier}\n\nScored with agent-guard. Is your AI actually production-safe?\n\nTry it free: ${location.href}\n\n#AI #AISafety #EnterpriseAI #DueDiligence`);
+  const text=encodeURIComponent(`${title}: ${score}/100 — ${tier}\n\nScored with CrewScore. Lint your agent prompts offline.\n\nTry it free: ${location.href}\n\n#AI #AISafety #EnterpriseAI #DueDiligence`);
   window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(location.href)}`);
   navigator.clipboard.writeText(decodeURIComponent(text));
   alert('Score copied to clipboard! Paste it in your LinkedIn post.');
 }
 function shareX(score,tier,title){
-  const text=encodeURIComponent(`${title}: ${score}/100 — ${tier}. Is your AI production-safe? Score yours free: ${location.href} #AI #AISafety`);
+  const text=encodeURIComponent(`${title}: ${score}/100 — ${tier}. Score your agent prompts free: ${location.href} #AI #AISafety`);
   window.open(`https://x.com/intent/tweet?text=${text}`);
 }
 function copyScore(score,tier,title){
-  navigator.clipboard.writeText(`${title}: ${score}/100 — ${tier}\nScored with agent-guard | ${location.href}`);
+  navigator.clipboard.writeText(`${title}: ${score}/100 — ${tier}\nScored with CrewScore | ${location.href}`);
   alert('Copied!');
 }
 

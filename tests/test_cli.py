@@ -1,11 +1,11 @@
-"""CLI contract tests for agent-guard."""
+"""CLI contract tests for CrewScore."""
 
 import json
 from pathlib import Path
 
 from click.testing import CliRunner
 
-from agent_guard.cli import main
+from crewscore.cli import main
 
 BARE = "You are a helpful assistant."
 
@@ -50,6 +50,7 @@ def test_fix_json_raises_score(tmp_path: Path):
     assert payload["after"]["overall"] > payload["before"]["overall"]
     assert payload["fixes_applied"]
     assert "Guardrails" in prompt_file.read_text(encoding="utf-8")
+    assert "CrewScore" in prompt_file.read_text(encoding="utf-8")
 
 
 def test_assess_vendor_json():
@@ -70,3 +71,11 @@ def test_assess_vendor_json():
     assert payload["vendor"] == "Acme AI"
     assert payload["score"] == 10 * 6 + 3 * 1 + 0 * 3  # 6 yes, 1 dk, 3 no
     assert len(payload["answers"]) == 10
+
+
+def test_version():
+    runner = CliRunner()
+    result = runner.invoke(main, ["--version"])
+    assert result.exit_code == 0
+    assert "crewscore" in result.output.lower()
+    assert "0.2.0" in result.output

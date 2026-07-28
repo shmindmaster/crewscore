@@ -3,16 +3,26 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "agent-guard"
-version = "0.1.1"
-description = "Structural production-readiness scorecard for AI agent system prompts."
+name = "crewscore"
+version = "0.2.0"
+description = "CrewScore — offline structural production-readiness scorecard for AI agent system prompts."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
 authors = [
     { name = "Sarosh Hussain", email = "sarosh@pendoah.ai" },
 ]
-keywords = ["ai-agents", "guardrails", "evaluation", "llm", "safety", "governance", "production"]
+keywords = [
+    "ai-agents",
+    "crewscore",
+    "guardrails",
+    "evaluation",
+    "llm",
+    "safety",
+    "governance",
+    "production",
+    "scorecard",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -34,15 +44,18 @@ dev = [
 ]
 
 [project.scripts]
-agent-guard = "agent_guard.cli:main"
+crewscore = "crewscore.cli:main"
+# Legacy alias (pre-rename)
+agent-guard = "crewscore.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/shmindmaster/agent-guard"
-Repository = "https://github.com/shmindmaster/agent-guard"
-Issues = "https://github.com/shmindmaster/agent-guard/issues"
+Homepage = "https://crewscore.ai"
+Repository = "https://github.com/shmindmaster/crewscore"
+Issues = "https://github.com/shmindmaster/crewscore/issues"
+Documentation = "https://github.com/shmindmaster/crewscore#readme"
 
 [tool.hatch.build.targets.wheel]
-packages = ["agent_guard"]
+packages = ["crewscore"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

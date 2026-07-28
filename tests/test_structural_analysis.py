@@ -1,8 +1,8 @@
 """Unit tests for structural scoring and fix application."""
 
-from agent_guard.scoring import build_result, overall_score, score_tier
-from agent_guard.scorers.fix_patterns import apply_fixes, generate_fixes
-from agent_guard.scorers.structural_analysis import analyze
+from crewscore.scoring import build_result, overall_score, score_tier
+from crewscore.scorers.fix_patterns import apply_fixes, generate_fixes
+from crewscore.scorers.structural_analysis import analyze
 
 BARE_PROMPT = "You are a helpful assistant that answers customer questions."
 
@@ -74,6 +74,7 @@ def test_fix_raises_score():
     enhanced = apply_fixes(BARE_PROMPT, fixes)
     after = analyze(enhanced)
     assert overall_score(after) > overall_score(before)
+    assert "CrewScore" in enhanced
 
 
 def test_build_result_tier():
