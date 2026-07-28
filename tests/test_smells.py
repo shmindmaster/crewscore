@@ -193,6 +193,41 @@ def test_bare_pyproject_is_not_a_linter_config(tmp_path):
     assert detect_lint_leakage(STYLE_TEXT, tmp_path) is None
 
 
+def test_packaging_only_setup_cfg_is_not_a_linter_config(tmp_path):
+    """A setup.cfg with only packaging metadata configures no style tooling."""
+    (tmp_path / "setup.cfg").write_text(
+        "[metadata]\nname = x\nversion = 1.0.0\n", encoding="utf-8"
+    )
+    assert detect_lint_leakage(STYLE_TEXT, tmp_path) is None
+
+
+def test_setup_cfg_with_flake8_section_counts(tmp_path):
+    (tmp_path / "setup.cfg").write_text(
+        "[flake8]\nmax-line-length = 100\n", encoding="utf-8"
+    )
+    smell = detect_lint_leakage(STYLE_TEXT, tmp_path)
+    assert smell is not None
+    assert "setup.cfg" in smell["linter_configs"]
+
+
+def test_tox_ini_with_only_pytest_section_is_not_a_linter_config(tmp_path):
+    """[pytest] is a test-runner section, not a linter — must not count."""
+    (tmp_path / "tox.ini").write_text(
+        "[tox]\nenvlist = py311\n\n[pytest]\naddopts = -q\n", encoding="utf-8"
+    )
+    assert detect_lint_leakage(STYLE_TEXT, tmp_path) is None
+
+
+def test_tox_ini_with_flake8_section_counts(tmp_path):
+    (tmp_path / "tox.ini").write_text(
+        "[tox]\nenvlist = py311\n\n[flake8]\nmax-line-length = 100\n",
+        encoding="utf-8",
+    )
+    smell = detect_lint_leakage(STYLE_TEXT, tmp_path)
+    assert smell is not None
+    assert "tox.ini" in smell["linter_configs"]
+
+
 # ─── Aggregation and score isolation ──────────────────────────────
 
 @needs_git
