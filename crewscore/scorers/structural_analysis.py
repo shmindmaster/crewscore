@@ -364,14 +364,22 @@ def _score_dimension(prompt_lower: str, patterns: list[tuple[str, str]]) -> int:
     return _score_from_match_count(len(matches), len(patterns))
 
 
-def _apply_length_bonus(results: dict[str, int], prompt_lower: str) -> dict[str, int]:
-    """Modest bonus for long, detailed prompts (capped to reduce gaming)."""
-    word_count = len(prompt_lower.split())
-    if word_count > 500:
-        length_bonus = min(10, (word_count - 500) // 200)
-        for key in results:
-            results[key] = min(100, results[key] + length_bonus)
-    return results
+# NOTE: CrewScore used to award a length bonus (up to +10 per dimension for
+# prompts over 500 words). It was removed in ruleset 0.3.0.
+#
+# Two reasons, both decisive:
+#   1. It rewarded the exact thing the evidence penalizes. Length is a cost,
+#      not a virtue: dos Santos et al. (arXiv:2606.15828) classify files at or
+#      over 200 lines as Context Bloat (42% of 100 popular repos), and
+#      Gloaguen et al. (arXiv:2602.11988) measured >20% higher inference cost
+#      from context files with no gain in task success.
+#   2. It was never in the published formula. README and
+#      rules_catalog.SCORING_METHOD both documented score as
+#      15 + 85 * matches/total, with no length term — so the documented
+#      formula did not match the code.
+#
+# Scores are now purely a function of rule matches. Length is reported as a
+# smell (see crewscore/smells.py), never as points.
 
 
 def analyze_with_findings(
@@ -458,7 +466,6 @@ def analyze_with_findings(
                 }
             )
 
-    results = _apply_length_bonus(results, prompt_lower)
     return results, findings
 
 

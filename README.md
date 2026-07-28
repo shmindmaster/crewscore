@@ -26,7 +26,7 @@ crewscore test --prompt "You are a helpful assistant."
 **CI:** `crewscore scan . --threshold 50` · Action `shmindmaster/crewscore@v1`  
 Structural hygiene only — **not a red-team**, not a certification.
 
-[Install](#install) · [Usage](#usage) · [Scoring charter](#scoring-charter) · [Share](#share-your-score) · [How scoring works](#how-scoring-works) · [CI](#ci-integration) · [After CrewScore](#after-crewscore) · [Limits](#what-this-is-and-is-not)
+[Install](#install) · [Usage](#usage) · [Scoring charter](#scoring-charter) · [How scoring works](#how-scoring-works) · [Config smells](#configuration-smells) · [What changed in 0.3.0](#what-changed-in-030) · [CI](#ci-integration) · [After CrewScore](#after-crewscore) · [Limits](#what-this-is-and-is-not)
 
 </div>
 
@@ -65,17 +65,21 @@ Scores reflect **prompt-text signals**. They are a useful smoke test, not a guar
 Honest principles we ship by:
 
 1. CrewScore measures **presence of hygiene signals in text**, not agent behavior.
-2. Scores are **rule-pack versioned** (`crewscore-hygiene@0.2.3`) and **deterministic** — no LLM, no hidden model.
+2. Scores are **rule-pack versioned** (`crewscore-hygiene@0.3.0`) and **deterministic** — no LLM, no hidden model.
 3. **Every rule is public.** List them anytime:
    ```bash
-   crewscore rules              # human: formula + every rule_id + regex
+   crewscore rules              # human: formula + provenance + every rule_id + regex
    crewscore rules --json       # machine-readable full catalog
    ```
 4. Findings show **open `rule_id`s**, match snippets, or explicit missing labels (default in CLI and JSON).
-5. `fix` improves **text coverage**, not runtime safety; template boilerplate triggers a warning.
-6. We never call a score a **certification**, **audit**, or **red-team result**.
-7. When in doubt, **under-score** rather than inflate.
-8. Source of truth: [`crewscore/scorers/structural_analysis.py`](crewscore/scorers/structural_analysis.py).
+5. **Every rule declares where it came from.** Each dimension is graded `evidence-backed`, `plausible`, or `author-intuition`, with citations. Three of the eight are evidence-backed; one (Compliance Readiness) is explicitly author-intuition, because detecting the word "HIPAA" is not detecting compliance.
+6. **Length is never a score.** Long files cost tokens on every run — see [configuration smells](#configuration-smells) below.
+7. `fix` improves **text coverage**, not runtime safety; it reports its own context cost, and template boilerplate triggers a warning.
+8. We never call a score a **certification**, **audit**, or **red-team result**.
+9. When in doubt, **under-score** rather than inflate.
+10. Source of truth: [`crewscore/scorers/structural_analysis.py`](crewscore/scorers/structural_analysis.py).
+
+> **Changed in `0.3.0`:** CrewScore used to award up to +10 per dimension for prompts over 500 words. That rewarded the exact thing the research penalizes — and it was never in the published formula. It is gone. See [what changed and why](#what-changed-in-030).
 
 See also [docs/next-steps-eval.md](docs/next-steps-eval.md) for when to graduate to live eval tools.
 
@@ -233,6 +237,46 @@ Labels describe **prompt-text coverage**, not production certification.
 
 ---
 
+## Configuration smells
+
+Alongside the score, CrewScore reports **configuration smells** — problems in the *shape* of an instruction file rather than its content. These come from a published, peer-reviewed catalog: [*Configuration Smells in AGENTS.md Files*](https://arxiv.org/abs/2606.15828) (dos Santos et al., 2026), which found **91 of 100** popular open-source projects carried at least one.
+
+CrewScore implements the three that can be detected **offline and deterministically**:
+
+| Smell | Heuristic | Found in |
+|-------|-----------|----------|
+| **Context Bloat** | ≥ 200 lines | 42% of studied projects |
+| **Lint Leakage** | Style rules a configured linter already enforces | 62% — the most common |
+| **Init Fossilization** | Tracked by git with exactly one commit — never revised | 24% |
+
+The paper's other three smells (Skill Leakage, Blind References, Conflicting Instructions) are detected with an LLM. CrewScore does not implement them: it would rather ship three honest detectors than six approximate ones.
+
+**Lint Leakage is an approximation** and says so in its output. The paper uses an LLM to judge whether guidance duplicates tooling; CrewScore requires two mechanical conditions instead — style-rule language in the file *and* a linter config in the repo. That is narrower than the paper's detector and will miss cases it catches.
+
+**Known limitation:** Init Fossilization is a commit-count heuristic, so a deliberately static file — a test fixture, a vendored example — is flagged the same as a genuinely stale config. The heuristic cannot tell "never needed revising" from "never got revised." Treat it as a prompt to look, not a verdict.
+
+Smells are **advisory. They never change the score.** Folding them in would silently change what every existing `--threshold N` means in someone's CI. Whether they *should* affect the score is a question for corpus validation, not something to slip into a patch release.
+
+---
+
+## What changed in 0.3.0
+
+Two defects, both found by testing CrewScore against the published research rather than waiting for someone else to.
+
+**1. The length bonus is gone.** CrewScore awarded up to +10 per dimension for prompts over 500 words. That rewarded length — and length is a cost, not a virtue: files at or over 200 lines are Context Bloat, and [Gloaguen et al.](https://arxiv.org/abs/2602.11988) measured **>20% higher inference cost** from context files with **no gain in task success**. It was also never in the published formula, so the documented formula did not match the code. Both are fixed: the formula in this README is now the whole formula.
+
+**2. `fix` no longer pads.** It used to turn a one-line prompt into 79 lines of generic boilerplate — consuming ~40% of the 200-line budget in one command — and score it 46 points higher for the privilege. Templates are now roughly half the size, and `fix` reports its own context cost:
+
+```
+Context cost: +44 lines (1 -> 45). Every line is re-read on every run.
+WARNING: generic_dominates: added 44 lines of generic guardrail text to 1 line
+         of project-specific content.
+```
+
+The remaining honest caveat: these templates are still **generic**, and the measured value of an instruction file lies in project-specific, non-standard practice. Specialize them; don't ship them verbatim.
+
+---
+
 ## CI integration
 
 ### Official GitHub Action (recommended)
@@ -326,11 +370,23 @@ CrewScore is the cheap lint / structural pre-gate. When you need **live** behavi
 
 | Need | Tool |
 |------|------|
-| Prompt eval suites, YAML scenarios, CI assertions | [Promptfoo](https://www.promptfoo.dev/) |
+| Prompt eval suites, YAML scenarios, CI assertions | [Promptfoo](https://www.promptfoo.dev/) (acquired by OpenAI, Mar 2026; still open source) |
 | LLM vulnerability / jailbreak scanning | [garak](https://github.com/NVIDIA/garak) (NVIDIA) |
 | Deeper agent red-team | Promptfoo agents / PyRIT / your own harness |
 
 Structural scores do **not** measure jailbreak resistance or multi-turn tool abuse. Use those tools after the prompt text has basic hygiene. Details: [docs/next-steps-eval.md](docs/next-steps-eval.md).
+
+### Other tools in this lane
+
+CrewScore is not the only static linter for agent instruction files, and pretending otherwise would be the fastest way to lose your trust:
+
+| Tool | What it asks | Where it differs |
+|------|--------------|------------------|
+| [AgentLinter](https://github.com/seojoonkim/agentlinter) | *"Will this file make the coding agent work well?"* | npm/`npx`, weighted dimensions, cross-file contradiction detection across a whole workspace |
+| [lintlang](https://github.com/hermes-labs-ai/lintlang) | Static gating for agent configs | Zero-LLM CI linting |
+| **CrewScore** | *"Will this agent hurt someone in production?"* | Governance lens (injection, human gates, audit, compliance), plus offline detection of published configuration smells |
+
+If you want agent-config *craft* — clarity, structure, memory layout — AgentLinter is aimed squarely at that and is worth your time. CrewScore's lens is production governance. They are complementary, and running both is reasonable.
 
 Generate starter stubs (does **not** run live evals):
 

@@ -57,6 +57,8 @@ Legacy CLI entry point `agent-guard` still maps to the same `crewscore.cli:main`
 crewscore/
   cli.py                 # click entry (test, fix, scan, rules, export-eval)
   scoring.py             # shared result model / tiers
+  smells.py              # offline config-smell detection (arXiv:2606.15828)
+  rules_catalog.py       # open rule catalog + per-dimension provenance
   summary.py             # PR/job markdown (transparent)
   vendor_scorecard.py    # assess-vendor command
   web_export.py          # builds score-engine.js payload
@@ -80,6 +82,11 @@ tests/
 - Prefer honest capability claims over roadmap theater.
 - Structural scores are pattern matches on prompt text, not proof of runtime behavior.
 - **Honesty scoring:** do not claim certification, audit, or red-team results; templates can inflate scores; under-score rather than over-claim.
+- **The published formula is the whole formula.** Score is a function of rule matches only. Never add a term (length, recency, file type) that isn't in `rules_catalog.SCORING_METHOD` and the README. A 0.2.x length bonus was removed in 0.3.0 precisely because it was undocumented and rewarded Context Bloat.
+- **Length is never rewarded.** Every line costs the agent context on every run. Fix templates stay terse, and `fix` reports its own context cost.
+- **Smells are advisory, never scored.** Folding them into the number would silently change what `--threshold N` means in someone's CI. Changing that needs corpus evidence, not a patch release.
+- **Rules declare their provenance.** New dimensions must be graded `evidence-backed` / `plausible` / `author-intuition` in `rules_catalog.DIMENSION_PROVENANCE`; evidence-backed requires a citation. Approximations of a published detector must say so in their output.
+- **Console output must be cp1252-encodable.** Windows redirects stdout through the ANSI code page; a stray `→` crashed `crewscore rules`. Use ASCII in printed strings.
 - Prefer `crewscore scan .` / Action `scan-path` for repo-native hygiene; demote vendor checklist in UX and docs.
 - Keep the package dependency-light (no LLM SDKs required for the core path).
 - Fame follows usefulness: explainable findings, fix, CI gate before launch theater.
