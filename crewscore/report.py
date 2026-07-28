@@ -7,7 +7,7 @@ from html import escape
 from xml.sax.saxutils import escape as xml_escape
 
 from crewscore import __version__
-from crewscore.scoring import DIMENSIONS, ScoreResult
+from crewscore.scoring import DIMENSIONS, RULESET_ID, ScoreResult
 
 HOMEPAGE = "https://crewscore.ai"
 
@@ -88,8 +88,12 @@ def render_html_report(
     result: ScoreResult,
     *,
     generated_at: str | None = None,
+    findings: list[dict] | None = None,
 ) -> str:
-    """Self-contained dark HTML scorecard (inline CSS, no scripts/CDN)."""
+    """Self-contained dark HTML scorecard (inline CSS, no scripts/CDN).
+
+    Includes ruleset, formula, and optional open rule-id findings — not a black box.
+    """
     if generated_at is None:
         generated_at = (
             datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
@@ -101,6 +105,7 @@ def render_html_report(
     mode = escape(result.mode)
     source = escape(result.source)
     version = escape(__version__)
+    ruleset = escape(getattr(result, "ruleset", None) or RULESET_ID)
     ts = escape(generated_at)
 
     rows: list[str] = []
@@ -117,6 +122,33 @@ def render_html_report(
             f"</div>"
         )
     dim_html = "\n".join(rows)
+
+    findings_html = ""
+    if findings:
+        parts: list[str] = ['<div class="findings"><h2>Open findings (rule IDs)</h2>']
+        by_dim: dict[str, list[dict]] = {}
+        for f in findings:
+            by_dim.setdefault(f.get("dimension", "?"), []).append(f)
+        for label, key in DIMENSIONS:
+            items = by_dim.get(key, [])
+            if not items:
+                continue
+            parts.append(f"<h3>{escape(label)} <code>{escape(key)}</code></h3><ul>")
+            for f in items:
+                rid = f.get("rule_id") or ""
+                status = f.get("status") or ""
+                reason = f.get("pattern_or_reason") or ""
+                snippet = f.get("snippet")
+                detail = snippet or reason
+                rid_s = f"<code>{escape(str(rid))}</code> " if rid else ""
+                parts.append(
+                    f'<li class="{escape(status)}">'
+                    f"<strong>{escape(status)}</strong> {rid_s}{escape(str(detail))}"
+                    f"</li>"
+                )
+            parts.append("</ul>")
+        parts.append("</div>")
+        findings_html = "\n".join(parts)
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -143,6 +175,14 @@ h1{{font-size:1.75rem;color:#fff;text-align:center;margin-bottom:0.25rem}}
 .dim-score{{width:55px;text-align:right;color:#64748b}}
 .disclaimer{{margin-top:1.25rem;padding:0.75rem;background:#0f0f1a;border:1px solid #334155;
 border-radius:8px;font-size:0.75rem;color:#94a3b8;line-height:1.45}}
+.findings{{margin-top:1rem;font-size:0.72rem;color:#94a3b8;text-align:left}}
+.findings h2{{color:#e2e8f0;font-size:0.85rem;margin-bottom:0.5rem}}
+.findings h3{{color:#cbd5e1;font-size:0.78rem;margin:0.65rem 0 0.25rem}}
+.findings ul{{padding-left:1.1rem;margin:0.2rem 0}}
+.findings li{{margin:0.2rem 0}}
+.findings .matched{{color:#34d399}}
+.findings .missing{{color:#f87171}}
+.findings code{{color:#93c5fd;font-size:0.7rem}}
 .footer{{margin-top:1.25rem;text-align:center;font-size:0.7rem;color:#475569;line-height:1.5}}
 .footer a{{color:#3b82f6;text-decoration:none}}
 </style>
@@ -150,19 +190,22 @@ border-radius:8px;font-size:0.75rem;color:#94a3b8;line-height:1.45}}
 <body>
 <div class="container">
   <h1>CrewScore</h1>
-  <p class="subtitle">Structural Production Readiness Report</p>
+  <p class="subtitle">Structural hygiene report (open rules)</p>
   <div class="card">
     <div class="score-big">{overall}/100</div>
     <div class="tier">{tier}</div>
-    <div class="meta">Mode: {mode} · Source: {source}</div>
+    <div class="meta">Ruleset: {ruleset} · Mode: {mode} · Source: {source}</div>
     {dim_html}
     <div class="disclaimer">
-      <strong>Structural scan only</strong> — offline pattern match on prompt text.
-      Not a substitute for live behavioral red-teaming or runtime proof of safety.
+      <strong>Not a black box.</strong> Deterministic regex on prompt text.
+      Dimension score = min(100, round(15+85×matches/total_rules)); overall = mean of 8 dims.
+      List every rule with <code>crewscore rules --json</code>.
+      Not live red-teaming, not runtime proof, not a certification.
     </div>
+    {findings_html}
   </div>
   <div class="footer">
-    CrewScore v{version} · Generated {ts}<br>
+    CrewScore v{version} · {ruleset} · Generated {ts}<br>
     <a href="{HOMEPAGE}">crewscore.ai</a>
   </div>
 </div>

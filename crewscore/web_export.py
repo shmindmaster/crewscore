@@ -253,6 +253,7 @@ JS_RUNTIME = r"""
 
   global.CrewScoreEngine = {
     ENGINE,
+    ruleset: ENGINE.ruleset,
     analyze,
     analyzeWithFindings,
     scoreTier,
@@ -263,6 +264,8 @@ JS_RUNTIME = r"""
     fixAndRescore,
     dimensions: ENGINE.dimensions,
     vendorQuestions: ENGINE.vendor_questions,
+    // Transparency: every rule lives in ENGINE.patterns as [rule_id, regex]
+    openScoring: true,
   };
 })(typeof window !== "undefined" ? window : globalThis);
 """

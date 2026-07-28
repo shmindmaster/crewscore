@@ -97,7 +97,7 @@ textarea{width:100%;min-height:150px;background:#020617;border:1px solid #334155
     <span class="pill">📤 Share a number people understand</span>
     <span class="pill">🛠 Fix without installing anything</span>
   </div>
-  <p class="social-proof">Structural text scan only — not a red-team or certification. Templates and boilerplate can inflate scores; pair fixes with runtime gates. Same engine as the free CLI for teams that want CI later.</p>
+  <p class="social-proof">Not a black box: open <code>rule_id</code>s + regex (CLI: <code>crewscore rules --json</code>). Structural scan only — not a red-team or certification. Templates can inflate scores; pair with runtime gates.</p>
 
   <div class="tabs" role="tablist">
     <div class="tab active" role="tab" data-tab="agent" tabindex="0">Score my agent prompt</div>
@@ -254,14 +254,19 @@ textarea{width:100%;min-height:150px;background:#020617;border:1px solid #334155
     });
   }
 
+  function findingLabel(f) {
+    const rid = f.rule_id ? `<code style="color:#93c5fd">${escapeHtml(f.rule_id)}</code> ` : "";
+    const body = escapeHtml(f.snippet || f.pattern_or_reason || "");
+    return rid + body;
+  }
   function explainHtml(findings, dimKey) {
     const matched = findings.filter((f) => f.dimension === dimKey && f.status === "matched");
     const missing = findings.filter((f) => f.dimension === dimKey && f.status === "missing");
     let h = "";
     if (matched.length)
-      h += `<div class="matched">Matched: ${matched.map((f) => escapeHtml(f.snippet || f.pattern_or_reason)).join(" · ")}</div>`;
+      h += `<div class="matched">Matched: ${matched.map(findingLabel).join(" · ")}</div>`;
     if (missing.length)
-      h += `<div class="missing">Missing: ${missing.map((f) => escapeHtml(f.pattern_or_reason)).join(" · ")}</div>`;
+      h += `<div class="missing">Missing: ${missing.map(findingLabel).join(" · ")}</div>`;
     return h;
   }
 
@@ -283,9 +288,12 @@ textarea{width:100%;min-height:150px;background:#020617;border:1px solid #334155
       const d = opts.delta;
       html += `<div class="delta ${d > 0 ? "score-green" : ""}">${d > 0 ? "+" + d : d} points after fix</div>`;
     }
+    const ruleset = (E.ruleset || (result && result.ruleset) || "open ruleset");
     html += `<div class="score-big ${tier.c}">${overall}/100</div>
       <div class="tier ${tier.c}">${escapeHtml(tier.n)}</div>
-      <p class="disclaimer">Structural text scan only — not proof the model will obey, not a security certification.</p>`;
+      <p class="disclaimer">Ruleset <code>${escapeHtml(String(ruleset))}</code> · deterministic regex · not a black box.
+      Each finding shows an open <code>rule_id</code>. Not red-team / not runtime proof / not a certification.
+      Formula: dim = min(100, round(15+85×matches/rules)); overall = mean of 8 dims.</p>`;
     dims.forEach((d) => {
       const s = scores[d.key] || 0;
       html += `<div class="dim-row"><span class="dim-label" title="${escapeHtml(d.label)}">${escapeHtml(d.label)}</span>${bar(s)}<span class="dim-score">${s}</span></div>`;
