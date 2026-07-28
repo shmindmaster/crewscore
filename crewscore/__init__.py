@@ -1,3 +1,3 @@
 """CrewScore — offline structural production-readiness scorecard for AI agent prompts."""
 
-__version__ = "0.2.4"
+__version__ = "0.2.5"
