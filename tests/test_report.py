@@ -114,15 +114,54 @@ def test_share_text_includes_score_and_url():
     assert "crewscore.ai" in text
 
 
+def _badge_geometry(svg: str) -> dict:
+    """svg width, the two panel rects, and the value text with its anchor."""
+    root = ElementTree.fromstring(svg)  # also asserts well-formedness
+    rects = [r for r in root.iter("{http://www.w3.org/2000/svg}rect")]
+    texts = [t for t in root.iter("{http://www.w3.org/2000/svg}text")]
+    value_rect = next(r for r in rects if r.get("x"))
+    return {
+        "width": float(root.get("width")),
+        "label_w": float(value_rect.get("x")),
+        "value_w": float(value_rect.get("width")),
+        "value_text": texts[-1].text,
+        "value_x": float(texts[-1].get("x")),
+    }
+
+
 def test_badge_for_config_shows_smell_verdict_not_a_grade():
     """A build-instructions file must never wear a 0/100 badge."""
     svg = render_badge_svg(_config_result([_smell(), _smell("Lint Leakage", "smell.lint_leakage")]))
     assert "/100" not in svg
     assert "config: 2 smells" in svg
-    root = ElementTree.fromstring(svg)  # well-formed
-    # Badge must be wide enough for the longer config text, not the 54px
-    # value box sized for "0/100".
-    assert int(root.get("width")) >= 78 + 7 * len("config: 2 smells")
+
+
+def test_badge_panels_fit_their_text_and_tile_the_svg():
+    """The value text must sit centered inside its own colored panel.
+
+    Reusing the governed badge's fixed value box for the longer config string
+    pushes the text out of its panel and past the right edge of the SVG.
+    """
+    for result in (
+        _result(),
+        _config_result([]),
+        _config_result([_smell()] * 12),
+    ):
+        g = _badge_geometry(render_badge_svg(result))
+        # Panels tile the badge exactly — no gap, no overflow.
+        assert g["label_w"] + g["value_w"] == g["width"]
+        # Text is centered in the value panel and stays inside it.
+        assert g["value_x"] == g["label_w"] + g["value_w"] / 2
+        half_text = 3.5 * len(g["value_text"])  # conservative glyph half-width
+        assert g["value_x"] - half_text > g["label_w"]
+        assert g["value_x"] + half_text < g["width"]
+
+
+def test_badge_grows_with_longer_verdict_text():
+    narrow = _badge_geometry(render_badge_svg(_config_result([])))
+    wide = _badge_geometry(render_badge_svg(_config_result([_smell()] * 12)))
+    assert len(wide["value_text"]) > len(narrow["value_text"])
+    assert wide["value_w"] > narrow["value_w"]
 
 
 def test_badge_for_clean_config_says_clean_and_is_green():
