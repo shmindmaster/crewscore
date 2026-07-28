@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 
 from crewscore import __version__
-from crewscore.scoring import DIMENSIONS
+from crewscore.scoring import DIMENSIONS, RULESET_ID
 from crewscore.scorers.fix_patterns import FIX_TEMPLATES
 from crewscore.scorers.structural_analysis import DIMENSION_SIGNAL_LABELS, SCORER_MAP
 from crewscore.vendor_scorecard import QUESTIONS
@@ -31,17 +31,46 @@ JS_RUNTIME = r"""
 
   function matchPatterns(promptLower, patterns) {
     const hits = [];
-    for (const pattern of patterns) {
+    for (const entry of patterns) {
+      // Support [rule_id, pattern] tuples and bare pattern strings.
+      const ruleId = Array.isArray(entry) ? entry[0] : null;
+      const pattern = Array.isArray(entry) ? entry[1] : entry;
       const re = safeRegExp(pattern);
       if (!re) continue;
       const m = promptLower.match(re);
       if (m) {
         let snip = m[0].replace(/\s+/g, " ");
         if (snip.length > 120) snip = snip.slice(0, 119) + "…";
-        hits.push({ pattern, snippet: snip });
+        hits.push({ ruleId, pattern, snippet: snip });
       }
     }
     return hits;
+  }
+
+  function detectTemplateBoilerplate(prompt) {
+    if (!prompt) return [];
+    const markers = [
+      "CrewScore",
+      "## Prompt Injection Defense",
+      "# Guardrails (Applied by CrewScore)",
+      "## Additional Guardrails (Applied by CrewScore)",
+    ];
+    const templates = ENGINE.fix_templates || {};
+    Object.values(templates).forEach((t) => {
+      const line = String(t)
+        .split("\n")
+        .map((l) => l.trim())
+        .find((l) => l.startsWith("## "));
+      if (line) markers.push(line);
+    });
+    let hits = 0;
+    for (const m of markers) {
+      if (prompt.includes(m)) hits += 1;
+    }
+    if ((prompt.includes("CrewScore") && hits >= 2) || hits >= 3) {
+      return ["template_boilerplate_detected"];
+    }
+    return [];
   }
 
   function applyLengthBonus(scores, promptLower) {
@@ -64,15 +93,23 @@ JS_RUNTIME = r"""
         scores[key] = 0;
         const signals = ENGINE.signal_labels[key] || [];
         for (const s of signals.slice(0, 3)) {
-          findings.push({
+          const entry = {
             dimension: key,
             status: "missing",
             pattern_or_reason: s.label,
             snippet: null,
-          });
+          };
+          if (s.rule_id) entry.rule_id = s.rule_id;
+          findings.push(entry);
         }
       }
-      return { scores, findings, overall: 0 };
+      return {
+        scores,
+        findings,
+        overall: 0,
+        ruleset: ENGINE.ruleset,
+        warnings: [],
+      };
     }
 
     const promptLower = String(systemPrompt).toLowerCase();
@@ -85,12 +122,14 @@ JS_RUNTIME = r"""
       scores[key] = scoreFromMatchCount(hits.length, patterns.length);
 
       for (const h of hits.slice(0, 3)) {
-        findings.push({
+        const entry = {
           dimension: key,
           status: "matched",
           pattern_or_reason: h.pattern,
           snippet: h.snippet,
-        });
+        };
+        if (h.ruleId) entry.rule_id = h.ruleId;
+        findings.push(entry);
       }
 
       let missingCount = 0;
@@ -99,12 +138,14 @@ JS_RUNTIME = r"""
         const re = safeRegExp(s.pattern);
         const matched = re ? re.test(promptLower) : false;
         if (matched) continue;
-        findings.push({
+        const entry = {
           dimension: key,
           status: "missing",
           pattern_or_reason: s.label,
           snippet: null,
-        });
+        };
+        if (s.rule_id) entry.rule_id = s.rule_id;
+        findings.push(entry);
         missingCount += 1;
       }
       if (!hits.length && missingCount === 0) {
@@ -122,7 +163,14 @@ JS_RUNTIME = r"""
     const overall = vals.length
       ? Math.floor(vals.reduce((a, b) => a + b, 0) / vals.length)
       : 0;
-    return { scores, findings, overall };
+    const warnings = detectTemplateBoilerplate(String(systemPrompt));
+    return {
+      scores,
+      findings,
+      overall,
+      ruleset: ENGINE.ruleset,
+      warnings,
+    };
   }
 
   function analyze(systemPrompt) {
@@ -130,10 +178,10 @@ JS_RUNTIME = r"""
   }
 
   function scoreTier(overall) {
-    if (overall >= 90) return { n: "PRODUCTION READY", c: "score-green" };
-    if (overall >= 70) return { n: "SHIP WITH MONITORING", c: "score-yellow" };
-    if (overall >= 50) return { n: "NEEDS WORK", c: "score-orange" };
-    return { n: "NOT PRODUCTION READY", c: "score-red" };
+    if (overall >= 90) return { n: "STRUCTURAL: STRONG", c: "score-green" };
+    if (overall >= 70) return { n: "STRUCTURAL: OK WITH GAPS", c: "score-yellow" };
+    if (overall >= 50) return { n: "STRUCTURAL: WEAK", c: "score-orange" };
+    return { n: "STRUCTURAL: CRITICAL GAPS", c: "score-red" };
   }
 
   function vendorTier(overall) {
@@ -222,13 +270,28 @@ JS_RUNTIME = r"""
 
 def build_payload() -> dict:
     dim_order = [key for _, key in DIMENSIONS]
+    # Flatten rule_id → pattern for signal labels.
+    pattern_to_rule: dict[str, str] = {}
+    for key in dim_order:
+        for rule_id, pattern in SCORER_MAP[key]:
+            pattern_to_rule[pattern] = rule_id
+
     return {
         "version": __version__,
+        "ruleset": RULESET_ID,
         "dimensions": [{"key": key, "label": label} for label, key in DIMENSIONS],
-        "patterns": {key: list(SCORER_MAP[key]) for key in dim_order},
+        # patterns as [rule_id, regex] pairs for JS matchPatterns
+        "patterns": {
+            key: [[rule_id, pattern] for rule_id, pattern in SCORER_MAP[key]]
+            for key in dim_order
+        },
         "signal_labels": {
             key: [
-                {"pattern": p, "label": lab}
+                {
+                    "pattern": p,
+                    "label": lab,
+                    **({"rule_id": pattern_to_rule[p]} if p in pattern_to_rule else {}),
+                }
                 for p, lab in DIMENSION_SIGNAL_LABELS.get(key, [])
             ]
             for key in dim_order

@@ -1,8 +1,8 @@
 """Unit tests for structural scoring and fix application."""
 
-from crewscore.scoring import build_result, overall_score, score_tier
+from crewscore.scoring import RULESET_ID, build_result, overall_score, score_tier
 from crewscore.scorers.fix_patterns import apply_fixes, generate_fixes
-from crewscore.scorers.structural_analysis import analyze
+from crewscore.scorers.structural_analysis import analyze, analyze_with_findings
 
 BARE_PROMPT = "You are a helpful assistant that answers customer questions."
 
@@ -79,8 +79,52 @@ def test_fix_raises_score():
 
 def test_build_result_tier():
     result = build_result({k: 0 for k in analyze(BARE_PROMPT)})
-    assert result.tier == "NOT PRODUCTION READY"
+    assert result.tier == "STRUCTURAL: CRITICAL GAPS"
     assert result.overall == 0
-    assert score_tier(95) == "PRODUCTION READY"
-    assert score_tier(75) == "SHIP WITH MONITORING"
-    assert score_tier(55) == "NEEDS WORK"
+    assert score_tier(95) == "STRUCTURAL: STRONG"
+    assert score_tier(75) == "STRUCTURAL: OK WITH GAPS"
+    assert score_tier(55) == "STRUCTURAL: WEAK"
+    assert score_tier(40) == "STRUCTURAL: CRITICAL GAPS"
+
+
+def test_ruleset_id_constant():
+    assert RULESET_ID == "crewscore-hygiene@0.2.2"
+
+
+def test_build_result_includes_ruleset_and_warnings():
+    result = build_result({k: 0 for k in analyze(BARE_PROMPT)})
+    payload = result.to_dict()
+    assert payload["ruleset"] == "crewscore-hygiene@0.2.2"
+    assert payload["warnings"] == []
+    assert isinstance(payload["warnings"], list)
+
+
+def test_template_boilerplate_warning_on_crewscore_fix():
+    before = analyze(BARE_PROMPT)
+    fixes = generate_fixes(before)
+    enhanced = apply_fixes(BARE_PROMPT, fixes)
+    result = build_result(analyze(enhanced), source="prompt", prompt_text=enhanced)
+    assert "template_boilerplate_detected" in result.warnings
+
+
+def test_bare_prompt_no_template_warning():
+    result = build_result(analyze(BARE_PROMPT), prompt_text=BARE_PROMPT)
+    assert "template_boilerplate_detected" not in result.warnings
+
+
+def test_bare_safety_word_does_not_inflate_injection():
+    """Broad 'safety' alone must not score like real injection defense."""
+    bare_safety = "You are a helpful assistant. Follow safety guidelines."
+    scores = analyze(bare_safety)
+    # Without specific injection signals, injection should stay low
+    assert scores["injection"] < 40
+
+
+def test_matched_findings_include_rule_id():
+    scores, findings = analyze_with_findings(GUARDED_PROMPT)
+    matched = [f for f in findings if f["status"] == "matched"]
+    assert matched
+    for f in matched:
+        assert "rule_id" in f
+        assert f["rule_id"]  # e.g. injection.01
+        assert "." in f["rule_id"]

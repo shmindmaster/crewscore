@@ -120,7 +120,12 @@ def test(prompt, prompt_file, as_json, threshold, explain, report, badge):
         dimensions, findings = structural_analysis.analyze_with_findings(system_prompt)
     else:
         dimensions = structural_analysis.analyze(system_prompt)
-    result = build_result(dimensions, mode="structural", source=source)
+    result = build_result(
+        dimensions,
+        mode="structural",
+        source=source,
+        prompt_text=system_prompt,
+    )
 
     if report:
         report_path = Path(report)
