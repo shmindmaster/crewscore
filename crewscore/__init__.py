@@ -1,3 +1,8 @@
-"""CrewScore — offline structural production-readiness scorecard for AI agent prompts."""
+"""CrewScore — deterministic offline checker for AI agent prompts and coding-agent config.
 
-__version__ = "0.3.1"
+Reports governance guardrail coverage and configuration smells with
+explainable per-rule findings, for use as a CI gate. See docs/validation.md
+for what the score does and does not measure.
+"""
+
+__version__ = "0.4.0"

@@ -764,6 +764,15 @@ def test_version():
     assert __version__ in result.output
 
 
+def test_version_is_0_4_0():
+    """This release breaks the --json payload shape and `fix` exit codes;
+    semver requires a minor bump, not the previous 0.3.1 patch bump.
+    """
+    from crewscore import __version__
+
+    assert __version__ == "0.4.0"
+
+
 def test_fix_plan_json_lists_dimensions_without_writing(tmp_path: Path):
     """--plan --json lists planned dimensions and never mutates the file."""
     prompt_file = tmp_path / "prompt.md"

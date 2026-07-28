@@ -260,6 +260,23 @@ def test_action_yml_present():
     assert "crewscore" in text.lower()
 
 
+def test_action_description_does_not_overclaim_production_readiness():
+    """Marketplace listing text must match what the tool actually does.
+
+    docs/validation.md is the source of truth: the score does not establish
+    production readiness. The top-level description must not claim
+    production-readiness assessment or certification.
+    """
+    text = _action_text()
+    description_line = next(
+        line for line in text.splitlines() if line.startswith("description:")
+    )
+    lowered = description_line.lower()
+    assert "production-readiness" not in lowered
+    assert "production readiness" not in lowered
+    assert "certif" not in lowered
+
+
 def test_action_scan_path_input_optional_and_prompt_file_not_required():
     """scan-path is optional; prompt-file is not required (XOR validated in script)."""
     text = _action_text()

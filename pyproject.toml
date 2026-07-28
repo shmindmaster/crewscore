@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "crewscore"
-version = "0.3.1"
-description = "CrewScore — offline structural production-readiness scorecard for AI agent system prompts."
+version = "0.4.0"
+description = "CrewScore — deterministic offline checker for AI agent prompts and coding-agent config: governance guardrail coverage and configuration smells, with explainable per-rule findings and a CI gate."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
@@ -16,14 +16,21 @@ keywords = [
     "ai-agents",
     "crewscore",
     "guardrails",
-    "evaluation",
+    "governance",
     "llm",
     "safety",
-    "governance",
-    "production",
-    "scorecard",
+    "static-analysis",
+    "linter",
+    "ci-cd",
+    "prompt-engineering",
 ]
 classifiers = [
+    # Still Alpha, not Beta: this very release breaks the --json payload
+    # shape and `fix` exit codes, three governance dimensions ship with
+    # disclosed low validity (docs/validation.md), and the scoring formula
+    # has a known defect tracked for a future release. Beta implies the
+    # public surface and behavior have settled; this project's contract is
+    # still actively changing release to release.
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",

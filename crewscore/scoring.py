@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
-RULESET_ID = "crewscore-hygiene@0.3.1"
+RULESET_ID = "crewscore-hygiene@0.4.0"
 
 DIMENSIONS: list[tuple[str, str]] = [
     ("Prompt Injection Resistance", "injection"),
