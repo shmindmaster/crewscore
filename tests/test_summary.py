@@ -41,3 +41,82 @@ def test_scan_markdown_worst_first_table():
     assert "10/100" in md
     assert "b.md" in md
     assert "| Path |" in md
+
+
+def test_scan_markdown_headline_ignores_coding_agent_config():
+    """A config file at 0 must never become the PR comment's headline score.
+
+    This body is the sticky PR comment and the job summary — the most public
+    surface CrewScore has. Ranking AGENTS.md by the governance score puts a
+    category error at the top of every comment.
+    """
+    md = format_scan_markdown(
+        [
+            {
+                "path": "AGENTS.md",
+                "overall": 0,
+                "tier": "CONFIG: NO SMELLS DETECTED",
+                "governance_applicable": False,
+            },
+            {
+                "path": "prompts/sys.md",
+                "overall": 87,
+                "tier": "STRUCTURAL: OK WITH GAPS",
+                "governance_applicable": True,
+            },
+        ]
+    )
+    assert "**87/100**" in md
+    assert "prompts/sys.md" in md
+    assert "0/100" not in md
+    assert "CONFIG: NO SMELLS DETECTED" in md
+
+
+def test_scan_markdown_config_row_shows_verdict_not_number():
+    """Table rows for config show the smell verdict, never a 0-100 number."""
+    md = format_scan_markdown(
+        [
+            {
+                "path": "AGENTS.md",
+                "overall": 0,
+                "tier": "CONFIG: 2 SMELLS",
+                "governance_applicable": False,
+            },
+            {
+                "path": "prompts/sys.md",
+                "overall": 87,
+                "tier": "STRUCTURAL: OK WITH GAPS",
+                "governance_applicable": True,
+            },
+        ]
+    )
+    config_row = next(line for line in md.splitlines() if "AGENTS.md" in line and "|" in line)
+    assert "0" not in config_row
+    assert "n/a" in config_row
+    assert "CONFIG: 2 SMELLS" in config_row
+    prompt_row = next(line for line in md.splitlines() if "prompts/sys.md" in line and "|" in line)
+    assert "87" in prompt_row
+
+
+def test_scan_markdown_config_only_has_no_governance_headline():
+    """A repo with only AGENTS.md-class files gets a smell verdict, no grade."""
+    md = format_scan_markdown(
+        [
+            {
+                "path": "AGENTS.md",
+                "overall": 0,
+                "tier": "CONFIG: 1 SMELL",
+                "governance_applicable": False,
+            },
+            {
+                "path": "CLAUDE.md",
+                "overall": 0,
+                "tier": "CONFIG: NO SMELLS DETECTED",
+                "governance_applicable": False,
+            },
+        ]
+    )
+    assert "/100" not in md
+    assert "Worst score" not in md
+    assert "configuration smells" in md.lower()
+    assert "CONFIG: 1 SMELL" in md
