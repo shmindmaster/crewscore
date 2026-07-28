@@ -96,11 +96,23 @@ jobs:
           from pathlib import PurePosixPath, PureWindowsPath
           rows = json.load(open('/tmp/cs-scan.json'))
           by = {}
+          config = {}
           for r in rows:
               p = r['path'].replace('\\\\', '/')
-              by[PurePosixPath(p).name] = int(r['overall'])
+              name = PurePosixPath(p).name
+              # Coding-agent config carries no governance grade at all - not a
+              # zero, not a key. Reading 'overall' off every row is what this
+              # guard exists to stop.
+              if r.get('governance_applicable', True):
+                  by[name] = int(r['overall'])
+              else:
+                  config[name] = r
           assert by['01-bare-assistant.md'] == 0
           assert by['05-hardened-ops.md'] >= 70
           assert by['05-hardened-ops.md'] > by['04-partial-hygiene.md']
-          print('OK corpus', by)
+          assert config, 'corpus lost its coding-agent config fixture'
+          for name, r in config.items():
+              assert 'overall' not in r, name + ' was handed a governance score'
+              assert 'dimensions' not in r, name + ' was handed dimension scores'
+          print('OK corpus', by, 'ungraded config', sorted(config))
           "
