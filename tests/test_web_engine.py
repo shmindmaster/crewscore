@@ -7,6 +7,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
+import pytest
+
 from crewscore.profiles import (
     CODING_AGENT_CONFIG,
     PROFILE_LABELS,
@@ -182,7 +184,7 @@ def test_js_never_grades_declared_config_when_node_present():
     CLI said CONFIG: NO SMELLS DETECTED for the identical bytes.
     """
     if not shutil.which("node"):
-        return
+        pytest.skip("node not installed; skipping JS engine parity test")
     agents_md = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
     out = _run_engine(
         "emit(E.analyzeArtifact("
@@ -204,7 +206,7 @@ def test_js_never_grades_declared_config_when_node_present():
 def test_js_declared_system_prompt_is_unchanged_when_node_present():
     """Declaring a system prompt must keep the existing 8-dimension behavior."""
     if not shutil.which("node"):
-        return
+        pytest.skip("node not installed; skipping JS engine parity test")
     out = _run_engine(
         "const a = E.analyzeArtifact("
         + json.dumps(GUARDED)
@@ -221,7 +223,7 @@ def test_js_declared_system_prompt_is_unchanged_when_node_present():
 def test_js_context_bloat_threshold_matches_python_when_node_present():
     """Same published 200-line threshold on both sides, including edge cases."""
     if not shutil.which("node"):
-        return
+        pytest.skip("node not installed; skipping JS engine parity test")
     fixtures = {
         "empty": "",
         "short": "line\n" * 10,
@@ -252,7 +254,7 @@ def test_js_context_bloat_threshold_matches_python_when_node_present():
 def test_js_config_verdict_declares_what_it_cannot_check_when_node_present():
     """A browser-clean config must still say two detectors did not run."""
     if not shutil.which("node"):
-        return
+        pytest.skip("node not installed; skipping JS engine parity test")
     out = _run_engine(
         'emit(E.analyzeArtifact("Build with make.\\n", "coding_agent_config"));'
     )
@@ -270,7 +272,7 @@ def test_js_config_verdict_declares_what_it_cannot_check_when_node_present():
 def test_js_classifies_a_real_filename_like_the_cli_when_node_present():
     """A loaded URL carries a real filename, so classify it — never sniff text."""
     if not shutil.which("node"):
-        return
+        pytest.skip("node not installed; skipping JS engine parity test")
     names = [
         "AGENTS.md",
         "CLAUDE.md",
@@ -307,7 +309,7 @@ def test_js_url_load_never_demotes_a_declared_config_when_node_present():
     the one thing the profile split exists to prevent.
     """
     if not shutil.which("node"):
-        return
+        pytest.skip("node not installed; skipping JS engine parity test")
     cases = [
         # Declared config + a filename that matches no config basename: the
         # user's declaration stands. These all regraded before the fix.
@@ -343,7 +345,7 @@ def test_js_url_load_never_demotes_a_declared_config_when_node_present():
 def test_js_demoted_url_load_would_have_produced_a_grade_when_node_present():
     """Ties the demotion bug to the invariant it broke: a grade for config."""
     if not shutil.which("node"):
-        return
+        pytest.skip("node not installed; skipping JS engine parity test")
     out = _run_engine(
         'const p = E.profileForLoadedUrl("coding_agent_config", "/o/r/main/rules.md");'
         'const r = E.analyzeArtifact("You are a helpful assistant.", p);'
@@ -364,7 +366,7 @@ def test_index_labels_are_not_score_worded_for_config():
 
 def test_js_python_score_parity_when_node_present():
     if not shutil.which("node"):
-        return
+        pytest.skip("node not installed; skipping JS engine parity test")
 
     fixtures = {"empty": "", "bare": BARE, "guarded": GUARDED}
     script = f"""
@@ -410,7 +412,7 @@ def test_python_findings_still_sane():
 
 def test_js_fix_raises_score_when_node_present():
     if not shutil.which("node"):
-        return
+        pytest.skip("node not installed; skipping JS engine parity test")
     script = f"""
 const fs = require('fs');
 const vm = require('vm');
