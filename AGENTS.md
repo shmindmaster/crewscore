@@ -70,8 +70,8 @@ examples/corpus/         # synthetic bare→hardened demo fixtures
 score-engine.js          # generated — commit after pattern changes
 index.html               # builder-first site (uses score-engine.js)
 action.yml               # composite GH Action (scan/test + sticky PR comment)
-docs/launch/             # launch copy kit
-docs/next-steps-eval.md  # Promptfoo / garak handoff
+docs/demo.svg            # README hero demo graphic
+docs/next-steps-eval.md  # Promptfoo / garak handoff (public user doc)
 tests/
 ```
 
