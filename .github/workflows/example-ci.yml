@@ -9,6 +9,9 @@
 # Point prompt-file at your agent system prompt. The sample path below is only
 # for illustration; examples/sample-prompt.md intentionally scores low.
 #
+# Prefer scan-path when the repo has multiple agent artifacts (AGENTS.md,
+# system-prompt.md, prompts/*, etc.). The Action reports the worst (min) overall.
+#
 # workflow_dispatch only so this example does not fail default CI on the bare
 # sample prompt. Use crewscore-selftest.yml for green self-tests.
 name: CrewScore CI Example
@@ -31,13 +34,29 @@ jobs:
       #     threshold: "50"
       #     # explain: "true"
 
-      # Local composite action (this repo / monorepo self-check):
+      # Repo-wide structural scan (preferred when you have multiple agent files):
+      # - name: CrewScore scan
+      #   id: crewscore
+      #   uses: shmindmaster/crewscore@v1
+      #   with:
+      #     scan-path: "."
+      #     threshold: "50"
+
+      # Local composite action (this repo / monorepo self-check) — single file:
       - name: CrewScore
         id: crewscore
         uses: ./
         with:
           prompt-file: examples/sample-prompt.md
           threshold: "50"
+
+      # Local scan example (uncomment when `crewscore scan` is available):
+      # - name: CrewScore scan
+      #   id: crewscore-scan
+      #   uses: ./
+      #   with:
+      #     scan-path: "."
+      #     threshold: "50"
 
       - name: Use score outputs
         if: always()
