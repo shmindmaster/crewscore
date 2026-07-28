@@ -5,7 +5,7 @@
 (function (global) {
   const ENGINE = {
   "version": "0.3.0",
-  "ruleset": "crewscore-hygiene@0.3.0",
+  "ruleset": "crewscore-hygiene@0.3.1",
   "dimensions": [
     {
       "key": "injection",
@@ -60,7 +60,7 @@
       ],
       [
         "injection.05",
-        "adversar|injection|jailbreak"
+        "(?:prompt|instruction|indirect)\\s+injection|jailbreak|adversarial\\s+(?:input|prompt|attack|user)"
       ],
       [
         "injection.06",
@@ -112,7 +112,7 @@
     "citation": [
       [
         "citation.01",
-        "(?:cite|citation|reference|attribute|source\\s+link|footnote)"
+        "\\bcitations?\\b|\\bcite\\s+(?:the|its|each|every|all|your|sources?)|source\\s+link|\\bfootnotes?\\b"
       ],
       [
         "citation.02",
@@ -128,7 +128,7 @@
       ],
       [
         "citation.05",
-        "\\[?\\d+\\]?.*(?:source|ref|cite)"
+        "\\[\\d+\\]|\\[source[:\\s]|\\[ref[:\\s]"
       ]
     ],
     "cost": [
@@ -216,7 +216,7 @@
       ],
       [
         "audit.02",
-        "(?:audit|logging|trace|provenance|accountab)"
+        "audit\\s+(?:trail|log|record)|\\bprovenance\\b|\\baccountab|immutable\\s+log|log\\s+(?:every|all|each)\\b"
       ],
       [
         "audit.03",
@@ -234,7 +234,7 @@
     "compliance": [
       [
         "compliance.01",
-        "(?:hipaa|phi|protected\\s+health|patient\\s+data|baa|business\\s+associate)"
+        "\\bhipaa\\b|\\bphi\\b|protected\\s+health|patient\\s+data|\\bbaa\\b|business\\s+associate"
       ],
       [
         "compliance.02",
@@ -254,7 +254,7 @@
       ],
       [
         "compliance.06",
-        "(?:pci|pci.dss|payment\\s+card)"
+        "\\bpci(?:[-\\s]?dss)?\\b|payment\\s+card"
       ],
       [
         "compliance.07",
@@ -307,7 +307,7 @@
     ],
     "citation": [
       {
-        "pattern": "(?:cite|citation|reference|attribute|source\\s+link|footnote)",
+        "pattern": "\\bcitations?\\b|\\bcite\\s+(?:the|its|each|every|all|your|sources?)|source\\s+link|\\bfootnotes?\\b",
         "label": "Require citations, references, or source links",
         "rule_id": "citation.01"
       },
@@ -380,7 +380,7 @@
         "rule_id": "audit.01"
       },
       {
-        "pattern": "(?:audit|logging|trace|provenance|accountab)",
+        "pattern": "audit\\s+(?:trail|log|record)|\\bprovenance\\b|\\baccountab|immutable\\s+log|log\\s+(?:every|all|each)\\b",
         "label": "Audit / logging / provenance accountability",
         "rule_id": "audit.02"
       },
@@ -392,7 +392,7 @@
     ],
     "compliance": [
       {
-        "pattern": "(?:hipaa|phi|protected\\s+health|patient\\s+data|baa|business\\s+associate)",
+        "pattern": "\\bhipaa\\b|\\bphi\\b|protected\\s+health|patient\\s+data|\\bbaa\\b|business\\s+associate",
         "label": "HIPAA / PHI / protected health data handling",
         "rule_id": "compliance.01"
       },
