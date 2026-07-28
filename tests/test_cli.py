@@ -537,6 +537,12 @@ def test_fix_forced_warning_names_the_output_file_not_the_source(tmp_path: Path)
     # The whole phrase: `--output` never touches the source file, so naming it
     # as the write target is the same wrong sentence --plan used to print.
     assert f"writing governance templates to {out_file}".lower() in lower
+    # ...and the classification clause must name the file that actually
+    # classifies as config. `out.md` does not; the source AGENTS.md does.
+    # "writing ... to out.md, which classifies as coding-agent config" tells
+    # the reader the wrong file is the problem.
+    assert f"{config} classifies as coding-agent config".lower() in lower
+    assert f"{out_file}, which classifies".lower() not in lower
     assert config.read_text(encoding="utf-8") == original
     assert "HIPAA" in out_file.read_text(encoding="utf-8")
 
@@ -884,3 +890,31 @@ def test_help_text_does_not_claim_production_readiness():
         lowered = result.output.lower()
         assert "production-readiness" not in lowered, args
         assert "production readiness" not in lowered, args
+
+
+def test_scan_reports_boilerplate_warning_like_test_does(tmp_path):
+    """scan is the CI mode the README recommends; it must not lose warnings.
+
+    `score_paths` built its result without `prompt_text`, so the boilerplate
+    warning could never fire on a scan row even though scan.py's comment
+    promises `warnings` parity with `test --json`. A team that ran
+    `crewscore fix --apply` and then gated CI on `scan` never learned their
+    prompt had become template filler.
+    """
+    prompt_file = tmp_path / "system-prompt.md"
+    prompt_file.write_text(BARE, encoding="utf-8")
+    runner = CliRunner()
+    runner.invoke(main, ["fix", "--prompt-file", str(prompt_file), "--apply"])
+
+    single = json.loads(
+        runner.invoke(
+            main, ["test", "--prompt-file", str(prompt_file), "--json"]
+        ).output
+    )
+    assert "template_boilerplate_detected" in single["warnings"]
+
+    scanned = json.loads(
+        runner.invoke(main, ["scan", str(tmp_path), "--json"]).output
+    )
+    row = next(r for r in scanned if r["path"].endswith("system-prompt.md"))
+    assert "template_boilerplate_detected" in row["warnings"], row

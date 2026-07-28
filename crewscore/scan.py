@@ -178,6 +178,11 @@ def score_paths(
         result = build_result(
             dimensions,
             mode="structural",
+            # `prompt_text` is what the boilerplate warning is computed from.
+            # Omitting it made the `warnings` parity promised below a lie:
+            # scan rows could never carry template_boilerplate_detected, and
+            # scan is the CI mode the README recommends.
+            prompt_text=text,
             source=str(path),
             smells=detect_smells(text, path=path, repo_root=repo_roots[parent]),
             profile=profile or classify_path(path),
