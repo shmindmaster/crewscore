@@ -14,26 +14,40 @@ Build backend: **hatchling** · Do **not** upload without a human-provided token
 - PyPI project name `crewscore` is free / owned by us
 - Human has a PyPI API token ready (see secrets below)
 
-## Secrets (human only — never commit)
+## Secrets (1Password — never commit)
 
-| Env var | Value |
+Canonical credential (Business & Apps vault):
+
+| Field | Value |
 | --- | --- |
-| `TWINE_USERNAME` | `__token__` |
-| `TWINE_PASSWORD` | PyPI API token (`pypi-...`) |
+| Item | **PyPI API Token — Main (Upload packages)** |
+| Item ID | `thabtkjmhdpamdshpn7urq2rqa` |
+| Vault ID | `d4yvwfzjsyw4x6mymqjjfcxcoe` (name contains `&`; prefer ID in `op://` refs) |
+| Twine username | `__token__` (item field `username`) |
+| Twine password | item field `credential` (concealed API token) |
+| Scope | Entire account · Upload packages · token name “Main” |
 
-Export these in the shell session that runs `twine upload`. Do **not** put them in the repo, CI secrets for this prep task, or commit messages.
+Load into the shell only for upload, then clear:
 
 ```powershell
-# PowerShell (session-only)
-$env:TWINE_USERNAME = "__token__"
-$env:TWINE_PASSWORD = "pypi-..."   # paste token from human; never commit
+# PowerShell — read from 1Password (session-only; never commit)
+$vault = "d4yvwfzjsyw4x6mymqjjfcxcoe"
+$id = "thabtkjmhdpamdshpn7urq2rqa"
+$env:TWINE_USERNAME = op read "op://$vault/$id/username"
+$env:TWINE_PASSWORD = op read "op://$vault/$id/credential"
+# ... twine upload ...
+Remove-Item Env:TWINE_USERNAME, Env:TWINE_PASSWORD -ErrorAction SilentlyContinue
 ```
 
 ```bash
-# bash (session-only)
-export TWINE_USERNAME=__token__
-export TWINE_PASSWORD='pypi-...'   # paste token from human; never commit
+# bash — session-only
+export TWINE_USERNAME="$(op read 'op://d4yvwfzjsyw4x6mymqjjfcxcoe/thabtkjmhdpamdshpn7urq2rqa/username')"
+export TWINE_PASSWORD="$(op read 'op://d4yvwfzjsyw4x6mymqjjfcxcoe/thabtkjmhdpamdshpn7urq2rqa/credential')"
+# ... twine upload ...
+unset TWINE_USERNAME TWINE_PASSWORD
 ```
+
+Do **not** put tokens in the repo, commit messages, CI logs, or permanent `.pypirc` unless that file is outside git and gitignored.
 
 ## Build + validate (no upload)
 
