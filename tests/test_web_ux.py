@@ -326,10 +326,10 @@ def test_hero_frames_the_number_as_coverage_not_quality():
     html = _html()
     assert "See which governance rules your prompt does not state" in html
     assert "Coverage, not a quality ranking." in html
-    # The measured result travels with the claim, not only behind a link.
-    assert "+0.061" in html
-    assert "p=0.36" in html
-    assert "0.863" in html
+    # The evidence travels with the claim, not only behind a link. The corpus
+    # study was withdrawn; the figure that ships is the one anyone can
+    # reproduce from the rule catalog.
+    assert "28" in html, "hero omits the score a fully-compliant prompt gets"
     assert VALIDATION_URL in html
 
 
@@ -395,11 +395,20 @@ def test_readme_links_validation_study_above_the_fold():
     assert "docs/validation.md" in md[:2400]
 
 
-def test_readme_states_the_discrimination_result_with_numbers():
-    """Vague hedging is not disclosure. The measured figures ship in prose."""
+def test_readme_states_the_coverage_proof_with_numbers():
+    """Vague hedging is not disclosure. The figure ships in prose.
+
+    This used to pin the corpus study's statistics. That study was withdrawn
+    after our own audit found impossible numbers in it, so what must appear
+    now is the deterministic result: stating all eight controls clearly, once
+    each, scores 28/100 -- below the lowest tier boundary of 50.
+    """
     md = _readme()
-    for stat in ("+0.061", "p=0.36", "0.863", "0.800"):
-        assert stat in md, f"validation statistic {stat} missing from README"
+    assert "28/100" in md, "README omits the fully-compliant-prompt score"
+    assert "50" in md
+    # The withdrawn figures must not reappear anywhere.
+    for stat in ("+0.061", "p=0.36", "0.863", "+0.601", "99.3%"):
+        assert stat not in md, f"withdrawn statistic {stat} is still in README"
 
 
 def test_readme_draws_the_checklist_versus_benchmark_line():
@@ -425,7 +434,7 @@ def test_readme_charter_carries_discrimination_and_validity_disclosure():
     assert start > 0 and end > start, "scoring charter section not found"
     charter = md[start:end]
     assert "crewscore-hygiene@0.4.0" in charter
-    assert "+0.061" in charter
+    assert "28/100" in charter, "charter omits the coverage-not-quality proof"
     for dim in ("Cost", "Compliance", "Audit"):
         assert dim in charter, f"charter omits low-validity dimension {dim}"
     assert "docs/validation.md" in charter
@@ -446,15 +455,19 @@ def test_readme_documents_040_breaking_changes():
 
 
 def test_readme_tier_table_discloses_the_empty_top_half():
-    """The tier ladder advertises 90-100 as reachable. Nothing real reaches
-    it — the highest score across 1,368 prompts was 50 — so a reader looking
-    at the ladder must be told that before they set a threshold against it."""
+    """The tier ladder advertises 90-100 as reachable by a good prompt.
+
+    It is not. A prompt that states all eight controls clearly, once each,
+    scores 28/100 -- it does not even clear the lowest band. A reader looking
+    at this ladder is about to set a CI threshold against it, so the ladder
+    itself has to say so.
+    """
     md = _readme()
     start = md.find("### Score tiers")
     end = md.find("## Two artifacts", start)
     assert start > 0 and end > start, "score tiers section not found"
     tiers = md[start:end]
-    assert "50" in tiers and "1,368" in tiers
+    assert "28" in tiers, "tier table does not disclose the reachable ceiling"
     assert "docs/validation.md" in tiers
 
 
