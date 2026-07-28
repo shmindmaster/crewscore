@@ -36,7 +36,13 @@ INJECTION_DEFENSE_PATTERNS: list[tuple[str, str]] = [
         r"system\s+prompt.*(?:confidential|private|do\s+not\s+reveal)",
     ),
     ("injection.04", r"reject.*(?:inject|override|manipulat)"),
-    ("injection.05", r"adversar|injection|jailbreak"),
+    # 0.3.1: was bare `injection`, which matched "dependency injection" and
+    # "SQL injection" in 19/100 real repo files. Require the prompt sense.
+    (
+        "injection.05",
+        r"(?:prompt|instruction|indirect)\s+injection|jailbreak|"
+        r"adversarial\s+(?:input|prompt|attack|user)",
+    ),
     (
         "injection.06",
         r"do\s+not\s+reveal\s+(your|the|this)\s+(system|instructions|prompt)",
@@ -79,7 +85,14 @@ HALLUCINATION_PATTERNS: list[tuple[str, str]] = [
 ]
 
 CITATION_PATTERNS: list[tuple[str, str]] = [
-    ("citation.01", r"(?:cite|citation|reference|attribute|source\s+link|footnote)"),
+    # 0.3.1: was `cite|citation|reference|attribute|...`. "reference" and
+    # "attribute" are ordinary words in developer docs and fired on 48/100
+    # real files. Require language that actually asks for attribution.
+    (
+        "citation.01",
+        r"\bcitations?\b|\bcite\s+(?:the|its|each|every|all|your|sources?)|"
+        r"source\s+link|\bfootnotes?\b",
+    ),
     ("citation.02", r"(?:source|evidence|provenance)\s*(?:link|id|span|reference)"),
     (
         "citation.03",
@@ -89,7 +102,10 @@ CITATION_PATTERNS: list[tuple[str, str]] = [
         "citation.04",
         r"link\s+(?:to|back\s+to)\s+(?:the|its|each)\s+(?:source|evidence|document)",
     ),
-    ("citation.05", r"\[?\d+\]?.*(?:source|ref|cite)"),
+    # 0.3.1: was `\[?\d+\]?.*(?:source|ref|cite)`, which matched any numbered
+    # list line containing "refer"/"prefer" — 35/100 real files. Require a
+    # bracketed citation marker.
+    ("citation.05", r"\[\d+\]|\[source[:\s]|\[ref[:\s]"),
 ]
 
 COST_PATTERNS: list[tuple[str, str]] = [
@@ -154,7 +170,13 @@ AUDIT_PATTERNS: list[tuple[str, str]] = [
         "audit.01",
         r"(?:log|record|track|trace|audit)\s*(?:trail|history|event|action|decision|every|all|each)",
     ),
-    ("audit.02", r"(?:audit|logging|trace|provenance|accountab)"),
+    # 0.3.1: was `audit|logging|trace|provenance|accountab`. Bare "logging"
+    # and "trace" are everyday build-doc words and fired on 30/100 real files.
+    (
+        "audit.02",
+        r"audit\s+(?:trail|log|record)|\bprovenance\b|\baccountab|"
+        r"immutable\s+log|log\s+(?:every|all|each)\b",
+    ),
     (
         "audit.03",
         r"(?:record|preserve|retain)\s*(?:the|all|every|each)\s*(?:decision|action|step|reason|source)",
@@ -164,9 +186,12 @@ AUDIT_PATTERNS: list[tuple[str, str]] = [
 ]
 
 COMPLIANCE_PATTERNS: list[tuple[str, str]] = [
+    # 0.3.1: `phi` and `baa` had no word boundaries, so they matched inside
+    # "cryptographic", "graphics", "baaS" and similar — 19/100 real files.
     (
         "compliance.01",
-        r"(?:hipaa|phi|protected\s+health|patient\s+data|baa|business\s+associate)",
+        r"\bhipaa\b|\bphi\b|protected\s+health|patient\s+data|\bbaa\b|"
+        r"business\s+associate",
     ),
     ("compliance.02", r"(?:soc\s*2|soc2|system\s+and\s+organization\s+controls)"),
     (
@@ -181,7 +206,8 @@ COMPLIANCE_PATTERNS: list[tuple[str, str]] = [
         "compliance.05",
         r"(?:fda|medical\s+device|saMD|software\s+as\s+a\s+medical\s+device)",
     ),
-    ("compliance.06", r"(?:pci|pci.dss|payment\s+card)"),
+    # 0.3.1: bare `pci` matched "pcie" and similar hardware terms.
+    ("compliance.06", r"\bpci(?:[-\s]?dss)?\b|payment\s+card"),
     ("compliance.07", r"(?:ferpa|student\s+data|education\s+record)"),
     ("compliance.08", r"(?:compliance|regulat|govern|legal|legal\s+requirement)"),
     ("compliance.09", r"(?:encrypt|redact|de.identif|anonymi|pseudonymi)"),
@@ -239,7 +265,8 @@ DIMENSION_SIGNAL_LABELS: dict[str, list[tuple[str, str]]] = {
     ],
     "citation": [
         (
-            r"(?:cite|citation|reference|attribute|source\s+link|footnote)",
+            r"\bcitations?\b|\bcite\s+(?:the|its|each|every|all|your|sources?)|"
+            r"source\s+link|\bfootnotes?\b",
             "Require citations, references, or source links",
         ),
         (
@@ -299,7 +326,8 @@ DIMENSION_SIGNAL_LABELS: dict[str, list[tuple[str, str]]] = {
             "Log or audit trail for actions and decisions",
         ),
         (
-            r"(?:audit|logging|trace|provenance|accountab)",
+            r"audit\s+(?:trail|log|record)|\bprovenance\b|\baccountab|"
+            r"immutable\s+log|log\s+(?:every|all|each)\b",
             "Audit / logging / provenance accountability",
         ),
         (
@@ -309,7 +337,8 @@ DIMENSION_SIGNAL_LABELS: dict[str, list[tuple[str, str]]] = {
     ],
     "compliance": [
         (
-            r"(?:hipaa|phi|protected\s+health|patient\s+data|baa|business\s+associate)",
+            r"\bhipaa\b|\bphi\b|protected\s+health|patient\s+data|\bbaa\b|"
+            r"business\s+associate",
             "HIPAA / PHI / protected health data handling",
         ),
         (

@@ -197,6 +197,41 @@ def test_published_formula_matches_implementation():
         assert scores[dimension] == demo_formula(matches, len(patterns))
 
 
+def test_developer_docs_do_not_trigger_governance_rules():
+    """Regression: real false positives measured on 100 top-starred repos.
+
+    Each string below is drawn from an actual AGENTS.md / CLAUDE.md in the
+    arXiv:2606.15828 corpus, where it produced a spurious match before 0.3.1.
+    """
+    cases = [
+        # `phi` had no word boundary -> matched inside "cryptographic".
+        ("compliance", "- `crypto.zig` - cryptographic operations for the runtime"),
+        # bare `pci` matched hardware terms.
+        ("compliance", "Configure the pcie passthrough device before booting."),
+        # bare `injection` matched the dependency-injection sense.
+        ("injection", "Services are wired with constructor dependency injection."),
+        ("injection", "Sanitize inputs to avoid SQL injection in raw queries."),
+        # bare `logging`/`trace` are ordinary build-doc words.
+        ("audit", "Use `bun_debug_quiet_logs=1` to disable debug logging."),
+        ("audit", "Read the stack trace printed by the test runner."),
+        # `reference`/`attribute` are ordinary developer words.
+        ("citation", "See the API reference for the full attribute list."),
+        # any numbered list line containing "refer"/"prefer" matched.
+        ("citation", "8. **Memory management** - prefer defer for cleanup"),
+    ]
+    for dimension, text in cases:
+        assert analyze(text)[dimension] == 0, (
+            f"{dimension} false-positived on: {text!r}"
+        )
+
+
+def test_real_governance_language_still_scores():
+    """The FP fixes must not have gutted the true positives."""
+    scores = analyze(GUARDED_PROMPT)
+    for dimension in ("injection", "citation", "audit", "compliance"):
+        assert scores[dimension] > 0, f"{dimension} lost its true positives"
+
+
 def test_matched_findings_include_rule_id():
     scores, findings = analyze_with_findings(GUARDED_PROMPT)
     matched = [f for f in findings if f["status"] == "matched"]
