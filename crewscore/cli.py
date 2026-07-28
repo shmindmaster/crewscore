@@ -770,9 +770,15 @@ def fix(prompt, prompt_file, apply, output, plan, as_json, profile):
                 f"previewing governance templates for {source_path} "
                 "(nothing is written without --apply or --output)"
             )
+        # The classification clause names the SOURCE. Hanging it off `action`
+        # made --output read as though the destination were the config file.
+        # Every mode but --output has already named the source, so only that
+        # one needs to repeat it.
+        subject = str(source_path) if output else "It"
         err_console.print(
-            f"  [yellow]Note:[/yellow] {action}, which classifies as "
-            "coding-agent config."
+            f"  [yellow]Note:[/yellow] {action}. {subject} classifies as "
+            "coding-agent config, which these governance templates do not "
+            "target."
         )
 
     before = structural_analysis.analyze(system_prompt)
