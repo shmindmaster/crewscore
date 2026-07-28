@@ -794,6 +794,10 @@ def fix(prompt, prompt_file, apply, output, plan, as_json, profile):
                         "fixes_planned": planned,
                         "before": before_result.to_dict(),
                         "written": False,
+                        # Same record as the write payload, for the same
+                        # reason: --plan is exactly where a consumer previews
+                        # this override before it happens.
+                        "forced_governance_write": forced_governance_write,
                         "note": honesty_note,
                     },
                     indent=2,
@@ -843,6 +847,7 @@ def fix(prompt, prompt_file, apply, output, plan, as_json, profile):
                         "before": before_result.to_dict(),
                         "after": before_result.to_dict(),
                         "message": "No fixes needed",
+                        "forced_governance_write": forced_governance_write,
                         "note": honesty_note,
                     },
                     indent=2,
