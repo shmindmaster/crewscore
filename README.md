@@ -110,13 +110,19 @@ crewscore scan .
 crewscore scan ./agents --json
 crewscore scan . --threshold 50
 crewscore scan . --json --threshold 50
+crewscore scan . --summary crewscore-summary.md
 crewscore test --prompt-file ./AGENTS.md --summary crewscore-summary.md
+
+# Synthetic demo gradient (bare → hardened)
+crewscore scan examples/corpus
 ```
 
 - Prints a table of path → overall → tier (JSON with `--json`).
 - `--threshold N` exits `2` if **any** file scores below `N`.
+- `--summary PATH` writes transparent PR/job markdown (formula + open rule IDs for single-file; table for scan).
 - Exit `1` if no candidate files are found.
 - Skips `node_modules`, `.git`, `venv`, `dist`, `__pycache__`, `.venv`.
+- Demo fixtures: [examples/corpus/](examples/corpus/) + [LEADERBOARD.md](examples/corpus/LEADERBOARD.md).
 
 Use this as the default CI gate for monorepos with multiple agent artifacts.
 
@@ -238,6 +244,9 @@ on: [pull_request]
 jobs:
   score:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write   # sticky PR comment with open rule findings
     steps:
       - uses: actions/checkout@v4
       - name: CrewScore
@@ -249,6 +258,8 @@ jobs:
           prompt-file: ./agents/system-prompt.md
           threshold: "50"
           # explain: "true"   # optional: matched vs missing signals
+          # pr-comment: "true"  # default: sticky PR comment on pull_request
+          # summary: crewscore-summary.md
       - name: Report
         if: always()
         run: |
@@ -264,10 +275,14 @@ jobs:
 | `scan-path` | one of | — | Path for `crewscore scan` (worst score becomes the output) |
 | `threshold` | no | `50` | Fail the step (exit 2) when overall score is below this |
 | `explain` | no | `false` | Pass `true` to include matched/missing signals |
+| `summary` | no | `crewscore-summary.md` | Markdown path (also appends to `GITHUB_STEP_SUMMARY`) |
+| `pr-comment` | no | `true` | On `pull_request`, post/update a sticky comment with the summary |
 
 Provide **either** `prompt-file` **or** `scan-path` (not neither). For scan mode, outputs use the **minimum** overall across discovered files.
 
-**Outputs:** `score` (0–100), `tier` (label string).
+**Outputs:** `score` (0–100), `tier` (label string), `summary-path` (markdown file if written).
+
+Sticky PR comments need `permissions: pull-requests: write` on the job. Set `pr-comment: "false"` to disable.
 
 The composite action installs CrewScore from the action path (`pip install "${{ github.action_path }}"`), so monorepo / pre-PyPI self-tests work with `uses: ./`.
 

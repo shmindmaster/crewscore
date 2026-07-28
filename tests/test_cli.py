@@ -79,6 +79,23 @@ def test_fix_requires_input():
     assert "Provide --prompt" in result.output
 
 
+def test_scan_summary_writes_markdown(tmp_path: Path):
+    """scan --summary writes transparent multi-file markdown."""
+    prompts = tmp_path / "prompts"
+    prompts.mkdir()
+    (prompts / "a.md").write_text(BARE, encoding="utf-8")
+    summary = tmp_path / "out.md"
+    runner = CliRunner()
+    result = runner.invoke(
+        main, ["scan", str(tmp_path), "--summary", str(summary)]
+    )
+    assert result.exit_code == 0, result.output
+    text = summary.read_text(encoding="utf-8")
+    assert "CrewScore" in text
+    assert "0/100" in text or "Path" in text
+    assert "crewscore-hygiene@" in text
+
+
 def test_assess_vendor_bad_answer_count():
     runner = CliRunner()
     result = runner.invoke(

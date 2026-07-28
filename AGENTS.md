@@ -53,8 +53,9 @@ Legacy CLI entry point `agent-guard` still maps to the same `crewscore.cli:main`
 
 ```
 crewscore/
-  cli.py                 # click entry (test, fix, scan)
+  cli.py                 # click entry (test, fix, scan, rules, export-eval)
   scoring.py             # shared result model / tiers
+  summary.py             # PR/job markdown (transparent)
   vendor_scorecard.py    # assess-vendor command
   web_export.py          # builds score-engine.js payload
   report.py              # HTML report + SVG badge
@@ -62,9 +63,11 @@ crewscore/
     structural_analysis.py
     fix_patterns.py
 scripts/export_web_engine.py
+scripts/score_corpus.py  # examples/corpus leaderboard
+examples/corpus/         # synthetic bare→hardened demo fixtures
 score-engine.js          # generated — commit after pattern changes
 index.html               # builder-first site (uses score-engine.js)
-action.yml               # composite GH Action (prompt-file or scan-path)
+action.yml               # composite GH Action (scan/test + sticky PR comment)
 docs/launch/             # launch copy kit
 docs/next-steps-eval.md  # Promptfoo / garak handoff
 tests/
