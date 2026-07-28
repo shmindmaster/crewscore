@@ -4,7 +4,7 @@
 /** CrewScore browser scorer — generated from Python. Do not edit by hand. */
 (function (global) {
   const ENGINE = {
-  "version": "0.3.0",
+  "version": "0.3.1",
   "ruleset": "crewscore-hygiene@0.3.1",
   "dimensions": [
     {
@@ -741,6 +741,31 @@
     return fallback;
   }
 
+  /**
+   * Which profile a URL load should end up with, given what the user declared.
+   *
+   * Filename evidence may only *promote* to config, never demote away from it.
+   * classify_path returns system_prompt as a **default**, not as a finding:
+   * "no config basename matched" is absence of evidence, not evidence that the
+   * file is a system prompt. Letting that default overrule a declaration the
+   * user actively made would turn absence of evidence into evidence against —
+   * and a renamed rules file (rules.md, docs/agent-guidelines.md,
+   * .github/instructions/*.instructions.md) would be re-graded as a system
+   * prompt, which is the one outcome the profile split exists to prevent.
+   *
+   * The asymmetry is deliberate. Both error directions are not equal: keeping
+   * a declared config that is really a system prompt costs the user a
+   * governance score they can get back by clicking the radio; demoting a real
+   * config publishes a governance grade that should never exist.
+   */
+  function profileForLoadedUrl(declaredProfile, pathOrName) {
+    const declared = declaredProfile || ENGINE.default_profile;
+    if (classifyFilename(pathOrName) === ENGINE.config_profile) {
+      return ENGINE.config_profile;
+    }
+    return declared;
+  }
+
   /** Mirrors crewscore.profiles.governance_applies. */
   function governanceApplies(profile) {
     return profile !== ENGINE.config_profile;
@@ -869,6 +894,7 @@
     analyzeArtifact,
     detectContextBloat,
     classifyFilename,
+    profileForLoadedUrl,
     configTier,
     governanceApplies,
     profileLabel,

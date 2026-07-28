@@ -672,9 +672,25 @@ body.sheet-open{overflow:hidden}
   function setProfile(value) {
     const el = document.querySelector('input[name="artifact-type"][value="' + value + '"]');
     if (el) el.checked = true;
+    syncChrome();
   }
   function isConfig(result) {
     return result && result.governance_applicable === false;
+  }
+  /* A config verdict is not a score, so the chrome around it must not say
+     "score" either — the wording is the same category error as the number. */
+  const CHROME = {
+    system_prompt: { cta: "Run structural score", head: "02 · Score" },
+    coding_agent_config: { cta: "Check configuration", head: "02 · Configuration verdict" },
+  };
+  function syncChrome() {
+    const c = CHROME[currentProfile()] || CHROME.system_prompt;
+    ["btn-score-agent", "btn-score-agent-mobile"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = c.cta;
+    });
+    const head = document.getElementById("inspect-head");
+    if (head) head.textContent = c.head;
   }
   function friendlyTier(overall) {
     if (overall >= 90) return "Looks solid on paper";
@@ -1420,12 +1436,16 @@ body.sheet-open{overflow:hidden}
       if (text.length > 500000) throw new Error("File too large");
       document.getElementById("agent-prompt").value = text;
       // A URL carries a real filename, so classify it exactly as the CLI does
-      // — still filename-only, never a guess at the content. The user sees the
-      // result in the radiogroup and can override it.
-      let named = null;
-      try { named = E.classifyFilename(new URL(url, location.href).pathname); } catch (e) {}
-      if (named) setProfile(named);
-      toast(named === E.configProfile
+      // — still filename-only, never a guess at the content. Evidence may only
+      // promote to config: it must never demote a declaration the user made
+      // themselves back to the default. See profileForLoadedUrl.
+      const declared = currentProfile();
+      let next = declared;
+      try {
+        next = E.profileForLoadedUrl(declared, new URL(url, location.href).pathname);
+      } catch (e) {}
+      setProfile(next);
+      toast(next === E.configProfile && declared !== E.configProfile
         ? "Loaded as coding-agent config — change above if that is wrong"
         : "Loaded — scoring…");
       scoreAgent({ source: "url" });
@@ -1440,9 +1460,11 @@ body.sheet-open{overflow:hidden}
   // stale the moment it changes — re-score rather than leave a wrong one up.
   document.querySelectorAll('input[name="artifact-type"]').forEach((radio) => {
     radio.addEventListener("change", () => {
+      syncChrome();
       if (lastAgent) scoreAgent({ source: "profile_change" });
     });
   });
+  syncChrome();
 
   document.getElementById("btn-load-url").addEventListener("click", loadUrl);
   document.getElementById("link-how-score").addEventListener("click", () => {
