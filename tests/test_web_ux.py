@@ -28,6 +28,20 @@ def test_plan_before_mutate_controls():
     assert "cancel" in html.lower()
 
 
+def test_config_verdict_never_prints_a_slash_100_number():
+    """Config verdict explanatory prose cites corpus rationale, not a grade
+    for the user's file — it must never render an N/100 number, since it
+    sits directly beneath a config verdict a screenshot would misread as
+    the user's own score."""
+    html = _html()
+    match = re.search(
+        r"function renderConfigVerdict\(result\) \{.*?\n  \}", html, re.S
+    )
+    assert match, "renderConfigVerdict function not found"
+    body = match.group(0)
+    assert not re.search(r"\d+/100", body)
+
+
 def test_wizard_lite_sheets_over_score():
     """Plan and export are sheets; score deck stays the mounted product surface."""
     html = _html()
