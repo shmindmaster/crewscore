@@ -211,6 +211,8 @@ jobs:
 
 The composite action installs CrewScore from the action path (`pip install "${{ github.action_path }}"`), so monorepo / pre-PyPI self-tests work with `uses: ./`.
 
+`uses: shmindmaster/crewscore@v1` requires a floating major tag `v1` on the release commit (in addition to the immutable `vX.Y.Z` tag). Maintainers create or move `v1` after each compatible release — see [docs/publish-checklist.md](docs/publish-checklist.md).
+
 See [`.github/workflows/example-ci.yml`](.github/workflows/example-ci.yml) for a documented consumer template and [`.github/workflows/crewscore-selftest.yml`](.github/workflows/crewscore-selftest.yml) for this repo’s smoke self-test.
 
 ### CLI in CI

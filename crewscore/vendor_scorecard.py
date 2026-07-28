@@ -333,7 +333,9 @@ def assess_vendor(name: str, answers: str | None, as_json: bool, report: str | N
     _, tier_color, _ = get_tier(total)
 
     if report:
-        Path(report).write_text(render_vendor_html(payload), encoding="utf-8")
+        report_path = Path(report)
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        report_path.write_text(render_vendor_html(payload), encoding="utf-8")
 
     if as_json:
         click.echo(json.dumps(payload, indent=2, sort_keys=True))
