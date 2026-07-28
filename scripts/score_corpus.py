@@ -36,7 +36,12 @@ def main() -> int:
         except ValueError:
             item["path"] = p.name
 
-    scored_sorted = sorted(scored, key=lambda r: (int(r["overall"]), r["path"]))
+    # Governed (system-prompt) rows rank by score; coding-agent config rows
+    # are never handed a governance grade (see crewscore/profiles.py), so
+    # they are listed separately rather than sorted into the same ranking.
+    governed = [r for r in scored if r.get("governance_applicable", True)]
+    config_rows = [r for r in scored if not r.get("governance_applicable", True)]
+    governed_sorted = sorted(governed, key=lambda r: (int(r["overall"]), r["path"]))
 
     lines = [
         "# CrewScore corpus leaderboard",
@@ -53,10 +58,28 @@ def main() -> int:
         "| Rank | Path | Score | Tier |",
         "| ---: | --- | ---: | --- |",
     ]
-    for i, row in enumerate(reversed(scored_sorted), start=1):
+    for i, row in enumerate(reversed(governed_sorted), start=1):
         lines.append(
             f"| {i} | `{row['path']}` | **{row['overall']}** | `{row['tier']}` |"
         )
+
+    if config_rows:
+        lines.extend(
+            [
+                "",
+                "### Coding-agent config (no governance grade)",
+                "",
+                "These files are repo guidance for a coding agent, not a "
+                "production system prompt — they are judged on configuration "
+                "smells, never the governance score. See "
+                "[configuration smells](../../README.md#configuration-smells).",
+                "",
+                "| Path | Verdict |",
+                "| --- | --- |",
+            ]
+        )
+        for row in sorted(config_rows, key=lambda r: r["path"]):
+            lines.append(f"| `{row['path']}` | `{row['tier']}` |")
 
     lines.extend(
         [
@@ -83,7 +106,7 @@ def main() -> int:
     out = corpus / "LEADERBOARD.md"
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(out)
-    print(json.dumps(scored_sorted, indent=2))
+    print(json.dumps(scored, indent=2))
     return 0
 
 

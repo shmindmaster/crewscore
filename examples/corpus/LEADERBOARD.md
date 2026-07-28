@@ -11,9 +11,16 @@ Synthetic fixtures representing common agent-prompt shapes (bare demo → partia
 | ---: | --- | ---: | --- |
 | 1 | `prompts/05-hardened-ops.md` | **87** | `STRUCTURAL: OK WITH GAPS` |
 | 2 | `prompts/04-partial-hygiene.md` | **20** | `STRUCTURAL: CRITICAL GAPS` |
-| 3 | `prompts/03-agents-md-weak.md` | **0** | `STRUCTURAL: CRITICAL GAPS` |
-| 4 | `prompts/02-demo-agent.md` | **0** | `STRUCTURAL: CRITICAL GAPS` |
-| 5 | `prompts/01-bare-assistant.md` | **0** | `STRUCTURAL: CRITICAL GAPS` |
+| 3 | `prompts/02-demo-agent.md` | **0** | `STRUCTURAL: CRITICAL GAPS` |
+| 4 | `prompts/01-bare-assistant.md` | **0** | `STRUCTURAL: CRITICAL GAPS` |
+
+### Coding-agent config (no governance grade)
+
+These files are repo guidance for a coding agent, not a production system prompt — they are judged on configuration smells, never the governance score. See [configuration smells](../../README.md#configuration-smells).
+
+| Path | Verdict |
+| --- | --- |
+| `repo-config/AGENTS.md` | `CONFIG: NO SMELLS DETECTED` |
 
 ## How to reproduce
 
