@@ -37,10 +37,10 @@ inputs:
 
 outputs:
   score:
-    description: Overall structural score (0-100); for scan mode, the worst (minimum) overall across files
+    description: "Overall structural score (0-100) for the scored system prompt; in scan mode the worst (minimum) overall across system prompts. Coding-agent config (AGENTS.md, CLAUDE.md, .cursorrules) is excluded — it is judged on configuration smells, not this number. Empty string when no system prompt was scored, because 0 would read as a failing grade the run never measured."
     value: ${{ steps.run.outputs.score }}
   tier:
-    description: Score tier label
+    description: "Tier label for the score output (e.g. STRUCTURAL: OK WITH GAPS). Empty string when no system prompt was scored — coding-agent config never sets it."
     value: ${{ steps.run.outputs.tier }}
   summary-path:
     description: Path to the markdown summary file (if written)
@@ -112,20 +112,27 @@ runs:
           echo "summary-path=" >> "$GITHUB_OUTPUT"
         fi
         # Single-file test JSON: {overall, tier, ...}
-        # scan --json: list of {path, overall, tier, ...} — take min overall (worst).
+        # scan --json: list of {path, overall, tier, ...} — take min overall (worst)
+        # over the files actually judged on the governance score. Coding-agent
+        # config sits at ~0 by construction and would otherwise set score/tier
+        # for the whole repo.
         echo "$OUTPUT" | python -c "
         import json, os, sys
         data = json.load(sys.stdin)
         if isinstance(data, list):
-            worst = min(data, key=lambda x: int(x['overall']))
+            items = data
+        else:
+            items = data.get('files') or data.get('results') or [data]
+        # governance_applicable is absent on payloads written before profiles
+        # existed; everything back then was judged on the score.
+        governed = [i for i in items if i.get('governance_applicable', True)]
+        if governed:
+            worst = min(governed, key=lambda x: int(x['overall']))
             score, tier = worst['overall'], worst['tier']
         else:
-            items = data.get('files') or data.get('results')
-            if items:
-                worst = min(items, key=lambda x: int(x['overall']))
-                score, tier = worst['overall'], worst['tier']
-            else:
-                score, tier = data['overall'], data['tier']
+            # Nothing here carries a governance grade. Emit empty rather than a
+            # 0 that consumers would read as a failing score.
+            score, tier = '', ''
         with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as f:
             f.write(f'score={score}\n')
             f.write(f'tier={tier}\n')
