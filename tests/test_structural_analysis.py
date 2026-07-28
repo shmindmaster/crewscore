@@ -2,6 +2,8 @@
 
 import re
 
+import pytest
+
 from crewscore.scoring import RULESET_ID, build_result, overall_score, score_tier
 from crewscore.scorers.fix_patterns import apply_fixes, generate_fixes
 from crewscore.scorers.structural_analysis import analyze, analyze_with_findings
@@ -240,3 +242,39 @@ def test_matched_findings_include_rule_id():
         assert "rule_id" in f
         assert f["rule_id"]  # e.g. injection.01
         assert "." in f["rule_id"]
+
+# The exact boundary values. Existing tier tests used 95/75/55/40 -- all
+# comfortably inside a band -- so mutating `>= 90` to `> 90` changed the
+# verdict at exactly 90 and every test still passed. The tier is the headline
+# users see in the CLI, the PR comment, the badge and the share text.
+TIER_BOUNDARIES = [
+    (100, "STRUCTURAL: STRONG", "green"),
+    (90, "STRUCTURAL: STRONG", "green"),
+    (89, "STRUCTURAL: OK WITH GAPS", "yellow"),
+    (70, "STRUCTURAL: OK WITH GAPS", "yellow"),
+    (69, "STRUCTURAL: WEAK", "dark_orange"),
+    (50, "STRUCTURAL: WEAK", "dark_orange"),
+    (49, "STRUCTURAL: CRITICAL GAPS", "red"),
+    (0, "STRUCTURAL: CRITICAL GAPS", "red"),
+]
+
+
+@pytest.mark.parametrize("score,tier,color", TIER_BOUNDARIES)
+def test_tier_and_color_are_exact_at_every_boundary(score, tier, color):
+    from crewscore.scoring import tier_color
+
+    assert score_tier(score) == tier, score
+    assert tier_color(score) == color, score
+
+
+@pytest.mark.parametrize("score,tier,color", TIER_BOUNDARIES)
+def test_report_hex_ladder_agrees_with_the_tier_ladder(score, tier, color):
+    """The same boundary ladder is written three times in two modules.
+
+    scoring.score_tier, scoring.tier_color and report._score_color_hex each
+    re-implement `>= 90 / 70 / 50`. Nothing forced them to agree, so a badge
+    could render yellow next to the word STRONG. This pins them together.
+    """
+    from crewscore.report import _TIER_HEX, _score_color_hex
+
+    assert _score_color_hex(score) == _TIER_HEX[color], score
