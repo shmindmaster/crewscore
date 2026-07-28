@@ -397,6 +397,47 @@ def test_test_json_warns_when_threshold_ignored_for_config(tmp_path: Path):
     assert "threshold_ignored_for_config" in payload["warnings"]
 
 
+def test_test_json_omits_governance_grade_for_config(tmp_path: Path):
+    """No governance grade for coding-agent config on the JSON surface either.
+
+    The JS engine already omits both (`web_export.py::analyzeArtifact`), so a
+    CI script running `jq -e '.overall >= 50'` failed on every AGENTS.md while
+    the browser reported no number at all. Same artifact, opposite contract.
+    """
+    config = tmp_path / "AGENTS.md"
+    config.write_text("# Guide\n\nBuild with `make`.\n", encoding="utf-8")
+    runner = CliRunner()
+    result = runner.invoke(main, ["test", "--prompt-file", str(config), "--json"])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+
+    assert payload["governance_applicable"] is False
+    assert "overall" not in payload
+    assert "dimensions" not in payload
+    # The config-specific verdict and its context stay.
+    assert payload["tier"].startswith("CONFIG:")
+    assert payload["profile"] == "coding_agent_config"
+    assert payload["source"] == str(config)
+    assert payload["ruleset"]
+    assert payload["smells"] == []
+    assert payload["warnings"] == []
+
+
+def test_test_json_keeps_the_score_for_a_system_prompt(tmp_path: Path):
+    """The omission is scoped to config — a system prompt still carries both."""
+    prompt_file = tmp_path / "system-prompt.md"
+    prompt_file.write_text(BARE, encoding="utf-8")
+    runner = CliRunner()
+    result = runner.invoke(
+        main, ["test", "--prompt-file", str(prompt_file), "--json"]
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["governance_applicable"] is True
+    assert isinstance(payload["overall"], int)
+    assert len(payload["dimensions"]) == 8
+
+
 def test_test_summary_markdown_reports_the_ignored_threshold(tmp_path: Path):
     """The sticky PR comment / step summary is the consumer that needs this.
 

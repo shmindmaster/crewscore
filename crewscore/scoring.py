@@ -38,12 +38,25 @@ class ScoreResult:
     # Which ruleset this artifact should be judged by (crewscore/profiles.py).
     profile: str = "system_prompt"
     # False for coding-agent config, where the governance dimensions are a
-    # category error. `overall` is still reported for transparency, but it is
-    # not a verdict — read `tier`.
+    # category error. `overall`/`dimensions` are computed but never published
+    # for that artifact — read `tier`. See to_dict().
     governance_applicable: bool = True
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        """Serializable payload. Coding-agent config carries no governance grade.
+
+        `overall` and the per-dimension scores are omitted entirely rather than
+        zeroed: a caller running `jq -e '.overall >= 50'` must not find a number
+        to fail on for an artifact that is not judged on one. This mirrors the
+        browser engine, which has never emitted either field for config
+        (`web_export.py::analyzeArtifact`). The fields stay on the dataclass so
+        internal callers that need the raw arithmetic still have it.
+        """
+        payload = asdict(self)
+        if not self.governance_applicable:
+            payload.pop("overall", None)
+            payload.pop("dimensions", None)
+        return payload
 
 
 def overall_score(dimensions: dict[str, int]) -> int:
