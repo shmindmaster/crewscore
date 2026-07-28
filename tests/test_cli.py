@@ -19,7 +19,9 @@ def test_test_json_output():
     assert "dimensions" in payload
     assert payload["mode"] == "structural"
     assert len(payload["dimensions"]) == 8
-    assert payload["ruleset"] == "crewscore-hygiene@0.2.2"
+    from crewscore.scoring import RULESET_ID
+
+    assert payload["ruleset"] == RULESET_ID
     assert isinstance(payload["warnings"], list)
     assert payload["tier"].startswith("STRUCTURAL:")
 
@@ -145,4 +147,6 @@ def test_version():
     result = runner.invoke(main, ["--version"])
     assert result.exit_code == 0
     assert "crewscore" in result.output.lower()
-    assert "0.2.2" in result.output
+    from crewscore import __version__
+
+    assert __version__ in result.output

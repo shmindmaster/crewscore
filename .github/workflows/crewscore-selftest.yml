@@ -44,3 +44,41 @@ jobs:
             exit 1
           fi
           echo "Threshold failure behaved as expected (exit 2)"
+
+      - name: Open rules catalog is non-empty
+        run: |
+          crewscore rules --json > /tmp/rules.json
+          python -c "
+          import json
+          data = json.load(open('/tmp/rules.json'))
+          assert data['rule_count'] > 0
+          assert data['method']['llm_calls'] is False
+          assert 'structural_analysis' in data['method']['source_of_truth']
+          print('OK rules', data['rule_count'], data['ruleset'])
+          "
+
+      - name: Repo scan discovers AGENTS.md (threshold 0)
+        id: scan
+        uses: ./
+        with:
+          scan-path: "."
+          threshold: "0"
+
+      - name: Assert scan outputs
+        run: |
+          echo "scan_score=${{ steps.scan.outputs.score }}"
+          echo "scan_tier=${{ steps.scan.outputs.tier }}"
+          python -c "
+          import sys
+          score = int(sys.argv[1])
+          assert 0 <= score <= 100, score
+          print('OK scan score', score)
+          " "${{ steps.scan.outputs.score }}"
+
+      - name: Markdown summary writer
+        run: |
+          crewscore test --prompt-file examples/sample-prompt.md --summary /tmp/cs-summary.md --no-explain
+          test -s /tmp/cs-summary.md
+          grep -q 'crewscore-hygiene@' /tmp/cs-summary.md
+          grep -q 'rules' /tmp/cs-summary.md
+          echo "OK summary markdown"

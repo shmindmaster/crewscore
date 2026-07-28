@@ -88,13 +88,13 @@ def test_build_result_tier():
 
 
 def test_ruleset_id_constant():
-    assert RULESET_ID == "crewscore-hygiene@0.2.2"
+    assert RULESET_ID.startswith("crewscore-hygiene@")
 
 
 def test_build_result_includes_ruleset_and_warnings():
     result = build_result({k: 0 for k in analyze(BARE_PROMPT)})
     payload = result.to_dict()
-    assert payload["ruleset"] == "crewscore-hygiene@0.2.2"
+    assert payload["ruleset"] == RULESET_ID
     assert payload["warnings"] == []
     assert isinstance(payload["warnings"], list)
 

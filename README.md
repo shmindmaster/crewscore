@@ -70,7 +70,7 @@ Scores reflect **prompt-text signals**. They are a useful smoke test, not a guar
 Honest principles we ship by:
 
 1. CrewScore measures **presence of hygiene signals in text**, not agent behavior.
-2. Scores are **rule-pack versioned** (`crewscore-hygiene@0.2.2`) and **deterministic** — no LLM, no hidden model.
+2. Scores are **rule-pack versioned** (`crewscore-hygiene@0.2.3`) and **deterministic** — no LLM, no hidden model.
 3. **Every rule is public.** List them anytime:
    ```bash
    crewscore rules              # human: formula + every rule_id + regex
@@ -110,6 +110,7 @@ crewscore scan .
 crewscore scan ./agents --json
 crewscore scan . --threshold 50
 crewscore scan . --json --threshold 50
+crewscore test --prompt-file ./AGENTS.md --summary crewscore-summary.md
 ```
 
 - Prints a table of path → overall → tier (JSON with `--json`).
@@ -313,6 +314,13 @@ CrewScore is the cheap lint / structural pre-gate. When you need **live** behavi
 | Deeper agent red-team | Promptfoo agents / PyRIT / your own harness |
 
 Structural scores do **not** measure jailbreak resistance or multi-turn tool abuse. Use those tools after the prompt text has basic hygiene. Details: [docs/next-steps-eval.md](docs/next-steps-eval.md).
+
+Generate starter stubs (does **not** run live evals):
+
+```bash
+crewscore export-eval --prompt-file ./agents/system-prompt.md -o ./crewscore-eval
+# → promptfooconfig.yaml + README-EVAL.md (Promptfoo + garak notes)
+```
 
 ---
 

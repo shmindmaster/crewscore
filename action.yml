@@ -22,6 +22,10 @@ inputs:
     description: Include matched vs missing guardrail signals (pass "true" to enable)
     required: false
     default: "false"
+  summary:
+    description: Write transparent markdown summary to this path (also appends to GITHUB_STEP_SUMMARY when set)
+    required: false
+    default: "crewscore-summary.md"
 
 outputs:
   score:
@@ -58,6 +62,7 @@ runs:
           exit 1
         fi
 
+        SUMMARY="${{ inputs.summary }}"
         set +e
         if [ -n "$SCAN_PATH" ]; then
           ARGS=(scan "$SCAN_PATH" --json --threshold "$THRESHOLD")
@@ -71,11 +76,18 @@ runs:
           if [ "$EXPLAIN" = "true" ]; then
             ARGS+=(--explain)
           fi
+          if [ -n "$SUMMARY" ]; then
+            ARGS+=(--summary "$SUMMARY")
+          fi
           OUTPUT=$(crewscore "${ARGS[@]}")
           EXIT=$?
         fi
         set -e
         echo "$OUTPUT"
+        # Job summary is written by CLI when GITHUB_STEP_SUMMARY is set.
+        if [ -n "$SUMMARY" ] && [ -f "$SUMMARY" ]; then
+          echo "Wrote summary markdown: $SUMMARY"
+        fi
         # Single-file test JSON: {overall, tier, ...}
         # scan --json: list of {path, overall, tier, ...} — take min overall (worst).
         echo "$OUTPUT" | python -c "
