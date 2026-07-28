@@ -60,7 +60,7 @@ jobs:
           print('OK rules', data['rule_count'], data['ruleset'])
           "
 
-      - name: Repo scan discovers AGENTS.md (threshold 0)
+      - name: Repo scan scores corpus prompts (threshold 0)
         id: scan
         uses: ./
         with:
