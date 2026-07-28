@@ -12,8 +12,9 @@ from rich.panel import Panel
 
 from crewscore import __version__
 from crewscore.report import render_badge_svg, render_html_report, share_text
+from crewscore.rules_catalog import SCORING_METHOD, catalog_payload, scoring_transparency_block
 from crewscore.scan import discover_prompt_files, score_paths
-from crewscore.scoring import DIMENSIONS, build_result, tier_color
+from crewscore.scoring import DIMENSIONS, RULESET_ID, build_result, tier_color
 from crewscore.scorers import structural_analysis
 from crewscore.vendor_scorecard import assess_vendor
 
@@ -77,9 +78,9 @@ main.add_command(assess_vendor)
     help="Exit non-zero if overall score is below this threshold",
 )
 @click.option(
-    "--explain",
-    is_flag=True,
-    help="Show matched vs missing guardrail signals per dimension",
+    "--explain/--no-explain",
+    default=True,
+    help="Show matched/missing signals with rule IDs (default: on — scores are not a black box)",
 )
 @click.option(
     "--report",
@@ -96,8 +97,8 @@ main.add_command(assess_vendor)
 def test(prompt, prompt_file, as_json, threshold, explain, report, badge):
     """Run structural production-readiness analysis on an agent system prompt.
 
-    This mode is offline and free: it scans the prompt text for guardrail
-    signals. It does not run live LLM adversarial attacks.
+    Offline, deterministic regex scan — not live red-teaming.
+    Every rule is public: run `crewscore rules` or `crewscore rules --json`.
     """
     system_prompt = None
     source = "prompt"
@@ -115,11 +116,8 @@ def test(prompt, prompt_file, as_json, threshold, explain, report, badge):
         )
         sys.exit(1)
 
-    findings = None
-    if explain:
-        dimensions, findings = structural_analysis.analyze_with_findings(system_prompt)
-    else:
-        dimensions = structural_analysis.analyze(system_prompt)
+    # Always compute findings so JSON is never a black box.
+    dimensions, findings = structural_analysis.analyze_with_findings(system_prompt)
     result = build_result(
         dimensions,
         mode="structural",
@@ -130,7 +128,10 @@ def test(prompt, prompt_file, as_json, threshold, explain, report, badge):
     if report:
         report_path = Path(report)
         report_path.parent.mkdir(parents=True, exist_ok=True)
-        report_path.write_text(render_html_report(result), encoding="utf-8")
+        report_path.write_text(
+            render_html_report(result, findings=findings),
+            encoding="utf-8",
+        )
     if badge:
         badge_path = Path(badge)
         badge_path.parent.mkdir(parents=True, exist_ok=True)
@@ -138,23 +139,30 @@ def test(prompt, prompt_file, as_json, threshold, explain, report, badge):
 
     if as_json:
         payload = result.to_dict()
-        if findings is not None:
-            payload["findings"] = findings
+        payload["findings"] = findings
+        payload["transparency"] = scoring_transparency_block()
         click.echo(json.dumps(payload, indent=2, sort_keys=True))
     else:
         color = tier_color(result.overall)
         console.print()
         console.print(
             Panel(
-                f"[bold]{BRAND.upper()} — Structural Production Readiness Report[/bold]",
+                f"[bold]{BRAND.upper()} — Structural Hygiene Report[/bold]",
                 border_style="blue",
                 expand=False,
             )
         )
         console.print()
         console.print(
-            "[dim]Mode: structural (offline prompt scan). "
-            "Not a substitute for live behavioral red-teaming.[/dim]"
+            f"[dim]Ruleset: [bold]{RULESET_ID}[/bold] · "
+            "deterministic regex · no LLM · not a red-team[/dim]"
+        )
+        console.print(
+            "[dim]How scored: each dimension = "
+            "min(100, round(15+85×matches/total_rules)); "
+            "overall = mean of 8 dimensions. "
+            "List every rule: [bold]crewscore rules[/bold] "
+            "· machine: [bold]crewscore rules --json[/bold][/dim]"
         )
         console.print()
 
@@ -169,6 +177,16 @@ def test(prompt, prompt_file, as_json, threshold, explain, report, badge):
         )
         console.print(f"  {'-' * 54}")
 
+        if result.warnings:
+            console.print()
+            for w in result.warnings:
+                console.print(f"  [yellow]WARNING:[/yellow] {w}")
+                if w == "template_boilerplate_detected":
+                    console.print(
+                        "  [dim]Score may be inflated by pasted CrewScore fix "
+                        "templates — text coverage ≠ runtime safety.[/dim]"
+                    )
+
         critical = [
             (label, key)
             for label, key in DIMENSIONS
@@ -180,26 +198,31 @@ def test(prompt, prompt_file, as_json, threshold, explain, report, badge):
                 score = result.dimensions[key]
                 if score == 0:
                     console.print(
-                        f"  [red]CRITICAL:[/red] No {label.lower()} detected in your agent."
+                        f"  [red]CRITICAL:[/red] No {label.lower()} signals matched."
                     )
                 else:
                     console.print(
-                        f"  [dark_orange]WEAK:[/dark_orange] {label} is below "
-                        f"production threshold ({score}/100)."
+                        f"  [dark_orange]WEAK:[/dark_orange] {label} is low "
+                        f"({score}/100) — few open rules matched."
                     )
 
-        if findings is not None:
+        if explain:
             _render_findings(findings)
 
         console.print()
         console.print(f"  Share: {share_text(result)}")
         console.print()
         console.print(
-            f"  -> Run [bold]crewscore fix[/bold] to apply recommended guardrail patterns."
+            f"  -> Open rules: [bold]crewscore rules[/bold] "
+            f"(source: {SCORING_METHOD['source_of_truth']})"
         )
         console.print(
-            "  -> Re-run with [bold]--json[/bold] for CI. "
-            "Use [bold]--threshold N[/bold] to fail builds below N."
+            f"  -> Run [bold]crewscore fix[/bold] to append templates "
+            "(still not runtime proof)."
+        )
+        console.print(
+            "  -> CI: [bold]--json --threshold N[/bold] · "
+            "repo: [bold]crewscore scan .[/bold]"
         )
         if report:
             console.print(f"  -> HTML report written to [bold]{report}[/bold]")
@@ -217,14 +240,16 @@ def test(prompt, prompt_file, as_json, threshold, explain, report, badge):
 
 
 def _render_findings(findings: list[dict]) -> None:
-    """Print matched/missing findings grouped by dimension."""
+    """Print matched/missing findings with rule IDs (transparency)."""
     label_by_key = {key: label for label, key in DIMENSIONS}
     by_dim: dict[str, list[dict]] = {}
     for f in findings:
         by_dim.setdefault(f["dimension"], []).append(f)
 
     console.print()
-    console.print("[bold]Findings (matched vs missing signals)[/bold]")
+    console.print(
+        "[bold]Findings (open rule IDs · matched vs missing)[/bold]"
+    )
     for _, key in DIMENSIONS:
         items = by_dim.get(key, [])
         if not items:
@@ -236,11 +261,79 @@ def _render_findings(findings: list[dict]) -> None:
             status = f["status"]
             reason = f.get("pattern_or_reason") or ""
             snippet = f.get("snippet")
+            rid = f.get("rule_id")
+            rid_s = f"[cyan]{rid}[/cyan] " if rid else ""
             if status == "matched":
                 detail = snippet or reason
-                console.print(f"    [green]matched[/green]  {detail}")
+                console.print(f"    [green]matched[/green]  {rid_s}{detail}")
             else:
-                console.print(f"    [red]missing[/red]  {reason}")
+                console.print(f"    [red]missing[/red]  {rid_s}{reason}")
+
+
+@main.command("rules")
+@click.option(
+    "--json",
+    "as_json",
+    is_flag=True,
+    help="Emit full open rule catalog as JSON",
+)
+@click.option(
+    "--dimension",
+    "-d",
+    default=None,
+    type=click.Choice([k for _, k in DIMENSIONS], case_sensitive=True),
+    help="Filter to one dimension key",
+)
+def rules_cmd(as_json: bool, dimension: str | None):
+    """List every scoring rule — CrewScore is not a black box.
+
+    Prints the ruleset id, scoring formula, and each rule_id + regex.
+    Machine form: crewscore rules --json
+    """
+    payload = catalog_payload(dimension=dimension)
+    if as_json:
+        click.echo(json.dumps(payload, indent=2, sort_keys=True))
+        return
+
+    console.print()
+    console.print(
+        Panel(
+            f"[bold]{BRAND} — Open scoring rules[/bold]",
+            border_style="cyan",
+            expand=False,
+        )
+    )
+    console.print()
+    console.print(f"  Ruleset: [bold]{payload['ruleset']}[/bold]")
+    console.print(f"  Type: {payload['method']['type']} · LLM calls: no · API key: no")
+    console.print(f"  Source of truth: [bold]{payload['method']['source_of_truth']}[/bold]")
+    console.print()
+    console.print("[bold]Formula[/bold]")
+    console.print(f"  Dimension: {payload['method']['dimension_score_formula']}")
+    console.print(f"  Overall:   {payload['method']['overall_score_formula']}")
+    console.print()
+    console.print("[bold]This is NOT[/bold]")
+    for line in payload["method"]["what_this_is_not"]:
+        console.print(f"  · {line}")
+    console.print()
+    console.print(f"[bold]Rules ({payload['rule_count']})[/bold]")
+    current_dim = None
+    for r in payload["rules"]:
+        if r["dimension"] != current_dim:
+            current_dim = r["dimension"]
+            console.print()
+            console.print(
+                f"  [bold]{r['dimension_label']}[/bold] ({r['dimension']})"
+            )
+        label = r.get("label") or ""
+        label_s = f" — {label}" if label else ""
+        console.print(f"    [cyan]{r['rule_id']}[/cyan]{label_s}")
+        console.print(f"      [dim]/{r['pattern']}/i[/dim]")
+    console.print()
+    console.print(
+        "  Machine-readable: [bold]crewscore rules --json[/bold]"
+    )
+    console.print()
 
 
 

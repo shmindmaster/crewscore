@@ -27,13 +27,29 @@ def _result(overall_dims=None):
 def test_html_contains_score_and_disclaimer():
     html = render_html_report(_result())
     assert "0/100" in html
-    assert "Structural" in html or "structural" in html
+    assert "Structural" in html or "structural" in html or "hygiene" in html.lower()
     assert "crewscore.ai" in html
+    assert "black box" in html.lower() or "ruleset" in html.lower()
     assert "<script" not in html.lower()  # no external/runtime scripts required
     # Self-contained: inline CSS present, no external stylesheet link
     assert "<style" in html.lower()
     assert 'rel="stylesheet"' not in html.lower()
     assert "http://" not in html  # no insecure external assets
+
+
+def test_html_findings_include_rule_ids():
+    findings = [
+        {
+            "dimension": "injection",
+            "status": "missing",
+            "pattern_or_reason": "Reject override attempts",
+            "snippet": None,
+            "rule_id": "injection.01",
+        }
+    ]
+    html = render_html_report(_result(), findings=findings)
+    assert "injection.01" in html
+    assert "Open findings" in html
 
 
 def test_html_has_inline_css_and_dimensions():

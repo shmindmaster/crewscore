@@ -65,17 +65,22 @@ Scores reflect **prompt-text signals**. They are a useful smoke test, not a guar
 
 ---
 
-## Scoring charter
+## Scoring charter (not a black box)
 
 Honest principles we ship by:
 
 1. CrewScore measures **presence of hygiene signals in text**, not agent behavior.
-2. Scores are **rule-pack versioned** and deterministic for a given pack.
-3. Every finding should show **match evidence or an explicit missing rule**.
-4. `fix` improves **text coverage**, not runtime safety; output always says so.
-5. We never call a score a **certification**, **audit**, or **red-team result**.
-6. When in doubt, **under-score** rather than inflate. Templates and boilerplate can raise the number without raising real safety.
-7. Rules change only with changelog; CI consumers can pin pack versions later.
+2. Scores are **rule-pack versioned** (`crewscore-hygiene@0.2.2`) and **deterministic** — no LLM, no hidden model.
+3. **Every rule is public.** List them anytime:
+   ```bash
+   crewscore rules              # human: formula + every rule_id + regex
+   crewscore rules --json       # machine-readable full catalog
+   ```
+4. Findings show **open `rule_id`s**, match snippets, or explicit missing labels (default in CLI and JSON).
+5. `fix` improves **text coverage**, not runtime safety; template boilerplate triggers a warning.
+6. We never call a score a **certification**, **audit**, or **red-team result**.
+7. When in doubt, **under-score** rather than inflate.
+8. Source of truth: [`crewscore/scorers/structural_analysis.py`](crewscore/scorers/structural_analysis.py).
 
 See also [docs/next-steps-eval.md](docs/next-steps-eval.md) for when to graduate to live eval tools.
 
@@ -185,6 +190,13 @@ Open **[crewscore.ai](https://crewscore.ai)** (or `index.html` locally) for a ze
 ## How scoring works
 
 **One engine:** Python CLI and the [crewscore.ai](https://crewscore.ai) site use the same patterns. The browser loads `score-engine.js`, generated from Python via `scripts/export_web_engine.py` (CI fails if it drifts).
+
+**Formula (fully public):**
+
+- Per dimension: count how many open rules’ regexes match (case-insensitive).  
+  `score = 0` if no matches, else `min(100, round(15 + 85 × matches / total_rules))`.
+- Overall: integer mean of the 8 dimension scores.
+- Inspect any rule: `crewscore rules` / `crewscore rules --json`.
 
 Eight dimensions, equal weight, each 0–100:
 
