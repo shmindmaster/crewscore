@@ -33,7 +33,7 @@ def test_preflight_stages_present():
     assert 'id="stg-inspect"' in html
     assert 'id="stg-export"' in html
     assert 'id="stg-act"' not in html
-    assert "2 Score" in html or ">2 Score<" in html
+    assert ">2 Coverage<" in html
 
 
 def test_plan_before_mutate_controls():
@@ -97,9 +97,15 @@ def test_privacy_metrics_hook_present():
 
 
 def test_builder_first_hero_preserved():
-    """Builder-first hero and structural hygiene framing stay intact."""
+    """Builder-first hero stays: browser-local, no signup, structural framing.
+
+    The headline moved from "Score agent prompts in your browser" to a
+    coverage claim, but the builder-first promises around it must survive
+    the reframe rather than be lost with it.
+    """
     html = _html()
-    assert "Score agent prompts in your browser" in html
+    assert "in your browser" in html
+    assert "no signup" in html.lower()
     assert "structural" in html.lower()
     assert "hygiene" in html.lower() or "Structural pre-gate" in html
 
@@ -312,6 +318,66 @@ def test_body_grid_restrained():
             assert float(a) <= 0.15, (
                 f"body repeating grid alpha {a} exceeds 0.15 (must be atmospheric)"
             )
+
+
+def test_hero_frames_the_number_as_coverage_not_quality():
+    """A visitor who reads nothing but the hero must still learn that the
+    number does not rank prompt quality — and see the figure that says so."""
+    html = _html()
+    assert "See which governance rules your prompt does not state" in html
+    assert "Coverage, not a quality ranking." in html
+    # The measured result travels with the claim, not only behind a link.
+    assert "+0.061" in html
+    assert "p=0.36" in html
+    assert "0.863" in html
+    assert VALIDATION_URL in html
+
+
+def test_score_surface_repeats_the_coverage_disclaimer():
+    """The disclosure cannot live only in the hero: a visitor who pastes and
+    scrolls straight to the ring reads the number with none of the hero in
+    view, and that number is what they screenshot."""
+    html = _html()
+    m = re.search(r"function renderInspect\(result, opts\) \{.*?\n  \}", html, re.S)
+    assert m, "renderInspect function not found"
+    body = m.group(0)
+    assert "This number is coverage, not quality." in body
+    assert VALIDATION_URL in body
+
+
+def test_share_text_does_not_claim_prompt_quality():
+    """Share text outlives the page. It is the one artifact that travels to
+    readers who never see any disclosure we put on the site."""
+    html = _html()
+    m = re.search(
+        r"function shareText\(overall, tierName, kind\) \{.*?\n  \}", html, re.S
+    )
+    assert m, "shareText function not found"
+    body = m.group(0)
+    assert "not a quality ranking" in body
+    assert "Structural hygiene only" not in body
+
+
+def test_validation_study_linked_from_footer():
+    """Persistent link for a reader who arrives mid-page or scrolls past."""
+    html = _html()
+    foot = html[html.find('<footer class="foot">') : html.find("</footer>")]
+    assert foot, "footer not found"
+    assert VALIDATION_URL in foot
+
+
+def test_partial_detector_disclosure_survives_the_coverage_reframe():
+    """Separate honest disclosure, separate feature: the browser runs 1 of 3
+    smell detectors. The governance reframe must not take it out with it."""
+    html = _html()
+    m = re.search(r"function renderConfigVerdict\(result\) \{.*?\n  \}", html, re.S)
+    assert m, "renderConfigVerdict function not found"
+    body = m.group(0)
+    assert "partial-note" in body
+    assert "This browser ran ${ran} of ${total} detectors." in body
+    assert (
+        "A clean result here is a partial check, not a clean bill of health." in body
+    )
 
 
 def test_readme_headline_is_a_checklist_not_a_score():
