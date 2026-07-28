@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -47,19 +48,20 @@ def _outputs_script() -> str:
     return textwrap.dedent(body.split('\n        "', 1)[0])
 
 
-def _run_crewscore_step_script() -> str:
-    """The full `run: |` block of the `Run CrewScore` step, dedented.
+def _run_crewscore_step_block() -> tuple[str, str]:
+    """The `Run CrewScore` step split into (head, script).
 
-    Unlike `_outputs_script`, this keeps the surrounding bash — the
-    `echo "$OUTPUT" | python -c "..."` pipe, the double-quoted heredoc that
-    embeds the python snippet, and the `${{ inputs.* }}` variable
-    assignments — so it can be executed through a real bash interpreter
-    instead of handed to python directly.
+    `head` is everything before `run: |` (the `shell:`/`env:` lines);
+    `script` is the dedented `run: |` block body — the surrounding bash
+    kept intact (the `echo "$OUTPUT" | python -c "..."` pipe, the
+    double-quoted heredoc that embeds the python snippet), so it can be
+    executed through a real bash interpreter instead of handed to python
+    directly.
     """
     body = _action_text().split("- name: Run CrewScore", 1)[1]
     body = body.split("- name: Sticky PR comment", 1)[0]
-    script = body.split("run: |\n", 1)[1]
-    return textwrap.dedent(script)
+    head, script = body.split("run: |\n", 1)
+    return head, textwrap.dedent(script)
 
 
 def _run_crewscore_step_via_bash(
@@ -79,19 +81,20 @@ def _run_crewscore_step_via_bash(
     if bash is None:
         pytest.skip("no real bash interpreter found for the end-to-end step test")
 
-    script = _run_crewscore_step_script()
-    # GitHub Actions substitutes `${{ inputs.X }}` with literal text before
-    # bash ever sees the script; reproduce that substitution here.
-    substitutions = {
-        "${{ inputs.prompt-file }}": prompt_file,
-        "${{ inputs.scan-path }}": "",
-        "${{ inputs.threshold }}": "50",
-        "${{ inputs.max-smells }}": "",
-        "${{ inputs.explain }}": "false",
-        "${{ inputs.summary }}": "",
+    # GitHub Actions resolves `${{ inputs.X }}` before bash ever sees the
+    # step: values declared under `env:` become literal OS env vars, and any
+    # left directly in the `run:` body are text-substituted into the script.
+    # `_resolve_run_crewscore_step` reproduces both paths from the current
+    # action.yml, whichever it uses.
+    inputs = {
+        "prompt-file": prompt_file,
+        "scan-path": "",
+        "threshold": "50",
+        "max-smells": "",
+        "explain": "false",
+        "summary": "",
     }
-    for token, value in substitutions.items():
-        script = script.replace(token, value)
+    script, extra_env = _resolve_run_crewscore_step(inputs)
 
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
@@ -106,7 +109,11 @@ def _run_crewscore_step_via_bash(
 
     gh_output = tmp_path / "github_output.txt"
     gh_output.write_text("", encoding="utf-8")
-    env = {**os.environ, "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}"}
+    env = {
+        **os.environ,
+        "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}",
+        **extra_env,
+    }
     env["GITHUB_OUTPUT"] = str(gh_output)
 
     proc = subprocess.run(
@@ -122,6 +129,109 @@ def _run_crewscore_step_via_bash(
         if "=" in line
     )
     return proc.returncode, proc.stderr, outputs
+
+
+def _resolve_run_crewscore_step(inputs: dict[str, str]) -> tuple[str, dict[str, str]]:
+    """Reproduce how the GitHub Actions runner materializes this step for bash.
+
+    Two mechanisms exist for `${{ inputs.x }}` to reach the step:
+    - Declared under the step's `env:` block: the runner assigns the
+      resolved value as a literal OS environment variable. Bash never
+      re-parses that text, so shell metacharacters in it are inert.
+    - Left directly in the `run:` script body: GitHub does a textual
+      substitution into the YAML *before* bash ever sees the script, so
+      shell metacharacters in the value become part of the parsed script
+      (the script-injection exposure).
+
+    Returns (script, env_vars) so callers can exercise either path exactly
+    as the real runner would, whichever the current action.yml uses.
+    """
+    head, script = _run_crewscore_step_block()
+
+    env_vars: dict[str, str] = {}
+    if "env:" in head:
+        env_section = head.split("env:", 1)[1]
+        for line in env_section.splitlines():
+            stripped = line.strip()
+            match = re.fullmatch(
+                r"(\w+):\s*\$\{\{\s*inputs\.([\w-]+)\s*\}\}", stripped
+            )
+            if match:
+                var_name, input_key = match.groups()
+                env_vars[var_name] = inputs.get(input_key, "")
+
+    for input_key, value in inputs.items():
+        script = script.replace("${{ inputs." + input_key + " }}", value)
+    return script, env_vars
+
+
+def test_action_step_never_splices_a_malicious_input_into_the_shell(tmp_path: Path):
+    """A malicious input value must reach the CLI as literal text, never execute.
+
+    `${{ inputs.* }}` spliced directly into the `run:` script body is the
+    documented GitHub Actions script-injection pattern: a consumer who wires
+    an input to attacker-controlled data (a PR title, a branch name) gets
+    that text executed as shell. The mitigation is passing inputs through
+    the step's `env:` block instead, where they arrive as literal
+    environment variable values bash never re-parses.
+    """
+    bash = _resolve_bash()
+    if bash is None:
+        pytest.skip("no real bash interpreter found for the end-to-end step test")
+
+    marker = tmp_path / "INJECTED"
+    payload = f'x"; touch "{marker.as_posix()}"; echo "'
+    inputs = {
+        "prompt-file": payload,
+        "scan-path": "",
+        "threshold": "50",
+        "max-smells": "",
+        "explain": "false",
+        "summary": "",
+    }
+    script, extra_env = _resolve_run_crewscore_step(inputs)
+
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    stub = bin_dir / "crewscore"
+    argv_file = tmp_path / "argv.txt"
+    with open(stub, "w", encoding="utf-8", newline="\n") as f:
+        f.write("#!/bin/bash\n")
+        f.write(f'printf "%s\\n" "$@" > "{argv_file.as_posix()}"\n')
+        f.write("cat <<'STUBEOF'\n")
+        f.write(
+            json.dumps(
+                {"overall": 10, "tier": "STRUCTURAL: WEAK", "governance_applicable": True}
+            )
+        )
+        f.write("\nSTUBEOF\n")
+        f.write("exit 0\n")
+    stub.chmod(0o755)
+
+    gh_output = tmp_path / "github_output.txt"
+    gh_output.write_text("", encoding="utf-8")
+    env = {
+        **os.environ,
+        "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}",
+        **extra_env,
+    }
+    env["GITHUB_OUTPUT"] = str(gh_output)
+
+    subprocess.run(
+        [bash, "-c", script],
+        capture_output=True,
+        text=True,
+        env=env,
+        cwd=tmp_path,
+    )
+
+    assert not marker.exists(), (
+        "malicious input value executed as shell code instead of being "
+        "passed through as literal text — inputs must be wired via env:, "
+        "not spliced into the run: script body"
+    )
+    argv = argv_file.read_text(encoding="utf-8").splitlines() if argv_file.exists() else []
+    assert payload in argv, "the literal (unexecuted) payload should still reach the CLI"
 
 
 def _run_outputs(payload, tmp_path) -> dict[str, str]:
