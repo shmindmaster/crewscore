@@ -19,6 +19,25 @@ def test_test_json_output():
     assert "dimensions" in payload
     assert payload["mode"] == "structural"
     assert len(payload["dimensions"]) == 8
+    assert payload["ruleset"] == "crewscore-hygiene@0.2.2"
+    assert isinstance(payload["warnings"], list)
+    assert payload["tier"].startswith("STRUCTURAL:")
+
+
+def test_test_json_template_warning_after_fix(tmp_path: Path):
+    prompt_file = tmp_path / "prompt.md"
+    prompt_file.write_text(BARE, encoding="utf-8")
+    runner = CliRunner()
+    runner.invoke(
+        main,
+        ["fix", "--prompt-file", str(prompt_file), "--apply", "--json"],
+    )
+    result = runner.invoke(
+        main, ["test", "--prompt-file", str(prompt_file), "--json"]
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert "template_boilerplate_detected" in payload["warnings"]
 
 
 def test_test_threshold_fails():
@@ -126,4 +145,4 @@ def test_version():
     result = runner.invoke(main, ["--version"])
     assert result.exit_code == 0
     assert "crewscore" in result.output.lower()
-    assert "0.2.1" in result.output
+    assert "0.2.2" in result.output

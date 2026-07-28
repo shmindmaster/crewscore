@@ -4,7 +4,8 @@
 /** CrewScore browser scorer — generated from Python. Do not edit by hand. */
 (function (global) {
   const ENGINE = {
-  "version": "0.2.1",
+  "version": "0.2.2",
+  "ruleset": "crewscore-hygiene@0.2.2",
   "dimensions": [
     {
       "key": "injection",
@@ -41,186 +42,369 @@
   ],
   "patterns": {
     "injection": [
-      "ignore\\s+(previous|above|all)\\s+(instructions|prompts)",
-      "do\\s+not\\s+(follow|obey|listen)\\s+to\\s+(user|input).*(system|instruction)",
-      "system\\s+prompt.*(?:confidential|private|do\\s+not\\s+reveal)",
-      "reject.*(?:inject|override|manipulat)",
-      "adversar|injection|jailbreak",
-      "do\\s+not\\s+reveal\\s+(your|the|this)\\s+(system|instructions|prompt)",
-      "you\\s+cannot\\s+be\\s+(instructed|told|asked)\\s+to\\s+(ignore|override)",
-      "safety|guardrail|boundar"
+      [
+        "injection.01",
+        "ignore\\s+(previous|above|all)\\s+(instructions|prompts)"
+      ],
+      [
+        "injection.02",
+        "do\\s+not\\s+(follow|obey|listen)\\s+to\\s+(user|input).*(system|instruction)"
+      ],
+      [
+        "injection.03",
+        "system\\s+prompt.*(?:confidential|private|do\\s+not\\s+reveal)"
+      ],
+      [
+        "injection.04",
+        "reject.*(?:inject|override|manipulat)"
+      ],
+      [
+        "injection.05",
+        "adversar|injection|jailbreak"
+      ],
+      [
+        "injection.06",
+        "do\\s+not\\s+reveal\\s+(your|the|this)\\s+(system|instructions|prompt)"
+      ],
+      [
+        "injection.07",
+        "you\\s+cannot\\s+be\\s+(instructed|told|asked)\\s+to\\s+(ignore|override)"
+      ],
+      [
+        "injection.08",
+        "(?:prompt\\s+)?(?:injection|jailbreak).*(?:defen|guard|protect|resist)|(?:defen|guard|protect|resist).*(?:prompt\\s+)?(?:injection|jailbreak)|safety\\s+(?:boundar|constraint|policy|policies|rule)|guardrail\\s+(?:against|for|on|policy|policies)"
+      ]
     ],
     "hallucination": [
-      "do\\s+not\\s+(?:fabricat|invent|make\\s+up|generat).*(?:fact|data|citation|source|number)",
-      "if\\s+you\\s+(?:do\\s+not\\s+know|are\\s+unsure|lack\\s+(?:the|enough)\\s+(?:data|information|evidence))",
-      "only\\s+(?:use|cite|reference)\\s+(?:provided|given|available|verified)\\s+(?:data|information|sources|context)",
-      "(?:hallucin|fabricat|confabulat)",
-      "say\\s+(?:I\\s+dont\\s+know|I\\s+cannot|I\\s+do\\s+not\\s+have)",
-      "ground(?:ed|ing)\\s+in\\s+(?:the|provided|given)",
-      "do\\s+not\\s+guess|never\\s+guess|avoid\\s+guess",
-      "recommend.*(?:consult|doctor|professional|specialist|expert)"
+      [
+        "hallucination.01",
+        "do\\s+not\\s+(?:fabricat|invent|make\\s+up|generat).*(?:fact|data|citation|source|number)"
+      ],
+      [
+        "hallucination.02",
+        "if\\s+you\\s+(?:do\\s+not\\s+know|are\\s+unsure|lack\\s+(?:the|enough)\\s+(?:data|information|evidence))"
+      ],
+      [
+        "hallucination.03",
+        "only\\s+(?:use|cite|reference)\\s+(?:provided|given|available|verified)\\s+(?:data|information|sources|context)"
+      ],
+      [
+        "hallucination.04",
+        "(?:hallucin|fabricat|confabulat)"
+      ],
+      [
+        "hallucination.05",
+        "say\\s+(?:I\\s+dont\\s+know|I\\s+cannot|I\\s+do\\s+not\\s+have)"
+      ],
+      [
+        "hallucination.06",
+        "ground(?:ed|ing)\\s+in\\s+(?:the|provided|given)"
+      ],
+      [
+        "hallucination.07",
+        "do\\s+not\\s+guess|never\\s+guess|avoid\\s+guess"
+      ],
+      [
+        "hallucination.08",
+        "recommend.*(?:consult|doctor|professional|specialist|expert)"
+      ]
     ],
     "citation": [
-      "(?:cite|citation|reference|attribute|source\\s+link|footnote)",
-      "(?:source|evidence|provenance)\\s*(?:link|id|span|reference)",
-      "every\\s+(?:claim|statement|answer|output)\\s+must\\s+(?:cite|reference|include)",
-      "link\\s+(?:to|back\\s+to)\\s+(?:the|its|each)\\s+(?:source|evidence|document)",
-      "\\[?\\d+\\]?.*(?:source|ref|cite)"
+      [
+        "citation.01",
+        "(?:cite|citation|reference|attribute|source\\s+link|footnote)"
+      ],
+      [
+        "citation.02",
+        "(?:source|evidence|provenance)\\s*(?:link|id|span|reference)"
+      ],
+      [
+        "citation.03",
+        "every\\s+(?:claim|statement|answer|output)\\s+must\\s+(?:cite|reference|include)"
+      ],
+      [
+        "citation.04",
+        "link\\s+(?:to|back\\s+to)\\s+(?:the|its|each)\\s+(?:source|evidence|document)"
+      ],
+      [
+        "citation.05",
+        "\\[?\\d+\\]?.*(?:source|ref|cite)"
+      ]
     ],
     "cost": [
-      "(?:token|cost|budget|spend)\\s*(?:limit|cap|max|ceiling|threshold)",
-      "(?:max|maximum)\\s*(?:token|tokens|length|response)",
-      "(?:rate|cost)\\s*limit",
-      "budget|spending|cost\\s*control",
-      "truncat(?:e|ion)|max_tokens|max_length"
+      [
+        "cost.01",
+        "(?:token|cost|budget|spend)\\s*(?:limit|cap|max|ceiling|threshold)"
+      ],
+      [
+        "cost.02",
+        "(?:max|maximum)\\s*(?:token|tokens|length|response)"
+      ],
+      [
+        "cost.03",
+        "(?:rate|cost)\\s*limit"
+      ],
+      [
+        "cost.04",
+        "budget|spending|cost\\s*control"
+      ],
+      [
+        "cost.05",
+        "truncat(?:e|ion)|max_tokens|max_length"
+      ]
     ],
     "human_gate": [
-      "(?:human|user|supervisor|operator|reviewer|staff|manager)\\s*(?:must|shall|should|needs?\\s+to)\\s*(?:approve|review|confirm|verify|check|validate)",
-      "(?:human|human-in-the-loop|hitl|manual)\\s*(?:review|approval|gate|checkpoint|oversight)",
-      "(?:before|prior\\s+to)\\s*(?:execut|send|submit|releas|publish|deploy)",
-      "do\\s+not\\s+(?:auto|automatic).*(?:execute|send|submit|approve|publish)",
-      "(?:require|mandate).*(?:human|manual)\\s*(?:approval|review|confirmation)",
-      "(?:staff|clinician|doctor|nurse|analyst|officer)\\s*(?:review|approve|sign)"
+      [
+        "human_gate.01",
+        "(?:human|user|supervisor|operator|reviewer|staff|manager)\\s*(?:must|shall|should|needs?\\s+to)\\s*(?:approve|review|confirm|verify|check|validate)"
+      ],
+      [
+        "human_gate.02",
+        "(?:human|human-in-the-loop|hitl|manual)\\s*(?:review|approval|gate|checkpoint|oversight)"
+      ],
+      [
+        "human_gate.03",
+        "(?:before|prior\\s+to)\\s*(?:execut|send|submit|releas|publish|deploy)"
+      ],
+      [
+        "human_gate.04",
+        "do\\s+not\\s+(?:auto|automatic).*(?:execute|send|submit|approve|publish)"
+      ],
+      [
+        "human_gate.05",
+        "(?:require|mandate).*(?:human|manual)\\s*(?:approval|review|confirmation)"
+      ],
+      [
+        "human_gate.06",
+        "(?:staff|clinician|doctor|nurse|analyst|officer)\\s*(?:review|approve|sign)"
+      ]
     ],
     "safe_stop": [
-      "(?:stop|halt|pause|refuse|decline|abort).*(?:if|when|unless)",
-      "(?:insufficient|missing|incomplete|unclear|ambiguous)\\s*(?:data|evidence|information|context|instruction)",
-      "(?:if|when)\\s+you\\s+(?:are\\s+)?(?:un)?(?:sure|certain|confident)",
-      "(?:cannot|can.t|should\\s+not)\\s+(?:proceed|continue|act|respond)",
-      "(?:escalat|hand\\s*off|transfer|refer).*(?:human|supervisor|specialist|operator)",
-      "(?:safe|calibrated|graceful)\\s*(?:stop|halt|failure|abort|exit)",
-      "refuse|disclaim|opt\\s*out"
+      [
+        "safe_stop.01",
+        "(?:stop|halt|pause|refuse|decline|abort).*(?:if|when|unless)"
+      ],
+      [
+        "safe_stop.02",
+        "(?:insufficient|missing|incomplete|unclear|ambiguous)\\s*(?:data|evidence|information|context|instruction)"
+      ],
+      [
+        "safe_stop.03",
+        "(?:if|when)\\s+you\\s+(?:are\\s+)?(?:un)?(?:sure|certain|confident)"
+      ],
+      [
+        "safe_stop.04",
+        "(?:cannot|can.t|should\\s+not)\\s+(?:proceed|continue|act|respond)"
+      ],
+      [
+        "safe_stop.05",
+        "(?:escalat|hand\\s*off|transfer|refer).*(?:human|supervisor|specialist|operator)"
+      ],
+      [
+        "safe_stop.06",
+        "(?:safe|calibrated|graceful)\\s*(?:stop|halt|failure|abort|exit)"
+      ],
+      [
+        "safe_stop.07",
+        "refuse|disclaim|opt\\s*out"
+      ]
     ],
     "audit": [
-      "(?:log|record|track|trace|audit)\\s*(?:trail|history|event|action|decision|every|all|each)",
-      "(?:audit|logging|trace|provenance|accountab)",
-      "(?:record|preserve|retain)\\s*(?:the|all|every|each)\\s*(?:decision|action|step|reason|source)",
-      "immutable|append.only|tamper.proof|write.once",
-      "(?:who|what|when|why|how)\\s*(?:did|made|took|decided|executed)"
+      [
+        "audit.01",
+        "(?:log|record|track|trace|audit)\\s*(?:trail|history|event|action|decision|every|all|each)"
+      ],
+      [
+        "audit.02",
+        "(?:audit|logging|trace|provenance|accountab)"
+      ],
+      [
+        "audit.03",
+        "(?:record|preserve|retain)\\s*(?:the|all|every|each)\\s*(?:decision|action|step|reason|source)"
+      ],
+      [
+        "audit.04",
+        "immutable|append.only|tamper.proof|write.once"
+      ],
+      [
+        "audit.05",
+        "(?:who|what|when|why|how)\\s*(?:did|made|took|decided|executed)"
+      ]
     ],
     "compliance": [
-      "(?:hipaa|phi|protected\\s+health|patient\\s+data|baa|business\\s+associate)",
-      "(?:soc\\s*2|soc2|system\\s+and\\s+organization\\s+controls)",
-      "(?:gdpr|general\\s+data\\s+protection|data\\s+protection\\s+regulation)",
-      "(?:eu\\s+ai\\s+act|artificial\\s+intelligence\\s+act|ai\\s+regulation)",
-      "(?:fda|medical\\s+device|saMD|software\\s+as\\s+a\\s+medical\\s+device)",
-      "(?:pci|pci.dss|payment\\s+card)",
-      "(?:ferpa|student\\s+data|education\\s+record)",
-      "(?:compliance|regulat|govern|legal|legal\\s+requirement)",
-      "(?:encrypt|redact|de.identif|anonymi|pseudonymi)"
+      [
+        "compliance.01",
+        "(?:hipaa|phi|protected\\s+health|patient\\s+data|baa|business\\s+associate)"
+      ],
+      [
+        "compliance.02",
+        "(?:soc\\s*2|soc2|system\\s+and\\s+organization\\s+controls)"
+      ],
+      [
+        "compliance.03",
+        "(?:gdpr|general\\s+data\\s+protection|data\\s+protection\\s+regulation)"
+      ],
+      [
+        "compliance.04",
+        "(?:eu\\s+ai\\s+act|artificial\\s+intelligence\\s+act|ai\\s+regulation)"
+      ],
+      [
+        "compliance.05",
+        "(?:fda|medical\\s+device|saMD|software\\s+as\\s+a\\s+medical\\s+device)"
+      ],
+      [
+        "compliance.06",
+        "(?:pci|pci.dss|payment\\s+card)"
+      ],
+      [
+        "compliance.07",
+        "(?:ferpa|student\\s+data|education\\s+record)"
+      ],
+      [
+        "compliance.08",
+        "(?:compliance|regulat|govern|legal|legal\\s+requirement)"
+      ],
+      [
+        "compliance.09",
+        "(?:encrypt|redact|de.identif|anonymi|pseudonymi)"
+      ]
     ]
   },
   "signal_labels": {
     "injection": [
       {
         "pattern": "ignore\\s+(previous|above|all)\\s+(instructions|prompts)",
-        "label": "Reject ignore-previous-instructions / override attempts"
+        "label": "Reject ignore-previous-instructions / override attempts",
+        "rule_id": "injection.01"
       },
       {
         "pattern": "do\\s+not\\s+(follow|obey|listen)\\s+to\\s+(user|input).*(system|instruction)",
-        "label": "Do not follow user input that conflicts with system rules"
+        "label": "Do not follow user input that conflicts with system rules",
+        "rule_id": "injection.02"
       },
       {
         "pattern": "do\\s+not\\s+reveal\\s+(your|the|this)\\s+(system|instructions|prompt)",
-        "label": "Keep system prompt confidential / do not reveal it"
+        "label": "Keep system prompt confidential / do not reveal it",
+        "rule_id": "injection.06"
       }
     ],
     "hallucination": [
       {
         "pattern": "do\\s+not\\s+(?:fabricat|invent|make\\s+up|generat).*(?:fact|data|citation|source|number)",
-        "label": "Do not fabricate facts, citations, or numbers"
+        "label": "Do not fabricate facts, citations, or numbers",
+        "rule_id": "hallucination.01"
       },
       {
         "pattern": "if\\s+you\\s+(?:do\\s+not\\s+know|are\\s+unsure|lack\\s+(?:the|enough)\\s+(?:data|information|evidence))",
-        "label": "Say so when you do not know or lack evidence"
+        "label": "Say so when you do not know or lack evidence",
+        "rule_id": "hallucination.02"
       },
       {
         "pattern": "only\\s+(?:use|cite|reference)\\s+(?:provided|given|available|verified)\\s+(?:data|information|sources|context)",
-        "label": "Only use provided / verified data"
+        "label": "Only use provided / verified data",
+        "rule_id": "hallucination.03"
       }
     ],
     "citation": [
       {
         "pattern": "(?:cite|citation|reference|attribute|source\\s+link|footnote)",
-        "label": "Require citations, references, or source links"
+        "label": "Require citations, references, or source links",
+        "rule_id": "citation.01"
       },
       {
         "pattern": "every\\s+(?:claim|statement|answer|output)\\s+must\\s+(?:cite|reference|include)",
-        "label": "Every claim must cite its source"
+        "label": "Every claim must cite its source",
+        "rule_id": "citation.03"
       },
       {
         "pattern": "link\\s+(?:to|back\\s+to)\\s+(?:the|its|each)\\s+(?:source|evidence|document)",
-        "label": "Link claims back to source evidence"
+        "label": "Link claims back to source evidence",
+        "rule_id": "citation.04"
       }
     ],
     "cost": [
       {
         "pattern": "(?:token|cost|budget|spend)\\s*(?:limit|cap|max|ceiling|threshold)",
-        "label": "Token / cost / budget limit or cap"
+        "label": "Token / cost / budget limit or cap",
+        "rule_id": "cost.01"
       },
       {
         "pattern": "(?:max|maximum)\\s*(?:token|tokens|length|response)",
-        "label": "Max token or response length constraint"
+        "label": "Max token or response length constraint",
+        "rule_id": "cost.02"
       },
       {
         "pattern": "(?:rate|cost)\\s*limit",
-        "label": "Rate or cost limiting"
+        "label": "Rate or cost limiting",
+        "rule_id": "cost.03"
       }
     ],
     "human_gate": [
       {
         "pattern": "(?:human|user|supervisor|operator|reviewer|staff|manager)\\s*(?:must|shall|should|needs?\\s+to)\\s*(?:approve|review|confirm|verify|check|validate)",
-        "label": "Human / supervisor must approve or review"
+        "label": "Human / supervisor must approve or review",
+        "rule_id": "human_gate.01"
       },
       {
         "pattern": "(?:human|human-in-the-loop|hitl|manual)\\s*(?:review|approval|gate|checkpoint|oversight)",
-        "label": "Human-in-the-loop review or approval gate"
+        "label": "Human-in-the-loop review or approval gate",
+        "rule_id": "human_gate.02"
       },
       {
         "pattern": "(?:before|prior\\s+to)\\s*(?:execut|send|submit|releas|publish|deploy)",
-        "label": "Approval required before execute / send / publish"
+        "label": "Approval required before execute / send / publish",
+        "rule_id": "human_gate.03"
       }
     ],
     "safe_stop": [
       {
         "pattern": "(?:stop|halt|pause|refuse|decline|abort).*(?:if|when|unless)",
-        "label": "Stop / halt / refuse when conditions are unmet"
+        "label": "Stop / halt / refuse when conditions are unmet",
+        "rule_id": "safe_stop.01"
       },
       {
         "pattern": "(?:insufficient|missing|incomplete|unclear|ambiguous)\\s*(?:data|evidence|information|context|instruction)",
-        "label": "Handle missing or insufficient evidence"
+        "label": "Handle missing or insufficient evidence",
+        "rule_id": "safe_stop.02"
       },
       {
         "pattern": "(?:escalat|hand\\s*off|transfer|refer).*(?:human|supervisor|specialist|operator)",
-        "label": "Escalate to a human supervisor"
+        "label": "Escalate to a human supervisor",
+        "rule_id": "safe_stop.05"
       }
     ],
     "audit": [
       {
         "pattern": "(?:log|record|track|trace|audit)\\s*(?:trail|history|event|action|decision|every|all|each)",
-        "label": "Log or audit trail for actions and decisions"
+        "label": "Log or audit trail for actions and decisions",
+        "rule_id": "audit.01"
       },
       {
         "pattern": "(?:audit|logging|trace|provenance|accountab)",
-        "label": "Audit / logging / provenance accountability"
+        "label": "Audit / logging / provenance accountability",
+        "rule_id": "audit.02"
       },
       {
         "pattern": "immutable|append.only|tamper.proof|write.once",
-        "label": "Immutable or append-only audit trail"
+        "label": "Immutable or append-only audit trail",
+        "rule_id": "audit.04"
       }
     ],
     "compliance": [
       {
         "pattern": "(?:hipaa|phi|protected\\s+health|patient\\s+data|baa|business\\s+associate)",
-        "label": "HIPAA / PHI / protected health data handling"
+        "label": "HIPAA / PHI / protected health data handling",
+        "rule_id": "compliance.01"
       },
       {
         "pattern": "(?:soc\\s*2|soc2|system\\s+and\\s+organization\\s+controls)",
-        "label": "SOC 2 controls"
+        "label": "SOC 2 controls",
+        "rule_id": "compliance.02"
       },
       {
         "pattern": "(?:gdpr|general\\s+data\\s+protection|data\\s+protection\\s+regulation)",
-        "label": "GDPR / data protection requirements"
+        "label": "GDPR / data protection requirements",
+        "rule_id": "compliance.03"
       }
     ]
   },
@@ -283,17 +467,46 @@
 
   function matchPatterns(promptLower, patterns) {
     const hits = [];
-    for (const pattern of patterns) {
+    for (const entry of patterns) {
+      // Support [rule_id, pattern] tuples and bare pattern strings.
+      const ruleId = Array.isArray(entry) ? entry[0] : null;
+      const pattern = Array.isArray(entry) ? entry[1] : entry;
       const re = safeRegExp(pattern);
       if (!re) continue;
       const m = promptLower.match(re);
       if (m) {
         let snip = m[0].replace(/\s+/g, " ");
         if (snip.length > 120) snip = snip.slice(0, 119) + "…";
-        hits.push({ pattern, snippet: snip });
+        hits.push({ ruleId, pattern, snippet: snip });
       }
     }
     return hits;
+  }
+
+  function detectTemplateBoilerplate(prompt) {
+    if (!prompt) return [];
+    const markers = [
+      "CrewScore",
+      "## Prompt Injection Defense",
+      "# Guardrails (Applied by CrewScore)",
+      "## Additional Guardrails (Applied by CrewScore)",
+    ];
+    const templates = ENGINE.fix_templates || {};
+    Object.values(templates).forEach((t) => {
+      const line = String(t)
+        .split("\n")
+        .map((l) => l.trim())
+        .find((l) => l.startsWith("## "));
+      if (line) markers.push(line);
+    });
+    let hits = 0;
+    for (const m of markers) {
+      if (prompt.includes(m)) hits += 1;
+    }
+    if ((prompt.includes("CrewScore") && hits >= 2) || hits >= 3) {
+      return ["template_boilerplate_detected"];
+    }
+    return [];
   }
 
   function applyLengthBonus(scores, promptLower) {
@@ -316,15 +529,23 @@
         scores[key] = 0;
         const signals = ENGINE.signal_labels[key] || [];
         for (const s of signals.slice(0, 3)) {
-          findings.push({
+          const entry = {
             dimension: key,
             status: "missing",
             pattern_or_reason: s.label,
             snippet: null,
-          });
+          };
+          if (s.rule_id) entry.rule_id = s.rule_id;
+          findings.push(entry);
         }
       }
-      return { scores, findings, overall: 0 };
+      return {
+        scores,
+        findings,
+        overall: 0,
+        ruleset: ENGINE.ruleset,
+        warnings: [],
+      };
     }
 
     const promptLower = String(systemPrompt).toLowerCase();
@@ -337,12 +558,14 @@
       scores[key] = scoreFromMatchCount(hits.length, patterns.length);
 
       for (const h of hits.slice(0, 3)) {
-        findings.push({
+        const entry = {
           dimension: key,
           status: "matched",
           pattern_or_reason: h.pattern,
           snippet: h.snippet,
-        });
+        };
+        if (h.ruleId) entry.rule_id = h.ruleId;
+        findings.push(entry);
       }
 
       let missingCount = 0;
@@ -351,12 +574,14 @@
         const re = safeRegExp(s.pattern);
         const matched = re ? re.test(promptLower) : false;
         if (matched) continue;
-        findings.push({
+        const entry = {
           dimension: key,
           status: "missing",
           pattern_or_reason: s.label,
           snippet: null,
-        });
+        };
+        if (s.rule_id) entry.rule_id = s.rule_id;
+        findings.push(entry);
         missingCount += 1;
       }
       if (!hits.length && missingCount === 0) {
@@ -374,7 +599,14 @@
     const overall = vals.length
       ? Math.floor(vals.reduce((a, b) => a + b, 0) / vals.length)
       : 0;
-    return { scores, findings, overall };
+    const warnings = detectTemplateBoilerplate(String(systemPrompt));
+    return {
+      scores,
+      findings,
+      overall,
+      ruleset: ENGINE.ruleset,
+      warnings,
+    };
   }
 
   function analyze(systemPrompt) {
@@ -382,10 +614,10 @@
   }
 
   function scoreTier(overall) {
-    if (overall >= 90) return { n: "PRODUCTION READY", c: "score-green" };
-    if (overall >= 70) return { n: "SHIP WITH MONITORING", c: "score-yellow" };
-    if (overall >= 50) return { n: "NEEDS WORK", c: "score-orange" };
-    return { n: "NOT PRODUCTION READY", c: "score-red" };
+    if (overall >= 90) return { n: "STRUCTURAL: STRONG", c: "score-green" };
+    if (overall >= 70) return { n: "STRUCTURAL: OK WITH GAPS", c: "score-yellow" };
+    if (overall >= 50) return { n: "STRUCTURAL: WEAK", c: "score-orange" };
+    return { n: "STRUCTURAL: CRITICAL GAPS", c: "score-red" };
   }
 
   function vendorTier(overall) {

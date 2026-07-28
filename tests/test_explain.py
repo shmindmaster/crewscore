@@ -86,6 +86,38 @@ def test_findings_schema_keys():
         assert f["status"] in ("matched", "missing")
 
 
+def test_missing_findings_include_rule_id_for_labeled_signals():
+    """Missing high-value signals from DIMENSION_SIGNAL_LABELS carry rule_id."""
+    _, findings = analyze_with_findings(BARE)
+    missing = [f for f in findings if f["status"] == "missing"]
+    assert missing
+    labeled = [f for f in missing if f.get("rule_id")]
+    assert labeled, "expected at least one missing finding with rule_id"
+    for f in labeled:
+        assert f["rule_id"].count(".") == 1
+        assert f["rule_id"].split(".")[0] in {
+            "injection",
+            "hallucination",
+            "citation",
+            "cost",
+            "human_gate",
+            "safe_stop",
+            "audit",
+            "compliance",
+        }
+
+
+def test_matched_findings_include_rule_id():
+    _, findings = analyze_with_findings(GUARDED)
+    matched = [f for f in findings if f["status"] == "matched"]
+    assert matched
+    for f in matched:
+        assert f.get("rule_id"), f
+        assert f["rule_id"].startswith(f["dimension"].split("_")[0]) or f[
+            "rule_id"
+        ].startswith(f["dimension"])
+
+
 def test_cli_explain_text_mentions_missing():
     runner = CliRunner()
     result = runner.invoke(main, ["test", "--prompt", "You are helpful.", "--explain"])
@@ -106,3 +138,8 @@ def test_cli_json_explain_includes_findings():
     assert isinstance(payload["findings"], list)
     assert payload["overall"] is not None
     assert "dimensions" in payload  # backward compatible
+    assert payload["ruleset"] == "crewscore-hygiene@0.2.2"
+    assert "warnings" in payload
+    # labeled missing findings should carry rule_id
+    with_id = [f for f in payload["findings"] if f.get("rule_id")]
+    assert with_id
