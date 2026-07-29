@@ -25,6 +25,8 @@ docs/ui-*.png
 
 # Marketing media pipeline (keep out of public tree)
 scripts/record-hero-demo.mjs
+_production/demo-work/
+_production/demo-review/
 
 .corpus-cache/
 node_modules/
