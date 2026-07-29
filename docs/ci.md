@@ -69,12 +69,9 @@ files at all — a repo with only `AGENTS.md`-style config and no system prompts
 for example.
 
 **Guard on `scored`, not on `score`.** GitHub casts `''` to `0` in numeric
-comparisons, so `if: outputs.score < 50` is true for a run that measured
-nothing:
-
-```yaml
-if: steps.crewscore.outputs.scored == 'true' && steps.crewscore.outputs.score < 50
-```
+comparisons, so an existing numeric comparison can mistakenly fail a run that
+measured nothing. Check `steps.crewscore.outputs.scored == 'true'` before any
+legacy numeric logic; new workflows should use an explicit control policy.
 
 `summary-path` carries the markdown summary path, if one was written.
 
@@ -108,21 +105,22 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install crewscore
-      - run: crewscore scan . --json --threshold 50
+      # Example policy: choose controls that match your workflow.
+      - run: crewscore scan . --json --require human_gate.approval_required,safe_stop.stop_condition
 ```
 
 ### Parsing the JSON yourself
 
 **Branch on `governance_applicable` before reading `overall`.** Coding-agent
 config carries no governance grade, and the field is **absent** rather than
-`0`. So `jq '.overall'` yields `null`, and `jq -e '.overall >= 50'` prints
-`false` and **exits 1** — it does not error. An unguarded gate quietly fails
-the build on every `AGENTS.md` in the repo.
+`0`. So `jq '.overall'` yields `null`; apply a policy only after checking the
+profile. An unguarded numeric legacy gate can quietly fail the build on every
+`AGENTS.md` in the repo.
 
 ```bash
-# single file: score it only if it is judged on the governance score
+# single file: read a governance field only when the profile carries one
 crewscore test --prompt-file ./AGENTS.md --json \
-  | jq -e 'if .governance_applicable then .overall >= 50 else true end'
+  | jq -e 'if .governance_applicable then (.overall | type == "number") else true end'
 
 # scan: worst score across the files that carry one
 crewscore scan . --json \
@@ -153,13 +151,13 @@ annotations. See [policies.md](policies.md) for baseline and control details.
 
 ---
 
-## Choosing a threshold
+## Legacy numeric thresholds
 
-Set it against what your files actually score, not against the tier ladder.
-Run `crewscore scan .` first and pick a number just under your current worst
-governed file, then raise it as you close gaps.
+`threshold` remains available for existing automation, but it is a count of
+written-control matches, not a safety or maturity bar. New workflows should
+name the controls they need with `required-controls` / `--require`, or protect
+a reviewed baseline with `fail-on-regression` / `--fail-on-regression`.
 
-Scores are versioned by ruleset (`crewscore rules --json` reports which). A
-ruleset bump can move every score, so re-check the threshold after upgrading —
-the [CHANGELOG](../CHANGELOG.md) states the delta for any release that changes
-scoring.
+If you retain a numeric gate, set it against your own files rather than the
+tier ladder, and re-check it after a ruleset update (`crewscore rules --json`
+reports the version). The [CHANGELOG](../CHANGELOG.md) records scoring deltas.

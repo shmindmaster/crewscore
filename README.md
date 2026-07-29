@@ -8,8 +8,9 @@ CrewScore reads your system prompt and shows you which of **23 safety controls
 it never states** — injection defense, human approval, cost limits, stop
 conditions.
 
-**We scanned 356 real agent prompts, including shipped ones from Anthropic,
-OpenAI and Cursor. The median states 14 of 100.**
+**We scanned 356 real agent prompts: 83 production prompts and 273
+general-purpose prompts. Among the production subset, median coverage was 14
+of 100.**
 [See the numbers →](docs/validation-corpus.md)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)

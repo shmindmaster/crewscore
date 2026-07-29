@@ -1,7 +1,8 @@
 """
-AI Vendor Scorecard — assess an AI vendor's production credibility via a checklist.
+AI Vendor Checklist — summarize self-attested diligence responses.
 
-Non-technical. No API key. Produces a score and optional shareable copy.
+Non-technical. No API key. It is neither an independent audit nor a vendor
+verdict.
 """
 
 from __future__ import annotations
@@ -49,10 +50,10 @@ SCORE_DK = 3
 SCORE_NO = 0
 
 TIERS = [
-    (80, "TRUSTED", "green", "Production-Proven"),
-    (50, "CAUTION", "yellow", "Proceed Carefully"),
-    (30, "HIGH RISK", "dark_orange", "Due Diligence Required"),
-    (0, "RED FLAG", "red", "Walk Away"),
+    (80, "MOSTLY POSITIVE RESPONSES", "green", "Collect independent evidence"),
+    (50, "FOLLOW-UP NEEDED", "yellow", "Review the unanswered and negative responses"),
+    (30, "MATERIAL GAPS", "dark_orange", "Request evidence before relying on it"),
+    (0, "INSUFFICIENT EVIDENCE", "red", "Do not treat this as a vendor verdict"),
 ]
 
 
@@ -60,7 +61,7 @@ def get_tier(score: int) -> tuple[str, str, str]:
     for threshold, name, color, label in TIERS:
         if score >= threshold:
             return name, color, label
-    return "RED FLAG", "red", "Walk Away"
+    return "INSUFFICIENT EVIDENCE", "red", "Do not treat this as a vendor verdict"
 
 
 def render_answer(ans: str) -> tuple[int, str]:
@@ -92,7 +93,7 @@ def collect_red_flags(results: list[tuple[str, str, int, str]]) -> list[str]:
 
 
 def build_vendor_result(name: str, answers_csv: str) -> dict:
-    """Pure vendor scorecard from comma-separated y/n/dk answers."""
+    """Pure self-attested vendor checklist from comma-separated y/n/dk answers."""
     parts = [p.strip() for p in answers_csv.split(",")]
     if len(parts) != 10:
         raise ValueError(f"Expected 10 answers (y/n/dk), got {len(parts)}")
@@ -111,6 +112,8 @@ def build_vendor_result(name: str, answers_csv: str) -> dict:
         "score": total,
         "tier": tier_name,
         "tier_label": tier_label,
+        "self_attested": True,
+        "not_independent_audit": True,
         "answers": [
             {
                 "question": q,
@@ -125,7 +128,7 @@ def build_vendor_result(name: str, answers_csv: str) -> dict:
 
 
 def render_vendor_html(payload: dict) -> str:
-    """Simple self-contained HTML scorecard for a vendor assessment."""
+    """Simple self-contained HTML summary for a vendor checklist."""
     vendor = escape(str(payload.get("vendor", "")))
     score = payload.get("score", 0)
     tier = escape(str(payload.get("tier", "")))
@@ -153,7 +156,7 @@ def render_vendor_html(payload: dict) -> str:
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CrewScore — {vendor} Vendor Scorecard</title>
+<title>CrewScore — {vendor} Vendor Diligence Checklist</title>
 <style>
 body{{font-family:system-ui,sans-serif;background:#0f0f1a;color:#e2e8f0;padding:2rem;max-width:720px;margin:0 auto}}
 h1{{color:#fff}}
@@ -168,9 +171,9 @@ a{{color:#3b82f6}}
 </style>
 </head>
 <body>
-<h1>CrewScore — AI Vendor Scorecard</h1>
+<h1>CrewScore — AI Vendor Diligence Checklist</h1>
 <p>Vendor: <strong>{vendor}</strong></p>
-<div class="score">{score}/100</div>
+<div class="score">Checklist response total: {score}/100</div>
 <div class="tier">{tier} — {tier_label}</div>
 {flags_block}
 <table>
@@ -180,8 +183,8 @@ a{{color:#3b82f6}}
 </tbody>
 </table>
 <p class="disclaimer">
-Self-attested answers — not an independent audit.
-Structural / checklist diligence only.
+Self-attested answers only — not an independent audit, certification, or vendor verdict.
+Use the questions to request evidence; do not infer runtime behavior or production suitability.
 <a href="{HOMEPAGE}">{HOMEPAGE}</a>
 </p>
 </body>
@@ -201,9 +204,10 @@ def generate_linkedin_post(
     cautions = [q for q, ans, pts in answers if pts == SCORE_DK]
 
     lines = [
-        f"We evaluated {vendor} for AI production use.",
+        f"{vendor} completed a self-attested AI vendor diligence checklist.",
+        "This is not an independent audit or a vendor verdict.",
         "",
-        f"Score: {score}/100 -- {tier}",
+        f"Checklist response total: {score}/100 -- {tier}",
         "",
     ]
 
@@ -223,9 +227,9 @@ def generate_linkedin_post(
                 lines.append(f"- {q.rstrip('?')}")
             lines.append("")
 
-    lines.append("Before signing that contract, ask these 10 questions.")
+    lines.append("Request evidence for each answer before making a vendor decision.")
     lines.append("")
-    lines.append(f"Score yours: pip install crewscore && crewscore assess-vendor")
+    lines.append(f"Use the checklist: pip install crewscore && crewscore assess-vendor")
     lines.append(HOMEPAGE)
     lines.append("")
     lines.append("#AI #AIVendors #DueDiligence #EnterpriseAI #AIProcurement")
@@ -234,7 +238,7 @@ def generate_linkedin_post(
 
 
 @click.command("assess-vendor")
-@click.option("--name", "-n", required=True, help="Vendor/product name to assess")
+@click.option("--name", "-n", required=True, help="Vendor/product name for the checklist")
 @click.option(
     "--answers",
     "-a",
@@ -250,10 +254,10 @@ def generate_linkedin_post(
     "--report",
     type=click.Path(),
     default=None,
-    help="Write a simple HTML vendor scorecard to this path",
+    help="Write a self-attested HTML checklist summary to this path",
 )
 def assess_vendor(name: str, answers: str | None, as_json: bool, report: str | None):
-    """Score an AI vendor's production credibility. 10 questions. No API key."""
+    """Summarize a self-attested AI vendor checklist. 10 questions. No API key."""
 
     results: list[tuple[str, str, int, str]] = []
 
@@ -285,8 +289,9 @@ def assess_vendor(name: str, answers: str | None, as_json: bool, report: str | N
         console.print()
         console.print(
             Panel(
-                f"[bold]CREWSCORE — AI Vendor Scorecard[/bold]\n"
-                f"Assessing: [bold]{name}[/bold]",
+                f"[bold]CREWSCORE — AI Vendor Diligence Checklist[/bold]\n"
+                f"Vendor: [bold]{name}[/bold]\n"
+                "[dim]Self-attested responses only; not an audit or verdict.[/dim]",
                 border_style="blue",
                 expand=False,
             )
@@ -311,6 +316,8 @@ def assess_vendor(name: str, answers: str | None, as_json: bool, report: str | N
             "score": total,
             "tier": tier_name,
             "tier_label": tier_label,
+            "self_attested": True,
+            "not_independent_audit": True,
             "answers": [
                 {
                     "question": q,
@@ -341,14 +348,15 @@ def assess_vendor(name: str, answers: str | None, as_json: bool, report: str | N
     console.print()
     console.print(
         Panel(
-            f"[bold]CREWSCORE — AI Vendor Scorecard[/bold]\n"
-            f"Assessing: [bold]{name}[/bold]",
+            f"[bold]CREWSCORE — AI Vendor Diligence Checklist[/bold]\n"
+            f"Vendor: [bold]{name}[/bold]\n"
+            "[dim]Self-attested responses only; not an audit or verdict.[/dim]",
             border_style="blue",
             expand=False,
         )
     )
     console.print()
-    console.print(Panel("[bold]AI VENDOR SCORECARD[/bold]", border_style="blue", expand=False))
+    console.print(Panel("[bold]SELF-ATTESTED VENDOR CHECKLIST[/bold]", border_style="blue", expand=False))
     console.print(f"  Vendor: [bold]{name}[/bold]")
     console.print()
 
@@ -359,7 +367,7 @@ def assess_vendor(name: str, answers: str | None, as_json: bool, report: str | N
         status_color = (
             "green" if pts == SCORE_YES else ("yellow" if pts == SCORE_DK else "red")
         )
-        flag = "  <-- RED FLAG" if pts == SCORE_NO or (
+        flag = "  <-- FOLLOW UP" if pts == SCORE_NO or (
             key in CRITICAL_KEYS and pts == SCORE_DK
         ) else ""
         console.print(
@@ -369,22 +377,22 @@ def assess_vendor(name: str, answers: str | None, as_json: bool, report: str | N
     console.print()
     console.print(f"  [{'=' * 54}]")
     console.print(
-        f"  [{tier_color}]SCORE: {total}/100 -- {tier_name} ({tier_label})[/{tier_color}]"
+        f"  [{tier_color}]CHECKLIST RESPONSE TOTAL: {total}/100 -- {tier_name} ({tier_label})[/{tier_color}]"
     )
     console.print(f"  [{'=' * 54}]")
 
     if red_flags:
         console.print()
         console.print(
-            f"  [red]{len(red_flags)} RED FLAG(S) detected.[/red] "
-            "Request evidence before signing."
+            f"  [red]{len(red_flags)} RESPONSE GAP(S) need follow-up.[/red] "
+            "Request evidence before making a vendor decision."
         )
         for flag in red_flags:
             console.print(f"  [red]•[/red] {flag}")
 
     console.print()
     console.print(
-        "  [dim]Self-attested answers — not an independent audit.[/dim]"
+        "  [dim]Self-attested answers — not an independent audit, certification, or vendor verdict.[/dim]"
     )
     console.print("  Scored with CrewScore | pip install crewscore")
     console.print(f"  {HOMEPAGE} · {REPO}")

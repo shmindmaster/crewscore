@@ -373,32 +373,6 @@ JS_RUNTIME = r"""
     return { n: "STRUCTURAL: CRITICAL GAPS", c: "score-red" };
   }
 
-  function vendorTier(overall) {
-    if (overall >= 80) return { n: "TRUSTED", c: "score-green" };
-    if (overall >= 50) return { n: "CAUTION", c: "score-yellow" };
-    if (overall >= 30) return { n: "HIGH RISK", c: "score-orange" };
-    return { n: "RED FLAG", c: "score-red" };
-  }
-
-  /** answers: array of 'yes'|'no'|'dk' — same points as CLI (y=10, dk=3, no=0). */
-  function scoreVendor(answers) {
-    const SCORE = { yes: 10, dk: 3, no: 0 };
-    let total = 0;
-    const redFlags = [];
-    const critical = new Set(ENGINE.vendor_critical_keys);
-    (answers || []).forEach((a, i) => {
-      const norm = (a || "no").toLowerCase();
-      const pts = SCORE[norm] !== undefined ? SCORE[norm] : 0;
-      total += pts;
-      const q = ENGINE.vendor_questions[i] || "";
-      const key = ENGINE.vendor_keys[i] || "";
-      if (norm === "no" || (norm === "dk" && critical.has(key))) {
-        redFlags.push(q.replace(/\?$/, ""));
-      }
-    });
-    return { score: total, tier: vendorTier(total), redFlags };
-  }
-
   /** Same threshold as CLI generate_fixes: score < 70. */
   function generateFixes(scores) {
     const fixes = {};
@@ -457,8 +431,6 @@ JS_RUNTIME = r"""
     configProfile: ENGINE.config_profile,
     contextBloatMaxLines: ENGINE.context_bloat_max_lines,
     scoreTier,
-    vendorTier,
-    scoreVendor,
     generateFixes,
     applyFixes,
     fixAndRescore,
@@ -536,14 +508,6 @@ def build_payload() -> dict:
             for entry in BROWSER_UNDETECTABLE_SMELLS
         ],
         "vendor_questions": [q for q, _ in QUESTIONS],
-        "vendor_keys": [k for _, k in QUESTIONS],
-        "vendor_critical_keys": [
-            "certification",
-            "audit",
-            "human_override",
-            "security_audit",
-            "incident",
-        ],
     }
 
 
