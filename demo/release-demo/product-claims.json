@@ -1,0 +1,88 @@
+{
+  "claims": [
+    {
+      "id": "claim-local-browser-check",
+      "text": "CrewScore checks the prompt in the browser.",
+      "audience": "Prompt author",
+      "episode": "written-controls-review",
+      "scene": "local-check",
+      "source": "assets/site.js#score and index.html local-scoring disclosure",
+      "readiness": "synthetic",
+      "environment": "local static server with synthetic fixture",
+      "visibleOnScreen": true,
+      "verified": true
+    },
+    {
+      "id": "claim-20-of-23",
+      "text": "The fictional fixture initially has 20 of 23 written controls found.",
+      "audience": "Prompt author",
+      "episode": "written-controls-review",
+      "scene": "missing-controls",
+      "source": "assets/demo-fixture.js expected.found and score-engine.js",
+      "readiness": "synthetic",
+      "environment": "local static server with synthetic fixture",
+      "visibleOnScreen": true,
+      "verified": true
+    },
+    {
+      "id": "claim-three-missing",
+      "text": "The fixture has three controls missing: human approval, tamper-evident record, and redaction of personal data.",
+      "audience": "Prompt author",
+      "episode": "written-controls-review",
+      "scene": "missing-controls",
+      "source": "assets/demo-fixture.js expected.missing and score-engine.js",
+      "readiness": "synthetic",
+      "environment": "local static server with synthetic fixture",
+      "visibleOnScreen": true,
+      "verified": true
+    },
+    {
+      "id": "claim-selected-control",
+      "text": "The author chooses and reviews A human must approve before applying it.",
+      "audience": "Prompt author",
+      "episode": "written-controls-review",
+      "scene": "review-control",
+      "source": "assets/site.js openFixReview and crewscore/scorers/fix_patterns.py CONTROL_FIX_TEMPLATES",
+      "readiness": "synthetic",
+      "environment": "local static server with synthetic fixture",
+      "visibleOnScreen": true,
+      "verified": true
+    },
+    {
+      "id": "claim-21-of-23",
+      "text": "After the selected wording is applied, the real browser checker updates to 21 of 23 written controls found.",
+      "audience": "Prompt author",
+      "episode": "written-controls-review",
+      "scene": "local-rescan",
+      "source": "assets/site.js applySelection and score; capture assertion in scripts/demo/capture-release-demo.mjs",
+      "readiness": "synthetic",
+      "environment": "local static server with synthetic fixture",
+      "visibleOnScreen": true,
+      "verified": true
+    },
+    {
+      "id": "claim-prompt-free-share",
+      "text": "A result link contains ruleset and control IDs only; it does not include prompt text.",
+      "audience": "Prompt author",
+      "episode": "written-controls-review",
+      "scene": "prompt-free-share",
+      "source": "assets/site.js sharePayload, shareUrl, and rendered share explanation",
+      "readiness": "synthetic",
+      "environment": "local static server with synthetic fixture",
+      "visibleOnScreen": true,
+      "verified": true
+    },
+    {
+      "id": "claim-not-runtime-proof",
+      "text": "Written-control coverage is not proof of runtime behavior or safety.",
+      "audience": "Prompt author",
+      "episode": "written-controls-review",
+      "scene": "local-rescan",
+      "source": "index.html and assets/site.js coverage disclosure",
+      "readiness": "synthetic",
+      "environment": "local static server with synthetic fixture",
+      "visibleOnScreen": true,
+      "verified": true
+    }
+  ]
+}
