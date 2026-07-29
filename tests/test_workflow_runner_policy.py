@@ -19,7 +19,6 @@ def test_routine_validation_uses_the_digitalocean_runner_with_exact_labels():
     workflows = {
         "pytest.yml": ("test", "browser"),
         "crewscore-selftest.yml": ("selftest",),
-        "example-ci.yml": ("score",),
     }
     for filename, job_names in workflows.items():
         jobs = _workflow(filename)["jobs"]
@@ -27,11 +26,16 @@ def test_routine_validation_uses_the_digitalocean_runner_with_exact_labels():
             assert jobs[name]["runs-on"] == RUNNER, f"{filename}:{name}"
 
 
-def test_persistent_runner_jobs_refuse_fork_originated_pull_request_code():
+def test_persistent_runner_jobs_only_accept_maintainer_owned_pull_requests():
     for filename, job_name in (("pytest.yml", "test"), ("pytest.yml", "browser"), ("crewscore-selftest.yml", "selftest")):
         condition = _workflow(filename)["jobs"][job_name].get("if", "")
         assert "github.event_name != 'pull_request'" in condition, f"{filename}:{job_name}"
         assert "head.repo.full_name == github.repository" in condition, f"{filename}:{job_name}"
+        assert "pull_request.user.login == github.repository_owner" in condition, f"{filename}:{job_name}"
+
+
+def test_consumer_example_uses_a_runner_available_in_a_new_repository():
+    assert _workflow("example-ci.yml")["jobs"]["score"]["runs-on"] == "ubuntu-latest"
 
 
 def test_selftest_only_runs_on_main_pushes_or_pull_requests():

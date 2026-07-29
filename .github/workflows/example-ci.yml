@@ -21,7 +21,8 @@ on:
 
 jobs:
   score:
-    runs-on: [self-hosted, Linux, X64, sh-runner, docker]
+    # This is a consumer copy-paste template, not CrewScore's own CI.
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4

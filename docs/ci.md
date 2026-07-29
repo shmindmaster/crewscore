@@ -3,11 +3,11 @@
 ## GitHub Action (recommended)
 
 CrewScore's own recurring validation runs on its private DigitalOcean runner
-labels `[self-hosted, Linux, X64, sh-runner, docker]`; fork-authored pull
-requests are refused before reaching that persistent host. The workflow below
-uses a GitHub-hosted runner because it is a copy-paste starting point for your
-own repository. Use your own isolated self-hosted labels only after applying
-the same fork boundary.
+labels `[self-hosted, Linux, X64, sh-runner, docker]`; only maintainer-owned,
+same-repository pull requests are allowed to reach that persistent host. The
+workflow below uses a GitHub-hosted runner because it is a copy-paste starting
+point for your own repository. Use your own isolated self-hosted labels only
+after applying the same trust boundary.
 
 ```yaml
 # .github/workflows/crewscore.yml

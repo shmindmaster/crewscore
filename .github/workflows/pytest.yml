@@ -8,8 +8,10 @@ on:
 jobs:
   test:
     # Routine validation stays on the existing DigitalOcean runner fleet.
-    # Never execute fork-authored code on a persistent self-hosted machine.
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    # Never execute untrusted PR code (forks, bots, or collaborators) on a
+    # persistent self-hosted machine. Maintainer-owned PRs are the only PRs
+    # permitted onto this runner.
+    if: github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == github.repository_owner)
     runs-on: [self-hosted, Linux, X64, sh-runner, docker]
     timeout-minutes: 30
     strategy:
@@ -34,7 +36,7 @@ jobs:
 
   browser:
     name: browser tests
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == github.repository_owner)
     runs-on: [self-hosted, Linux, X64, sh-runner, docker]
     timeout-minutes: 45
     steps:
