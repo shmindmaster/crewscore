@@ -53,3 +53,13 @@ def test_release_publishing_stays_isolated_from_routine_runner_compute():
     release = _workflow("release.yml")["jobs"]
     assert release["verify"]["runs-on"] == "${{ matrix.os }}"
     assert release["publish"]["runs-on"] == "ubuntu-latest"
+
+
+def test_dependabot_security_changes_use_an_ephemeral_runner():
+    """Dependency-update PRs run on GitHub-hosted infrastructure, not DigitalOcean."""
+    workflow = _workflow("dependabot-security-validation.yml")
+    job = workflow["jobs"]["validate"]
+    assert job["runs-on"] == "ubuntu-latest"
+    assert "dependabot[bot]" in job["if"]
+    assert "npm run test:web -- --workers=1" in str(job["steps"])
+    assert any(step.get("uses") == "./" for step in job["steps"])
