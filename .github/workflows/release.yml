@@ -188,3 +188,47 @@ jobs:
           fi
           gh release create "$REF_NAME" dist/* \
             --title "$REF_NAME" --notes-file notes.md
+
+  floating-major-tag:
+    # `uses: shmindmaster/crewscore@v2` resolves through a floating major tag,
+    # and action.yml installs from `github.action_path` - the repo AT THAT TAG,
+    # not from PyPI. So a stale v2 keeps serving the old scorer to Action users
+    # while pip users get the new one: same tool, two different numbers for the
+    # same prompt, which is the one failure this project cannot ship.
+    #
+    # It went stale exactly once, by hand, which is why it is automated here.
+    name: Move the floating major tag
+    needs: github-release
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Point v<major> at this release
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${REF_NAME#v}"
+          MAJOR="${VERSION%%.*}"
+          # Pre-1.0 every release is a major-tag move: 0.x has no compatibility
+          # promise, so v0 would be meaningless and the published Action tag is
+          # v2 (v1 was force-moved off the release carrying the action.yml
+          # script-injection hole). Track the newest release with both, so no
+          # pinned user is left on vulnerable or divergent code.
+          if [ "$MAJOR" = "0" ]; then
+            TAGS="v1 v2"
+          else
+            TAGS="v$MAJOR"
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for TAG in $TAGS; do
+            git tag -f -a "$TAG" -m "Track $REF_NAME" "${{ github.sha }}"
+            git push -f origin "refs/tags/$TAG"
+            echo "moved $TAG -> $REF_NAME (${{ github.sha }})"
+          done
