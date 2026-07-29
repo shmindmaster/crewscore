@@ -4,6 +4,16 @@ import { readFile } from "node:fs/promises";
 
 const LONG_UNICODE = `${"请保留这段测试文本。".repeat(140)}\nSENTINEL_PROMPT_CONTENT_NEVER_SEND`;
 
+test("public security page exposes the private reporting route", async ({ page }) => {
+  await page.goto("/security.html");
+  await expect(page.getByRole("heading", { name: "Report a CrewScore vulnerability privately." })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Report a vulnerability on GitHub" })).toHaveAttribute(
+    "href",
+    "https://github.com/shmindmaster/crewscore/security/advisories/new",
+  );
+  await expect(page.getByText("CrewScore is not a security certification")).toBeVisible();
+});
+
 test("demo produces controls-first results and an editable review", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Try a 10-second demo" }).click();

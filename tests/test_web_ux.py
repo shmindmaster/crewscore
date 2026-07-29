@@ -52,6 +52,7 @@ def test_privacy_contract_has_no_remote_font_and_offers_opt_out():
     assert "Your prompt text never leaves your browser" in html
     assert 'id="analytics-opt-out"' in html
     assert 'href="privacy.html"' in html
+    assert 'href="security.html"' in html
 
 
 def test_vendor_is_a_separate_secondary_page():
