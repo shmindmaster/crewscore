@@ -153,3 +153,31 @@ def test_social_card_headline_is_the_live_control_count():
     assert "CONCEPT_COUNT" in src, (
         "social card headline is no longer derived from the catalog"
     )
+
+
+def test_readme_headline_statistic_matches_the_generated_corpus_report():
+    """The landing page leads with a measured number. It has to stay measured.
+
+    Marketing copy drifting from the data it cites is the exact failure the
+    withdrawn study was: a real analysis, quoted from memory. The README says
+    "356 real agent prompts" and a median of 14 - both are read back out of
+    docs/validation-corpus.json here, so re-running the harness on a different
+    corpus fails this until the copy is updated with it.
+    """
+    import json
+
+    data_path = Path("docs/validation-corpus.json")
+    if not data_path.exists():
+        pytest.skip("corpus report not generated")
+    data = json.loads(data_path.read_text(encoding="utf-8"))
+    groups = data["groups"]
+    total = sum(g["files"] for g in groups.values())
+    median = groups["production"]["describe"]["median"]
+
+    readme = _read("README.md")
+    assert f"{total} real agent prompts" in readme, (
+        f"README cites a corpus size the harness did not produce ({total})"
+    )
+    assert f"median states {median} of 100" in readme.lower(), (
+        f"README cites a median the harness did not produce ({median})"
+    )
