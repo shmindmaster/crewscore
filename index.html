@@ -584,7 +584,8 @@ body.sheet-open{overflow:hidden}
     · structural scan only · templates must be paired with runtime gates<br>
     Same rules in the browser and the CLI. The number is coverage, not quality -
     stating all eight controls clearly, once each, scores 28/100:
-    <a href="https://github.com/shmindmaster/crewscore/blob/main/docs/validation.md" target="_blank" rel="noopener">read the validation study</a>.
+    <a href="https://github.com/shmindmaster/crewscore/blob/main/docs/validation.md" target="_blank" rel="noopener">read the validation study</a>.<br>
+    Scoring stays in your browser. Anonymous, allowlisted usage events exclude prompt text and person profiles.
   </footer>
 </div>
 <div id="mobile-score-bar" aria-hidden="true">
@@ -611,6 +612,7 @@ body.sheet-open{overflow:hidden}
 <canvas id="share-canvas" width="900" height="500" style="display:none"></canvas>
 
 <script src="score-engine.js"></script>
+<script src="analytics.js"></script>
 <script>
 (function () {
   const E = window.CrewScoreEngine;
@@ -645,6 +647,7 @@ body.sheet-open{overflow:hidden}
       if (store.events.length > 200) store.events = store.events.slice(-200);
       localStorage.setItem(METRICS_KEY, JSON.stringify(store));
     } catch (err) { /* private mode */ }
+    window.CrewScoreAnalytics?.capture(event, props);
   }
   function bucket(n) {
     n = Number(n) || 0;
