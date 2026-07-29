@@ -13,7 +13,7 @@
 
 <br/>
 
-![CrewScore — a bare prompt states none of the eight controls; crewscore fix raises coverage to 50/100 and CrewScore flags its own output as template boilerplate](https://raw.githubusercontent.com/shmindmaster/crewscore/main/docs/demo.svg)
+![CrewScore — a bare prompt states none of the eight dimensions' controls; crewscore fix raises coverage to 50/100 and CrewScore flags its own output as template boilerplate](https://raw.githubusercontent.com/shmindmaster/crewscore/main/docs/demo.svg)
 
 **Try it live (no install):** [crewscore.ai](https://crewscore.ai)
 
@@ -64,7 +64,8 @@ to print the grouping — it is the denominator, so it is published as data.
 | Restates one control five different ways | **same as stating it once** |
 
 **Through 0.1.0 this was broken**, and badly: a dimension divided by its *rule*
-count, so a prompt stating all eight controls clearly, once each, scored
+count, so a prompt stating one control in each of the eight dimensions,
+clearly and once, scored
 **28/100** — below the lowest tier — and reaching 70 required restating the same
 control four to six ways, the exact redundancy our own
 [Context Bloat detector](#configuration-smells) flags. We published that
@@ -388,7 +389,7 @@ published research, rather than waiting for someone else to.
 
 ### What we fixed before shipping it
 
-**0. We published the arithmetic that showed our own scale was broken, then fixed it.** Through 0.1.0 a prompt stating all eight controls clearly, once each, scored **28/100** — below the lowest tier — because dimensions divided by their *rule* count and the rules are near-synonyms. A metric a well-written prompt cannot pass is not measuring quality. 0.3.0 groups rules into the 23 distinct controls they express and scores coverage of those, so complete coverage now scores 100 and restating a control still scores it once. Both sets of numbers, measured old-engine against new: [`docs/validation.md`](docs/validation.md). The document also carries the per-dimension caveats, including three dimensions (Cost, Compliance, Audit) that ship known-weak, and records a corpus study that was **withdrawn** after our own audit found arithmetic in it that did not survive scrutiny. The positioning changed with all of it: CrewScore is a **checklist, not a benchmark**, and the number is **coverage, not quality**. The rules and the formula are unchanged in this release; what changed is what we claim they mean.
+**0. We published the arithmetic that showed our own scale was broken, then fixed it.** Through 0.1.0 a prompt stating one control in each of the eight dimensions, clearly and once, scored **28/100** — below the lowest tier — because dimensions divided by their *rule* count and the rules are near-synonyms. A metric a well-written prompt cannot pass is not measuring quality. 0.3.0 groups rules into the 23 distinct controls they express and scores coverage of those, so complete coverage now scores 100 and restating a control still scores it once. Both sets of numbers, measured old-engine against new: [`docs/validation.md`](docs/validation.md). The document also carries the per-dimension caveats, including three dimensions (Cost, Compliance, Audit) that ship known-weak, and records a corpus study that was **withdrawn** after our own audit found arithmetic in it that did not survive scrutiny. The positioning changed with all of it: CrewScore is a **checklist, not a benchmark**, and the number is **coverage, not quality**. The rules and the formula are unchanged in this release; what changed is what we claim they mean.
 
 **1. `AGENTS.md` files were being judged by the wrong ruleset.** Validated against the [arXiv:2606.15828](https://arxiv.org/abs/2606.15828) corpus of the 100 most-starred repos with an agent config file, CrewScore scored every one of them in the worst tier. `crewscore scan` targeted exactly those files by default, so the headline command pointed the governance ruleset at the one artifact it can't assess. Fixed by [splitting the rulesets](#two-artifacts-two-rulesets): none of those files receive a governance grade now — they are judged on configuration smells instead.
 
