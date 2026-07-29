@@ -8,7 +8,11 @@ on:
 
 jobs:
   selftest:
-    runs-on: ubuntu-latest
+    # This job executes checked-out code through the composite Action. Keep
+    # fork-originated code off the persistent DigitalOcean runner.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, Linux, X64, sh-runner, docker]
+    timeout-minutes: 30
     permissions:
       contents: read
       pull-requests: write
