@@ -40,7 +40,7 @@ const subtitleFilter = `subtitles=filename='${filterPath(srtPath)}':force_style=
 const common = ["-y", "-i", sourceVideo, "-i", narrationPath, "-map", "0:v:0", "-map", "1:a:0", "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart"];
 run("ffmpeg", [...common, "-vf", scaleFilter, cleanMaster]);
 run("ffmpeg", [...common, "-vf", `${scaleFilter},${subtitleFilter}`, captionedMaster]);
-run("ffmpeg", ["-y", "-ss", "00:00:28", "-i", captionedMaster, "-frames:v", "1", poster]);
+run("ffmpeg", ["-y", "-ss", "00:00:32", "-i", captionedMaster, "-frames:v", "1", "-update", "1", poster]);
 
 await cp(resolve(narrationRoot, "captions.srt"), resolve(reviewRoot, "captions.srt"));
 await cp(resolve(narrationRoot, "captions.vtt"), resolve(reviewRoot, "captions.vtt"));
