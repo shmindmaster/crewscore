@@ -44,15 +44,24 @@ def test_selftest_only_runs_on_main_pushes_or_pull_requests():
     assert workflow[True]["pull_request"] is None
 
 
-def test_release_publishing_stays_isolated_from_routine_runner_compute():
-    """Trusted release/PyPI jobs remain on GitHub-hosted ephemeral workers.
+def test_release_linux_verification_uses_digitalocean_but_publishing_stays_ephemeral():
+    """Spend Linux release verification on DigitalOcean, not GitHub minutes.
 
-    They run only from tags/manual dispatch and hold OIDC release permissions;
-    this is a deliberate exception, not a routine validation-minute sink.
+    Native Windows/macOS verification still needs its hosted platforms, while
+    PyPI publishing and release-tag mutation stay on short-lived hosted workers
+    with their dedicated trusted-publishing permissions.
     """
     release = _workflow("release.yml")["jobs"]
-    assert release["verify"]["runs-on"] == "${{ matrix.os }}"
+    verify = release["verify"]
+    assert verify["runs-on"] == "${{ fromJSON(matrix.runner) }}"
+    assert verify["strategy"]["matrix"]["include"] == [
+        {"os": "Linux", "runner": '["self-hosted", "Linux", "X64", "sh-runner", "docker"]'},
+        {"os": "Windows", "runner": '"windows-latest"'},
+        {"os": "macOS", "runner": '"macos-latest"'},
+    ]
     assert release["publish"]["runs-on"] == "ubuntu-latest"
+    assert release["github-release"]["runs-on"] == "ubuntu-latest"
+    assert release["floating-major-tag"]["runs-on"] == "ubuntu-latest"
 
 
 def test_dependabot_security_changes_use_an_ephemeral_runner():
