@@ -14,6 +14,23 @@ install them, and do not compare their numbers to these.
 
 ---
 
+## [Unreleased] — complete secondary handoffs
+
+No scoring change. Ruleset remains `crewscore-hygiene@0.5.0`.
+
+### Improved
+
+- **`export-eval`** maps offline missing controls into Promptfoo starter cases,
+  garak probe suggestions, ruleset/version headers, optional `--provider`, and a
+  prompt-free `crewscore-eval-manifest.json`. Still does not run live evals.
+- **`assess-vendor`** JSON schema (`schema_version`, theme metadata per answer,
+  `next_crewscore_checks` with published control IDs and suggested CLI). HTML
+  and console show follow-ups for your prompts/CI, not a vendor grade.
+- **Metrics contract** centralizes event/property allowlists in
+  `crewscore/metrics.py` with parity tests against `analytics.js`.
+
+---
+
 ## [0.6.0] — 2026-07-29 — explicit control-policy stabilization
 
 No scoring change. `crewscore-hygiene@0.5.0`, the 23-control denominator,
