@@ -31,6 +31,14 @@ from crewscore.smells import CONTEXT_BLOAT_MAX_LINES
 
 # ─── Fix Patterns ─────────────────────────────────────────────────
 
+# This is deliberately about the templates, not the agent. A complete match
+# against this published text checklist cannot establish runtime behavior,
+# quality, security, or production readiness.
+NO_FIXES_COVERAGE_MESSAGE = (
+    "No matching fix templates are needed for the published written controls. "
+    "This does not assess runtime behavior."
+)
+
 FIX_TEMPLATES: Dict[str, str] = {
     "injection": """
 ## Prompt Injection Defense
@@ -226,7 +234,7 @@ def fix_cost_report(original: str, enhanced: str) -> Dict[str, object]:
 def explain_fixes(fixes: Dict[str, str], *, planned: bool = False) -> str:
     """Human-readable explanation of fixes applied, or planned (dry-run)."""
     if not fixes:
-        return "[OK] No fixes needed - your agent is production-ready."
+        return f"[OK] {NO_FIXES_COVERAGE_MESSAGE}"
 
     if planned:
         lines = [

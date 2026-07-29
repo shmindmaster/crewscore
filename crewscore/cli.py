@@ -876,6 +876,7 @@ def export_eval(prompt, prompt_file, output_dir):
 def fix(prompt, prompt_file, apply, output, plan, as_json, profile):
     """Append recommended guardrail patterns to a system prompt."""
     from crewscore.scorers.fix_patterns import (
+        NO_FIXES_COVERAGE_MESSAGE,
         apply_fixes,
         explain_fixes,
         fix_cost_report,
@@ -1044,7 +1045,7 @@ def fix(prompt, prompt_file, apply, output, plan, as_json, profile):
         console.print()
         if not planned:
             console.print(
-                "  [green]No fixes needed — structural score is already strong.[/green]"
+                f"  [green]{NO_FIXES_COVERAGE_MESSAGE}[/green]"
             )
         else:
             console.print(
@@ -1085,7 +1086,7 @@ def fix(prompt, prompt_file, apply, output, plan, as_json, profile):
         else:
             console.print()
             console.print(
-                "  [green]No fixes needed — structural score is already strong.[/green]"
+                f"  [green]{NO_FIXES_COVERAGE_MESSAGE}[/green]"
             )
             console.print()
         return
