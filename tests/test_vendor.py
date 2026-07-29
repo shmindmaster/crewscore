@@ -1,4 +1,4 @@
-"""Vendor scorecard polish: red flags and pure result builder."""
+"""Vendor checklist: self-attested response summaries, never verdicts."""
 
 from pathlib import Path
 
@@ -48,6 +48,8 @@ def test_json_includes_red_flags():
     payload = json.loads(result.output)
     assert "red_flags" in payload
     assert len(payload["red_flags"]) >= 3
+    assert payload["self_attested"] is True
+    assert payload["not_independent_audit"] is True
 
 
 def test_assess_vendor_report_writes_html(tmp_path: Path):
@@ -70,6 +72,7 @@ def test_assess_vendor_report_writes_html(tmp_path: Path):
     html = report.read_text(encoding="utf-8")
     assert "Acme AI" in html
     assert "crewscore" in html.lower()
+    assert "not an independent audit, certification, or vendor verdict" in html
 
 
 def test_index_html_share_uses_data_attrs_not_json_onclick():
@@ -98,16 +101,14 @@ def test_index_html_escapes_user_titles_before_innerhtml():
     assert "esc(question)" in text
 
 
-def test_index_html_vendor_uses_cli_vendor_tiers_not_agent_tiers():
-    """Web vendor results must use engine vendor tiers (TRUSTED/CAUTION/…)."""
+def test_browser_vendor_checklist_has_no_score_or_verdict_engine():
+    """The browser summarizes responses; it does not score or grade a vendor."""
     text = Path("assets/vendor.js").read_text(encoding="utf-8")
     assert "not a vendor grade" in text
-    # Agent path must not claim vendor uses PRODUCTION READY labels for checklist
     engine = Path("score-engine.js").read_text(encoding="utf-8")
-    assert "TRUSTED" in engine
-    assert "CAUTION" in engine
-    assert "HIGH RISK" in engine
-    assert "vendorTier" in engine
+    assert "scoreVendor" not in engine
+    assert "vendorTier" not in engine
+    assert "TRUSTED" not in engine
 
 
 def test_index_html_hero_is_builder_first():
@@ -151,17 +152,17 @@ def test_index_html_authenticity_line_warns_templates_and_not_red_team():
 
 
 def test_vendor_get_tier_thresholds():
-    """CLI vendor tiers: 80 TRUSTED, 50 CAUTION, 30 HIGH RISK, else RED FLAG."""
+    """Checklist labels describe response follow-up, never vendor quality."""
     from crewscore.vendor_scorecard import get_tier
 
-    assert get_tier(100)[0] == "TRUSTED"
-    assert get_tier(80)[0] == "TRUSTED"
-    assert get_tier(79)[0] == "CAUTION"
-    assert get_tier(50)[0] == "CAUTION"
-    assert get_tier(49)[0] == "HIGH RISK"
-    assert get_tier(30)[0] == "HIGH RISK"
-    assert get_tier(29)[0] == "RED FLAG"
-    assert get_tier(0)[0] == "RED FLAG"
+    assert get_tier(100)[0] == "MOSTLY POSITIVE RESPONSES"
+    assert get_tier(80)[0] == "MOSTLY POSITIVE RESPONSES"
+    assert get_tier(79)[0] == "FOLLOW-UP NEEDED"
+    assert get_tier(50)[0] == "FOLLOW-UP NEEDED"
+    assert get_tier(49)[0] == "MATERIAL GAPS"
+    assert get_tier(30)[0] == "MATERIAL GAPS"
+    assert get_tier(29)[0] == "INSUFFICIENT EVIDENCE"
+    assert get_tier(0)[0] == "INSUFFICIENT EVIDENCE"
 
 
 def test_assess_vendor_report_creates_parent_dirs(tmp_path: Path):

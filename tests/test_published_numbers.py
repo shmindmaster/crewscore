@@ -162,7 +162,8 @@ def test_readme_headline_statistic_matches_the_generated_corpus_report():
     withdrawn study was: a real analysis, quoted from memory. The README says
     "356 real agent prompts" and a median of 14 - both are read back out of
     docs/validation-corpus.json here, so re-running the harness on a different
-    corpus fails this until the copy is updated with it.
+    corpus fails this until the copy is updated with it. The median applies to
+    the production subset, not the combined corpus.
     """
     import json
 
@@ -172,12 +173,17 @@ def test_readme_headline_statistic_matches_the_generated_corpus_report():
     data = json.loads(data_path.read_text(encoding="utf-8"))
     groups = data["groups"]
     total = sum(g["files"] for g in groups.values())
+    production_n = groups["production"]["files"]
     median = groups["production"]["describe"]["median"]
 
     readme = _read("README.md")
     assert f"{total} real agent prompts" in readme, (
         f"README cites a corpus size the harness did not produce ({total})"
     )
-    assert f"median states {median} of 100" in readme.lower(), (
-        f"README cites a median the harness did not produce ({median})"
+    lowered = readme.lower()
+    assert f"{production_n} production prompts" in lowered, (
+        f"README does not scope the median to the production subset ({production_n})"
+    )
+    assert f"median coverage was {median}" in lowered, (
+        f"README cites a production median the harness did not produce ({median})"
     )

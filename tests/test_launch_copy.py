@@ -82,6 +82,29 @@ def test_production_median_is_the_measured_one():
     )
 
 
+def test_production_median_is_scoped_to_the_production_subset():
+    data = _data()
+    production_n = data["groups"]["production"]["files"]
+    median = data["groups"]["production"]["describe"]["median"]
+    # Editorial objection prep quotes 14/100 but is not a launch draft.
+    drafts = _drafts().split("**Comment prep", 1)[0].lower()
+    for match in re.finditer(rf"\b{median}(?:/100| out of 100)\b", drafts):
+        context = drafts[max(0, match.start() - 150) : match.end()]
+        assert (
+            f"{production_n} production" in context
+            or "production median" in context
+        ), f"unscoped production median: {context!r}"
+    assert f"{sum(g['files'] for g in data['groups'].values())} production" not in drafts
+
+
+def test_launch_copy_describes_browser_analytics_without_claiming_nothing_leaves():
+    text = _drafts().lower()
+    assert "nothing leaves your machine" not in text
+    assert "entirely on your own machine" not in text
+    assert "prompt text is never" in text or "prompt never" in text
+    assert "anonymous allowlisted usage events may be sent unless you opt out" in text
+
+
 def test_effect_size_and_p_value_are_the_measured_ones():
     data = _data()
     a = data["analysis"]

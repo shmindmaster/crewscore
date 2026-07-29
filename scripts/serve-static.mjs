@@ -4,6 +4,7 @@ import { extname, normalize, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
+const port = Number(process.env.CREWSCORE_STATIC_PORT || "41731");
 const types = { ".css": "text/css; charset=utf-8", ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".json": "application/json; charset=utf-8", ".svg": "image/svg+xml", ".png": "image/png", ".ico": "image/x-icon" };
 const server = createServer((request, response) => {
   const raw = decodeURIComponent(new URL(request.url, "http://localhost").pathname);
@@ -15,4 +16,4 @@ const server = createServer((request, response) => {
   response.writeHead(200, { "content-type": types[extname(file)] || "application/octet-stream", "cache-control": "no-store" });
   createReadStream(file).pipe(response);
 });
-server.listen(4173, "127.0.0.1", () => console.log("CrewScore static server: http://127.0.0.1:4173"));
+server.listen(port, "127.0.0.1", () => console.log(`CrewScore static server: http://127.0.0.1:${port}`));

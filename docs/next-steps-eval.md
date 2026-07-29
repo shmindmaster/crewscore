@@ -71,4 +71,4 @@ Keep CrewScore in CI even after you add live tools: it is cheap, offline, and ca
 - `crewscore fix` templates can **inflate** the structural number without changing runtime behavior.
 - Live tools can still miss novel attacks; defense in depth remains on you.
 
-See the [Scoring charter](../README.md#scoring-charter) in the README.
+See the [Scoring charter](scoring.md#charter).
