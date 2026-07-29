@@ -68,3 +68,8 @@ Read [scoring governance](docs/scoring-governance.md) before proposing a new
 rule, control, or scoring change. It defines the required provenance,
 validation, browser-regeneration, and changelog work. Security-sensitive
 reports follow [SECURITY.md](SECURITY.md), not public issues.
+
+Use [GitHub Discussions](https://github.com/shmindmaster/crewscore/discussions)
+for questions, adoption feedback, and open-ended ideas. Use an issue form for a
+reproducible defect, a safely redacted scoring report, or a scoped feature
+proposal that is ready for triage.
