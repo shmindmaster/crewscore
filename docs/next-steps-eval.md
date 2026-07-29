@@ -2,7 +2,8 @@
 
 CrewScore is a **structural pre-gate**: offline pattern scan of agent instruction text. It is intentionally *not* a red-team, pen test, or runtime proof.
 
-When the structural score is “good enough” for your team’s hygiene bar, graduate to live testing.
+After selecting the written controls your product needs and protecting them from
+regression, graduate to live testing.
 
 ## What CrewScore already covered
 
@@ -52,7 +53,8 @@ Typical path:
 edit agent instructions
         │
         ▼
- crewscore scan . --threshold 50     # structural hygiene (this repo)
+ crewscore scan . --require human_gate.approval_required,safe_stop.stop_condition
+                                      # example: protect selected written controls
         │
         ▼
  promptfoo eval / red-team           # live response assertions

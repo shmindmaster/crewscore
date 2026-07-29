@@ -470,6 +470,22 @@ def test_fix_no_fixes_needed_json_forced_flag_is_false_for_an_ordinary_prompt(
     assert payload["forced_governance_write"] is False
 
 
+def test_fix_no_fixes_human_copy_stays_within_coverage_claim(tmp_path: Path):
+    """A complete text checklist is not evidence of production readiness."""
+    prompt_file = tmp_path / "system-prompt.md"
+    prompt_file.write_text(STRONG_ENOUGH, encoding="utf-8")
+    runner = CliRunner()
+
+    for suffix in ([], ["--plan"]):
+        result = runner.invoke(main, ["fix", "--prompt-file", str(prompt_file), *suffix])
+        assert result.exit_code == 0, result.output
+        lowered = result.output.lower()
+        assert "no matching fix templates are needed" in lowered
+        assert "does not assess runtime behavior" in lowered
+        assert "production-ready" not in lowered
+        assert "structural score is already strong" not in lowered
+
+
 def test_fix_forced_warning_does_not_claim_a_write_in_plan_mode(tmp_path: Path):
     """--plan writes nothing, so the note must not say it is writing."""
     config = _write_config(tmp_path)

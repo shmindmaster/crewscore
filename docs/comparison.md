@@ -9,12 +9,12 @@ way to lose your trust.
 |------|--------------|------------------|
 | [AgentLinter](https://github.com/seojoonkim/agentlinter) | *"Will this file make the coding agent work well?"* | npm / `npx`, weighted dimensions, cross-file contradiction detection across a workspace |
 | [lintlang](https://github.com/hermes-labs-ai/lintlang) | Static gating for agent configs | Zero-LLM CI linting |
-| **CrewScore** | *"Will this agent hurt someone in production?"* | Governance lens — injection, human gates, audit, compliance — plus offline detection of published configuration smells |
+| **CrewScore** | *"Which published written controls does this system prompt not state?"* | Offline, deterministic coverage findings for system prompts — plus published configuration-smell detection for coding-agent instructions |
 
 If you want agent-config *craft* — clarity, structure, memory layout —
 AgentLinter is aimed squarely at that and is worth your time. CrewScore's lens
-is production governance. They are complementary, and running both is
-reasonable.
+is written-control coverage, not a prediction of runtime behavior. They are
+complementary, and running both is reasonable.
 
 ---
 
@@ -29,7 +29,8 @@ CrewScore is the cheap structural pre-gate. When you need **live** behaviour:
 | Deeper agent red-team | Promptfoo agents, PyRIT, or your own harness |
 
 A structural score does **not** measure jailbreak resistance or multi-turn tool
-abuse. Use those tools once the prompt text has basic hygiene.
+abuse. Use those tools after reviewing the written-control findings relevant to
+your product.
 
 Generate starter stubs (this does **not** run live evals):
 

@@ -7,7 +7,9 @@ import pytest
 from crewscore.scoring import RULESET_ID, build_result, overall_score, score_tier
 from crewscore.scorers.fix_patterns import (
     CONTROL_FIX_TEMPLATES,
+    NO_FIXES_COVERAGE_MESSAGE,
     apply_fixes,
+    explain_fixes,
     generate_fixes,
 )
 from crewscore.scorers.structural_analysis import CONCEPTS, analyze, analyze_with_findings
@@ -362,3 +364,11 @@ def test_apply_fixes_does_not_re_append_guardrails_it_already_added():
     assert len(thrice.splitlines()) == len(twice.splitlines()) == len(
         once.splitlines()
     ), "fix --apply grows the prompt without bound"
+
+
+def test_no_fix_explanation_does_not_overclaim_runtime_behavior():
+    rendered = explain_fixes({})
+    assert NO_FIXES_COVERAGE_MESSAGE in rendered
+    lowered = rendered.lower()
+    assert "production-ready" not in lowered
+    assert "runtime behavior" in lowered

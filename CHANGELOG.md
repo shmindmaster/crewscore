@@ -21,6 +21,12 @@ numeric JSON fields, and Action outputs are unchanged.
 
 ### Fixed
 
+- **Coverage language now stays coverage language.** The `fix` no-change path
+  no longer calls an agent production-ready or treats a structural result as
+  strong. The public comparison and live-eval guidance now describe published
+  written-control findings and selected-control policies, rather than claiming
+  to predict production harm or recommending an arbitrary score threshold.
+
 - **Browser control suggestions now satisfy exactly the control they name.**
   The controls-first reviewer rescans the in-browser text after applying a
   selected suggestion. Ten terse suggestions previously matched no published
