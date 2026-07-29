@@ -25,6 +25,7 @@ test("demo produces controls-first results and an editable review", async ({ pag
 test("applying one selected control rescans the browser-local text", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Try a 10-second demo" }).click();
+  await expect(page.getByRole("heading", { name: /written guardrails found/ })).toBeVisible();
   await page.getByRole("button", { name: "Review suggested guardrails" }).click();
   // The reviewer intentionally limits its suggestions to the highest-priority
   // missing controls. Verify the selected control's effect without coupling
@@ -103,9 +104,9 @@ test("keyboard help dialog restores focus and clipboard/popup fallbacks remain u
   if (testInfo.project.name === "chromium") {
     await page.getByRole("button", { name: "Copy result link" }).click();
     await expect(page.locator("#toast")).toBeVisible();
+    await page.getByRole("button", { name: "X", exact: true }).click();
+    await expect(page.locator("#toast")).toContainText("blocked");
   }
-  await page.getByRole("button", { name: "X", exact: true }).click();
-  await expect(page.locator("#toast")).toContainText("blocked");
 });
 
 test("prompt content does not appear in a network request and local scoring survives offline", async ({ page, context }) => {
