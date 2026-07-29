@@ -49,4 +49,7 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium firefox webkit
       - name: Run browser tests
-        run: npm run test:web
+        # The shared DigitalOcean host has one runner. Serialize Playwright so
+        # Firefox/WebKit do not contend for its browser resources; all browser
+        # projects still run on every non-deploying validation pass.
+        run: npm run test:web -- --workers=1
