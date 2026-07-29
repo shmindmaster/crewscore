@@ -2,7 +2,9 @@
 
 # CrewScore
 
-### A governance checklist for AI agent prompts — coverage, not a quality score
+### What did you forget to tell your AI agent?
+
+**Find the guardrails your agent prompt never mentions** — prompt injection, hallucination, runaway cost, missing human approval, no stop condition.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11+-green.svg)](https://python.org)

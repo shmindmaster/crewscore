@@ -80,7 +80,7 @@ def main() -> int:
     d.text((88, 92), "CrewScore", font=f_brand, fill=WHITE)
     d.text(
         (88, 172),
-        "Governance checklist for AI agent prompts",
+        "What did you forget to tell your AI agent?",
         font=f_tag,
         fill=MUTED,
     )

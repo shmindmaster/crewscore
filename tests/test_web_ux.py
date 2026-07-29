@@ -324,7 +324,14 @@ def test_hero_frames_the_number_as_coverage_not_quality():
     """A visitor who reads nothing but the hero must still learn that the
     number does not rank prompt quality — and see the figure that says so."""
     html = _html()
-    assert "See which governance rules your prompt does not state" in html
+    # The headline speaks to the reader's actual fear - the agent doing
+    # something they never told it not to - rather than to a compliance
+    # department. "Governance" described real failure modes in words only
+    # an auditor uses, and it is also a bigger claim than we make.
+    assert "forget to tell your AI agent" in html
+    for mode in ("prompt injection", "hallucination", "runaway cost"):
+        assert mode in html.lower(), mode
+    # Reframing the pitch must not soften the limit.
     assert "Coverage, not a quality ranking." in html
     # The evidence travels with the claim, not only behind a link. The corpus
     # study was withdrawn; the figure that ships is the one anyone can
@@ -385,7 +392,12 @@ def test_readme_headline_is_a_checklist_not_a_score():
     the length-matched study could not demonstrate."""
     md = _readme()
     assert "Free structural score for AI agent prompts" not in md
-    assert "### A governance checklist for AI agent prompts" in md
+    # Names the failure modes rather than the compliance category, and
+    # still never calls the number a "score" in the headline.
+    assert "forget to tell your AI agent" in md
+    assert "prompt injection" in md.lower()
+    headline = next(line for line in md.splitlines() if line.startswith("### "))
+    assert "score" not in headline.lower(), headline
 
 
 def test_readme_links_validation_study_above_the_fold():

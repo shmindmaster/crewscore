@@ -190,8 +190,11 @@ def test_pyproject_description_does_not_overclaim_production_readiness():
     assert "production-readiness" not in lowered
     assert "production readiness" not in lowered
     assert "certif" not in lowered
-    assert "governance guardrail coverage" in lowered
-    assert "configuration smells" in lowered
+    # The description must say what the tool finds, in the words a
+    # developer would use, without claiming it prevents any of it.
+    assert "guardrails" in lowered or "failure modes" in lowered
+    for promise in ("prevent", "protect", "secure your", "guarantee"):
+        assert promise not in lowered, promise
 
 
 def test_scoring_method_constant_honest():

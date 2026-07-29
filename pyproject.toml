@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "crewscore"
 version = "0.4.0"
-description = "CrewScore - deterministic offline checker for AI agent prompts and coding-agent config: governance guardrail coverage and configuration smells, with explainable per-rule findings and a CI gate."
+description = "Find the guardrails your AI agent prompt forgot: which of eight failure modes - prompt injection, hallucination, runaway cost, missing human approval and more - the text never guards against. Offline, deterministic, explainable per-rule findings, with a CI gate."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
