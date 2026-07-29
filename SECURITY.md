@@ -7,8 +7,8 @@ chain dependency.
 
 ## Report privately
 
-Use the repository's private vulnerability-reporting flow when it is available.
-If it is not available, email [sarosh@pendoah.ai](mailto:sarosh@pendoah.ai)
+Use GitHub's [private vulnerability reporting flow](https://github.com/shmindmaster/crewscore/security/advisories/new).
+If GitHub is unavailable to you, email [sarosh@pendoah.ai](mailto:sarosh@pendoah.ai)
 with `CrewScore security report` in the subject line. Do not include secrets,
 customer prompts, or exploit payloads in a public GitHub issue.
 
