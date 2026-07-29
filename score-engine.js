@@ -4,8 +4,8 @@
 /** CrewScore browser scorer — generated from Python. Do not edit by hand. */
 (function (global) {
   const ENGINE = {
-  "version": "0.1.0",
-  "ruleset": "crewscore-hygiene@0.1.0",
+  "version": "0.3.0",
+  "ruleset": "crewscore-hygiene@0.3.0",
   "dimensions": [
     {
       "key": "injection",
@@ -48,15 +48,15 @@
       ],
       [
         "injection.02",
-        "do\\s+not\\s+(follow|obey|listen)\\s+to\\s+(user|input).*(system|instruction)"
+        "do\\s+not\\s+(follow|obey|listen)\\s+to\\s+(user|input).{0,200}(system|instruction)"
       ],
       [
         "injection.03",
-        "system\\s+prompt.*(?:confidential|private|do\\s+not\\s+reveal)"
+        "system\\s+prompt.{0,200}(?:confidential|private|do\\s+not\\s+reveal)"
       ],
       [
         "injection.04",
-        "reject.*(?:inject|override|manipulat)"
+        "reject.{0,200}(?:inject|override|manipulat)"
       ],
       [
         "injection.05",
@@ -71,14 +71,18 @@
         "you\\s+cannot\\s+be\\s+(instructed|told|asked)\\s+to\\s+(ignore|override)"
       ],
       [
+        "injection.09",
+        "(?:as\\s+)?data[,;]?\\s*(?:and\\s+)?not\\s+(?:as\\s+)?(?:command|instruction|directive)|(?:ignore|disregard|reject|never\\s+(?:follow|obey|execute|trust)|do\\s+not\\s+(?:follow|obey|execute|act\\s+on|trust)).{0,200}(?:instruction|command|directive|prompt)s?.{0,200}(?:user|external|retrieved|untrusted|tool|third.party|embedded|injected|inserted)|(?:instruction|command|directive)s?\\s+(?:embedded|contained|found|appearing|included)\\s+(?:in|within|inside)\\s+(?:the\\s+|any\\s+)?(?:user|external|retrieved|untrusted|tool|third.party)"
+      ],
+      [
         "injection.08",
-        "(?:prompt\\s+)?(?:injection|jailbreak).*(?:defen|guard|protect|resist)|(?:defen|guard|protect|resist).*(?:prompt\\s+)?(?:injection|jailbreak)|safety\\s+(?:boundar|constraint|policy|policies|rule)|guardrail\\s+(?:against|for|on|policy|policies)"
+        "(?:prompt\\s+)?(?:injection|jailbreak).{0,200}(?:defen|guard|protect|resist)|(?:defen|guard|protect|resist).{0,200}(?:prompt\\s+)?(?:injection|jailbreak)|safety\\s+(?:boundar|constraint|policy|policies|rule)|guardrail\\s+(?:against|for|on|policy|policies)"
       ]
     ],
     "hallucination": [
       [
         "hallucination.01",
-        "do\\s+not\\s+(?:fabricat|invent|make\\s+up|generat).*(?:fact|data|citation|source|number)"
+        "do\\s+not\\s+(?:fabricat|invent|make\\s+up|generat).{0,200}(?:fact|data|citation|source|number)"
       ],
       [
         "hallucination.02",
@@ -86,7 +90,7 @@
       ],
       [
         "hallucination.03",
-        "only\\s+(?:use|cite|reference)\\s+(?:provided|given|available|verified)\\s+(?:data|information|sources|context)"
+        "only\\s+(?:use|cite|reference|rely\\s+on)\\s+(?:(?:provided|given|available|verified|supplied|trusted|approved)[,\\s]+)+(?:data|information|sources?|context|material|documents?)"
       ],
       [
         "hallucination.04",
@@ -106,7 +110,7 @@
       ],
       [
         "hallucination.08",
-        "recommend.*(?:consult|doctor|professional|specialist|expert)"
+        "recommend.{0,200}(?:consult|doctor|professional|specialist|expert)"
       ]
     ],
     "citation": [
@@ -168,11 +172,11 @@
       ],
       [
         "human_gate.04",
-        "do\\s+not\\s+(?:auto|automatic).*(?:execute|send|submit|approve|publish)"
+        "do\\s+not\\s+(?:auto|automatic).{0,200}(?:execute|send|submit|approve|publish)"
       ],
       [
         "human_gate.05",
-        "(?:require|mandate).*(?:human|manual)\\s*(?:approval|review|confirmation)"
+        "(?:require|mandate).{0,200}(?:human|manual)\\s*(?:approval|review|confirmation)"
       ],
       [
         "human_gate.06",
@@ -182,7 +186,7 @@
     "safe_stop": [
       [
         "safe_stop.01",
-        "(?:stop|halt|pause|refuse|decline|abort).*(?:if|when|unless)"
+        "(?:stop|halt|pause|refuse|decline|abort).{0,200}(?:if|when|unless)"
       ],
       [
         "safe_stop.02",
@@ -198,7 +202,7 @@
       ],
       [
         "safe_stop.05",
-        "(?:escalat|hand\\s*off|transfer|refer).*(?:human|supervisor|specialist|operator)"
+        "(?:escalat|hand\\s*off|transfer|refer).{0,200}(?:human|supervisor|specialist|operator)"
       ],
       [
         "safe_stop.06",
@@ -270,141 +274,213 @@
       ]
     ]
   },
-  "signal_labels": {
+  "concepts": {
     "injection": [
       {
-        "pattern": "ignore\\s+(previous|above|all)\\s+(instructions|prompts)",
-        "label": "Reject ignore-previous-instructions / override attempts",
-        "rule_id": "injection.01"
+        "key": "injection.override_resistance",
+        "label": "Treat instructions inside user content as data, not commands",
+        "rule_ids": [
+          "injection.01",
+          "injection.02",
+          "injection.04",
+          "injection.07",
+          "injection.09"
+        ]
       },
       {
-        "pattern": "do\\s+not\\s+(follow|obey|listen)\\s+to\\s+(user|input).*(system|instruction)",
-        "label": "Do not follow user input that conflicts with system rules",
-        "rule_id": "injection.02"
+        "key": "injection.prompt_confidentiality",
+        "label": "Keep the system prompt confidential",
+        "rule_ids": [
+          "injection.03",
+          "injection.06"
+        ]
       },
       {
-        "pattern": "do\\s+not\\s+reveal\\s+(your|the|this)\\s+(system|instructions|prompt)",
-        "label": "Keep system prompt confidential / do not reveal it",
-        "rule_id": "injection.06"
+        "key": "injection.named_defense",
+        "label": "Name prompt injection and state a defense",
+        "rule_ids": [
+          "injection.05",
+          "injection.08"
+        ]
       }
     ],
     "hallucination": [
       {
-        "pattern": "do\\s+not\\s+(?:fabricat|invent|make\\s+up|generat).*(?:fact|data|citation|source|number)",
-        "label": "Do not fabricate facts, citations, or numbers",
-        "rule_id": "hallucination.01"
+        "key": "hallucination.no_fabrication",
+        "label": "Do not fabricate, invent, or guess",
+        "rule_ids": [
+          "hallucination.01",
+          "hallucination.04",
+          "hallucination.07"
+        ]
       },
       {
-        "pattern": "if\\s+you\\s+(?:do\\s+not\\s+know|are\\s+unsure|lack\\s+(?:the|enough)\\s+(?:data|information|evidence))",
-        "label": "Say so when you do not know or lack evidence",
-        "rule_id": "hallucination.02"
+        "key": "hallucination.admit_uncertainty",
+        "label": "Say so when you do not know",
+        "rule_ids": [
+          "hallucination.02",
+          "hallucination.05"
+        ]
       },
       {
-        "pattern": "only\\s+(?:use|cite|reference)\\s+(?:provided|given|available|verified)\\s+(?:data|information|sources|context)",
-        "label": "Only use provided / verified data",
-        "rule_id": "hallucination.03"
+        "key": "hallucination.grounding",
+        "label": "Ground answers in provided sources",
+        "rule_ids": [
+          "hallucination.03",
+          "hallucination.06"
+        ]
+      },
+      {
+        "key": "hallucination.defer_to_expert",
+        "label": "Defer to a qualified professional",
+        "rule_ids": [
+          "hallucination.08"
+        ]
       }
     ],
     "citation": [
       {
-        "pattern": "\\bcitations?\\b|\\bcite\\s+(?:the|its|each|every|all|your|sources?)|source\\s+link|\\bfootnotes?\\b",
-        "label": "Require citations, references, or source links",
-        "rule_id": "citation.01"
+        "key": "citation.require",
+        "label": "Require citations for claims",
+        "rule_ids": [
+          "citation.01",
+          "citation.03"
+        ]
       },
       {
-        "pattern": "every\\s+(?:claim|statement|answer|output)\\s+must\\s+(?:cite|reference|include)",
-        "label": "Every claim must cite its source",
-        "rule_id": "citation.03"
+        "key": "citation.link_source",
+        "label": "Link each claim to its source",
+        "rule_ids": [
+          "citation.02",
+          "citation.04"
+        ]
       },
       {
-        "pattern": "link\\s+(?:to|back\\s+to)\\s+(?:the|its|each)\\s+(?:source|evidence|document)",
-        "label": "Link claims back to source evidence",
-        "rule_id": "citation.04"
+        "key": "citation.inline_marker",
+        "label": "Use an inline citation marker format",
+        "rule_ids": [
+          "citation.05"
+        ]
       }
     ],
     "cost": [
       {
-        "pattern": "(?:token|cost|budget|spend)\\s*(?:limit|cap|max|ceiling|threshold)",
-        "label": "Token / cost / budget limit or cap",
-        "rule_id": "cost.01"
+        "key": "cost.budget_cap",
+        "label": "Cap spend, tokens, or rate",
+        "rule_ids": [
+          "cost.01",
+          "cost.03",
+          "cost.04"
+        ]
       },
       {
-        "pattern": "(?:max|maximum)\\s*(?:token|tokens|length|response)",
-        "label": "Max token or response length constraint",
-        "rule_id": "cost.02"
-      },
-      {
-        "pattern": "(?:rate|cost)\\s*limit",
-        "label": "Rate or cost limiting",
-        "rule_id": "cost.03"
+        "key": "cost.output_bound",
+        "label": "Bound output length",
+        "rule_ids": [
+          "cost.02",
+          "cost.05"
+        ]
       }
     ],
     "human_gate": [
       {
-        "pattern": "(?:human|user|supervisor|operator|reviewer|staff|manager)\\s*(?:must|shall|should|needs?\\s+to)\\s*(?:approve|review|confirm|verify|check|validate)",
-        "label": "Human / supervisor must approve or review",
-        "rule_id": "human_gate.01"
+        "key": "human_gate.approval_required",
+        "label": "A human must approve",
+        "rule_ids": [
+          "human_gate.01",
+          "human_gate.02",
+          "human_gate.05",
+          "human_gate.06"
+        ]
       },
       {
-        "pattern": "(?:human|human-in-the-loop|hitl|manual)\\s*(?:review|approval|gate|checkpoint|oversight)",
-        "label": "Human-in-the-loop review or approval gate",
-        "rule_id": "human_gate.02"
-      },
-      {
-        "pattern": "(?:before|prior\\s+to)\\s*(?:execut|send|submit|releas|publish|deploy)",
-        "label": "Approval required before execute / send / publish",
-        "rule_id": "human_gate.03"
+        "key": "human_gate.no_autonomous_action",
+        "label": "Do not act autonomously before approval",
+        "rule_ids": [
+          "human_gate.03",
+          "human_gate.04"
+        ]
       }
     ],
     "safe_stop": [
       {
-        "pattern": "(?:stop|halt|pause|refuse|decline|abort).*(?:if|when|unless)",
-        "label": "Stop / halt / refuse when conditions are unmet",
-        "rule_id": "safe_stop.01"
+        "key": "safe_stop.stop_condition",
+        "label": "Stop or refuse rather than proceed",
+        "rule_ids": [
+          "safe_stop.01",
+          "safe_stop.04",
+          "safe_stop.06",
+          "safe_stop.07"
+        ]
       },
       {
-        "pattern": "(?:insufficient|missing|incomplete|unclear|ambiguous)\\s*(?:data|evidence|information|context|instruction)",
-        "label": "Handle missing or insufficient evidence",
-        "rule_id": "safe_stop.02"
+        "key": "safe_stop.uncertainty_trigger",
+        "label": "Name what triggers stopping",
+        "rule_ids": [
+          "safe_stop.02",
+          "safe_stop.03"
+        ]
       },
       {
-        "pattern": "(?:escalat|hand\\s*off|transfer|refer).*(?:human|supervisor|specialist|operator)",
-        "label": "Escalate to a human supervisor",
-        "rule_id": "safe_stop.05"
+        "key": "safe_stop.escalate",
+        "label": "Escalate to a human",
+        "rule_ids": [
+          "safe_stop.05"
+        ]
       }
     ],
     "audit": [
       {
-        "pattern": "(?:log|record|track|trace|audit)\\s*(?:trail|history|event|action|decision|every|all|each)",
-        "label": "Log or audit trail for actions and decisions",
-        "rule_id": "audit.01"
+        "key": "audit.log_actions",
+        "label": "Log actions and decisions",
+        "rule_ids": [
+          "audit.01",
+          "audit.02",
+          "audit.03"
+        ]
       },
       {
-        "pattern": "audit\\s+(?:trail|log|record)|\\bprovenance\\b|\\baccountab|immutable\\s+log|log\\s+(?:every|all|each)\\b",
-        "label": "Audit / logging / provenance accountability",
-        "rule_id": "audit.02"
+        "key": "audit.tamper_evident",
+        "label": "Keep the log tamper-evident",
+        "rule_ids": [
+          "audit.04"
+        ]
       },
       {
-        "pattern": "immutable|append.only|tamper.proof|write.once",
-        "label": "Immutable or append-only audit trail",
-        "rule_id": "audit.04"
+        "key": "audit.actor_attribution",
+        "label": "Record who did what and when",
+        "rule_ids": [
+          "audit.05"
+        ]
       }
     ],
     "compliance": [
       {
-        "pattern": "\\bhipaa\\b|\\bphi\\b|protected\\s+health|patient\\s+data|\\bbaa\\b|business\\s+associate",
-        "label": "HIPAA / PHI / protected health data handling",
-        "rule_id": "compliance.01"
+        "key": "compliance.named_regime",
+        "label": "Name the regime that applies",
+        "rule_ids": [
+          "compliance.01",
+          "compliance.02",
+          "compliance.03",
+          "compliance.04",
+          "compliance.05",
+          "compliance.06",
+          "compliance.07"
+        ]
       },
       {
-        "pattern": "(?:soc\\s*2|soc2|system\\s+and\\s+organization\\s+controls)",
-        "label": "SOC 2 controls",
-        "rule_id": "compliance.02"
+        "key": "compliance.stated_obligation",
+        "label": "State that legal or regulatory constraints apply",
+        "rule_ids": [
+          "compliance.08"
+        ]
       },
       {
-        "pattern": "(?:gdpr|general\\s+data\\s+protection|data\\s+protection\\s+regulation)",
-        "label": "GDPR / data protection requirements",
-        "rule_id": "compliance.03"
+        "key": "compliance.data_protection",
+        "label": "State a data-protection technique",
+        "rule_ids": [
+          "compliance.09"
+        ]
       }
     ]
   },
@@ -509,10 +585,31 @@
   ]
 };
 
-  function scoreFromMatchCount(matches, total) {
-    if (!total || matches === 0) return 0;
-    const raw = matches / total;
-    return Math.min(100, Math.round(15 + raw * 85));
+  // Mirrors structural_analysis.score_from_concepts. Integer round-half-up
+  // rather than Math.round on a float: Python's round() is half-to-even, so a
+  // dimension with 8 controls would score 12 there and 13 here off one covered
+  // control. Integer arithmetic makes the two engines agree by construction.
+  function scoreFromConcepts(covered, total) {
+    if (!total || covered === 0) return 0;
+    return Math.floor((100 * covered + Math.floor(total / 2)) / total);
+  }
+
+  function coveredConcepts(key, matchedIds) {
+    return (ENGINE.concepts[key] || []).filter((c) =>
+      c.rule_ids.some((id) => matchedIds.has(id))
+    );
+  }
+
+  function missingFinding(key, concept) {
+    const entry = {
+      dimension: key,
+      status: "missing",
+      pattern_or_reason: concept.label,
+      snippet: null,
+      concept: concept.key,
+    };
+    if (concept.rule_ids.length) entry.rule_id = concept.rule_ids[0];
+    return entry;
   }
 
   // Python's \b and \d are Unicode-aware. JavaScript's are ASCII-only, and the
@@ -601,16 +698,8 @@
       const findings = [];
       for (const key of dimOrder) {
         scores[key] = 0;
-        const signals = ENGINE.signal_labels[key] || [];
-        for (const s of signals.slice(0, 3)) {
-          const entry = {
-            dimension: key,
-            status: "missing",
-            pattern_or_reason: s.label,
-            snippet: null,
-          };
-          if (s.rule_id) entry.rule_id = s.rule_id;
-          findings.push(entry);
+        for (const c of ENGINE.concepts[key] || []) {
+          findings.push(missingFinding(key, c));
         }
       }
       return {
@@ -629,42 +718,31 @@
     for (const key of dimOrder) {
       const patterns = ENGINE.patterns[key] || [];
       const hits = matchPatterns(promptLower, patterns);
-      scores[key] = scoreFromMatchCount(hits.length, patterns.length);
+      const matchedIds = new Set(hits.map((h) => h.ruleId));
+      const snippetFor = {};
+      for (const h of hits) snippetFor[h.ruleId] = h.snippet;
 
-      for (const h of hits.slice(0, 3)) {
-        const entry = {
-          dimension: key,
-          status: "matched",
-          pattern_or_reason: h.pattern,
-          snippet: h.snippet,
-        };
-        if (h.ruleId) entry.rule_id = h.ruleId;
-        findings.push(entry);
-      }
+      const concepts = ENGINE.concepts[key] || [];
+      const covered = coveredConcepts(key, matchedIds);
+      scores[key] = scoreFromConcepts(covered.length, concepts.length);
 
-      let missingCount = 0;
-      for (const s of ENGINE.signal_labels[key] || []) {
-        if (missingCount >= 3) break;
-        const re = safeRegExp(s.pattern);
-        const matched = re ? re.test(promptLower) : false;
-        if (matched) continue;
-        const entry = {
-          dimension: key,
-          status: "missing",
-          pattern_or_reason: s.label,
-          snippet: null,
-        };
-        if (s.rule_id) entry.rule_id = s.rule_id;
-        findings.push(entry);
-        missingCount += 1;
-      }
-      if (!hits.length && missingCount === 0) {
+      // One finding per control, not per regex: reporting every synonym that
+      // fired would tell a reader who stated one control three ways that they
+      // have three, which is the double-count the score itself used to make.
+      const coveredKeys = new Set(covered.map((c) => c.key));
+      for (const c of covered) {
+        const fired = c.rule_ids.find((id) => matchedIds.has(id));
         findings.push({
           dimension: key,
-          status: "missing",
-          pattern_or_reason: "No " + key + " guardrail signals detected",
-          snippet: null,
+          status: "matched",
+          pattern_or_reason: c.label,
+          snippet: snippetFor[fired],
+          rule_id: fired,
+          concept: c.key,
         });
+      }
+      for (const c of concepts) {
+        if (!coveredKeys.has(c.key)) findings.push(missingFinding(key, c));
       }
     }
 

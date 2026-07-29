@@ -274,7 +274,7 @@ def test(
         payload = result.to_dict()
         if result.governance_applicable:
             # `findings` (matched/missing governance rules) and
-            # `transparency` (the 15+85*matches/total_rules formula) are the
+            # `transparency` (the controls-covered formula) are the
             # apparatus of a governance grade. Coding-agent config already
             # has `overall`/`dimensions` withheld; publishing these two would
             # let a reader reconstruct a score from them alone.
@@ -324,9 +324,9 @@ def test(
         else:
             console.print(
                 "[dim]How scored: each dimension = "
-                "min(100, round(15+85×matches/total_rules)); "
+                "the share of that dimension's controls your prompt states; "
                 "overall = mean of 8 dimensions. "
-                "List every rule: [bold]crewscore rules[/bold] "
+                "See the controls: [bold]crewscore rules --concepts[/bold] "
                 "· machine: [bold]crewscore rules --json[/bold][/dim]"
             )
             console.print()
@@ -522,21 +522,72 @@ def _render_findings(findings: list[dict]) -> None:
     help="Emit full open rule catalog as JSON",
 )
 @click.option(
+    "--concepts",
+    "show_concepts",
+    is_flag=True,
+    help="Show the controls each dimension scores on (the score denominator)",
+)
+@click.option(
     "--dimension",
     "-d",
     default=None,
     type=click.Choice([k for _, k in DIMENSIONS], case_sensitive=True),
     help="Filter to one dimension key",
 )
-def rules_cmd(as_json: bool, dimension: str | None):
+def rules_cmd(as_json: bool, show_concepts: bool, dimension: str | None):
     """List every scoring rule — CrewScore is not a black box.
 
     Prints the ruleset id, scoring formula, and each rule_id + regex.
+
+    A dimension scores on how many of its *controls* the prompt states, and
+    several rules can be alternative phrasings of one control. Run
+    `crewscore rules --concepts` to see that grouping — it is the denominator
+    of every dimension score.
+
     Machine form: crewscore rules --json
     """
     payload = catalog_payload(dimension=dimension)
     if as_json:
         click.echo(json.dumps(payload, indent=2, sort_keys=True))
+        return
+
+    if show_concepts:
+        console.print()
+        console.print(
+            Panel(
+                f"[bold]{BRAND} — Controls each dimension scores on[/bold]",
+                border_style="cyan",
+                expand=False,
+            )
+        )
+        console.print()
+        console.print(f"  {payload['method']['dimension_score_formula']}")
+        console.print()
+        current = None
+        for c in payload["concepts"]:
+            if c["dimension"] != current:
+                current = c["dimension"]
+                total = sum(
+                    1 for x in payload["concepts"] if x["dimension"] == current
+                )
+                console.print()
+                console.print(
+                    f"  [bold]{c['dimension_label']}[/bold] ({current}) — "
+                    f"{total} controls, {c['points']} points each"
+                )
+            console.print(f"    [cyan]{c['label']}[/cyan]")
+            console.print(
+                f"      [dim]{c['concept']} · any of: "
+                f"{', '.join(c['rule_ids'])}[/dim]"
+            )
+        console.print()
+        console.print(
+            f"  {payload['control_count']} controls across "
+            f"{payload['rule_count']} rules. "
+            "Rules within a control are alternative phrasings — stating one "
+            "control several ways scores it once."
+        )
+        console.print()
         return
 
     console.print()

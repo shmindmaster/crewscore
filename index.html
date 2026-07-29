@@ -12,10 +12,10 @@
 <meta property="og:image" content="https://crewscore.ai/docs/social-card.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="CrewScore. 28/100 - what a prompt scores when it states all eight governance controls clearly. The lowest tier starts at 50.">
+<meta property="og:image:alt" content="CrewScore. 23 controls an AI agent prompt should state. See which ones yours is missing, free, in your browser.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="What did you forget to tell your AI agent?">
-<meta name="twitter:description" content="A prompt that states all eight governance controls clearly scores 28/100 on our own tool. Coverage, not a quality ranking - and we published why.">
+<meta name="twitter:description" content="Paste your agent prompt and see which of 23 controls it never states - injection, hallucination, runaway cost, human approval. Coverage, not a quality ranking.">
 <meta name="twitter:image" content="https://crewscore.ai/docs/social-card.png">
 <link rel="canonical" href="https://crewscore.ai/">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -507,7 +507,7 @@ body.sheet-open{overflow:hidden}
     <p class="sub">Paste your system prompt. See which of the eight ways agents go wrong it never mentions - <strong>prompt injection, hallucination, runaway cost, no human approval, no stop condition</strong>. Same open rules as the CLI. <strong>Not a red-team.</strong>
       <button type="button" class="linkish" id="link-how-score">How the number is computed</button>
     </p>
-    <p class="trust"><strong>Coverage, not a quality ranking.</strong> You can prove that from the shipped rules: a prompt that states all eight governance controls clearly, once each, scores <strong>28/100</strong> - below the lowest tier. Stating every one of them twice reaches only 41/100. A high score is unreachable by clear writing; it needs the same control restated four to six different ways, which is exactly the redundancy our own Context Bloat detector flags. A low score tells you what you have not written down. A high score means the text is present - nothing more. <a href="https://github.com/shmindmaster/crewscore/blob/main/docs/validation.md" target="_blank" rel="noopener">Read the validation study</a>.</p>
+    <p class="trust"><strong>Coverage, not a quality ranking.</strong> The number is the share of <strong>23 published controls</strong> your prompt states - you can print the whole list with <code>crewscore rules --concepts</code>. Restating one control five ways scores it once, by design. A low score tells you what you have not written down. A high score means the text is present - not that the agent obeys it, and not that this prompt beats one scoring lower. Through 0.1.0 the scale was broken and we published the arithmetic; 0.3.0 fixed it. <a href="https://github.com/shmindmaster/crewscore/blob/main/docs/validation.md" target="_blank" rel="noopener">Read the validation study</a>.</p>
   </section>
 
   <nav class="stages" aria-label="Preflight stages">
@@ -583,7 +583,7 @@ body.sheet-open{overflow:hidden}
     <a href="https://github.com/shmindmaster/crewscore">Open source on GitHub</a>
     · structural scan only · templates must be paired with runtime gates<br>
     Same rules in the browser and the CLI. The number is coverage, not quality -
-    stating all eight controls clearly, once each, scores 28/100:
+    the share of 23 published controls your prompt states:
     <a href="https://github.com/shmindmaster/crewscore/blob/main/docs/validation.md" target="_blank" rel="noopener">read the validation study</a>.<br>
     Scoring stays in your browser. Anonymous, allowlisted usage events exclude prompt text and person profiles.
   </footer>
@@ -709,9 +709,9 @@ body.sheet-open{overflow:hidden}
     if (head) head.textContent = c.head;
   }
   /* Verdict wording describes coverage of stated controls only. It must not
-     read as a judgment of the prompt: the formula makes a high score
-     unreachable by clear writing, so it cannot rank prompts against each
-     other. See docs/validation.md. */
+     read as a judgment of the prompt: covering every control means the text is
+     present, not that it is well specified or that the agent obeys it, so this
+     cannot rank prompts against each other. See docs/validation.md. */
   function friendlyTier(overall) {
     if (overall >= 90) return "Nearly every control stated in text";
     if (overall >= 70) return "Most controls stated - gaps remain";
@@ -882,7 +882,7 @@ body.sheet-open{overflow:hidden}
     if (kind === "vendor") {
       return `We scored an AI vendor ${overall}/100 (${tierName}) with CrewScore — free structural diligence checklist. Not an audit. Try yours: ${location.origin}`;
     }
-    return `My agent prompt covers ${overall}/100 of CrewScore's governance checklist (${tierName}). That is coverage, not a quality ranking - CrewScore is a checklist, not a benchmark: stating all eight controls clearly, once each, only scores 28/100. Check yours free (no install): ${location.origin}`;
+    return `My agent prompt states ${overall}% of CrewScore's 23 agent-guardrail controls (${tierName}). That is coverage, not a quality ranking - CrewScore is a checklist, not a benchmark. Check yours free (no install): ${location.origin}`;
   }
 
   /**
@@ -991,10 +991,9 @@ body.sheet-open{overflow:hidden}
        is the element people screenshot, and it is read with nothing else on
        screen. Figures are from docs/validation.md and pinned by tests. */
     html += `<p class="trust" style="margin:.2rem 0 .7rem">
-      <strong>This number is coverage, not quality.</strong> It counts how many of
-      the 8 governance controls this text states, and how many different ways.
-      Stating all eight clearly, once each, scores only 28/100 - the top of the
-      scale is reachable solely by restating the same control four to six ways.
+      <strong>This number is coverage, not quality.</strong> It is the share of
+      23 published controls this text states. Rules within a control are
+      alternative phrasings, so restating one control five ways scores it once.
       A high number means the text is present -
       not that the agent will obey it, and not that this prompt beats one scoring
       lower. Read the missing rules below, not the total.
@@ -1033,9 +1032,9 @@ body.sheet-open{overflow:hidden}
       <details class="how" id="how-score-details"${openHowNext || opts.openHow ? " open" : ""}>
         <summary>How this number is computed</summary>
         <div class="formula">Ruleset <code>${escapeHtml(String(ruleset))}</code> · deterministic regex · open rule_ids<br>
-        dim = min(100, round(15+85×matches/rules)); overall = mean of 8 dims<br>
+        dim = share of that dimension's controls the prompt states; overall = mean of 8 dims<br>
         Coverage of stated controls only - never validated as a ranking of prompt quality.<br>
-        All 8 controls stated clearly, once each = 28/100; twice = 41/100. Clear writing cannot reach the top tiers.<br>
+        23 controls across 8 dimensions. Several rules can be alternative phrasings of one control; a control counts once however many times it is stated. <code>crewscore rules --concepts</code><br>
         cost, compliance and audit ship with known-poor construct validity (5 patterns each for cost and audit; compliance is keyword detection, graded author-intuition) - read a 0 there with suspicion.<br>
         CLI: <code>crewscore rules --json</code> · Templates can inflate this number.</div>
       </details>
@@ -1221,8 +1220,8 @@ body.sheet-open{overflow:hidden}
     const ci = `# Gate governance-checklist coverage (structural only - not a red-team)
 # This gates whether controls are stated in the prompt text. It is not a
 # quality bar and not a safety bar - see docs/validation.md.
-# Stating all 8 controls clearly, once each, scores 28/100, so set the
-# threshold against what your files actually score, not against the tier ladder.
+# Set the threshold against what your files actually score, not against the
+# tier ladder - 100 means every control is written down, nothing more.
 - uses: shmindmaster/crewscore@v2
   with:
     scan-path: "."

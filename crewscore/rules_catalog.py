@@ -10,8 +10,9 @@ from typing import Any
 
 from crewscore.scoring import DIMENSIONS, RULESET_ID, overall_score, score_tier
 from crewscore.scorers.structural_analysis import (
-    DIMENSION_SIGNAL_LABELS,
+    CONCEPTS,
     PATTERN_RULE_IDS,
+    RULE_LABELS,
     SCORER_MAP,
 )
 
@@ -135,13 +136,23 @@ SCORING_METHOD: dict[str, Any] = {
     "api_key_required": False,
     "ruleset": RULESET_ID,
     "dimension_score_formula": (
-        "matches = count of rules whose regex hits the prompt (case-insensitive); "
-        "if matches == 0 or total_rules == 0 -> 0; "
-        "else min(100, round(15 + 85 * matches / total_rules))"
+        "A dimension defines N distinct controls (concepts). A control is "
+        "covered when ANY of its rules hits the prompt (case-insensitive) — "
+        "rules within a control are alternative phrasings, not additive "
+        "evidence. matches = controls with at least one rule hit; "
+        "score = (100 * matches + N // 2) // N (integer round-half-up), "
+        "or 0 when matches == 0."
     ),
     "overall_score_formula": (
         "floor(mean of the 8 dimension scores) — integer division of sum/len"
     ),
+    "why_not_count_rules": (
+        "Scoring matched_rules/total_rules counted synonyms as separate "
+        "evidence, so stating a control once scored 24-32 while restating it "
+        "six ways scored well — rewarding the redundancy the tool reports as "
+        "a smell. Controls are counted once each instead."
+    ),
+    "list_concepts_cli": "crewscore rules --concepts",
     "tier_thresholds": {
         "STRUCTURAL: STRONG": "overall >= 90",
         "STRUCTURAL: OK WITH GAPS": "70 <= overall < 90",
@@ -160,11 +171,12 @@ SCORING_METHOD: dict[str, Any] = {
 }
 
 
-def _label_for_pattern(dimension: str, pattern: str) -> str | None:
-    for p, label in DIMENSION_SIGNAL_LABELS.get(dimension, []):
-        if p == pattern:
-            return label
-    return None
+def _concept_for_rule(dimension: str, rule_id: str) -> tuple[str | None, str | None]:
+    """Which control this rule is one phrasing of. Drives the denominator."""
+    for concept in CONCEPTS.get(dimension, ()):
+        if rule_id in concept.rule_ids:
+            return concept.key, concept.label
+    return None, None
 
 
 def list_rules(*, dimension: str | None = None) -> list[dict[str, Any]]:
@@ -176,15 +188,43 @@ def list_rules(*, dimension: str | None = None) -> list[dict[str, Any]]:
         dim_label = next((lab for lab, k in DIMENSIONS if k == dim_key), dim_key)
         provenance = DIMENSION_PROVENANCE.get(dim_key, {})
         for rule_id, pattern in patterns:
+            concept_key, concept_label = _concept_for_rule(dim_key, rule_id)
             rows.append(
                 {
                     "rule_id": rule_id,
                     "dimension": dim_key,
                     "dimension_label": dim_label,
                     "pattern": pattern,
-                    "label": _label_for_pattern(dim_key, pattern),
+                    "label": RULE_LABELS.get(rule_id),
+                    "concept": concept_key,
+                    "concept_label": concept_label,
                     "open": True,
                     "provenance": provenance.get("grade", "author-intuition"),
+                }
+            )
+    return rows
+
+
+def list_concepts(*, dimension: str | None = None) -> list[dict[str, Any]]:
+    """The scoring denominator, published as data.
+
+    A dimension scores on how many of these controls the prompt states, so the
+    grouping is as load-bearing as the regexes and gets the same exposure.
+    """
+    rows: list[dict[str, Any]] = []
+    for dim_key, concepts in CONCEPTS.items():
+        if dimension and dim_key != dimension:
+            continue
+        dim_label = next((lab for lab, k in DIMENSIONS if k == dim_key), dim_key)
+        for concept in concepts:
+            rows.append(
+                {
+                    "concept": concept.key,
+                    "label": concept.label,
+                    "dimension": dim_key,
+                    "dimension_label": dim_label,
+                    "rule_ids": list(concept.rule_ids),
+                    "points": round(100 / len(concepts)),
                 }
             )
     return rows
@@ -193,9 +233,13 @@ def list_rules(*, dimension: str | None = None) -> list[dict[str, Any]]:
 def catalog_payload(*, dimension: str | None = None) -> dict[str, Any]:
     """Full open catalog for `crewscore rules --json`."""
     rules = list_rules(dimension=dimension)
+    concepts = list_concepts(dimension=dimension)
     by_dim: dict[str, int] = {}
     for r in rules:
         by_dim[r["dimension"]] = by_dim.get(r["dimension"], 0) + 1
+    concepts_by_dim: dict[str, int] = {}
+    for c in concepts:
+        concepts_by_dim[c["dimension"]] = concepts_by_dim.get(c["dimension"], 0) + 1
     return {
         "ruleset": RULESET_ID,
         "method": SCORING_METHOD,
@@ -205,11 +249,15 @@ def catalog_payload(*, dimension: str | None = None) -> dict[str, Any]:
                 "key": key,
                 "label": label,
                 "rule_count": by_dim.get(key, 0),
+                # The scoring denominator for this dimension.
+                "control_count": concepts_by_dim.get(key, 0),
                 **DIMENSION_PROVENANCE.get(key, {}),
             }
             for label, key in DIMENSIONS
             if not dimension or key == dimension
         ],
+        "concepts": concepts,
+        "control_count": len(concepts),
         "rules": rules,
         "rule_count": len(rules),
         "pattern_index_size": len(PATTERN_RULE_IDS),
@@ -229,17 +277,23 @@ def scoring_transparency_block() -> dict[str, Any]:
     }
 
 
-def demo_formula(matches: int, total: int) -> int:
-    """Public pure function documenting dimension scoring (used in tests/docs)."""
-    if total == 0 or matches == 0:
-        return 0
-    return min(100, round(15 + 85 * (matches / total)))
+def demo_formula(covered_controls: int, total_controls: int) -> int:
+    """Public pure function documenting dimension scoring (used in tests/docs).
+
+    Thin re-export of the implementation rather than a second copy of the
+    arithmetic: the previous duplicate is how the published formula and the
+    code drifted apart once already.
+    """
+    from crewscore.scorers.structural_analysis import score_from_concepts
+
+    return score_from_concepts(covered_controls, total_controls)
 
 
 # Re-export helpers tests may want
 __all__ = [
     "SCORING_METHOD",
     "list_rules",
+    "list_concepts",
     "catalog_payload",
     "scoring_transparency_block",
     "demo_formula",

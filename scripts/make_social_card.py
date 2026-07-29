@@ -16,8 +16,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-from crewscore.scoring import DIMENSION_KEYS, overall_score
-from crewscore.scorers.structural_analysis import SCORER_MAP
+from crewscore.scorers.structural_analysis import CONCEPT_COUNT
 
 W, H = 1200, 630
 BG = (15, 15, 26)
@@ -53,19 +52,18 @@ def load(kind: str, size: int):
     return ImageFont.load_default()
 
 
-def headline_score() -> int:
-    """The number on the card is computed, never typed by hand."""
+def headline_number() -> int:
+    """The number on the card is computed from the catalog, never typed by hand.
 
-    def dim(matches: int, total: int) -> int:
-        if not total or not matches:
-            return 0
-        return min(100, round(15 + 85 * matches / total))
-
-    return overall_score({k: dim(1, len(SCORER_MAP[k])) for k in DIMENSION_KEYS})
+    It was the score a fully-correct prompt used to get (28, below the lowest
+    tier) - a real defect, and a real hook while it was true. It is fixed, so
+    the card leads with the checklist size instead of a broken number.
+    """
+    return CONCEPT_COUNT
 
 
 def main() -> int:
-    score = headline_score()
+    count = headline_number()
 
     img = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(img)
@@ -85,17 +83,17 @@ def main() -> int:
         fill=MUTED,
     )
 
-    # The hook: the tool's own scale is unreachable by a well-written prompt.
-    d.text((88, 268), f"{score}/100", font=f_stat, fill=AMBER)
+    # The hook: a concrete, countable checklist, taken from the live catalog.
+    d.text((88, 268), str(count), font=f_stat, fill=AMBER)
     d.text(
         (88, 424),
-        "what a prompt scores when it states all eight",
+        "controls an agent prompt should state - injection, cost,",
         font=f_stat_label,
         fill=MUTED,
     )
     d.text(
         (88, 458),
-        "governance controls clearly. The lowest tier starts at 50.",
+        "human approval, safe stop. See which ones yours is missing.",
         font=f_stat_label,
         fill=MUTED,
     )
@@ -107,7 +105,7 @@ def main() -> int:
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     img.save(OUT, "PNG", optimize=True)
-    print(f"wrote {OUT} ({OUT.stat().st_size // 1024} KB) headline={score}/100")
+    print(f"wrote {OUT} ({OUT.stat().st_size // 1024} KB) headline={count} controls")
     return 0
 
 

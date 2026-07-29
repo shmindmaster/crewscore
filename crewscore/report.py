@@ -201,7 +201,7 @@ def _document(
 def _render_config_html(result: ScoreResult, *, ts: str) -> str:
     """Scorecard for coding-agent config: smells only, no governance grade.
 
-    No dimension bars, no 0-100 headline, and no `15+85*matches` formula —
+    No dimension bars, no 0-100 headline, and no controls-covered formula —
     none of those describe how this artifact was judged.
     """
     count = len(result.smells)
@@ -331,8 +331,10 @@ def render_html_report(
     {dim_html}
     <div class="disclaimer">
       <strong>Not a black box.</strong> Deterministic regex on prompt text.
-      Dimension score = min(100, round(15+85×matches/total_rules)); overall = mean of 8 dims.
-      List every rule with <code>crewscore rules --json</code>.
+      Dimension score = the share of that dimension's controls the prompt states;
+      overall = mean of 8 dims. Several rules can be alternative phrasings of one
+      control, and a control counts once however many times it is stated.
+      See them with <code>crewscore rules --concepts</code>.
       Not live red-teaming, not runtime proof, not a certification.
     </div>
     {findings_html}"""
