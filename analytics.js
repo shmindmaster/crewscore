@@ -4,6 +4,8 @@
   const PROJECT_TOKEN = "phc_z36vRZVmYzw9NBJmY83QKwaAKREemEsGR7mxxZd2b92m";
   const CAPTURE_URL = "https://us.i.posthog.com/capture/";
   const SESSION_KEY = "crewscore_web_analytics_id";
+  const OPT_OUT_KEY = "crewscore_analytics_opt_out_v1";
+  let sessionOptOut = false;
   const ALLOWED_EVENTS = new Set([
     "cs_site_view",
     "cs_rules_expand",
@@ -13,6 +15,11 @@
     "cs_export",
     "cs_score",
     "cs_vendor_open",
+    "cs_demo_started",
+    "cs_check_completed",
+    "cs_fix_review",
+    "cs_mode_change",
+    "cs_share",
   ]);
   const ALLOWED_PROPERTIES = new Set([
     "source",
@@ -23,7 +30,27 @@
     "dims_to_fix_count",
     "delta_bucket",
     "kind",
+    "controls_found",
+    "mode",
   ]);
+
+  function isOptedOut() {
+    if (sessionOptOut) return true;
+    try {
+      return localStorage.getItem(OPT_OUT_KEY) === "1";
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function setOptOut(value) {
+    sessionOptOut = Boolean(value);
+    try {
+      localStorage.setItem(OPT_OUT_KEY, value ? "1" : "0");
+    } catch (error) {
+      // Preferences are optional; blocked storage must not break scoring.
+    }
+  }
 
   function newAnonymousId() {
     try {
@@ -58,7 +85,7 @@
   }
 
   function capture(event, properties) {
-    if (!ALLOWED_EVENTS.has(event) || location.hostname !== "crewscore.ai") return;
+    if (!ALLOWED_EVENTS.has(event) || location.hostname !== "crewscore.ai" || isOptedOut()) return;
     const body = JSON.stringify({
       api_key: PROJECT_TOKEN,
       event,
@@ -80,6 +107,6 @@
     });
   }
 
-  window.CrewScoreAnalytics = Object.freeze({ capture });
+  window.CrewScoreAnalytics = Object.freeze({ capture, isOptedOut, setOptOut });
   capture("cs_site_view");
 })();

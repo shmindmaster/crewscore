@@ -2,7 +2,7 @@
 
 # CrewScore
 
-### Your AI agent doesn't know what it's not allowed to do
+### Find the safety rules your AI agent prompt forgot.
 
 CrewScore reads your system prompt and shows you which of **23 safety controls
 it never states** — injection defense, human approval, cost limits, stop
@@ -19,7 +19,8 @@ OpenAI and Cursor. The median states 14 of 100.**
 
 <br/>
 
-![CrewScore — a bare prompt states none of the eight dimensions' controls; crewscore fix raises coverage and CrewScore flags its own output as template boilerplate](https://raw.githubusercontent.com/shmindmaster/crewscore/main/docs/demo.svg)
+> Example result: **8 of 23 written guardrails found** · 15 may be missing.
+> CrewScore checks whether controls are written down, not whether an agent obeys them.
 
 **Try it live, no install:** [crewscore.ai](https://crewscore.ai)
 

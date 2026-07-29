@@ -2,17 +2,17 @@
 
 Synthetic fixtures representing common agent-prompt shapes (bare demo → partial hygiene → hardened ops). **Structural scores only** — not red-team results, not runtime proof.
 
-> **These are fixtures, not evidence.** They were written to exercise the rules, which is why the top one scores well. Across 1,368 real system prompts, nothing scored above 50/100 and the score did not separate production prompts from amateur ones once length was controlled. Read [`docs/validation.md`](../../docs/validation.md) before reading anything into a number here.
+> **These are fixtures, not evidence.** They were written to exercise the rules, which is why the top one scores well. The reproducible public validation corpus contains 356 prompts (83 production-agent and 273 general-purpose); it supports coverage observations, not a quality ranking. Read [`docs/validation.md`](../../docs/validation.md) before reading anything into a number here.
 
-- **Ruleset:** `crewscore-hygiene@0.1.0`
+- **Ruleset:** `crewscore-hygiene@0.5.0`
 - **Generated:** 2026-07-28
 - **Command:** `crewscore scan examples/corpus`
 - **Regenerate:** `python scripts/score_corpus.py`
 
 | Rank | Path | Score | Tier |
 | ---: | --- | ---: | --- |
-| 1 | `prompts/05-hardened-ops.md` | **87** | `STRUCTURAL: OK WITH GAPS` |
-| 2 | `prompts/04-partial-hygiene.md` | **20** | `STRUCTURAL: CRITICAL GAPS` |
+| 1 | `prompts/05-hardened-ops.md` | **95** | `STRUCTURAL: STRONG` |
+| 2 | `prompts/04-partial-hygiene.md` | **33** | `STRUCTURAL: CRITICAL GAPS` |
 | 3 | `prompts/02-demo-agent.md` | **0** | `STRUCTURAL: CRITICAL GAPS` |
 | 4 | `prompts/01-bare-assistant.md` | **0** | `STRUCTURAL: CRITICAL GAPS` |
 
