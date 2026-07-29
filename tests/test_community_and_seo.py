@@ -15,12 +15,13 @@ def test_static_discovery_has_robots_sitemap_and_structured_data():
     sitemap = (ROOT / "sitemap.xml").read_text(encoding="utf-8")
     index = (ROOT / "index.html").read_text(encoding="utf-8")
     assert "Sitemap: https://crewscore.ai/sitemap.xml" in robots
-    for route in ("https://crewscore.ai/", "https://crewscore.ai/rules/", "https://crewscore.ai/docs/"):
+    for route in ("https://crewscore.ai/", "https://crewscore.ai/security.html", "https://crewscore.ai/rules/", "https://crewscore.ai/docs/"):
         assert route in sitemap
     assert '"@type":"SoftwareApplication"' in index
     assert '"@type":"FAQPage"' in index
     assert 'href="rules/"' in index
     assert 'href="docs/"' in index
+    assert 'href="security.html"' in index
 
 
 def test_static_rules_page_is_the_complete_public_control_catalog():
@@ -45,3 +46,10 @@ def test_community_governance_and_safe_reporting_surfaces_exist():
         assert (ROOT / ".github" / "ISSUE_TEMPLATE" / name).exists(), name
     assert (ROOT / "docs" / "scoring-governance.md").exists()
     assert (ROOT / "docs" / "roadmap.md").exists()
+
+
+def test_public_security_page_routes_to_the_private_reporting_channel_without_overclaiming():
+    page = (ROOT / "security.html").read_text(encoding="utf-8").lower()
+    assert "github.com/shmindmaster/crewscore/security/advisories/new" in page
+    assert "dependabot security updates" in page
+    assert "not a security certification" in page
