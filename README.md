@@ -81,7 +81,7 @@ crewscore fix  --prompt-file ./prompt.md --plan   # what's missing, no writes
 crewscore rules --concepts                # the 23 controls, and the rules behind them
 ```
 
-**[Full CLI reference →](docs/cli.md)** · **[How scoring works →](docs/scoring.md)**
+**[Full CLI reference →](docs/cli.md)** · **[How scoring works →](docs/scoring-and-controls.md)**
 
 ---
 
@@ -100,7 +100,7 @@ crewscore rules --concepts                # the 23 controls, and the rules behin
 Posts a sticky PR comment with the open rule findings. Guard downstream steps
 on the `scored` output, not on `score` — an empty score casts to `0`.
 
-**[Action inputs, outputs, and the CLI variant →](docs/ci.md)**
+**[Action inputs, outputs, and the CLI variant →](docs/github-action.md)**
 
 ---
 
@@ -165,9 +165,8 @@ pip install -e ".[dev]"
 pytest
 ```
 
-[AGENTS.md](AGENTS.md) has contributor operating notes.
-[CONTRIBUTING.md](CONTRIBUTING.md) covers adding a rule — note that adding a
-synonym for a control that is already covered changes no score, by design.
+**[Development guide →](docs/development.md)** · [AGENTS.md](AGENTS.md) ·
+[CONTRIBUTING.md](CONTRIBUTING.md)
 
 ---
 
@@ -177,12 +176,13 @@ synonym for a control that is already covered changes no score, by design.
 |---|---|
 | [Validation](docs/validation.md) | What the number does and does not measure |
 | [Corpus validation](docs/validation-corpus.md) | Generated result over 356 real prompts |
-| [Scoring](docs/scoring.md) | Formula, dimensions, provenance, charter |
+| [Scoring and controls](docs/scoring-and-controls.md) | Formula, 23 controls, charter, governance |
 | [CLI](docs/cli.md) | Every command and flag |
-| [CI](docs/ci.md) | Action and CLI integration |
+| [GitHub Action](docs/github-action.md) | Action inputs/outputs and CLI-in-CI |
 | [Policies and SARIF](docs/policies.md) | Regression and required-control CI without score gating |
-| [Architecture](docs/architecture.md) | One catalog powering CLI, Action, and browser |
-| [Scoring governance](docs/scoring-governance.md) | How public rules and validation change |
+| [Architecture](docs/architecture.md) | Modules, data flow, lean target |
+| [Development](docs/development.md) | Local setup, rules, packaging, media |
+| [Live eval handoff](docs/next-steps-eval.md) | Promptfoo / garak after structural gate |
 | [Roadmap](docs/roadmap.md) | Available work and deliberately deferred capabilities |
 | [Security](SECURITY.md) | Private vulnerability reporting |
 | [Community discussions](https://github.com/shmindmaster/crewscore/discussions) | Questions, adoption feedback, and open-ended ideas |

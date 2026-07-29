@@ -14,7 +14,7 @@ install them, and do not compare their numbers to these.
 
 ---
 
-## [Unreleased] — complete secondary handoffs
+## [Unreleased] — complete secondary handoffs + docs regeneration
 
 No scoring change. Ruleset remains `crewscore-hygiene@0.5.0`.
 
@@ -28,6 +28,15 @@ No scoring change. Ruleset remains `crewscore-hygiene@0.5.0`.
   and console show follow-ups for your prompts/CI, not a vendor grade.
 - **Metrics contract** centralizes event/property allowlists in
   `crewscore/metrics.py` with parity tests against `analytics.js`.
+
+### Documentation
+
+- Regenerated **architecture**, **scoring-and-controls**, **github-action**, and
+  **development** guides from the current implementation.
+- Stable redirects: `docs/scoring.md`, `docs/scoring-governance.md`, and
+  `docs/ci.md` point at the canonical pages (no silent 404 for old links).
+- README, CONTRIBUTING, AGENTS, SARIF help URL, and static docs index updated.
+- Media policy documented (hero/demo assets retained; large binaries noted).
 
 ---
 

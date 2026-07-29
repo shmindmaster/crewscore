@@ -11,6 +11,9 @@ prompts (83 production-agent and 273 general-purpose). Claims remain about
 
 ## Dev setup
 
+Full local workflow, packaging, and media policy:
+**[docs/development.md](docs/development.md)**.
+
 ```bash
 git clone https://github.com/shmindmaster/crewscore.git
 cd crewscore
@@ -20,33 +23,15 @@ pytest -q
 
 ## How scoring works
 
+See **[docs/scoring-and-controls.md](docs/scoring-and-controls.md)**. Short version:
+
 - Patterns live in `crewscore/scorers/structural_analysis.py` (`SCORER_MAP`).
 - Rules are grouped into controls in `CONCEPTS`; a dimension scores on how
-  many of its controls the prompt states, not how many regexes fired (see
-  `score_from_concepts`). Adding a synonym for a control already covered
-  therefore changes no score - that is deliberate.
-- Run `crewscore rules --concepts` to see the grouping.
-- Explain labels: `DIMENSION_SIGNAL_LABELS` (pattern → human label pairs).
-- CLI: `crewscore test`, `fix`, `assess-vendor`.
-- **Web uses the same engine:** after changing patterns, regenerate:
-
-```bash
-python scripts/export_web_engine.py
-pytest tests/test_web_engine.py -q
-```
-
-Commit the updated `score-engine.js` with your pattern change.
-
-## Adding a pattern
-
-1. Add a regex to the right list in `structural_analysis.py`.
-2. Optionally add a `(pattern, human_label)` to `DIMENSION_SIGNAL_LABELS`.
-3. Add/adjust a unit test in `tests/test_structural_analysis.py` or `tests/test_explain.py`.
-4. Run `python scripts/export_web_engine.py` and `pytest -q`.
-
-## Adding a fix template
-
-Edit `crewscore/scorers/fix_patterns.py` `FIX_TEMPLATES` for the dimension key.
+  many of its controls the prompt states, not how many regexes fired.
+- CLI: `crewscore test`, `scan`, `fix`, `rules`, `baseline`, `init`, plus
+  secondary `export-eval` and `assess-vendor`.
+- **Web uses the same engine:** after changing patterns, regenerate
+  `score-engine.js` with `python scripts/export_web_engine.py`.
 
 ## PR rules
 
@@ -64,10 +49,10 @@ text, credentials, or private source URLs.
 
 ## Governance and community
 
-Read [scoring governance](docs/scoring-governance.md) before proposing a new
-rule, control, or scoring change. It defines the required provenance,
-validation, browser-regeneration, and changelog work. Security-sensitive
-reports follow [SECURITY.md](SECURITY.md), not public issues.
+Read [scoring governance](docs/scoring-and-controls.md#scoring-governance-how-rules-change)
+before proposing a new rule, control, or scoring change. It defines the
+required provenance, validation, browser-regeneration, and changelog work.
+Security-sensitive reports follow [SECURITY.md](SECURITY.md), not public issues.
 
 Use [GitHub Discussions](https://github.com/shmindmaster/crewscore/discussions)
 for questions, adoption feedback, and open-ended ideas. Use an issue form for a

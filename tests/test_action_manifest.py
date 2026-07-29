@@ -594,12 +594,13 @@ def test_readme_output_guard_example_uses_scored():
     semantics, but it predates the `scored` output and is not the guard a
     consumer should copy — `scored == 'true'` is simpler and explicit.
     """
-    # The worked example moved to docs/ci.md with the rest of the CI content.
+    # The worked example lives in docs/github-action.md (docs/ci.md redirects).
     # The README keeps only the warning, because a reader who never opens the
     # linked doc still has to learn that an empty score casts to 0.
-    docs = Path("docs/ci.md").read_text(encoding="utf-8")
+    docs = Path("docs/github-action.md").read_text(encoding="utf-8")
     assert "outputs.scored == 'true'" in docs
     assert "outputs.score != ''" not in docs
+    assert "github-action.md" in Path("docs/ci.md").read_text(encoding="utf-8")
     readme = Path("README.md").read_text(encoding="utf-8")
     assert "scored" in readme, "README drops the empty-score guard entirely"
 
