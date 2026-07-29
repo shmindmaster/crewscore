@@ -449,7 +449,7 @@ def test_readme_charter_carries_discrimination_and_validity_disclosure():
     end = md.find("## Install", start)
     assert start > 0 and end > start, "scoring charter section not found"
     charter = md[start:end]
-    assert "crewscore-hygiene@0.4.0" in charter
+    assert "crewscore-hygiene@0.1.0" in charter
     assert "28/100" in charter, "charter omits the coverage-not-quality proof"
     for dim in ("Cost", "Compliance", "Audit"):
         assert dim in charter, f"charter omits low-validity dimension {dim}"
@@ -457,16 +457,16 @@ def test_readme_charter_carries_discrimination_and_validity_disclosure():
 
 
 def test_readme_documents_040_breaking_changes():
-    """0.4.0 drops four fields from config `--json` payloads and changes a
+    """0.1.0 drops four fields from config `--json` payloads and changes a
     `fix` exit code. A consumer who upgrades blind breaks; say so."""
     md = _readme()
-    start = md.find("## What changed in 0.4.0")
-    assert start > 0, "0.4.0 release-notes section not found"
+    start = md.find("## What changed in 0.1.0")
+    assert start > 0, "0.1.0 release-notes section not found"
     end = md.find("## CI integration", start)
     assert end > start
     section = md[start:end]
     for field in ("`overall`", "`dimensions`", "`findings`", "`transparency`"):
-        assert field in section, f"0.4.0 notes omit dropped field {field}"
+        assert field in section, f"0.1.0 notes omit dropped field {field}"
     assert "exit" in section.lower()
 
 
@@ -499,24 +499,17 @@ def test_readme_config_smells_marked_unaffected_by_the_study():
     assert "arxiv.org/abs/2606.15828" in section
 
 
-def test_readme_never_presents_an_unpublished_version_as_released():
-    """Neither 0.3.0 nor 0.3.1 was ever published; PyPI stops at 0.2.7.
+def test_readme_does_not_point_readers_at_a_withdrawn_version():
+    """Pre-0.1.0 builds are withdrawn from PyPI.
 
-    The rule is not "never say 0.3.x" — saying it is *fine and useful* when
-    the point being made is that it never shipped, which is what an upgrading
-    user needs to know. What must never happen is presenting it as something
-    the reader could have, install, or be upgrading from.
+    Telling a reader they are "coming from 0.2.7" sends them looking for a
+    release that no longer exists, and any pin instruction naming one is a
+    dead end.
     """
     md = _readme()
-    if "0.3.1" in md or "0.3.0" in md:
-        assert "never published" in md.lower(), (
-            "README mentions a 0.3.x version without saying it never shipped"
-        )
-        assert "0.2.7" in md, "README must name the real last public release"
-    # No instruction anywhere can point at an unpublished version.
-    for bad in ("pip install crewscore==0.3", "crewscore==0.3.0", "crewscore==0.3.1"):
+    for bad in ("crewscore==0.2", "crewscore==0.3", "crewscore==0.4"):
         assert bad not in md, bad
-
+    assert "first supported release" in md.lower()
 
 def test_panel_lifted_from_bg():
     """Panel surface color is distinct from page background (lifted card)."""

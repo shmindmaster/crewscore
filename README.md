@@ -130,7 +130,7 @@ Honest principles we ship by:
    | Audit Trail | Holds only **five patterns**, for logging and immutable-trail language that real prompts phrase many different ways | Re-specification planned |
 
    **Read `audit` and `cost` results with suspicion.** A `0` there means the rules did not find something, not that you failed to write it.
-4. Scores are **rule-pack versioned** (`crewscore-hygiene@0.4.0`) and **deterministic** — no LLM, no hidden model.
+4. Scores are **rule-pack versioned** (`crewscore-hygiene@0.1.0`) and **deterministic** — no LLM, no hidden model.
 5. **Every rule is public.** List them anytime:
    ```bash
    crewscore rules              # human: formula + provenance + every rule_id + regex
@@ -144,7 +144,7 @@ Honest principles we ship by:
 11. When in doubt, **under-score** rather than inflate.
 12. Source of truth: [`crewscore/scorers/structural_analysis.py`](crewscore/scorers/structural_analysis.py). What the number does and does not measure, with the proof: [`docs/validation.md`](docs/validation.md).
 
-> **Removed before `0.4.0`:** CrewScore used to award up to +10 per dimension for prompts over 500 words. That rewarded the exact thing the research penalizes — and it was never in the published formula. It is gone. See [what changed and why](#what-changed-in-040).
+> **Removed before `0.1.0`:** CrewScore used to award up to +10 per dimension for prompts over 500 words. That rewarded the exact thing the research penalizes — and it was never in the published formula. It is gone. See [what changed and why](#what-changed-in-040).
 
 See also [docs/next-steps-eval.md](docs/next-steps-eval.md) for when to graduate to live eval tools.
 
@@ -250,7 +250,7 @@ crewscore fix --prompt-file ./system-prompt.md --plan --json
 
 `--plan` / `--dry-run` is mutually exclusive with `--apply` and `--output`. These are **prompt text templates**. They can raise the structural score without changing runtime behavior — wire matching controls (tool gates, logging, budgets) in your application.
 
-**Exit `1` on coding-agent config.** Since `0.4.0`, `fix` refuses to write governance templates into an `AGENTS.md`-class file and exits `1` (`--json`: `{"refused": true, ...}`). A loop that treats any non-zero exit as fatal will stop there — skip those paths, or pass `--profile system_prompt` to force the templates in. Forced runs report `"forced_governance_write": true`.
+**Exit `1` on coding-agent config.** Since `0.1.0`, `fix` refuses to write governance templates into an `AGENTS.md`-class file and exits `1` (`--json`: `{"refused": true, ...}`). A loop that treats any non-zero exit as fatal will stop there — skip those paths, or pass `--profile system_prompt` to force the templates in. Forced runs report `"forced_governance_write": true`.
 
 ### Vendor checklist (self-attest, secondary)
 
@@ -370,18 +370,18 @@ Smells are **advisory. They never change the score.** Folding them in would sile
 
 ---
 
-## What changed in 0.4.0
+## What changed in 0.1.0
 
 Defects found by testing CrewScore against its own rule catalog and against the
 published research, rather than waiting for someone else to.
 
-> **If you are upgrading, you are coming from `0.2.7`.** That is the newest
-> version on PyPI. `0.3.0` and `0.3.1` were built and tagged in this repo but
-> **never published**, so everything in both groups below is new to you, and a
-> `0.2.7` score is not comparable to a `0.4.0` score. The two groups are kept
-> separate only because the ruleset split was developed after the scoring fixes.
+> **`0.1.0` is the first supported release**, so there is nothing to migrate
+> from. Earlier builds were published during development and have been withdrawn
+> from PyPI — they carried a script-injection exposure in `action.yml` and a
+> scoring term that rewarded prompt length. If you have one installed, upgrade
+> and do not compare its numbers to these.
 
-### 0.4.0 — the validation release (breaking for `--json` consumers)
+### What we fixed before shipping it
 
 **0. We say what the number means, and prove it from the rule catalog.** [`docs/validation.md`](docs/validation.md) shows that a prompt stating all eight controls clearly, once each, scores **28/100** — below the lowest tier — and that reaching 70 requires restating the same control four to six different ways. A metric a well-written prompt cannot pass is not a quality ranking; it is coverage. The document also carries the per-dimension caveats, including three dimensions (Cost, Compliance, Audit) that ship known-weak, and records a corpus study that was **withdrawn** after our own audit found arithmetic in it that did not survive scrutiny. The positioning changed with all of it: CrewScore is a **checklist, not a benchmark**, and the number is **coverage, not quality**. The rules and the formula are unchanged in this release; what changed is what we claim they mean.
 
@@ -395,7 +395,7 @@ published research, rather than waiting for someone else to.
 
 **5. `--threshold` says when it did nothing.** `--threshold` gates the governance score, so it is a no-op on coding-agent config — and both `test` and `scan` now record `threshold_ignored_for_config` in `warnings` and print it in the `--summary` markdown that becomes the sticky PR comment. The Action passes `threshold` unconditionally (default `"50"`) and the docs recommend `scan-path`, so before this the most-recommended CI setup reported a passing gate that had never run. Use `--max-smells N` to gate those files.
 
-### The scoring fixes (developed as `0.3.0`, never released on their own)
+### Scoring fixes
 
 **6. The length bonus is gone.** CrewScore awarded up to +10 per dimension for prompts over 500 words. That rewarded length — and length is a cost, not a virtue: files at or over 200 lines are Context Bloat, and [Gloaguen et al.](https://arxiv.org/abs/2602.11988) measured **>20% higher inference cost** from context files with **no gain in task success**. It was also never in the published formula, so the documented formula did not match the code. Both are fixed: the formula in this README is now the whole formula.
 
@@ -497,7 +497,7 @@ Or parse JSON yourself:
 SCORE=$(crewscore test --prompt-file ./agents/system-prompt.md --json | jq '.overall')
 ```
 
-**Branch on `governance_applicable` before reading `overall`.** [Coding-agent config](#two-artifacts-two-rulesets) carries no governance grade, and since `0.4.0` the field is **absent** rather than `0` — `jq '.overall'` yields `null` there, and `jq -e '.overall >= 50'` prints `false` and **exits 1** — it does not error, so an unguarded gate just quietly fails the build on every `AGENTS.md` in the repo:
+**Branch on `governance_applicable` before reading `overall`.** [Coding-agent config](#two-artifacts-two-rulesets) carries no governance grade, and since `0.1.0` the field is **absent** rather than `0` — `jq '.overall'` yields `null` there, and `jq -e '.overall >= 50'` prints `false` and **exits 1** — it does not error, so an unguarded gate just quietly fails the build on every `AGENTS.md` in the repo:
 
 ```bash
 # single file: score it only if it is judged on the governance score

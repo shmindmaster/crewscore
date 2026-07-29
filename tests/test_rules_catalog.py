@@ -149,31 +149,26 @@ def test_test_human_shows_ruleset_and_method_without_explain_flag():
 
 
 def test_ruleset_id_is_0_4_0():
-    """The ruleset moves alongside the package to 0.4.0.
+    """The ruleset moves alongside the package to 0.1.0.
 
-    No 0.3.x was ever published — the last release on PyPI is 0.2.7 — so
-    there is no comparison history for the renumber to invalidate.
+    Versioned in lockstep with the package so any score can be traced back
+    to the exact rules that produced it.
     """
-    assert RULESET_ID == "crewscore-hygiene@0.4.0"
+    assert RULESET_ID == "crewscore-hygiene@0.1.0"
 
 
-def test_docs_do_not_claim_an_unpublished_version_was_released():
-    """0.3.0 and 0.3.1 were tagged in development but never shipped to PyPI.
+def test_changelog_does_not_reference_withdrawn_versions():
+    """Every pre-0.1.0 build was withdrawn from PyPI.
 
-    The CHANGELOG originally called 0.3.0 the "last publicly released
-    version", which is false: PyPI has 0.2.0 through 0.2.7 and nothing else.
-    A release whose entire premise is "we corrected our overclaims" cannot
-    ship a wrong claim about its own release history, so this pins it.
+    A changelog that tells readers "you are almost certainly coming from
+    0.2.7" points at something nobody can install, and an upgrade section for
+    a version that does not exist reads worse than no section at all.
     """
     changelog = Path("CHANGELOG.md").read_text(encoding="utf-8")
-    # The upgrade section must name the version users actually have.
-    assert "0.2.7" in changelog
-    for wrong in (
-        "## [0.3.0]",
-        "## [0.3.1]",
-    ):
-        assert wrong not in changelog, wrong + " is not a released version"
-
+    for gone in ("## [0.2.", "## [0.3.", "## [0.4."):
+        assert gone not in changelog, gone + " is not an installable release"
+    assert "withdrawn" in changelog.lower()
+    assert "first supported release" in changelog.lower()
 
 def test_pyproject_description_does_not_overclaim_production_readiness():
     """Packaging metadata must match what the tool actually does.

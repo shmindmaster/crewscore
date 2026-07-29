@@ -13,7 +13,7 @@ Public brand: **CrewScore** · Domain: **https://crewscore.ai** · PyPI: **`crew
 
 It does **not** (yet) run live adversarial LLM attacks or parse LangGraph/CrewAI runtimes. For live testing, hand off to Promptfoo / garak — see `docs/next-steps-eval.md`.
 
-Ruleset id: **`crewscore-hygiene@0.4.0`** (`crewscore rules` prints it; `crewscore/scoring.py:RULESET_ID` is the source of truth — it may lag this doc by a patch release mid-work).
+Ruleset id: **`crewscore-hygiene@0.1.0`** (`crewscore rules` prints it; `crewscore/scoring.py:RULESET_ID` is the source of truth — it may lag this doc by a patch release mid-work).
 
 ## Stack
 
@@ -132,7 +132,7 @@ tests/
 - Fame follows usefulness: explainable findings, fix, CI gate before launch theater.
 - Breaking CLI flags are acceptable if all docs and tests update in the same change.
 - Never document `pip install agent-guard` as *this* product (that PyPI name is taken by another package).
-- **Read `docs/validation.md` before writing or editing any claim about what the governance score proves.** It documents a discrimination study against 1,368 real prompts; do not re-inflate the "production-readiness" framing this file used before 0.4.0 without new evidence to support it.
+- **Read `docs/validation.md` before writing or editing any claim about what the governance score proves.** It documents a discrimination study against 1,368 real prompts; do not re-inflate the "production-readiness" framing this file used before 0.1.0 without new evidence to support it.
 
 ## Do not
 

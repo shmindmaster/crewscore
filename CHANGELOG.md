@@ -4,17 +4,28 @@ All notable changes to CrewScore are documented here.
 
 This project follows [Semantic Versioning](https://semver.org/). The `--json`
 payload shape, the CLI exit codes, and the GitHub Action's outputs are treated
-as the public contract; breaking changes to any of them get a minor bump
-pre-1.0 and are listed under **Breaking** below.
+as the public contract; while the project is pre-1.0 a breaking change to any
+of them gets a minor bump and is listed under **Breaking**.
+
+`0.1.0` is the first supported release. Earlier builds were published during
+development and have been withdrawn from PyPI — they carried a script-injection
+exposure in `action.yml` and a scoring term that rewarded prompt length. Do not
+install them, and do not compare their numbers to these.
 
 ---
 
-## [0.4.0] — 2026-07-28
+## [0.1.0] — 2026-07-28 — first supported release
 
-The honest reframe. CrewScore measures **coverage**, not quality — and that is
-provable from the shipped rule catalog, without any corpus: a prompt that states
-all eight governance controls clearly, once each, scores **28/100**, below the
-lowest tier. This release publishes that rather than the marketing.
+CrewScore reads an AI agent system prompt and reports which of eight failure
+modes it never guards against — prompt injection, hallucination, runaway cost,
+missing human approval, no stop condition, and three more.
+
+**The number is coverage, not quality, and that is provable from the shipped
+rule catalog without any corpus:** a prompt that states all eight controls
+clearly, once each, scores **28/100** — below the lowest tier. A metric a
+well-written prompt cannot pass is not measuring quality. We publish that rather
+than the marketing, and [`docs/validation.md`](docs/validation.md) shows the
+arithmetic.
 
 ### Added
 
@@ -54,16 +65,19 @@ lowest tier. This release publishes that rather than the marketing.
 
 ### Changed
 
-- **Ruleset is now `crewscore-hygiene@0.4.0`.** No `0.3.x` was ever published
-  (the last public release is `0.2.7`), so no
-  comparison history is invalidated by the renumber.
+- **Ruleset id is `crewscore-hygiene@0.1.0`**, versioned in lockstep with the
+  package so a score can always be traced to the exact rules that produced it.
 - Package description, README, `AGENTS.md`, and the GitHub Action manifest no
   longer claim "production-readiness". The number is coverage of controls you
   wrote down. It does not predict whether an agent obeys them.
 - Scan and summary output surfaces branch on `governance_applicable` everywhere:
   no headline score, tier, badge, or verdict is emitted for coding-agent config.
 
-### Breaking
+### Contract notes
+
+These are the shapes to code against. They are called out because
+pre-release builds behaved differently and some copies may still be in
+circulation.
 
 - **`--json` payload shape for coding-agent config.** Config rows no longer
   carry `overall`, `dimensions`, `findings`, or `transparency` — not as zero,
@@ -83,8 +97,7 @@ lowest tier. This release publishes that rather than the marketing.
   interpolated directly into the `run:` shell body. They now arrive via `env:`.
   This was verified live — a crafted `threshold` value executed a command
   against the unfixed manifest.
-- **Scoring no longer rewards context bloat.** The length bonus present in 0.2.x
-  is gone; measured false-positive rules were removed.
+- **Scoring no longer rewards context bloat.** There is no length term in the score; measured false-positive rules were removed.
 - `_git_commit_count` returned a wrong smell verdict on shallow clones
   (`--depth 1`); it now returns `None` and the detector abstains.
 - `setup.cfg` / `tox.ini` are only treated as linter config when they actually
@@ -117,24 +130,3 @@ applied — but does not repair the patterns, because narrowing them changes
 which prompts match and therefore changes scores. That work lands with the
 regex precision pass. If you scan untrusted input, note that the worst case is
 slow, not unbounded, and the GitHub Action inherits your job timeout.
-
----
-
-## [0.2.7] — the last public release
-
-**If you are upgrading, you are almost certainly coming from 0.2.7.** It is the
-newest version on PyPI; `0.3.0` and `0.3.1` were developed and tagged in-repo
-but **never published**, so no released version ever carried the `0.3.x`
-behavior. Everything listed under 0.4.0 above is therefore a change relative to
-0.2.7, including two that predate the 0.3.x work:
-
-- **The length bonus is gone.** 0.2.x added score for longer prompts. It
-  rewarded exactly the padding the Context Bloat detector now flags, and it is
-  the reason 0.2.x scores are not comparable to 0.4.0 scores. Expect your score
-  to move, usually down.
-- **Rules with measured false positives were removed**, so the rule set is not
-  a superset of the one you have.
-
-Do not compare a 0.2.7 number to a 0.4.0 number. They are different rulesets
-measuring the same thing with different instruments — and per
-[`docs/validation.md`](docs/validation.md), neither number ranks prompt quality.
