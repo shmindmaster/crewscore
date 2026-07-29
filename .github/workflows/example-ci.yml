@@ -1,7 +1,7 @@
 # Documented copy-paste example for consumers.
 #
 # In your own repo, prefer the published tag:
-#   uses: shmindmaster/crewscore@v1
+#   uses: shmindmaster/crewscore@v2
 #
 # When developing this monorepo (or a fork), local path works:
 #   uses: ./
@@ -33,7 +33,8 @@ jobs:
       #   uses: shmindmaster/crewscore@v2
       #   with:
       #     prompt-file: agents/system-prompt.md
-      #     threshold: "50"
+      #     # Example policy: select controls your workflow actually needs.
+      #     required-controls: "human_gate.approval_required,safe_stop.stop_condition"
       #     # explain: "true"
       #     # pr-comment: "true"   # default on pull_request
 
@@ -43,7 +44,7 @@ jobs:
       #   uses: shmindmaster/crewscore@v2
       #   with:
       #     scan-path: "."
-      #     threshold: "50"
+      #     required-controls: "human_gate.approval_required,safe_stop.stop_condition"
 
       # Local composite action (this repo / monorepo self-check) — single file:
       - name: CrewScore
@@ -51,7 +52,6 @@ jobs:
         uses: ./
         with:
           prompt-file: examples/sample-prompt.md
-          threshold: "50"
           pr-comment: "false"
 
       # Local scan example (uncomment when `crewscore scan` is available):
@@ -60,7 +60,7 @@ jobs:
       #   uses: ./
       #   with:
       #     scan-path: "."
-      #     threshold: "50"
+      #     required-controls: "human_gate.approval_required,safe_stop.stop_condition"
 
       - name: Use score outputs
         if: always()
