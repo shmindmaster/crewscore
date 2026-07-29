@@ -31,7 +31,8 @@ counted **near-synonymous patterns for the same control**.
 That formula did not ask *"is this control specified?"* It asked *"how many of
 our phrasings did you happen to hit?"* Stating a control once, unambiguously,
 matched about one pattern out of six and scored 24–32. **A prompt that stated
-all eight controls clearly, once each, scored 28/100 — below the lowest tier
+one control in each of the eight dimensions, clearly and once, scored
+28/100 — below the lowest tier
 boundary of 50.** Reaching 70 took the same control restated four to six
 different ways, which is exactly the redundancy our own Context Bloat detector
 flags as a defect.

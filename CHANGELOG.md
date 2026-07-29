@@ -18,7 +18,8 @@ install them, and do not compare their numbers to these.
 
 **Scores change in this release.** A dimension used to divide by its *rule*
 count, and the rules inside a dimension are near-synonyms for the same control.
-So a prompt that stated all eight controls clearly, once each, scored **28/100**
+So a prompt that stated one control in each of the eight dimensions, clearly
+and once, scored **28/100**
 — below the lowest tier — and the only way to score well was to restate the same
 control four to six different ways, which is the exact redundancy the Context
 Bloat detector reports as a defect.
@@ -92,7 +93,7 @@ score, so it is published as data and versioned with the ruleset.
 - **Browser and CLI cannot disagree on rounding.** The dimension formula uses
   integer round-half-up rather than a float `round()`, because Python rounds
   half-to-even and JavaScript's `Math.round` rounds half-up — a dimension with
-  8 controls would have scored 12 in the CLI and 13 in the browser.
+  eight controls would have scored 12 in the CLI and 13 in the browser.
 
 - **Rule labels are keyed by `rule_id`, not by regex source.** The old map
   duplicated every pattern in two places and had already broken twice, once
@@ -101,6 +102,11 @@ score, so it is published as data and versioned with the ruleset.
 ---
 
 ## [0.1.0] — 2026-07-28 — first supported release
+
+> **Superseded by 0.3.0.** The scoring described below is the *old* formula.
+> Numbers in this entry are a record of what 0.1.0 did, not of what CrewScore
+> does now — the 28/100 it reports as a deliberate disclosure was fixed in
+> 0.3.0. Do not quote figures from this entry as current.
 
 CrewScore reads an AI agent system prompt and reports which of eight failure
 modes it never guards against — prompt injection, hallucination, runaway cost,
