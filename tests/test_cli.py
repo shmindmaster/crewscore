@@ -770,13 +770,13 @@ def test_version():
     assert __version__ in result.output
 
 
-def test_version_is_0_3_0():
+def test_version_is_0_5_0():
     """This release breaks the --json payload shape and `fix` exit codes;
     semver requires a minor bump, not the previous 0.3.1 patch bump.
     """
     from crewscore import __version__
 
-    assert __version__ == "0.3.0"
+    assert __version__ == "0.5.0"
 
 
 def test_fix_plan_json_lists_dimensions_without_writing(tmp_path: Path):

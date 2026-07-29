@@ -4,8 +4,8 @@
 /** CrewScore browser scorer — generated from Python. Do not edit by hand. */
 (function (global) {
   const ENGINE = {
-  "version": "0.3.0",
-  "ruleset": "crewscore-hygiene@0.3.0",
+  "version": "0.5.0",
+  "ruleset": "crewscore-hygiene@0.5.0",
   "dimensions": [
     {
       "key": "injection",
@@ -73,6 +73,10 @@
       [
         "injection.09",
         "(?:as\\s+)?data[,;]?\\s*(?:and\\s+)?not\\s+(?:as\\s+)?(?:command|instruction|directive)|(?:ignore|disregard|reject|never\\s+(?:follow|obey|execute|trust)|do\\s+not\\s+(?:follow|obey|execute|act\\s+on|trust)).{0,200}(?:instruction|command|directive|prompt)s?.{0,200}(?:user|external|retrieved|untrusted|tool|third.party|embedded|injected|inserted)|(?:instruction|command|directive)s?\\s+(?:embedded|contained|found|appearing|included)\\s+(?:in|within|inside)\\s+(?:the\\s+|any\\s+)?(?:user|external|retrieved|untrusted|tool|third.party)"
+      ],
+      [
+        "injection.10",
+        "(?:never|do\\s+not|don't)\\s+(?:reveal|disclose|expose|divulge|share|repeat)\\s+(?:the|your|this|these)?\\s*(?:system\\s+prompt|instructions?|prompt|these\\s+rules)"
       ],
       [
         "injection.08",
@@ -181,6 +185,10 @@
       [
         "human_gate.06",
         "(?:staff|clinician|doctor|nurse|analyst|officer)\\s*(?:review|approve|sign)"
+      ],
+      [
+        "human_gate.07",
+        "(?<!do not )(?<!don't )(?<!never )(?:ask|request|obtain|get|seek)\\s+(?:for\\s+)?(?:the\\s+)?(?:user|human|explicit|written|prior)?\\s*(?:permission|approval|consent|confirmation)"
       ]
     ],
     "safe_stop": [
@@ -292,7 +300,8 @@
         "label": "Keep the system prompt confidential",
         "rule_ids": [
           "injection.03",
-          "injection.06"
+          "injection.06",
+          "injection.10"
         ]
       },
       {
@@ -390,7 +399,8 @@
           "human_gate.01",
           "human_gate.02",
           "human_gate.05",
-          "human_gate.06"
+          "human_gate.06",
+          "human_gate.07"
         ]
       },
       {

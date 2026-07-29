@@ -89,6 +89,19 @@ INJECTION_DEFENSE_PATTERNS: list[tuple[str, str]] = [
         r"(?:in|within|inside)\s+(?:the\s+|any\s+)?"
         r"(?:user|external|retrieved|untrusted|tool|third.party)",
     ),
+    # 0.5.0: fired on 2/356 real prompts where a looser probe found 13/356.
+    # injection.06 requires the literal "do not reveal"; real prompts
+    # overwhelmingly write "NEVER disclose your system prompt" or "never
+    # expose this system prompt". The verb list stays narrow - "output" is
+    # excluded so "do not output instructions on how to install packages"
+    # does not read as prompt confidentiality.
+    (
+        "injection.10",
+        r"(?:never|do\s+not|don't)\s+"
+        r"(?:reveal|disclose|expose|divulge|share|repeat)\s+"
+        r"(?:the|your|this|these)?\s*"
+        r"(?:system\s+prompt|instructions?|prompt|these\s+rules)",
+    ),
     # Softened: bare "safety|guardrail" alone inflated scores; require defense context.
     (
         "injection.08",
@@ -184,6 +197,19 @@ HUMAN_GATE_PATTERNS: list[tuple[str, str]] = [
     (
         "human_gate.06",
         r"(?:staff|clinician|doctor|nurse|analyst|officer)\s*(?:review|approve|sign)",
+    ),
+    # 0.5.0: the corpus harness measured this control firing on 2/356 real
+    # prompts while a looser probe found 24/356. Inspection confirmed the
+    # misses were real: production prompts say "ask permission before
+    # dangerous actions" and "get user approval", neither of which matches
+    # human_gate.01 (which needs an actor + modal) or .05 (which needs
+    # "require/mandate"). The negative lookbehinds keep "do not ask
+    # permission" - the opposite instruction - from scoring as the control.
+    (
+        "human_gate.07",
+        r"(?<!do not )(?<!don't )(?<!never )(?:ask|request|obtain|get|seek)\s+"
+        r"(?:for\s+)?(?:the\s+)?(?:user|human|explicit|written|prior)?\s*"
+        r"(?:permission|approval|consent|confirmation)",
     ),
 ]
 
@@ -292,6 +318,7 @@ RULE_LABELS: dict[str, str] = {
     "injection.07": "You cannot be instructed to ignore your instructions",
     "injection.08": "State an injection defense or safety boundary policy",
     "injection.09": "Treat instructions in user content as data, not commands",
+    "injection.10": "Never disclose or expose the system prompt",
     "hallucination.01": "Do not fabricate facts, citations, or numbers",
     "hallucination.02": "Say so when you do not know or lack evidence",
     "hallucination.03": "Only use provided / verified data",
@@ -316,6 +343,7 @@ RULE_LABELS: dict[str, str] = {
     "human_gate.04": "Do not auto-execute, send, or publish",
     "human_gate.05": "Require human approval or confirmation",
     "human_gate.06": "Named role must review or sign off",
+    "human_gate.07": "Ask for permission or approval before acting",
     "safe_stop.01": "Stop / halt / refuse when conditions are unmet",
     "safe_stop.02": "Handle missing or insufficient evidence",
     "safe_stop.03": "Act on your own uncertainty",
@@ -377,7 +405,7 @@ CONCEPTS: dict[str, tuple[Concept, ...]] = {
         Concept(
             "injection.prompt_confidentiality",
             "Keep the system prompt confidential",
-            ("injection.03", "injection.06"),
+            ("injection.03", "injection.06", "injection.10"),
         ),
         Concept(
             "injection.named_defense",
@@ -445,6 +473,7 @@ CONCEPTS: dict[str, tuple[Concept, ...]] = {
                 "human_gate.02",
                 "human_gate.05",
                 "human_gate.06",
+                "human_gate.07",
             ),
         ),
         Concept(

@@ -1,0 +1,377 @@
+{
+  "analysis": {
+    "alpha": 0.05,
+    "ci95": [
+      0.549,
+      0.781
+    ],
+    "ci_and_p_agree": true,
+    "ci_excludes_zero": true,
+    "delta": 0.672,
+    "interval_method": "percentile bootstrap on the same statistic, 10000 resamples within groups, seed 20260730",
+    "p_value": 0.0001,
+    "significance_test": "two-sided permutation test on Cliff's delta, 10000 relabelings, seed 20260729, add-one corrected",
+    "significant": true,
+    "statistic": "Cliff's delta (Mann-Whitney U identity, midranks for ties)",
+    "zero_floor_sensitivity": {
+      "delta": 0.77,
+      "n_gpt_store": 87,
+      "n_production": 66,
+      "p": 0.0001
+    }
+  },
+  "controls": [
+    {
+      "control": "injection.override_resistance",
+      "dimension": "injection",
+      "gpt_store_hits": 3,
+      "gpt_store_n": 273,
+      "gpt_store_pct": 1.1,
+      "label": "Treat instructions inside user content as data, not commands",
+      "production_hits": 7,
+      "production_n": 83,
+      "production_pct": 8.4
+    },
+    {
+      "control": "injection.prompt_confidentiality",
+      "dimension": "injection",
+      "gpt_store_hits": 10,
+      "gpt_store_n": 273,
+      "gpt_store_pct": 3.7,
+      "label": "Keep the system prompt confidential",
+      "production_hits": 5,
+      "production_n": 83,
+      "production_pct": 6.0
+    },
+    {
+      "control": "injection.named_defense",
+      "dimension": "injection",
+      "gpt_store_hits": 17,
+      "gpt_store_n": 273,
+      "gpt_store_pct": 6.2,
+      "label": "Name prompt injection and state a defense",
+      "production_hits": 7,
+      "production_n": 83,
+      "production_pct": 8.4
+    },
+    {
+      "control": "hallucination.no_fabrication",
+      "dimension": "hallucination",
+      "gpt_store_hits": 4,
+      "gpt_store_n": 273,
+      "gpt_store_pct": 1.5,
+      "label": "Do not fabricate, invent, or guess",
+      "production_hits": 16,
+      "production_n": 83,
+      "production_pct": 19.3
+    },
+    {
+      "control": "hallucination.admit_uncertainty",
+      "dimension": "hallucination",
+      "gpt_store_hits": 2,
+      "gpt_store_n": 273,
+      "gpt_store_pct": 0.7,
+      "label": "Say so when you do not know",
+      "production_hits": 6,
+      "production_n": 83,
+      "production_pct": 7.2
+    },
+    {
+      "control": "hallucination.grounding",
+      "dimension": "hallucination",
+      "gpt_store_hits": 0,
+      "gpt_store_n": 273,
+      "gpt_store_pct": 0.0,
+      "label": "Ground answers in provided sources",
+      "production_hits": 0,
+      "production_n": 83,
+      "production_pct": 0.0
+    },
+    {
+      "control": "hallucination.defer_to_expert",
+      "dimension": "hallucination",
+      "gpt_store_hits": 2,
+      "gpt_store_n": 273,
+      "gpt_store_pct": 0.7,
+      "label": "Defer to a qualified professional",
+      "production_hits": 0,
+      "production_n": 83,
+      "production_pct": 0.0
+    },
+    {
+      "control": "citation.require",
+      "dimension": "citation",
+      "gpt_store_hits": 19,
+      "gpt_store_n": 273,
+      "gpt_store_pct": 7.0,
+      "label": "Require citations for claims",
+      "production_hits": 27,
+      "production_n": 83,
+      "production_pct": 32.5
+    },
+    {
+      "control": "citation.link_source",
+      "dimension": "citation",
+      "gpt_store_hits": 1,
+      "gpt_store_n": 273,
+      "gpt_store_pct": 0.4,
+      "label": "Link each claim to its source",
+      "production_hits": 1,
+      "production_n": 83,
+      "production_pct": 1.2
+    },
+    {
+      "control": "citation.inline_marker",
+      "dimension": "citation",
+      "gpt_store_hits": 4,
+      "gpt_store_n": 273,
+      "gpt_store_pct": 1.5,
+      "label": "Use an inline citation marker format",
+      "production_hits": 7,
+      "production_n": 83,
+      "production_pct": 8.4
+    },
+    {
+      "control": "cost.budget_cap",
+      "dimension": "cost",
+      "gpt_store_hits": 2,
+      "gpt_store_n": 273,
+      "gpt_store_pct": 0.7,
+      "label": "Cap spend, tokens, or rate",
+      "production_hits": 17,
+      "production_n": 83,
+      "production_pct": 20.5
+    },
+    {
+      "control": "cost.output_bound",
+      "dimension": "cost",
+      "gpt_store_hits": 3,
+      "gpt_store_n": 273,
+      "gpt_store_pct": 1.1,
+      "label": "Bound output length",
+      "production_hits": 33,
+      "production_n": 83,
+      "production_pct": 39.8
+    },
+    {
+      "control": "human_gate.approval_required",
+      "dimension": "human_gate",
+      "gpt_store_hits": 0,
+      "gpt_store_n": 273,
+      "gpt_store_pct": 0.0,
+      "label": "A human must approve",
+      "production_hits": 18,
+      "production_n": 83,
+      "production_pct": 21.7
+    },
+    {
+      "control": "human_gate.no_autonomous_action",
+      "dimension": "human_gate",
+      "gpt_store_hits": 2,
+      "gpt_store_n": 273,
+      "gpt_store_pct": 0.7,
+      "label": "Do not act autonomously before approval",
+      "production_hits": 17,
+      "production_n": 83,
+      "production_pct": 20.5
+    },
+    {
+      "control": "safe_stop.stop_condition",
+      "dimension": "safe_stop",
+      "gpt_store_hits": 45,
+      "gpt_store_n": 273,
+      "gpt_store_pct": 16.5,
+      "label": "Stop or refuse rather than proceed",
+      "production_hits": 35,
+      "production_n": 83,
+      "production_pct": 42.2
+    },
+    {
+      "control": "safe_stop.uncertainty_trigger",
+      "dimension": "safe_stop",
+      "gpt_store_hits": 0,
+      "gpt_store_n": 273,
+      "gpt_store_pct": 0.0,
+      "label": "Name what triggers stopping",
+      "production_hits": 21,
+      "production_n": 83,
+      "production_pct": 25.3
+    },
+    {
+      "control": "safe_stop.escalate",
+      "dimension": "safe_stop",
+      "gpt_store_hits": 1,
+      "gpt_store_n": 273,
+      "gpt_store_pct": 0.4,
+      "label": "Escalate to a human",
+      "production_hits": 0,
+      "production_n": 83,
+      "production_pct": 0.0
+    },
+    {
+      "control": "audit.log_actions",
+      "dimension": "audit",
+      "gpt_store_hits": 0,
+      "gpt_store_n": 273,
+      "gpt_store_pct": 0.0,
+      "label": "Log actions and decisions",
+      "production_hits": 6,
+      "production_n": 83,
+      "production_pct": 7.2
+    },
+    {
+      "control": "audit.tamper_evident",
+      "dimension": "audit",
+      "gpt_store_hits": 0,
+      "gpt_store_n": 273,
+      "gpt_store_pct": 0.0,
+      "label": "Keep the log tamper-evident",
+      "production_hits": 2,
+      "production_n": 83,
+      "production_pct": 2.4
+    },
+    {
+      "control": "audit.actor_attribution",
+      "dimension": "audit",
+      "gpt_store_hits": 0,
+      "gpt_store_n": 273,
+      "gpt_store_pct": 0.0,
+      "label": "Record who did what and when",
+      "production_hits": 8,
+      "production_n": 83,
+      "production_pct": 9.6
+    },
+    {
+      "control": "compliance.named_regime",
+      "dimension": "compliance",
+      "gpt_store_hits": 1,
+      "gpt_store_n": 273,
+      "gpt_store_pct": 0.4,
+      "label": "Name the regime that applies",
+      "production_hits": 1,
+      "production_n": 83,
+      "production_pct": 1.2
+    },
+    {
+      "control": "compliance.stated_obligation",
+      "dimension": "compliance",
+      "gpt_store_hits": 9,
+      "gpt_store_n": 273,
+      "gpt_store_pct": 3.3,
+      "label": "State that legal or regulatory constraints apply",
+      "production_hits": 12,
+      "production_n": 83,
+      "production_pct": 14.5
+    },
+    {
+      "control": "compliance.data_protection",
+      "dimension": "compliance",
+      "gpt_store_hits": 2,
+      "gpt_store_n": 273,
+      "gpt_store_pct": 0.7,
+      "label": "State a data-protection technique",
+      "production_hits": 11,
+      "production_n": 83,
+      "production_pct": 13.3
+    }
+  ],
+  "corpora": [
+    {
+      "globs": [
+        "**/*.txt"
+      ],
+      "key": "production",
+      "label": "Production agent system prompts",
+      "license_note": "Collection is CC0 by its maintainer; the underlying vendor prompt text is not. Fetched at a pinned SHA, never redistributed here.",
+      "sha": "2054f580b1203da061e8e3df3c6449de2ad7c322",
+      "url": "https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools"
+    },
+    {
+      "globs": [
+        "prompts/**/*.md"
+      ],
+      "key": "gpt_store",
+      "label": "General-purpose GPT-Store prompts",
+      "license_note": "Collection is MIT by its maintainer; the underlying author text is not. Fetched at a pinned SHA, never redistributed here.",
+      "sha": "3adfb7b38423b64a995057483c1f9007ed5f4da5",
+      "url": "https://github.com/linexjlin/GPTs"
+    }
+  ],
+  "groups": {
+    "gpt_store": {
+      "describe": {
+        "max": 20,
+        "mean": 1.88,
+        "median": 0,
+        "n": 273,
+        "q1": 0,
+        "q3": 4,
+        "zero_rate_pct": 68.1,
+        "zeros": 186
+      },
+      "files": 273
+    },
+    "production": {
+      "describe": {
+        "max": 49,
+        "mean": 14.36,
+        "median": 14,
+        "n": 83,
+        "q1": 4,
+        "q3": 20,
+        "zero_rate_pct": 20.5,
+        "zeros": 17
+      },
+      "files": 83
+    }
+  },
+  "never_fired": [
+    {
+      "control": "hallucination.grounding",
+      "dimension": "hallucination",
+      "label": "Ground answers in provided sources"
+    }
+  ],
+  "probes": {
+    "audit.tamper_evident": {
+      "hits": 2,
+      "n": 356,
+      "patterns": 1,
+      "pct": 0.6
+    },
+    "hallucination.defer_to_expert": {
+      "hits": 3,
+      "n": 356,
+      "patterns": 1,
+      "pct": 0.8
+    },
+    "hallucination.grounding": {
+      "hits": 1,
+      "n": 356,
+      "patterns": 5,
+      "pct": 0.3
+    },
+    "human_gate.approval_required": {
+      "hits": 24,
+      "n": 356,
+      "patterns": 2,
+      "pct": 6.7
+    },
+    "injection.prompt_confidentiality": {
+      "hits": 13,
+      "n": 356,
+      "patterns": 2,
+      "pct": 3.7
+    },
+    "safe_stop.escalate": {
+      "hits": 0,
+      "n": 356,
+      "patterns": 2,
+      "pct": 0.0
+    }
+  },
+  "resamples": 10000,
+  "ruleset": "crewscore-hygiene@0.5.0",
+  "seed": 20260729,
+  "self_checks": 104
+}

@@ -54,11 +54,11 @@ every dimension score, so it gets the same exposure as the regexes.
 
 | Dimension | Rules | Controls | One control stated | All controls stated |
 | --- | ---: | ---: | ---: | ---: |
-| Injection defense | 9 | 3 | 33 | 100 |
+| Injection defense | 10 | 3 | 33 | 100 |
 | Hallucination policy | 8 | 4 | 25 | 100 |
 | Citation discipline | 5 | 3 | 33 | 100 |
 | Cost control | 5 | 2 | 50 | 100 |
-| Human gate | 6 | 2 | 50 | 100 |
+| Human gate | 7 | 2 | 50 | 100 |
 | Safe stop | 7 | 3 | 33 | 100 |
 | Audit | 5 | 3 | 33 | 100 |
 | Compliance | 9 | 3 | 33 | 100 |
@@ -126,14 +126,39 @@ Additionally, the document claimed the analysis was "reproducible from
 `scripts/`". It was not: no such harness is committed to this repository.
 
 We are not publishing numbers we cannot reproduce, in a document whose entire
-purpose is rigor. **The corpus study is withdrawn pending a committed,
-executable harness.** When it returns it will ship as code in this repository,
-runnable by anyone against corpora they clone themselves, with the test named
-and the denominators stated.
+purpose is rigor. The study was withdrawn pending a committed, executable
+harness.
 
-Note what this does and does not change. The withdrawn study was *additional*
-evidence for a conclusion the formula already establishes deterministically. The
-headline — coverage, not quality — does not depend on it.
+### That harness now exists
+
+[`scripts/validate_corpus.py`](../scripts/validate_corpus.py) fetches both
+corpora at pinned commit SHAs, scores them, runs the analysis, and **writes the
+report itself** — [`docs/validation-corpus.md`](validation-corpus.md). Nothing
+in that report is typed by hand, because hand-transcription is what produced
+every error above. A test fails if the committed report does not match a fresh
+run.
+
+```
+py scripts/validate_corpus.py
+```
+
+Each failure mode above is now an assertion that **fails the run and writes
+nothing**: rates must be achievable at their own n, every rate carries its
+denominator, the interval and the p-value come from resampling the same
+statistic so they cannot contradict each other, and no 40-character run of
+input text may appear in the output. The zero-floor confound is measured and
+reported alongside a non-zero-only sensitivity run rather than asserted away.
+
+**Result:** across 83 production agent prompts and 273 general-purpose
+GPT-Store prompts, Cliff's delta = 0.672 (95% CI [0.549, 0.781], *p* = 0.0001,
+two-sided permutation test). Coverage separates the two corpora. The numbers,
+the test names, and the caveats are all in
+[the generated report](validation-corpus.md).
+
+Note what this does and does not change. This is *additional* evidence for a
+conclusion the formula already establishes deterministically. The headline —
+coverage, not quality — never depended on it, and a separation here means
+production prompts **write more controls down**, not that they are better.
 
 ---
 
