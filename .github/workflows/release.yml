@@ -106,7 +106,7 @@ jobs:
           /tmp/clean/bin/crewscore --version
           /tmp/clean/bin/crewscore test --prompt-file p.md --json > gov.json
           /tmp/clean/bin/crewscore rules --json > rules.json
-          # The 0.4.0 contract: config carries no governance grade at all.
+          # The 0.1.0 contract: config carries no governance grade at all.
           /tmp/clean/bin/crewscore test --prompt-file AGENTS.md --json > cfg.json
           python - <<'PY'
           import json

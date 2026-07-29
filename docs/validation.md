@@ -64,7 +64,7 @@ this document: **the number is coverage, not quality.** A high score means the
 text is verbose about a control. A low score means a control may be missing —
 which is genuinely useful, and is the job the tool should be trusted with.
 
-This defect is deliberately **not** fixed in 0.4.0. Repairing the formula
+This defect is deliberately **not** fixed in 0.1.0. Repairing the formula
 changes every score, and belongs in a release that changes scoring on purpose,
 alongside the rule-precision work.
 
@@ -146,4 +146,4 @@ If you find an error in this document, please open an issue. The previous draft
 was withdrawn because we audited it ourselves and it did not hold up; we would
 rather be corrected than believed.
 
-*Last updated for 0.4.0.*
+*Last updated for 0.1.0.*
