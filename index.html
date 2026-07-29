@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="CrewScore - a governance checklist for AI agent prompts. See which controls your prompt states and which it never mentions, in your browser. Coverage, not a quality ranking. No signup. No install.">
-<meta property="og:title" content="CrewScore - governance checklist for agent prompts">
-<meta property="og:description" content="Checklist coverage for agent system prompts: which governance controls the text states and which it does not. Coverage, not a quality ranking. Not a red-team. No signup, no API key.">
+<meta name="description" content="Paste an AI agent system prompt and see which failure modes it never guards against - prompt injection, hallucination, runaway cost, missing human approval. Free, offline, no signup, no API key.">
+<meta property="og:title" content="What did you forget to tell your AI agent?">
+<meta property="og:description" content="Paste a system prompt, see which of eight failure modes it never guards against: prompt injection, hallucination, runaway cost, missing human approval. Offline and deterministic. Not a red-team.">
 <meta property="og:url" content="https://crewscore.ai">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="CrewScore">
@@ -14,7 +14,7 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="CrewScore. 28/100 - what a prompt scores when it states all eight governance controls clearly. The lowest tier starts at 50.">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="CrewScore - governance checklist for agent prompts">
+<meta name="twitter:title" content="What did you forget to tell your AI agent?">
 <meta name="twitter:description" content="A prompt that states all eight governance controls clearly scores 28/100 on our own tool. Coverage, not a quality ranking - and we published why.">
 <meta name="twitter:image" content="https://crewscore.ai/docs/social-card.png">
 <link rel="canonical" href="https://crewscore.ai/">
@@ -23,7 +23,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<title>CrewScore - Free governance checklist for AI agent prompts (no install)</title>
+<title>CrewScore - what did you forget to tell your AI agent? (free, no install)</title>
 <style>
 :root{
   --bg:#0a0c0b;
@@ -502,9 +502,9 @@ body.sheet-open{overflow:hidden}
   </header>
 
   <section class="hero">
-    <div class="eyebrow">Governance checklist for agent instructions</div>
-    <h2>See which governance rules your prompt does not state</h2>
-    <p class="sub">Paste a prompt in your browser, get the eight controls it states and the ones it never mentions. Same open rules as the CLI. <strong>Not a red-team.</strong>
+    <div class="eyebrow">Free - runs in your browser - nothing leaves the page</div>
+    <h2>What did you forget to tell your AI agent?</h2>
+    <p class="sub">Paste your system prompt. See which of the eight ways agents go wrong it never mentions - <strong>prompt injection, hallucination, runaway cost, no human approval, no stop condition</strong>. Same open rules as the CLI. <strong>Not a red-team.</strong>
       <button type="button" class="linkish" id="link-how-score">How the number is computed</button>
     </p>
     <p class="trust"><strong>Coverage, not a quality ranking.</strong> You can prove that from the shipped rules: a prompt that states all eight governance controls clearly, once each, scores <strong>28/100</strong> - below the lowest tier. Stating every one of them twice reaches only 41/100. A high score is unreachable by clear writing; it needs the same control restated four to six different ways, which is exactly the redundancy our own Context Bloat detector flags. A low score tells you what you have not written down. A high score means the text is present - nothing more. <a href="https://github.com/shmindmaster/crewscore/blob/main/docs/validation.md" target="_blank" rel="noopener">Read the validation study</a>.</p>
