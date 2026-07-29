@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="How to report a CrewScore vulnerability privately and how the project protects its browser, package, Action, and release surfaces.">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://crewscore.ai/security.html">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="stylesheet" href="assets/site.css">
+  <title>CrewScore security</title>
+</head>
+<body>
+  <div class="site-shell">
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="CrewScore home"><span class="brand-mark" aria-hidden="true">CS</span><span>CrewScore</span></a>
+      <nav class="site-nav" aria-label="Primary navigation"><a href="./">Checker</a><a href="privacy.html">Privacy</a><a href="https://github.com/shmindmaster/crewscore">GitHub</a></nav>
+    </header>
+    <main class="hero" style="max-width:760px">
+      <p class="eyebrow">Security</p>
+      <h1>Report a CrewScore vulnerability privately.</h1>
+      <p class="hero-copy">CrewScore is an offline static-analysis tool. Please report concrete security issues privately, especially ones involving prompt text, source URLs, analytics, the GitHub Action, publishing, or dependencies.</p>
+      <p><a class="button" href="https://github.com/shmindmaster/crewscore/security/advisories/new">Report a vulnerability on GitHub</a></p>
+      <p>If GitHub is unavailable, email <a href="mailto:sarosh@pendoah.ai?subject=CrewScore%20security%20report">sarosh@pendoah.ai</a>. Do not post secrets, customer prompts, or exploit payloads in a public issue.</p>
+      <h2>What to include</h2>
+      <p>Share the affected version or commit, a minimal synthetic reproduction, impact, and any suggested mitigation. We will acknowledge the report, assess scope, and coordinate a fix and disclosure timeline with the reporter.</p>
+      <h2>Current project safeguards</h2>
+      <ul>
+        <li>Prompt text stays in the browser during website scoring; see <a href="privacy.html">privacy details</a>.</li>
+        <li>Package publication uses PyPI Trusted Publishing rather than a stored publishing token.</li>
+        <li>Release artifacts are built, tested, and smoke-tested before publication.</li>
+        <li>GitHub secret scanning, push protection, Dependabot alerts, and Dependabot security updates are enabled.</li>
+        <li>Dependabot pull requests run on ephemeral GitHub-hosted runners; routine project checks use an isolated maintainer-runner boundary.</li>
+      </ul>
+      <h2>Scope and limits</h2>
+      <p>Reports may cover the Python package, GitHub Action, static site, generated browser engine, build and release automation, or published dependencies. A false positive or missing written control is normally a scoring-quality issue, not a security vulnerability.</p>
+      <p>CrewScore is not a security certification and does not prove an AI agent will follow written instructions. It checks whether guardrails are written down; runtime enforcement and adversarial testing remain separate.</p>
+    </main>
+    <footer class="footer"><p><a href="./">Checker</a> · <a href="privacy.html">Privacy</a> · <a href="https://github.com/shmindmaster/crewscore">GitHub</a></p></footer>
+  </div>
+</body>
+</html>
