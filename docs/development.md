@@ -66,6 +66,15 @@ Edit `crewscore/scorers/fix_patterns.py` (`FIX_TEMPLATES` and/or
 `CONTROL_FIX_TEMPLATES`). Re-export the web engine if the browser should show
 the new text.
 
+## Merge automation (no human review by default)
+
+Required status checks on `main` are the merge gate. Maintainer same-repo PRs
+enable **squash auto-merge** when checks pass. See [automation.md](automation.md).
+
+- Label **`no-automerge`** to force a manual merge.
+- Humans still own: public launch posts, Gate 0 strategy, scoring arithmetic
+  changes, and choosing when to cut a PyPI tag.
+
 ## Public contracts
 
 Treat these as the public surface while pre-1.0:

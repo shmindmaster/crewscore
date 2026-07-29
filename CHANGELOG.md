@@ -39,6 +39,9 @@ No scoring change. Ruleset remains `crewscore-hygiene@0.5.0`.
 - Media policy documented (hero/demo assets retained; large binaries noted).
 - Inventory of the lean-product pass: [cleanup-and-completion.md](docs/cleanup-and-completion.md).
 - `python -m crewscore` works via `crewscore/__main__.py`.
+- **Machine merge gates:** required CI checks on `main` (no required human
+  reviews); owner same-repo PRs auto-squash-merge when green; docs in
+  `docs/automation.md`.
 
 ---
 

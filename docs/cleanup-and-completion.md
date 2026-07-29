@@ -115,3 +115,10 @@ No new runtime dependencies. No LLM SDKs.
 
 Ship as **0.6.1** (additive completions + docs) unless a scoring break appears.
 Bump ruleset only if control arithmetic changes.
+
+## Automation note (2026-07-29)
+
+"Human review" is **not** a required merge gate for this repo. Machine gates
+(required CI checks + owner auto-merge) replace routine review. See
+[automation.md](automation.md). Product decisions (Show HN, Gate 0, scoring
+formula, release tags) remain human-owned.
