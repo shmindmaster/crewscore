@@ -5,8 +5,12 @@ import re
 import pytest
 
 from crewscore.scoring import RULESET_ID, build_result, overall_score, score_tier
-from crewscore.scorers.fix_patterns import apply_fixes, generate_fixes
-from crewscore.scorers.structural_analysis import analyze, analyze_with_findings
+from crewscore.scorers.fix_patterns import (
+    CONTROL_FIX_TEMPLATES,
+    apply_fixes,
+    generate_fixes,
+)
+from crewscore.scorers.structural_analysis import CONCEPTS, analyze, analyze_with_findings
 
 BARE_PROMPT = "You are a helpful assistant that answers customer questions."
 
@@ -79,6 +83,29 @@ def test_fix_raises_score():
     after = analyze(enhanced)
     assert overall_score(after) > overall_score(before)
     assert "CrewScore" in enhanced
+
+
+def test_each_browser_control_template_matches_only_its_named_control():
+    """A selected browser suggestion must earn its advertised control only.
+
+    The browser applies this wording and immediately rescans it. Matching no
+    control makes the review misleading; matching extra controls turns a
+    per-control choice back into the dimension-wide append-all behavior the
+    controls-first experience replaced.
+    """
+    published_controls = {
+        concept.key for concepts in CONCEPTS.values() for concept in concepts
+    }
+    assert set(CONTROL_FIX_TEMPLATES) == published_controls
+
+    for control, template in CONTROL_FIX_TEMPLATES.items():
+        _, findings = analyze_with_findings(template)
+        matched = {
+            finding["concept"]
+            for finding in findings
+            if finding["status"] == "matched"
+        }
+        assert matched == {control}, f"{control}: {template!r} matched {matched}"
 
 
 def test_build_result_tier():

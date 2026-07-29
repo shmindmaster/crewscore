@@ -14,6 +14,23 @@ install them, and do not compare their numbers to these.
 
 ---
 
+## [Unreleased]
+
+No scoring change. `crewscore-hygiene@0.5.0`, the 23-control denominator,
+numeric JSON fields, and Action outputs are unchanged.
+
+### Fixed
+
+- **Browser control suggestions now satisfy exactly the control they name.**
+  The controls-first reviewer rescans the in-browser text after applying a
+  selected suggestion. Ten terse suggestions previously matched no published
+  control; some others matched an additional control. Every exported
+  per-control template is now asserted to match its own control and no other,
+  and cross-browser coverage verifies that applying one control updates the
+  result by one control.
+
+---
+
 ## [0.6.0] — 2026-07-29 — explicit control-policy stabilization
 
 No scoring change. `crewscore-hygiene@0.5.0` remains the ruleset, so the
