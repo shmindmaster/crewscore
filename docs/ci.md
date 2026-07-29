@@ -18,10 +18,12 @@ jobs:
         id: crewscore
         uses: shmindmaster/crewscore@v2
         with:
-          # prefer a repo scan when you have multiple agent artifacts:
-          # scan-path: "."
-          prompt-file: ./agents/system-prompt.md
-          threshold: "50"
+          # Prefer a repo scan when you have multiple agent artifacts.
+          # The Action is report-only by default: use explicit public controls
+          # or regressions, not the coverage average, when failing CI.
+          scan-path: "."
+          required-controls: "human_gate.approval_required,safe_stop.stop_condition"
+          sarif: "crewscore.sarif"
           # explain: "true"     # matched vs missing signals
           # pr-comment: "true"  # default on pull_request
       - name: Report
@@ -37,11 +39,17 @@ jobs:
 |-------|----------|---------|-------------|
 | `prompt-file` | one of | — | Path to a single system prompt file |
 | `scan-path` | one of | — | Path for `crewscore scan`. The worst score across **governed** files becomes the output |
-| `threshold` | no | `50` | Fail the step (exit 2) when a **system prompt** scores below this. Coding-agent config is exempt |
+| `threshold` | no | `""` | Optional legacy numeric gate. Prefer explicit control policies; coding-agent config is exempt |
 | `max-smells` | no | `""` | Fail the step (exit 2) when any file carries more than N configuration smells. This is the gate for `AGENTS.md`-style files |
 | `explain` | no | `false` | Include matched/missing signals |
 | `summary` | no | `crewscore-summary.md` | Markdown path; also appended to `GITHUB_STEP_SUMMARY` |
 | `pr-comment` | no | `true` | On `pull_request`, post or update a sticky comment |
+| `required-controls` | no | `""` | Comma-separated public control IDs or dimensions that must be present |
+| `forbid-missing` | no | `""` | Comma-separated public control IDs or dimensions that must not be missing |
+| `baseline` | no | `""` | Prompt-free baseline JSON from `crewscore baseline` |
+| `fail-on-regression` | no | `false` | Fail only if a baseline control disappears |
+| `config` | no | `""` | Optional `.crewscore.yml` control-policy file |
+| `sarif` | no | `""` | Optional destination for prompt-free SARIF 2.1.0 findings |
 
 Provide **either** `prompt-file` **or** `scan-path`. In scan mode the outputs
 use the minimum overall across governed files only — coding-agent config is
@@ -115,6 +123,26 @@ crewscore scan . --json \
 ```
 
 The official Action already does this, and exposes `scored` to guard on.
+
+---
+
+## Recommended policy setup
+
+Run `crewscore init .` once, review the generated prompt-free baseline and
+`.crewscore.yml`, then use:
+
+```yaml
+- uses: shmindmaster/crewscore@v2
+  with:
+    scan-path: "."
+    config: .crewscore.yml
+    sarif: crewscore.sarif
+```
+
+The generated workflow stores SARIF as an artifact. The report contains
+missing control IDs and file paths but no prompt text or matching snippets; use
+your code-scanning provider's approved SARIF upload step if you want inline
+annotations. See [policies.md](policies.md) for baseline and control details.
 
 ---
 

@@ -1,0 +1,36 @@
+name: False-positive written control
+description: CrewScore detected a public control that the instructions do not actually state.
+title: "false positive: "
+labels: ["scoring", "false-positive"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not paste customer prompts, credentials, or private source URLs. Use a minimal synthetic or safely redacted example.
+  - type: input
+    id: version
+    attributes:
+      label: CrewScore and ruleset version
+      placeholder: "crewscore 0.5.1; crewscore-hygiene@0.5.0"
+    validations:
+      required: true
+  - type: input
+    id: control
+    attributes:
+      label: Detected control ID
+      placeholder: "human_gate.approval_required"
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Minimal synthetic example
+      description: Include only text you are allowed to share.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Why this should be missing
+    validations:
+      required: true

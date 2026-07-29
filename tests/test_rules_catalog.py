@@ -172,7 +172,7 @@ def test_test_human_shows_ruleset_and_method_without_explain_flag():
 
 
 def test_ruleset_id_is_0_5_0():
-    """The ruleset moves alongside the package to 0.5.0.
+    """The ruleset remains at 0.5.0 while package 0.6.0 adds policy tooling.
 
     Versioned in lockstep with the package so any score can be traced back
     to the exact rules that produced it.

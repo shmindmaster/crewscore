@@ -15,9 +15,9 @@ inputs:
     required: false
     default: ""
   threshold:
-    description: "Exit non-zero (code 2) if a system prompt scores below this value (0-100). Coding-agent config (AGENTS.md, CLAUDE.md, .cursorrules) is exempt — it is judged on configuration smells, not this number. Use max-smells to gate those."
+    description: "Optional legacy numeric gate (0-100). Leave empty for report-only; prefer required-controls or fail-on-regression so an average is never treated as a safety bar. Coding-agent config is exempt."
     required: false
-    default: "50"
+    default: ""
   max-smells:
     description: "Exit non-zero (code 2) if any file has more than this many configuration smells (arXiv:2606.15828). Leave empty to disable. This is the gate that applies to AGENTS.md-style config files."
     required: false
@@ -34,6 +34,30 @@ inputs:
     description: "On pull_request events, post or update a sticky PR comment with the summary (requires pull-requests write permission)"
     required: false
     default: "true"
+  required-controls:
+    description: "Comma-separated public control IDs or dimensions that must be present (for example human_gate.approval_required,safe_stop)."
+    required: false
+    default: ""
+  forbid-missing:
+    description: "Comma-separated public control IDs or dimensions that must not be missing."
+    required: false
+    default: ""
+  baseline:
+    description: "Path to a prompt-free baseline JSON from crewscore baseline."
+    required: false
+    default: ""
+  fail-on-regression:
+    description: "When true, fail only if a control recorded in baseline disappears."
+    required: false
+    default: "false"
+  config:
+    description: "Optional .crewscore.yml policy configuration."
+    required: false
+    default: ""
+  sarif:
+    description: "Optional path for prompt-free SARIF 2.1.0 missing-control findings."
+    required: false
+    default: ""
 
 outputs:
   scored:
@@ -71,6 +95,12 @@ runs:
         MAX_SMELLS: ${{ inputs.max-smells }}
         EXPLAIN: ${{ inputs.explain }}
         SUMMARY: ${{ inputs.summary }}
+        REQUIRED_CONTROLS: ${{ inputs.required-controls }}
+        FORBID_MISSING: ${{ inputs.forbid-missing }}
+        BASELINE: ${{ inputs.baseline }}
+        FAIL_ON_REGRESSION: ${{ inputs.fail-on-regression }}
+        CONFIG: ${{ inputs.config }}
+        SARIF: ${{ inputs.sarif }}
       run: |
         set -euo pipefail
 
@@ -81,7 +111,10 @@ runs:
 
         set +e
         if [ -n "$SCAN_PATH" ]; then
-          ARGS=(scan "$SCAN_PATH" --json --threshold "$THRESHOLD")
+          ARGS=(scan "$SCAN_PATH" --json)
+          if [ -n "$THRESHOLD" ]; then
+            ARGS+=(--threshold "$THRESHOLD")
+          fi
           if [ -n "$MAX_SMELLS" ]; then
             ARGS+=(--max-smells "$MAX_SMELLS")
           fi
@@ -91,10 +124,19 @@ runs:
           if [ -n "$SUMMARY" ]; then
             ARGS+=(--summary "$SUMMARY")
           fi
+          if [ -n "$REQUIRED_CONTROLS" ]; then ARGS+=(--require "$REQUIRED_CONTROLS"); fi
+          if [ -n "$FORBID_MISSING" ]; then ARGS+=(--forbid-missing "$FORBID_MISSING"); fi
+          if [ -n "$BASELINE" ]; then ARGS+=(--baseline "$BASELINE"); fi
+          if [ "$FAIL_ON_REGRESSION" = "true" ]; then ARGS+=(--fail-on-regression); fi
+          if [ -n "$CONFIG" ]; then ARGS+=(--config "$CONFIG"); fi
+          if [ -n "$SARIF" ]; then ARGS+=(--sarif "$SARIF"); fi
           OUTPUT=$(crewscore "${ARGS[@]}")
           EXIT=$?
         else
-          ARGS=(test --prompt-file "$PROMPT_FILE" --json --threshold "$THRESHOLD")
+          ARGS=(test --prompt-file "$PROMPT_FILE" --json)
+          if [ -n "$THRESHOLD" ]; then
+            ARGS+=(--threshold "$THRESHOLD")
+          fi
           if [ -n "$MAX_SMELLS" ]; then
             ARGS+=(--max-smells "$MAX_SMELLS")
           fi
@@ -104,6 +146,14 @@ runs:
           if [ -n "$SUMMARY" ]; then
             ARGS+=(--summary "$SUMMARY")
           fi
+          # Values come from env rather than command text, so consumer inputs
+          # remain literal even if they contain shell metacharacters.
+          if [ -n "$REQUIRED_CONTROLS" ]; then ARGS+=(--require "$REQUIRED_CONTROLS"); fi
+          if [ -n "$FORBID_MISSING" ]; then ARGS+=(--forbid-missing "$FORBID_MISSING"); fi
+          if [ -n "$BASELINE" ]; then ARGS+=(--baseline "$BASELINE"); fi
+          if [ "$FAIL_ON_REGRESSION" = "true" ]; then ARGS+=(--fail-on-regression); fi
+          if [ -n "$CONFIG" ]; then ARGS+=(--config "$CONFIG"); fi
+          if [ -n "$SARIF" ]; then ARGS+=(--sarif "$SARIF"); fi
           OUTPUT=$(crewscore "${ARGS[@]}")
           EXIT=$?
         fi

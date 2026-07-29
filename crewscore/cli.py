@@ -13,8 +13,15 @@ from rich.panel import Panel
 
 from crewscore import __version__
 from crewscore.export_eval import write_eval_stubs
+from crewscore.policy import (
+    PolicyError,
+    baseline_payload,
+    evaluate_policy,
+    resolve_policy,
+)
 from crewscore.report import render_badge_svg, render_html_report, share_text
 from crewscore.rules_catalog import SCORING_METHOD, catalog_payload, scoring_transparency_block
+from crewscore.sarif import write_sarif
 from crewscore.scan import MAX_FILE_BYTES, discover_prompt_files, score_paths
 from crewscore.scoring import DIMENSIONS, RULESET_ID, build_result, tier_color
 from crewscore.scorers import structural_analysis
@@ -90,6 +97,49 @@ err_console = Console(stderr=True)
 BRAND = "CrewScore"
 HOMEPAGE = "https://crewscore.ai"
 REPO = "https://github.com/shmindmaster/crewscore"
+
+
+def _resolve_policy_or_exit(
+    *,
+    config: str | None,
+    require: tuple[str, ...],
+    forbid_missing: tuple[str, ...],
+    baseline: str | None,
+    fail_on_regression: bool,
+):
+    """Resolve optional control policy with a clear CLI error, not a traceback."""
+    try:
+        return resolve_policy(
+            config=config,
+            require=require,
+            forbid_missing=forbid_missing,
+            baseline=baseline,
+            fail_on_regression=fail_on_regression,
+        )
+    except PolicyError as exc:
+        err_console.print(f"[red]Policy error: {exc}[/red]")
+        sys.exit(1)
+
+
+def _evaluate_policy_or_exit(settings, **kwargs):
+    try:
+        return evaluate_policy(settings, **kwargs)
+    except PolicyError as exc:
+        err_console.print(f"[red]Policy error: {exc}[/red]")
+        sys.exit(1)
+
+
+def _baseline_entries(root: Path, profile: str | None) -> list[tuple[str, str, list[dict]]]:
+    """Collect public control state for a prompt-free baseline file."""
+    entries: list[tuple[str, str, list[dict]]] = []
+    for path in discover_prompt_files(root):
+        resolved = profile or classify_path(path)
+        if not governance_applies(resolved):
+            continue
+        text = _read_prompt_file(path)
+        _dimensions, findings = structural_analysis.analyze_with_findings(text)
+        entries.append((path.resolve().relative_to(root).as_posix(), resolved, findings))
+    return entries
 
 
 def render_score_bar(score: int) -> str:
@@ -185,6 +235,44 @@ main.add_command(assess_vendor)
         "smells are found. Use instead of --threshold for AGENTS.md-style files."
     ),
 )
+@click.option(
+    "--require",
+    "required_controls",
+    multiple=True,
+    help=(
+        "Require a public control ID or a whole dimension (comma-separated; "
+        "repeatable). This is an explicit policy gate, not a score threshold."
+    ),
+)
+@click.option(
+    "--forbid-missing",
+    "forbidden_missing_controls",
+    multiple=True,
+    help="Fail if a named public control ID or dimension is not detected (repeatable).",
+)
+@click.option(
+    "--baseline",
+    type=click.Path(dir_okay=False),
+    default=None,
+    help="Prompt-free baseline JSON written by `crewscore baseline`.",
+)
+@click.option(
+    "--fail-on-regression",
+    is_flag=True,
+    help="Fail only when a control recorded in the baseline disappears.",
+)
+@click.option(
+    "--config",
+    type=click.Path(exists=True, dir_okay=False),
+    default=None,
+    help="Read required controls and baseline settings from .crewscore.yml.",
+)
+@click.option(
+    "--sarif",
+    type=click.Path(dir_okay=False),
+    default=None,
+    help="Write prompt-free missing-control findings as SARIF 2.1.0.",
+)
 def test(
     prompt,
     prompt_file,
@@ -196,6 +284,12 @@ def test(
     summary,
     profile,
     max_smells,
+    required_controls,
+    forbidden_missing_controls,
+    baseline,
+    fail_on_regression,
+    config,
+    sarif,
 ):
     """Measure governance guardrail coverage in an agent system prompt.
 
@@ -222,6 +316,14 @@ def test(
         )
         sys.exit(1)
 
+    policy = _resolve_policy_or_exit(
+        config=config,
+        require=required_controls,
+        forbid_missing=forbidden_missing_controls,
+        baseline=baseline,
+        fail_on_regression=fail_on_regression,
+    )
+
     # Always compute findings so JSON is never a black box.
     dimensions, findings = structural_analysis.analyze_with_findings(system_prompt)
     # Smells need file context; a --prompt string only supports Context Bloat.
@@ -247,6 +349,14 @@ def test(
         # payload, so record it as a warning rather than only printing it.
         result.warnings.append("threshold_ignored_for_config")
 
+    policy_result = _evaluate_policy_or_exit(
+        policy,
+        findings=findings,
+        governance_applicable=result.governance_applicable,
+        source=str(prompt_path) if prompt_path else "prompt",
+        root=prompt_path.parent if prompt_path else None,
+    )
+
     if report:
         report_path = Path(report)
         report_path.parent.mkdir(parents=True, exist_ok=True)
@@ -258,6 +368,17 @@ def test(
         badge_path = Path(badge)
         badge_path.parent.mkdir(parents=True, exist_ok=True)
         badge_path.write_text(render_badge_svg(result), encoding="utf-8")
+    if sarif:
+        write_sarif(
+            sarif,
+            [
+                (
+                    str(prompt_path) if prompt_path else "prompt",
+                    result.governance_applicable,
+                    findings,
+                )
+            ],
+        )
 
     md_body = format_score_markdown(result, findings=findings)
     if summary:
@@ -280,6 +401,8 @@ def test(
             # let a reader reconstruct a score from them alone.
             payload["findings"] = findings
             payload["transparency"] = scoring_transparency_block()
+        if policy.enabled:
+            payload["policy"] = policy_result
         click.echo(json.dumps(payload, indent=2, sort_keys=True))
     else:
         color = tier_color(result.overall)
@@ -392,7 +515,7 @@ def test(
                 "(still not runtime proof)."
             )
             console.print(
-                "  -> CI: [bold]--json --threshold N[/bold] · "
+                "  -> CI: [bold]--json --fail-on-regression --baseline FILE[/bold] · "
                 "repo: [bold]crewscore scan .[/bold]"
             )
         else:
@@ -433,6 +556,20 @@ def test(
                 f"  [red]Smell threshold failure: {len(result.smells)} "
                 f"> {max_smells}[/red]"
             )
+        sys.exit(2)
+
+    if policy_result["failed"]:
+        if not as_json:
+            missing = policy_result.get("missing_required_controls") or []
+            regressions = policy_result.get("regressed_controls") or []
+            if missing:
+                err_console.print(
+                    "  [red]Required-control failure:[/red] " + ", ".join(missing)
+                )
+            if regressions:
+                err_console.print(
+                    "  [red]Regression failure:[/red] " + ", ".join(regressions)
+                )
         sys.exit(2)
 
 
@@ -1049,6 +1186,133 @@ def fix(prompt, prompt_file, apply, output, plan, as_json, profile):
         console.print()
 
 
+@main.command("baseline")
+@click.argument(
+    "path",
+    default=".",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+)
+@click.option(
+    "--output",
+    "output_path",
+    type=click.Path(dir_okay=False, path_type=Path),
+    default=None,
+    help="Destination JSON path (default: PATH/.crewscore-baseline.json).",
+)
+@click.option(
+    "--profile",
+    type=click.Choice([*PROFILES], case_sensitive=False),
+    default=None,
+    help="Optional profile override for every discovered artifact.",
+)
+def baseline(path: Path, output_path: Path | None, profile: str | None):
+    """Record current found-control IDs without storing prompt text.
+
+    Use the result with ``scan --baseline FILE --fail-on-regression``.  A
+    baseline tracks controls present today; it does not establish a safety
+    threshold and it never writes a prompt into the baseline file.
+    """
+    root = path.resolve()
+    forced_profile = profile.lower() if profile else None
+    entries = _baseline_entries(root, forced_profile)
+    destination = output_path or root / ".crewscore-baseline.json"
+    destination = destination.resolve()
+    payload = baseline_payload(entries, ruleset=RULESET_ID)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    console.print(
+        f"[green]Wrote prompt-free baseline:[/green] {destination} "
+        f"({len(entries)} governed file(s), {sum(len(v['found_controls']) for v in payload['files'].values())} controls)."
+    )
+    console.print(
+        "[dim]Use --fail-on-regression to protect written controls already present; "
+        "add --require for an explicit policy.[/dim]"
+    )
+
+
+@main.command("init")
+@click.argument(
+    "path",
+    default=".",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+)
+@click.option(
+    "--force",
+    is_flag=True,
+    help="Replace existing CrewScore configuration/template files in PATH.",
+)
+def init(path: Path, force: bool):
+    """Create a prompt-free baseline and non-deploying GitHub workflow."""
+    root = path.resolve()
+    config_path = root / ".crewscore.yml"
+    baseline_path = root / ".crewscore-baseline.json"
+    workflow_path = root / ".github" / "workflows" / "crewscore.yml"
+    targets = [config_path, baseline_path, workflow_path]
+    existing = [target.relative_to(root) for target in targets if target.exists()]
+    if existing and not force:
+        err_console.print(
+            "[red]Refusing to overwrite existing file(s):[/red] "
+            + ", ".join(str(item) for item in existing)
+        )
+        err_console.print("[dim]Review them first, or re-run `crewscore init --force`.[/dim]")
+        sys.exit(1)
+
+    entries = _baseline_entries(root, None)
+    baseline_path.write_text(
+        json.dumps(baseline_payload(entries, ruleset=RULESET_ID), indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    config_path.write_text(
+        "# CrewScore policy: explicit controls and regressions, never a safety grade.\n"
+        "version: 1\n"
+        "baseline: .crewscore-baseline.json\n"
+        "fail_on_regression: true\n"
+        "required_controls: []\n"
+        "# Add a dimension (for example human_gate) or a precise published control:\n"
+        "# required_controls:\n"
+        "#   - human_gate.approval_required\n"
+        "#   - safe_stop.stop_condition\n"
+        "forbid_missing: []\n",
+        encoding="utf-8",
+    )
+    workflow_path.parent.mkdir(parents=True, exist_ok=True)
+    workflow_path.write_text(
+        "name: CrewScore\n\n"
+        "on:\n"
+        "  pull_request:\n"
+        "  workflow_dispatch:\n\n"
+        "permissions:\n"
+        "  contents: read\n\n"
+        "jobs:\n"
+        "  written-controls:\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - uses: actions/checkout@v4\n"
+        "      - name: Check written guardrails\n"
+        "        uses: shmindmaster/crewscore@v2\n"
+        "        with:\n"
+        "          scan-path: .\n"
+        "          config: .crewscore.yml\n"
+        "          sarif: crewscore.sarif\n"
+        "          pr-comment: 'true'\n"
+        "      - name: Preserve SARIF findings\n"
+        "        if: always()\n"
+        "        uses: actions/upload-artifact@v4\n"
+        "        with:\n"
+        "          name: crewscore-sarif\n"
+        "          path: crewscore.sarif\n"
+        "          if-no-files-found: warn\n",
+        encoding="utf-8",
+    )
+    console.print(f"[green]Created[/green] {config_path.relative_to(root)}")
+    console.print(f"[green]Created[/green] {baseline_path.relative_to(root)}")
+    console.print(f"[green]Created[/green] {workflow_path.relative_to(root)}")
+    console.print(
+        f"[dim]Baseline contains {len(entries)} governed artifact(s) and no prompt text. "
+        "Edit .crewscore.yml to require controls explicitly.[/dim]"
+    )
+
+
 @main.command("scan")
 @click.argument(
     "path",
@@ -1097,13 +1361,69 @@ def fix(prompt, prompt_file, apply, output, plan, as_json, profile):
         "on configuration smells, everything else on the 8 governance dimensions."
     ),
 )
-def scan(path, as_json, threshold, max_smells, explain, summary, profile):
+@click.option(
+    "--require",
+    "required_controls",
+    multiple=True,
+    help="Require a public control ID or whole dimension (comma-separated; repeatable).",
+)
+@click.option(
+    "--forbid-missing",
+    "forbidden_missing_controls",
+    multiple=True,
+    help="Fail if a named public control ID or dimension is absent (repeatable).",
+)
+@click.option(
+    "--baseline",
+    type=click.Path(dir_okay=False),
+    default=None,
+    help="Prompt-free baseline JSON written by `crewscore baseline`.",
+)
+@click.option(
+    "--fail-on-regression",
+    is_flag=True,
+    help="Fail only when a baseline control disappears.",
+)
+@click.option(
+    "--config",
+    type=click.Path(exists=True, dir_okay=False),
+    default=None,
+    help="Read required controls and baseline settings from .crewscore.yml.",
+)
+@click.option(
+    "--sarif",
+    type=click.Path(dir_okay=False),
+    default=None,
+    help="Write prompt-free missing-control findings as SARIF 2.1.0.",
+)
+def scan(
+    path,
+    as_json,
+    threshold,
+    max_smells,
+    explain,
+    summary,
+    profile,
+    required_controls,
+    forbidden_missing_controls,
+    baseline,
+    fail_on_regression,
+    config,
+    sarif,
+):
     """Discover and score agent prompt files under PATH (default: .).
 
     Looks for AGENTS.md, CLAUDE.md, system-prompt.md, and files under
     agents/prompts/prompt directories. Offline structural scan only.
     """
     root = Path(path).resolve()
+    policy = _resolve_policy_or_exit(
+        config=config,
+        require=required_controls,
+        forbid_missing=forbidden_missing_controls,
+        baseline=baseline,
+        fail_on_regression=fail_on_regression,
+    )
     files = discover_prompt_files(root)
 
     if not files:
@@ -1141,6 +1461,28 @@ def scan(path, as_json, threshold, max_smells, explain, summary, profile):
             rel = str(abs_path)
         abs_by_rel[rel] = abs_path
         item["path"] = rel
+
+    # Keep the established scan JSON rows and their numeric fields intact.
+    # Policy evidence is an optional, control-only extension; SARIF gets the
+    # same source-free findings without ever serializing prompt snippets.
+    sarif_entries: list[tuple[str, bool, list[dict]]] = []
+    for item in scored:
+        resolved_path = abs_by_rel[item["path"]]
+        text = _read_prompt_file(resolved_path)
+        _dimensions, findings = structural_analysis.analyze_with_findings(text)
+        applicable = item.get("governance_applicable", True)
+        policy_result = _evaluate_policy_or_exit(
+            policy,
+            findings=findings,
+            governance_applicable=applicable,
+            source=str(resolved_path),
+            root=root,
+        )
+        if policy.enabled:
+            item["policy"] = policy_result
+        sarif_entries.append((item["path"], applicable, findings))
+    if sarif:
+        write_sarif(sarif, sarif_entries)
 
     md_body = format_scan_markdown(scored)
     if summary:
@@ -1285,6 +1627,27 @@ def scan(path, as_json, threshold, max_smells, explain, summary, profile):
                     err_console.print(
                         f"  [red]Smell threshold failure: {item['path']} "
                         f"{len(item['smells'])} > {max_smells}[/red]"
+                    )
+
+    policy_failures = [
+        item for item in scored if item.get("policy", {}).get("failed")
+    ]
+    if policy_failures:
+        failed = True
+        if not as_json:
+            for item in policy_failures:
+                details = item["policy"]
+                missing = details.get("missing_required_controls") or []
+                regressions = details.get("regressed_controls") or []
+                if missing:
+                    err_console.print(
+                        f"  [red]Required-control failure: {item['path']} "
+                        f"missing {', '.join(missing)}[/red]"
+                    )
+                if regressions:
+                    err_console.print(
+                        f"  [red]Regression failure: {item['path']} "
+                        f"lost {', '.join(regressions)}[/red]"
                     )
 
     if failed:
