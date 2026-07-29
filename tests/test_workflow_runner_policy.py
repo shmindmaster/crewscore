@@ -34,6 +34,12 @@ def test_persistent_runner_jobs_refuse_fork_originated_pull_request_code():
         assert "head.repo.full_name == github.repository" in condition, f"{filename}:{job_name}"
 
 
+def test_selftest_only_runs_on_main_pushes_or_pull_requests():
+    workflow = _workflow("crewscore-selftest.yml")
+    assert workflow[True]["push"]["branches"] == ["main"]
+    assert workflow[True]["pull_request"] is None
+
+
 def test_release_publishing_stays_isolated_from_routine_runner_compute():
     """Trusted release/PyPI jobs remain on GitHub-hosted ephemeral workers.
 

@@ -4,6 +4,7 @@ name: CrewScore Self-Test
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 jobs:
