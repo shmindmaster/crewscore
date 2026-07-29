@@ -21,7 +21,11 @@ pytest -q
 ## How scoring works
 
 - Patterns live in `crewscore/scorers/structural_analysis.py` (`SCORER_MAP`).
-- Scores are match counts mapped to 0–100 (see `_score_from_match_count`).
+- Rules are grouped into controls in `CONCEPTS`; a dimension scores on how
+  many of its controls the prompt states, not how many regexes fired (see
+  `score_from_concepts`). Adding a synonym for a control already covered
+  therefore changes no score - that is deliberate.
+- Run `crewscore rules --concepts` to see the grouping.
 - Explain labels: `DIMENSION_SIGNAL_LABELS` (pattern → human label pairs).
 - CLI: `crewscore test`, `fix`, `assess-vendor`.
 - **Web uses the same engine:** after changing patterns, regenerate:

@@ -56,7 +56,7 @@ def test_score_markdown_includes_formula_and_ruleset():
     )
     assert "0/100" in md
     assert "crewscore-hygiene@" in md
-    assert "15+85" in md or "15 + 85" in md or "matches" in md
+    assert "controls" in md or "matches" in md
     assert "injection.01" in md
     assert "not" in md.lower() or "Not" in md
     assert "crewscore rules" in md
@@ -178,3 +178,4 @@ def test_config_markdown_ignores_governance_findings():
     assert marker not in md
     assert "/100" not in md
     assert "15+85" not in md and "15 + 85" not in md
+    assert "controls the prompt" not in md

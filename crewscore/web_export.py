@@ -15,7 +15,7 @@ from crewscore.profiles import (
 )
 from crewscore.scoring import DIMENSIONS, RULESET_ID
 from crewscore.scorers.fix_patterns import FIX_TEMPLATES
-from crewscore.scorers.structural_analysis import DIMENSION_SIGNAL_LABELS, SCORER_MAP
+from crewscore.scorers.structural_analysis import CONCEPTS, SCORER_MAP
 from crewscore.smells import CITATION, CONTEXT_BLOAT_MAX_LINES, SMELL_CATALOG
 from crewscore.vendor_scorecard import QUESTIONS
 
@@ -38,10 +38,31 @@ JS_RUNTIME = r"""
 (function (global) {
   const ENGINE = __PAYLOAD__;
 
-  function scoreFromMatchCount(matches, total) {
-    if (!total || matches === 0) return 0;
-    const raw = matches / total;
-    return Math.min(100, Math.round(15 + raw * 85));
+  // Mirrors structural_analysis.score_from_concepts. Integer round-half-up
+  // rather than Math.round on a float: Python's round() is half-to-even, so a
+  // dimension with 8 controls would score 12 there and 13 here off one covered
+  // control. Integer arithmetic makes the two engines agree by construction.
+  function scoreFromConcepts(covered, total) {
+    if (!total || covered === 0) return 0;
+    return Math.floor((100 * covered + Math.floor(total / 2)) / total);
+  }
+
+  function coveredConcepts(key, matchedIds) {
+    return (ENGINE.concepts[key] || []).filter((c) =>
+      c.rule_ids.some((id) => matchedIds.has(id))
+    );
+  }
+
+  function missingFinding(key, concept) {
+    const entry = {
+      dimension: key,
+      status: "missing",
+      pattern_or_reason: concept.label,
+      snippet: null,
+      concept: concept.key,
+    };
+    if (concept.rule_ids.length) entry.rule_id = concept.rule_ids[0];
+    return entry;
   }
 
   // Python's \b and \d are Unicode-aware. JavaScript's are ASCII-only, and the
@@ -130,16 +151,8 @@ JS_RUNTIME = r"""
       const findings = [];
       for (const key of dimOrder) {
         scores[key] = 0;
-        const signals = ENGINE.signal_labels[key] || [];
-        for (const s of signals.slice(0, 3)) {
-          const entry = {
-            dimension: key,
-            status: "missing",
-            pattern_or_reason: s.label,
-            snippet: null,
-          };
-          if (s.rule_id) entry.rule_id = s.rule_id;
-          findings.push(entry);
+        for (const c of ENGINE.concepts[key] || []) {
+          findings.push(missingFinding(key, c));
         }
       }
       return {
@@ -158,42 +171,31 @@ JS_RUNTIME = r"""
     for (const key of dimOrder) {
       const patterns = ENGINE.patterns[key] || [];
       const hits = matchPatterns(promptLower, patterns);
-      scores[key] = scoreFromMatchCount(hits.length, patterns.length);
+      const matchedIds = new Set(hits.map((h) => h.ruleId));
+      const snippetFor = {};
+      for (const h of hits) snippetFor[h.ruleId] = h.snippet;
 
-      for (const h of hits.slice(0, 3)) {
-        const entry = {
-          dimension: key,
-          status: "matched",
-          pattern_or_reason: h.pattern,
-          snippet: h.snippet,
-        };
-        if (h.ruleId) entry.rule_id = h.ruleId;
-        findings.push(entry);
-      }
+      const concepts = ENGINE.concepts[key] || [];
+      const covered = coveredConcepts(key, matchedIds);
+      scores[key] = scoreFromConcepts(covered.length, concepts.length);
 
-      let missingCount = 0;
-      for (const s of ENGINE.signal_labels[key] || []) {
-        if (missingCount >= 3) break;
-        const re = safeRegExp(s.pattern);
-        const matched = re ? re.test(promptLower) : false;
-        if (matched) continue;
-        const entry = {
-          dimension: key,
-          status: "missing",
-          pattern_or_reason: s.label,
-          snippet: null,
-        };
-        if (s.rule_id) entry.rule_id = s.rule_id;
-        findings.push(entry);
-        missingCount += 1;
-      }
-      if (!hits.length && missingCount === 0) {
+      // One finding per control, not per regex: reporting every synonym that
+      // fired would tell a reader who stated one control three ways that they
+      // have three, which is the double-count the score itself used to make.
+      const coveredKeys = new Set(covered.map((c) => c.key));
+      for (const c of covered) {
+        const fired = c.rule_ids.find((id) => matchedIds.has(id));
         findings.push({
           dimension: key,
-          status: "missing",
-          pattern_or_reason: "No " + key + " guardrail signals detected",
-          snippet: null,
+          status: "matched",
+          pattern_or_reason: c.label,
+          snippet: snippetFor[fired],
+          rule_id: fired,
+          concept: c.key,
         });
+      }
+      for (const c of concepts) {
+        if (!coveredKeys.has(c.key)) findings.push(missingFinding(key, c));
       }
     }
 
@@ -471,12 +473,6 @@ JS_RUNTIME = r"""
 
 def build_payload() -> dict:
     dim_order = [key for _, key in DIMENSIONS]
-    # Flatten rule_id → pattern for signal labels.
-    pattern_to_rule: dict[str, str] = {}
-    for key in dim_order:
-        for rule_id, pattern in SCORER_MAP[key]:
-            pattern_to_rule[pattern] = rule_id
-
     return {
         "version": __version__,
         "ruleset": RULESET_ID,
@@ -486,14 +482,16 @@ def build_payload() -> dict:
             key: [[rule_id, pattern] for rule_id, pattern in SCORER_MAP[key]]
             for key in dim_order
         },
-        "signal_labels": {
+        # The scoring denominator. Shipped as data so the browser and the CLI
+        # cannot disagree about what a dimension is made of.
+        "concepts": {
             key: [
                 {
-                    "pattern": p,
-                    "label": lab,
-                    **({"rule_id": pattern_to_rule[p]} if p in pattern_to_rule else {}),
+                    "key": concept.key,
+                    "label": concept.label,
+                    "rule_ids": list(concept.rule_ids),
                 }
-                for p, lab in DIMENSION_SIGNAL_LABELS.get(key, [])
+                for concept in CONCEPTS.get(key, ())
             ]
             for key in dim_order
         },

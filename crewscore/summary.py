@@ -117,7 +117,8 @@ def format_score_markdown(
         "",
         f"- **Ruleset:** `{ruleset}` (deterministic regex · no LLM)",
         f"- **Source:** `{source}`",
-        "- **Formula:** dim = `min(100, round(15+85×matches/rules))`; overall = mean of 8 dims",
+        "- **Formula:** dim = share of that dimension's controls the prompt "
+        "states (`crewscore rules --concepts`); overall = mean of 8 dims",
         "- **Open rules:** `crewscore rules --json`",
         "- **Not:** red-team, runtime proof, or certification",
         "",

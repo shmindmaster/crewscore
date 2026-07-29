@@ -1,10 +1,12 @@
 # Validation: what the CrewScore number does and does not measure
 
-**The score cannot rank prompt quality, and you do not have to take our word
-for it — you can prove it from the shipped rule catalog in about ten seconds.**
+**The score reports coverage of a published checklist. It does not rank prompt
+quality, and it never has.** You do not have to take our word for either half —
+both are derivable from the shipped rule catalog in about ten seconds.
 
-This document reports what we can demonstrate, and is explicit about what we
-tried to demonstrate and then withdrew.
+This document reports what we can demonstrate, what we fixed after publishing
+the arithmetic that showed it was broken, and what we tried to demonstrate and
+then withdrew.
 
 ---
 
@@ -12,61 +14,83 @@ tried to demonstrate and then withdrew.
 
 | Question | Answer |
 | --- | --- |
-| Does a higher CrewScore mean a better prompt? | **No.** Not demonstrated, and the formula argues against it. |
-| Can a well-written prompt score well? | **No.** Stating all eight controls clearly, once each, scores **28/100** — below the lowest tier. |
-| What does the number actually report? | **Coverage:** which controls the text mentions, and how many different ways. |
-| Should you gate CI on the total? | **No.** Gate on the findings — which rule fired, which did not. |
+| Does a higher CrewScore mean a better prompt? | **No.** Not demonstrated. It means more of the checklist is written down. |
+| Can a well-written prompt score well? | **Yes, since 0.3.0.** Covering all 23 controls scores 100. Before 0.3.0 the same prompt scored 28. |
+| What does the number actually report? | **Coverage:** the share of the 23 published controls the text states. |
+| Should you gate CI on the total? | **Prefer the findings** — which control is missing is more actionable than the average. |
 | Are the configuration-smell detectors affected? | **No.** Separate feature, separate grounding ([arXiv:2606.15828](https://arxiv.org/abs/2606.15828)). |
 
 ---
 
-## The proof: a perfect prompt fails
+## The defect we published, and then fixed
 
-Each dimension scores `min(100, round(15 + 85 x matches / total_rules))`, where
-`total_rules` is the number of near-synonymous patterns that dimension holds.
+Through 0.1.0 each dimension scored
+`min(100, round(15 + 85 x matched_rules / total_rules))`, where `total_rules`
+counted **near-synonymous patterns for the same control**.
 
-A dimension therefore does not ask *"is this control specified?"* It asks
-*"how many of our phrasings did you happen to hit?"* Stating a control once,
-unambiguously, matches roughly one pattern.
+That formula did not ask *"is this control specified?"* It asked *"how many of
+our phrasings did you happen to hit?"* Stating a control once, unambiguously,
+matched about one pattern out of six and scored 24–32. **A prompt that stated
+all eight controls clearly, once each, scored 28/100 — below the lowest tier
+boundary of 50.** Reaching 70 took the same control restated four to six
+different ways, which is exactly the redundancy our own Context Bloat detector
+flags as a defect.
 
-Run this against the installed package:
+So the tool rewarded, through its core formula, the precise anti-pattern it
+reports as a smell — and the top two thirds of its scale were unreachable by
+writing well. We published that arithmetic rather than the marketing.
 
-```python
-from crewscore.scoring import DIMENSION_KEYS, overall_score
-from crewscore.scorers.structural_analysis import SCORER_MAP
+**0.3.0 fixes it.** Rules are now grouped into the distinct **controls** they
+express, and rules within a control are alternative phrasings rather than
+additive evidence:
 
-def dim(matches, total):
-    return 0 if not total or not matches else min(100, round(15 + 85 * matches / total))
-
-per = {k: dim(1, len(SCORER_MAP[k])) for k in DIMENSION_KEYS}
-print(per, overall_score(per))
+```
+score = (100 * controls_covered + N // 2) // N     # N = controls in the dimension
 ```
 
-| Dimension | Rules | Score for stating it once | Restatements needed to reach 70 |
-| --- | ---: | ---: | ---: |
-| Injection defense | 8 | 26 | 6 |
-| Hallucination policy | 8 | 26 | 6 |
-| Citation discipline | 5 | 32 | 4 |
-| Cost control | 5 | 32 | 4 |
-| Human gate | 6 | 29 | 4 |
-| Safe stop | 7 | 27 | 5 |
-| Audit | 5 | 32 | 4 |
-| Compliance | 9 | 24 | 6 |
+Run `crewscore rules --concepts` to print the grouping. It is the denominator of
+every dimension score, so it gets the same exposure as the regexes.
 
-**A prompt that states all eight controls clearly, once each, scores 28/100.**
-Stating every one of them *twice* still only reaches **41/100**. The lowest tier
-boundary is 50. The top of the scale is unreachable by clear writing — it is
-reachable only by saying the same thing four to six different ways, which is
-exactly the redundancy our own Context Bloat detector flags as a defect.
+| Dimension | Rules | Controls | One control stated | All controls stated |
+| --- | ---: | ---: | ---: | ---: |
+| Injection defense | 9 | 3 | 33 | 100 |
+| Hallucination policy | 8 | 4 | 25 | 100 |
+| Citation discipline | 5 | 3 | 33 | 100 |
+| Cost control | 5 | 2 | 50 | 100 |
+| Human gate | 6 | 2 | 50 | 100 |
+| Safe stop | 7 | 3 | 33 | 100 |
+| Audit | 5 | 3 | 33 | 100 |
+| Compliance | 9 | 3 | 33 | 100 |
 
-That is a scoring bug, and it is sufficient on its own to establish the point of
-this document: **the number is coverage, not quality.** A high score means the
-text is verbose about a control. A low score means a control may be missing —
-which is genuinely useful, and is the job the tool should be trusted with.
+Measured, old engine against new, on the same inputs:
 
-This defect is deliberately **not** fixed in 0.1.0. Repairing the formula
-changes every score, and belongs in a release that changes scoring on purpose,
-alongside the rule-precision work.
+| Prompt | 0.1.0 | 0.3.0 |
+| --- | ---: | ---: |
+| Bare assistant prompt | 0 | 0 |
+| Partial hygiene | 20 | 29 |
+| Hardened ops | 87 | 95 |
+| States one control per dimension | 30 | 36 |
+| **States all 23 controls** | **62** | **100** |
+
+The floor is unchanged — a prompt with no guardrails still scores 0 — and the
+ceiling is now reachable by writing each control down once.
+
+### What this does *not* fix
+
+**The number is still coverage, not quality.** A 100 means every control on the
+checklist appears in the text. It does not mean the controls are well specified,
+mutually consistent, or that the model will obey them — CrewScore reads text and
+never runs the agent. Two further limits are unchanged:
+
+- **Restating a control still cannot raise a score, by design.** That is the
+  anti-bloat property, and it means the score is blind to how *thoroughly* a
+  control is specified.
+- **The controls are our judgement.** The grouping above is the most
+  consequential call in the catalog. Disagree with one in an issue — that is
+  why it is published as data rather than buried in the scorer.
+
+Per-dimension provenance, including the three dimensions that ship known-weak,
+is below and in `crewscore rules`.
 
 ---
 
