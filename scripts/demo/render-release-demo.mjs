@@ -52,7 +52,7 @@ await cp(resolve(demoRoot, "product-claims.json"), resolve(reviewRoot, "product-
 await cp(resolve(demoRoot, "truth-sheet.md"), resolve(reviewRoot, "truth-sheet.md"));
 await cp(captureManifestPath, resolve(reviewRoot, "capture-manifest.json"));
 
-const timing = JSON.parse(await readFile(timingPath, "utf8"));
+const timing = JSON.parse((await readFile(timingPath, "utf8")).replace(/^\uFEFF/, ""));
 const manifest = {
   version: 1,
   episodeId: "written-controls-review",
