@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="CrewScore documentation: local checking, explicit control policies, regression baselines, and limitations.">
+  <link rel="canonical" href="https://crewscore.ai/docs/"><title>CrewScore documentation</title>
+  <link rel="stylesheet" href="../assets/site.css">
+</head>
+<body><div class="site-shell"><header class="site-header"><a class="brand" href="../"><span class="brand-mark" aria-hidden="true">CS</span><span>CrewScore</span></a><nav class="site-nav"><a href="../">Checker</a><a href="../rules/">Public controls</a><a href="https://github.com/shmindmaster/crewscore">Repository</a></nav></header>
+<main class="hero longform"><p class="eyebrow">Documentation</p><h1>Written-control coverage, explained</h1><p class="hero-copy">CrewScore helps identify public guardrail controls that are not written in AI instructions. It does not test runtime behavior or issue safety grades.</p>
+<section><h2>Start locally</h2><p>Paste instructions into the browser checker or use <code>crewscore scan .</code> from the CLI. Prompt text stays local to the tool you choose.</p></section>
+<section><h2>Protect the controls you mean</h2><p>Run <code>crewscore init .</code> to create a prompt-free baseline and pull-request workflow. Require public controls such as <code>human_gate.approval_required</code> instead of treating a coverage percentage as a safety threshold.</p><p><a href="https://github.com/shmindmaster/crewscore/blob/main/docs/policies.md">Read policy, baseline, and SARIF instructions</a></p></section>
+<section><h2>Read the limitations</h2><p>The open rules, reproducible validation snapshot, construct-validity limits, and scoring governance are part of the product contract.</p><p><a href="https://github.com/shmindmaster/crewscore/blob/main/docs/validation.md">Validation and limitations</a> · <a href="https://github.com/shmindmaster/crewscore/blob/main/docs/scoring-governance.md">Scoring governance</a> · <a href="https://github.com/shmindmaster/crewscore/blob/main/docs/roadmap.md">Public roadmap</a></p></section>
+</main></div></body>
+</html>

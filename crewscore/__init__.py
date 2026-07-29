@@ -5,4 +5,4 @@ explainable per-rule findings, for use as a CI gate. See docs/validation.md
 for what the score does and does not measure.
 """
 
-__version__ = "0.5.1"
+__version__ = "0.6.0"

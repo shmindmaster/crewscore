@@ -57,4 +57,14 @@ Edit `crewscore/scorers/fix_patterns.py` `FIX_TEMPLATES` for the dimension key.
 
 ## Code of conduct
 
-Be respectful. File false-positive / false-negative scoring issues with the prompt text and expected dimension.
+The full [Code of Conduct](CODE_OF_CONDUCT.md) applies to every project space.
+For scoring reports, use the false-positive or false-negative issue forms and
+provide a minimal synthetic or safely redacted example - never customer prompt
+text, credentials, or private source URLs.
+
+## Governance and community
+
+Read [scoring governance](docs/scoring-governance.md) before proposing a new
+rule, control, or scoring change. It defines the required provenance,
+validation, browser-regeneration, and changelog work. Security-sensitive
+reports follow [SECURITY.md](SECURITY.md), not public issues.

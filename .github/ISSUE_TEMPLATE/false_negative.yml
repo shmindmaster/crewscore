@@ -1,0 +1,36 @@
+name: False-negative written control
+description: CrewScore missed a public control that the instructions clearly state.
+title: "false negative: "
+labels: ["scoring", "false-negative"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not paste customer prompts, credentials, or private source URLs. Use a minimal synthetic or safely redacted example.
+  - type: input
+    id: version
+    attributes:
+      label: CrewScore and ruleset version
+      placeholder: "crewscore 0.5.1; crewscore-hygiene@0.5.0"
+    validations:
+      required: true
+  - type: input
+    id: control
+    attributes:
+      label: Expected control ID
+      placeholder: "safe_stop.stop_condition"
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Minimal synthetic example
+      description: Include only text you are allowed to share.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Why this control is present
+    validations:
+      required: true

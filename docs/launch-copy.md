@@ -1,6 +1,6 @@
 # Launch copy
 
-Drafts for the 0.5.1 launch. **Every number here is checked against
+Drafts for the 0.6.0 launch. **Every number here is checked against
 [`validation-corpus.json`](validation-corpus.json) by
 `tests/test_launch_copy.py`** — if the harness is re-run on a different corpus,
 these fail until they are updated. Do not hand-edit a figure.

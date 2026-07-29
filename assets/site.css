@@ -132,9 +132,18 @@ textarea { min-height: 278px; resize: vertical; font-family: var(--mono); font-s
 .diff .header { color: #b8c7bd; }
 .cost { color: var(--muted); font-size: .9rem; }
 
-.info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; padding: 0 0 64px; }
+.info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; padding: 0 0 38px; }
 .info-grid section { border-top: 1px solid var(--border); padding-top: 18px; }
 .info-grid h2 { font-size: 1.15rem; }
+.faq { max-width: 780px; padding: 0 0 64px; }
+.faq details { border-top: 1px solid var(--border); padding: 14px 0; }
+.faq details:last-child { border-bottom: 1px solid var(--border); }
+.faq summary { cursor: pointer; color: var(--text); font-weight: 750; }
+.faq p { color: var(--muted); margin: 9px 0 0; }
+.longform { max-width: 860px; }
+.longform section { border-top: 1px solid var(--border); margin: 28px 0 0; padding-top: 20px; }
+.longform li { margin: 8px 0; }
+.longform code { font-family: var(--mono); font-size: .9em; }
 .footer { border-top: 1px solid var(--border); padding: 25px 0 80px; color: var(--muted); font-size: .88rem; }
 .footer p { margin-bottom: 8px; }
 
