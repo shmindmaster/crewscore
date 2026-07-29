@@ -17,7 +17,11 @@ name: Release
 
 on:
   push:
-    tags: ["v*"]
+    # Semver tags only. "v*" also matches the floating major tags (v1, v2),
+    # so moving one fired a release run that then failed the version gate with
+    # "Tag v2 says 2 but the package says 0.1.0" - correct, but it should never
+    # have been asked the question.
+    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
   workflow_dispatch:
     inputs:
       dry-run:
