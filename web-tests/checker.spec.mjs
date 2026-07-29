@@ -24,9 +24,12 @@ test("applying one selected control rescans the browser-local text", async ({ pa
   await page.goto("/");
   await page.getByRole("button", { name: "Try a 10-second demo" }).click();
   await page.getByRole("button", { name: "Review suggested guardrails" }).click();
-  const safeStopControl = page.locator('[data-select="safe_stop.uncertainty_trigger"]');
-  await expect(safeStopControl).toBeVisible();
-  await safeStopControl.check();
+  // The reviewer intentionally limits its suggestions to the highest-priority
+  // missing controls. Verify the selected control's effect without coupling
+  // this browser journey to one specific priority ordering.
+  const suggestedControl = page.locator("[data-select]").first();
+  await expect(suggestedControl).toBeVisible();
+  await suggestedControl.check();
   await page.getByRole("button", { name: "Add selected guardrails" }).click();
   await expect(page.getByRole("heading", { name: "1 of 23 written guardrails found" })).toBeVisible();
   await expect(page.locator("#results")).toContainText("22 controls may be missing");
