@@ -81,3 +81,10 @@ def test_result_and_share_contracts_are_present_without_prompt_export():
     assert "Download Facebook SVG" in script
     assert "JSON findings" in script
     assert "prompt text is never included" in script.lower()
+
+
+def test_copy_fallback_is_not_held_by_a_stuck_browser_clipboard_api():
+    script = (ROOT / "assets" / "site.js").read_text(encoding="utf-8")
+    assert "writeClipboardWithFallbackTimeout" in script
+    assert "Clipboard write timed out." in script
+    assert "await writeClipboardWithFallbackTimeout(value)" in script

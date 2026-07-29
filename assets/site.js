@@ -206,7 +206,11 @@
     if (!selected.length) return state.last.prompt;
     const entries = selected.map((control) => {
       const wording = state.selections.get(control.key).text.trim();
-      return `### ${controlName(control)}\n${wording}`;
+      // The UI already shows the human control name. Do not carry it into the
+      // applied prompt: names such as "Stops when information is missing" can
+      // themselves match a different published control. The selected wording
+      // is the only text that should affect the immediate rescan.
+      return `- ${wording}`;
     }).filter((entry) => !entry.endsWith("\n"));
     return `${state.last.prompt.replace(/\s+$/, "")}\n\n---\n\n## Suggested guardrails\n\n${entries.join("\n\n")}\n`;
   }
@@ -274,9 +278,28 @@
     track("cs_fix_apply", { controls_found: selected.length });
   }
 
+  function writeClipboardWithFallbackTimeout(value) {
+    // Browser clipboard APIs can remain pending forever when a permission
+    // prompt is suppressed or denied (notably in headless Firefox). A denied
+    // copy must fall through to the in-page manual-copy path, not leave the
+    // action without any user feedback.
+    return new Promise((resolve, reject) => {
+      const timer = window.setTimeout(() => reject(new Error("Clipboard write timed out.")), 800);
+      try {
+        Promise.resolve(navigator.clipboard.writeText(value)).then(
+          (result) => { window.clearTimeout(timer); resolve(result); },
+          (error) => { window.clearTimeout(timer); reject(error); },
+        );
+      } catch (error) {
+        window.clearTimeout(timer);
+        reject(error);
+      }
+    });
+  }
+
   async function copyText(value, success) {
     try {
-      if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(value); toast(success); return true; }
+      if (navigator.clipboard?.writeText) { await writeClipboardWithFallbackTimeout(value); toast(success); return true; }
     } catch (_) { /* fall back to a temporary text area */ }
     try {
       const helper = document.createElement("textarea");
