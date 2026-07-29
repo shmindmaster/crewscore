@@ -29,6 +29,11 @@ numeric JSON fields, and Action outputs are unchanged.
   and cross-browser coverage verifies that applying one control updates the
   result by one control.
 
+- **Clipboard fallback no longer waits forever on a blocked browser API.** A
+  bounded write attempt now falls through to the in-page copy path with user
+  feedback when a browser leaves the asynchronous clipboard permission request
+  pending.
+
 ---
 
 ## [0.6.0] — 2026-07-29 — explicit control-policy stabilization
