@@ -470,20 +470,24 @@ def test_readme_documents_040_breaking_changes():
     assert "exit" in section.lower()
 
 
-def test_readme_tier_table_discloses_the_empty_top_half():
-    """The tier ladder advertises 90-100 as reachable by a good prompt.
+def test_readme_tier_table_says_what_the_ladder_measures():
+    """A reader looking at this ladder is about to set a CI threshold on it.
 
-    It is not. A prompt that states all eight controls clearly, once each,
-    scores 28/100 -- it does not even clear the lowest band. A reader looking
-    at this ladder is about to set a CI threshold against it, so the ladder
-    itself has to say so.
+    Through 0.1.0 the honest disclosure was that the top half was unreachable:
+    a prompt stating all eight controls clearly, once each, scored 28. 0.2.0
+    makes the whole ladder reachable, so the required disclosure changed - but
+    it did not go away. The ladder still ranks *coverage*, and a reader who
+    reads 90-100 as "good prompt" is being misled either way.
     """
     md = _readme()
     start = md.find("### Score tiers")
     end = md.find("## Two artifacts", start)
     assert start > 0 and end > start, "score tiers section not found"
     tiers = md[start:end]
-    assert "28" in tiers, "tier table does not disclose the reachable ceiling"
+    assert "coverage" in tiers.lower(), "tier table does not say it ranks coverage"
+    # Both ends of the scale must be pinned to something concrete, so the
+    # reader can calibrate a threshold instead of guessing.
+    assert "100" in tiers and "0" in tiers
     assert "docs/validation.md" in tiers
 
 

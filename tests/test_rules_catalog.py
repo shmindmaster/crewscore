@@ -15,7 +15,7 @@ from crewscore.rules_catalog import (
     list_rules,
     scoring_transparency_block,
 )
-from crewscore.scorers.structural_analysis import SCORER_MAP
+from crewscore.scorers.structural_analysis import CONCEPTS, SCORER_MAP
 from crewscore.scoring import DIMENSION_KEYS, RULESET_ID
 
 
@@ -78,15 +78,38 @@ def test_catalog_has_formula_and_source():
     payload = catalog_payload()
     assert payload["ruleset"] == RULESET_ID
     assert payload["method"]["llm_calls"] is False
-    assert "matches" in payload["method"]["dimension_score_formula"]
+    formula = payload["method"]["dimension_score_formula"]
+    assert "matches" in formula
+    # The denominator is controls, not rules. If this reverts to counting rules
+    # the published formula silently starts rewarding synonyms again.
+    assert "control" in formula
     assert "structural_analysis.py" in payload["method"]["source_of_truth"]
     assert payload["rule_count"] == len(list_rules())
 
 
 def test_demo_formula_matches_documented_math():
+    """`(100 * matches + N // 2) // N`, exactly as published — including the
+    rounding, which must be half-up so the browser engine can match it."""
     assert demo_formula(0, 8) == 0
-    assert demo_formula(1, 8) == min(100, round(15 + 85 * (1 / 8)))
-    assert demo_formula(8, 8) == 100
+    assert demo_formula(4, 4) == 100
+    assert demo_formula(1, 3) == 33
+    assert demo_formula(2, 3) == 67
+    assert demo_formula(1, 2) == 50
+    # Half-up, not Python's default half-to-even: round(12.5) is 12, and a
+    # browser scoring 13 for the same prompt is the divergence this prevents.
+    assert demo_formula(1, 8) == 13
+    assert demo_formula(0, 0) == 0
+
+
+def test_no_control_is_worth_more_than_any_other_in_its_dimension():
+    """Equal weight is a published property, not an accident of the grouping."""
+    from crewscore.rules_catalog import list_concepts
+
+    by_dim: dict[str, set[int]] = {}
+    for row in list_concepts():
+        by_dim.setdefault(row["dimension"], set()).add(row["points"])
+    for dimension, points in by_dim.items():
+        assert len(points) == 1, f"{dimension} weights controls unequally: {points}"
 
 
 def test_cli_rules_human_lists_rule_ids():
@@ -148,13 +171,13 @@ def test_test_human_shows_ruleset_and_method_without_explain_flag():
     assert "missing" in result.output.lower() or "Findings" in result.output
 
 
-def test_ruleset_id_is_0_4_0():
-    """The ruleset moves alongside the package to 0.1.0.
+def test_ruleset_id_is_0_3_0():
+    """The ruleset moves alongside the package to 0.3.0.
 
     Versioned in lockstep with the package so any score can be traced back
     to the exact rules that produced it.
     """
-    assert RULESET_ID == "crewscore-hygiene@0.1.0"
+    assert RULESET_ID == "crewscore-hygiene@0.3.0"
 
 
 def test_changelog_does_not_reference_withdrawn_versions():
@@ -165,8 +188,12 @@ def test_changelog_does_not_reference_withdrawn_versions():
     a version that does not exist reads worse than no section at all.
     """
     changelog = Path("CHANGELOG.md").read_text(encoding="utf-8")
-    for gone in ("## [0.2.", "## [0.3.", "## [0.4."):
-        assert gone not in changelog, gone + " is not an installable release"
+    # 0.2.x and 0.4.0 were published and then deleted. PyPI never lets a
+    # deleted version number be re-used, so those numbers are burned for good
+    # and no future release may claim one - which is why the scoring release
+    # is 0.3.0 and not the 0.2.0 a minor bump from 0.1.0 would suggest.
+    for gone in ("## [0.2.", "## [0.4."):
+        assert gone not in changelog, gone + " is a burned version number"
     assert "withdrawn" in changelog.lower()
     assert "first supported release" in changelog.lower()
 
@@ -199,33 +226,50 @@ def test_scoring_method_constant_honest():
     assert block["open_rules"].startswith("crewscore rules")
 
 
-def _dim_score(matches, total):
+def _dim_score(covered, total):
     """The published per-dimension formula, restated independently."""
-    if not total or matches == 0:
+    if not total or covered == 0:
         return 0
-    return min(100, round(15 + 85 * matches / total))
+    return (100 * covered + total // 2) // total
 
 
-def test_a_prompt_stating_every_control_once_scores_below_the_lowest_tier():
+def test_the_whole_scale_is_reachable_by_a_well_written_prompt():
     """docs/validation.md's central, self-contained proof.
 
-    A prompt that states all eight governance controls clearly, once each,
-    scores 28/100 -- under the lowest tier boundary of 50. Reaching 70 needs
-    the same control restated 4-6 different ways, which is exactly the
-    redundancy the Context Bloat detector calls a defect.
+    Until ruleset 0.2.0 a dimension scored `matched_rules / total_rules`, where
+    the rules inside a dimension are near-synonyms. A prompt that stated all
+    eight controls clearly, once each, scored 28/100 -- under the lowest tier
+    boundary of 50 -- and reaching 70 took the same control restated 4-6 ways,
+    the exact redundancy the Context Bloat detector calls a defect. A metric a
+    well-written prompt could not pass was not measuring quality.
 
-    This is the evidence the coverage-not-quality claim rests on, so it is
-    pinned here: if a rule count changes, this number moves and the document
-    must be updated with it.
+    Counting controls instead of synonyms fixes it: covering every control in
+    a dimension scores 100 there, so the top of the scale is reachable by
+    writing well rather than by writing more.
     """
     from crewscore.scoring import overall_score
 
-    per = {k: _dim_score(1, len(SCORER_MAP[k])) for k in DIMENSION_KEYS}
-    assert overall_score(per) == 28, per
-    twice = {k: _dim_score(2, len(SCORER_MAP[k])) for k in DIMENSION_KEYS}
-    assert overall_score(twice) == 41, twice
-    # The documented per-dimension range for a single clear statement.
-    assert min(per.values()) == 24 and max(per.values()) == 32, per
+    full = {k: _dim_score(len(CONCEPTS[k]), len(CONCEPTS[k])) for k in DIMENSION_KEYS}
+    assert overall_score(full) == 100, full
+
+    # Half the controls in every dimension lands mid-scale, not at the floor.
+    half = {
+        k: _dim_score(len(CONCEPTS[k]) // 2, len(CONCEPTS[k])) for k in DIMENSION_KEYS
+    }
+    assert 30 <= overall_score(half) <= 60, half
+
+    # No dimension is stuck below the lowest tier when fully covered - that was
+    # the defect, and it was invisible until someone did the arithmetic.
+    assert min(full.values()) == 100, full
+
+
+def test_stating_one_control_many_ways_cannot_beat_stating_two_controls():
+    """The anti-bloat invariant, at the level of the published formula."""
+    for dimension in DIMENSION_KEYS:
+        total = len(CONCEPTS[dimension])
+        if total < 2:
+            continue
+        assert _dim_score(1, total) < _dim_score(2, total), dimension
 
 
 def test_validation_doc_does_not_cite_the_withdrawn_corpus_statistics():

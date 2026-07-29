@@ -26,7 +26,7 @@ crewscore test --prompt "You are a helpful assistant."
 #   deterministic · offline · no API key, no LLM
 ```
 
-**Coverage, not quality** — [stating all eight controls clearly, once each, scores 28/100](docs/validation.md).  
+**Coverage, not quality** — the number is [the share of 23 published controls your prompt states](docs/validation.md), not a ranking.  
 **CI:** `crewscore scan . --threshold 50` · Action `shmindmaster/crewscore@v2`  
 Structural hygiene only — **not a red-team**, not a certification.
 
@@ -44,24 +44,32 @@ that one?"* CrewScore answers the first question — and the scoring formula mak
 the second one unanswerable.
 
 You do not have to take our word for that; you can prove it from the shipped
-rule catalog. Each dimension scores
-`min(100, round(15 + 85 × matches / total_rules))`, where `total_rules` is the
-number of near-synonymous patterns that dimension holds. Stating a control once,
-unambiguously, matches roughly one pattern:
+rule catalog. Each of the eight dimensions is a small set of distinct
+**controls** — 23 in total — and a dimension scores on how many of its controls
+your prompt states:
+
+```
+score = (100 × controls_covered + N ÷ 2) ÷ N        # N = controls in the dimension
+```
+
+Rules within a control are alternative phrasings, not additive evidence, so
+saying the same thing five ways scores it once. Run `crewscore rules --concepts`
+to print the grouping — it is the denominator, so it is published as data.
 
 | What the prompt does | What it scores |
 | --- | --- |
-| States all eight governance controls clearly, **once each** | **28 / 100** |
-| States every one of them **twice** | **41 / 100** |
-| Lowest tier boundary (`STRUCTURAL: WEAK`) | **50** |
-| Reaching **70** | the same control restated **4–6 different ways** |
-| A single clear statement, per dimension | **24–32** |
+| Nothing — no guardrails written down | **0** |
+| States one control in each dimension | **36** |
+| States **all 23 controls** | **100** |
+| Restates one control five different ways | **same as stating it once** |
 
-**A high score is unreachable by clear writing.** It is reachable by saying the
-same thing five or six ways — exactly the redundancy our own
-[Context Bloat detector](#configuration-smells) flags as a defect. Those numbers
-are pinned by tests in `tests/test_rules_catalog.py` and reproducible against the
-installed package in about ten seconds.
+**Through 0.1.0 this was broken**, and badly: a dimension divided by its *rule*
+count, so a prompt stating all eight controls clearly, once each, scored
+**28/100** — below the lowest tier — and reaching 70 required restating the same
+control four to six ways, the exact redundancy our own
+[Context Bloat detector](#configuration-smells) flags. We published that
+arithmetic and then fixed it in 0.3.0. The numbers above are pinned by tests in
+`tests/test_rules_catalog.py`.
 
 So: **a low score is actionable** — you probably have not written down an
 explicit injection policy, human gate, or safe-stop rule, and writing those down
@@ -120,7 +128,7 @@ not a guarantee of runtime safety.
 Honest principles we ship by:
 
 1. CrewScore measures **coverage: presence of hygiene signals in text**, not agent behavior and not prompt quality.
-2. **The number does not rank prompts, and the formula is the reason.** A prompt that states all eight controls clearly, once each, scores **28/100** — below the lowest tier boundary of 50; stating every one of them *twice* still reaches only **41/100**. Reaching 70 requires restating the same control four to six different ways, which is precisely the redundancy our own Context Bloat detector flags. That is a scoring defect, and it is enough on its own: the number is **coverage, not quality**. Reproduce it from the shipped catalog — [`docs/validation.md`](docs/validation.md).
+2. **The number reports coverage, not quality.** It is the share of 23 published controls your prompt states — nothing about whether they are well specified, mutually consistent, or obeyed at runtime. Through 0.1.0 it could not even report coverage honestly: a dimension divided by its *rule* count, so a prompt stating all eight controls clearly, once each, scored **28/100**, and the top two thirds of the scale were unreachable by writing well. 0.3.0 counts controls instead of synonyms; the arithmetic for both is in [`docs/validation.md`](docs/validation.md).
 3. **Three dimensions ship with known-poor construct validity**, disclosed rather than quietly removed, because removing dimensions changes every score and belongs in a release that changes scoring on purpose. The reasons come straight from the rule catalog (`crewscore rules --json`):
 
    | Dimension | Why it is weak | Status |
@@ -304,15 +312,12 @@ Eight dimensions, equal weight, each 0–100:
 
 Labels describe **prompt-text coverage**, not production certification.
 
-**The top half of this ladder is unreachable by clear writing.** A prompt that
-states all eight controls plainly, once each, scores **28/100**; stating every
-one of them *twice* still reaches only **41/100**. That is a defect in the
-aggregation formula, not a finding about the industry: because each dimension
-holds several near-synonymous patterns, a control stated *once, clearly* matches
-one pattern and scores **24–32**. To land in the top two tiers you must restate
-the same rule four to six different ways — which is exactly the redundancy our
-own Context Bloat detector flags. It is
-[tracked for repair](docs/validation.md). Set thresholds against what your files
+**The whole ladder is reachable as of 0.3.0.** A prompt that states every one
+of the 23 controls scores **100**; one control per dimension scores **36**; a
+prompt with nothing written down still scores **0**. Through 0.1.0 the top two
+tiers were unreachable by clear writing — a dimension divided by its rule count,
+so stating a control once scored 24–32 no matter how well it was written. That
+defect is [documented and fixed](docs/validation.md). Set thresholds against what your files
 actually score, not against this ladder.
 
 ---
@@ -383,7 +388,7 @@ published research, rather than waiting for someone else to.
 
 ### What we fixed before shipping it
 
-**0. We say what the number means, and prove it from the rule catalog.** [`docs/validation.md`](docs/validation.md) shows that a prompt stating all eight controls clearly, once each, scores **28/100** — below the lowest tier — and that reaching 70 requires restating the same control four to six different ways. A metric a well-written prompt cannot pass is not a quality ranking; it is coverage. The document also carries the per-dimension caveats, including three dimensions (Cost, Compliance, Audit) that ship known-weak, and records a corpus study that was **withdrawn** after our own audit found arithmetic in it that did not survive scrutiny. The positioning changed with all of it: CrewScore is a **checklist, not a benchmark**, and the number is **coverage, not quality**. The rules and the formula are unchanged in this release; what changed is what we claim they mean.
+**0. We published the arithmetic that showed our own scale was broken, then fixed it.** Through 0.1.0 a prompt stating all eight controls clearly, once each, scored **28/100** — below the lowest tier — because dimensions divided by their *rule* count and the rules are near-synonyms. A metric a well-written prompt cannot pass is not measuring quality. 0.3.0 groups rules into the 23 distinct controls they express and scores coverage of those, so complete coverage now scores 100 and restating a control still scores it once. Both sets of numbers, measured old-engine against new: [`docs/validation.md`](docs/validation.md). The document also carries the per-dimension caveats, including three dimensions (Cost, Compliance, Audit) that ship known-weak, and records a corpus study that was **withdrawn** after our own audit found arithmetic in it that did not survive scrutiny. The positioning changed with all of it: CrewScore is a **checklist, not a benchmark**, and the number is **coverage, not quality**. The rules and the formula are unchanged in this release; what changed is what we claim they mean.
 
 **1. `AGENTS.md` files were being judged by the wrong ruleset.** Validated against the [arXiv:2606.15828](https://arxiv.org/abs/2606.15828) corpus of the 100 most-starred repos with an agent config file, CrewScore scored every one of them in the worst tier. `crewscore scan` targeted exactly those files by default, so the headline command pointed the governance ruleset at the one artifact it can't assess. Fixed by [splitting the rulesets](#two-artifacts-two-rulesets): none of those files receive a governance grade now — they are judged on configuration smells instead.
 
