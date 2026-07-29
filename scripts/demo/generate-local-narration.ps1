@@ -112,7 +112,11 @@ $timingDocument = [ordered]@{
     segments = $timing
     narrationPath = $narrationPath
 }
-$timingDocument | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $OutDir 'narration-timing.json') -Encoding utf8
+[IO.File]::WriteAllText(
+    (Join-Path $OutDir 'narration-timing.json'),
+    (($timingDocument | ConvertTo-Json -Depth 8) + [Environment]::NewLine),
+    [Text.UTF8Encoding]::new($false)
+)
 
 [pscustomobject]@{
     narration = $narrationPath
