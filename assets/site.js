@@ -162,7 +162,7 @@
     mount.querySelector("#review-fixes")?.addEventListener("click", openFixReview);
     mount.querySelector("#copy-result")?.addEventListener("click", () => copyText(shareUrl(result), "Result link copied"));
     mount.querySelector("#copy-team")?.addEventListener("click", () => copyText(`${shareText()}\n${shareUrl(result)}`, "Slack/Teams result copied"));
-    mount.querySelector("#copy-ci")?.addEventListener("click", () => copyText(`# Technical coverage report only; do not use this as a safety bar\n- uses: shmindmaster/crewscore@v2\n  with:\n    scan-path: "."\n    threshold: "50"`, "CI snippet copied"));
+    mount.querySelector("#copy-ci")?.addEventListener("click", () => copyText(`# Example policy: select controls your workflow actually needs\n- uses: shmindmaster/crewscore@v2\n  with:\n    scan-path: "."\n    required-controls: "human_gate.approval_required,safe_stop.stop_condition"`, "CI snippet copied"));
     mount.querySelector("#native-share")?.addEventListener("click", nativeShare);
     mount.querySelectorAll("[data-social]").forEach((button) => button.addEventListener("click", () => shareTo(button.dataset.social)));
     mount.querySelector("#copy-badge")?.addEventListener("click", () => copyText(badgeMarkdown(), "README badge snippet copied"));
@@ -172,7 +172,7 @@
   function renderDeveloperDetails(result, found, missing) {
     const foundText = found.join(", ") || "none";
     const missingText = missing.join(", ") || "none";
-    const ci = `# Technical coverage report only; do not use this as a safety bar\n- uses: shmindmaster/crewscore@v2\n  with:\n    scan-path: "."\n    threshold: "50"`;
+    const ci = `# Example policy: select controls your workflow actually needs\n- uses: shmindmaster/crewscore@v2\n  with:\n    scan-path: "."\n    required-controls: "human_gate.approval_required,safe_stop.stop_condition"`;
     const evidence = (result.findings || []).map((finding) => ({ control: finding.concept, status: finding.status, rule_id: finding.rule_id || null, matched_text: finding.snippet || null }));
     return `<details class="technical"><summary>Developer details</summary><p><strong>Technical coverage:</strong> ${result.overall}% · ruleset <code>${escapeHtml(result.ruleset)}</code></p><p><strong>Found control IDs:</strong> <code>${escapeHtml(foundText)}</code></p><p><strong>Missing control IDs:</strong> <code>${escapeHtml(missingText)}</code></p><p>Rule IDs and regex matches are technical evidence, not a safety grade. Cost, audit, and compliance have documented validity limits.</p><h4>JSON findings</h4><pre>${escapeHtml(JSON.stringify({ ruleset: result.ruleset, profile: result.profile, overall: result.overall, findings: evidence }, null, 2))}</pre><h4>CI example</h4><pre>${escapeHtml(ci)}</pre><button class="button-ghost" id="copy-ci" type="button">Copy CI snippet</button></details>`;
   }

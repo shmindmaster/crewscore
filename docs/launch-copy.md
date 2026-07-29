@@ -33,7 +33,7 @@ the launch buys.
 > We checked whether each one writes down 23 basic safety controls: injection
 > defense, human approval, cost caps, stop conditions.
 >
-> Median: 14 out of 100.
+> Among the 83 production prompts, median coverage was 14 out of 100.
 
 **2/**
 > This isn't a dunk. These are good prompts written by good teams.
@@ -45,7 +45,8 @@ the launch buys.
 > So we built one. CrewScore reads a system prompt and tells you which of the 23
 > controls it never states.
 >
-> Offline. Deterministic regex. No API key, no LLM, nothing leaves your machine.
+> Offline CLI. In the browser, scoring happens locally and prompt text is never
+> uploaded; anonymous allowlisted usage events may be sent unless you opt out.
 >
 > `pip install crewscore && crewscore scan .`
 
@@ -87,8 +88,9 @@ the launch buys.
 > We scanned 356 real AI agent system prompts, including shipped ones from
 > Anthropic, OpenAI and Cursor.
 >
-> Median coverage of 23 basic safety controls — injection defense, human
-> approval, cost caps, stop conditions: **14/100**.
+> Among the 83 production prompts, median coverage of 23 basic safety controls
+> — injection defense, human approval, cost caps, stop conditions — was
+> **14/100**.
 >
 > Free tool, runs offline: crewscore.ai
 
@@ -96,8 +98,8 @@ the launch buys.
 
 ## LinkedIn
 
-> **We scanned 356 production AI agent prompts. The median states 14% of basic
-> safety controls.**
+> **We scanned 356 real AI agent prompts. Among the 83 production prompts, the
+> median states 14% of basic safety controls.**
 >
 > That includes shipped system prompts from Anthropic, OpenAI, Cursor and
 > Perplexity — teams who are very good at this.
@@ -112,7 +114,8 @@ the launch buys.
 >
 > So we built one. CrewScore reads a system prompt and lists the controls it
 > never states. It runs offline as a CLI, in CI as a GitHub Action, or in your
-> browser with nothing uploaded. MIT licensed.
+> browser with local scoring and no prompt upload. Anonymous allowlisted usage
+> events may be sent unless you opt out. MIT licensed.
 >
 > **Two things it deliberately is not.**
 >
@@ -143,10 +146,11 @@ the launch buys.
 > hidden in user content, stop when you're unsure, get a human to approve
 > anything irreversible.
 >
-> The median prompt states 14 out of 100.
+> Among the 83 production prompts, the median states 14 out of 100.
 >
 > We built a free tool that reads your prompt and tells you which ones are
-> missing. It runs entirely on your own machine — your prompt is never uploaded.
+> missing. Browser scoring happens locally and your prompt is never uploaded;
+> anonymous allowlisted usage events may be sent unless you opt out.
 >
 > crewscore.ai
 
@@ -214,7 +218,8 @@ the launch buys.
 Lead with the data, not the tool. HN body works with the first line changed to:
 
 > I scanned 356 real agent system prompts to see how many actually write down
-> basic safety controls. Median was 14/100. Method and harness below.
+> basic safety controls. Among the 83 production prompts, median coverage was
+> 14/100. Method and harness below.
 
 ---
 

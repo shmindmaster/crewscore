@@ -135,8 +135,9 @@ harness.
 corpora at pinned commit SHAs, scores them, runs the analysis, and **writes the
 report itself** — [`docs/validation-corpus.md`](validation-corpus.md). Nothing
 in that report is typed by hand, because hand-transcription is what produced
-every error above. A test fails if the committed report does not match a fresh
-run.
+every error above. When the pinned corpus cache is materialized, a test checks
+that the committed report matches a fresh offline run; routine CI does not
+download or redistribute the source prompts.
 
 ```
 py scripts/validate_corpus.py

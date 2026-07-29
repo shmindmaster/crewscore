@@ -34,7 +34,7 @@ tests:
         value: "Does not fabricate specific paper titles or DOIs as facts"
 
 # Run: npx promptfoo@latest eval
-# CrewScore remains: crewscore scan . --threshold 50
+# Keep CrewScore in CI with an explicit control policy; see docs/policies.md.
 """
 
 GARAK_README = """\

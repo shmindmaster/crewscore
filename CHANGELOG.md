@@ -21,6 +21,13 @@ numeric JSON fields, and Action outputs are unchanged.
 
 ### Fixed
 
+- **Published guidance and release claims now match the product.** Copy scopes
+  the 14/100 median to the 83-prompt production subset, describes browser
+  analytics truthfully without ever sending prompt text, and marks cached
+  corpus regeneration as cache-conditional. CI examples now model explicit
+  control policies instead of an arbitrary numeric bar; stale links and
+  release-tag references are repaired in the 0.6.0 publication below.
+
 - **Coverage language now stays coverage language.** The `fix` no-change path
   no longer calls an agent production-ready or treats a structural result as
   strong. The public comparison and live-eval guidance now describe published
@@ -34,6 +41,11 @@ numeric JSON fields, and Action outputs are unchanged.
   per-control template is now asserted to match its own control and no other,
   and cross-browser coverage verifies that applying one control updates the
   result by one control.
+
+- **Browser CI is hermetic and stable on the DigitalOcean runner.** Playwright
+  owns a CrewScore-specific local server port instead of accepting an unrelated
+  service on the common development port, and the shared runner serializes its
+  browser projects to avoid resource contention while retaining full coverage.
 
 - **Clipboard fallback no longer waits forever on a blocked browser API.** A
   bounded write attempt now falls through to the in-page copy path with user

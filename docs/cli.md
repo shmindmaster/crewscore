@@ -62,10 +62,12 @@ See [policies.md](policies.md) for the small `.crewscore.yml` schema.
 crewscore test --prompt "You are a customer service agent for..."
 crewscore test --prompt-file ./my-agent/system-prompt.md
 crewscore test --prompt-file ./my-agent/system-prompt.md --json
-crewscore test --prompt-file ./my-agent/system-prompt.md --json --threshold 50
+crewscore test --prompt-file ./my-agent/system-prompt.md --require human_gate.approval_required,safe_stop.stop_condition
 ```
 
-`--threshold N` exits `2` when the overall score is below `N`.
+`--threshold N` is available for legacy numeric gates and exits `2` when the
+overall score is below `N`. For new CI policies, prefer `--require`,
+`--forbid-missing`, or a regression baseline so the rule is explicit.
 
 `test` also accepts `--require`, `--forbid-missing`, `--baseline`,
 `--fail-on-regression`, `--config`, and `--sarif` with the same semantics as
