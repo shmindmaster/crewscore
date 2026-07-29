@@ -37,6 +37,7 @@ def test_community_governance_and_safe_reporting_surfaces_exist():
     security = (ROOT / "SECURITY.md").read_text(encoding="utf-8").lower()
     conduct = (ROOT / "CODE_OF_CONDUCT.md").read_text(encoding="utf-8").lower()
     assert "privately" in security and "public issue" in security
+    assert "github.com/shmindmaster/crewscore/security/advisories/new" in security
     assert "contributor covenant" in conduct
     for name in ("false_positive.yml", "false_negative.yml", "framework_adapter.yml"):
         assert (ROOT / ".github" / "ISSUE_TEMPLATE" / name).exists(), name
