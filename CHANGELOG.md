@@ -14,7 +14,7 @@ install them, and do not compare their numbers to these.
 
 ---
 
-## [Unreleased]
+## [0.6.0] — 2026-07-29 — explicit control-policy stabilization
 
 No scoring change. `crewscore-hygiene@0.5.0`, the 23-control denominator,
 numeric JSON fields, and Action outputs are unchanged.
@@ -51,14 +51,6 @@ numeric JSON fields, and Action outputs are unchanged.
   bounded write attempt now falls through to the in-page copy path with user
   feedback when a browser leaves the asynchronous clipboard permission request
   pending.
-
----
-
-## [0.6.0] — 2026-07-29 — explicit control-policy stabilization
-
-No scoring change. `crewscore-hygiene@0.5.0` remains the ruleset, so the
-published coverage arithmetic, control count, numeric JSON fields, and Action
-outputs remain comparable with 0.5.1.
 
 ### Added
 
