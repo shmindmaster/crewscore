@@ -1,5 +1,5 @@
 name: CrewScore
-description: Find the guardrails your AI agent prompt forgot - prompt injection, hallucination, runaway cost, missing human approval. Offline, deterministic, no API key, and it fails the build on the gaps you choose to gate.
+description: Find the guardrails your AI agent prompt forgot - injection, hallucination, cost, human approval. Offline, no API key.
 author: shmindmaster
 branding:
   icon: shield

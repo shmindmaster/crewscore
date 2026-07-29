@@ -14,6 +14,27 @@ install them, and do not compare their numbers to these.
 
 ---
 
+## [0.5.1] — 2026-07-29 — Marketplace listing
+
+No scoring change. `crewscore-hygiene@0.5.0` is unchanged, so scores from
+0.5.0 and 0.5.1 are directly comparable.
+
+### Fixed
+
+- **`action.yml` description was 211 characters; GitHub Marketplace rejects
+  anything over 125.** The listing could not be published, and the form offers
+  no override — the fix has to ship in a tagged release, so a browser-time
+  discovery cost a whole extra release. Now 118 characters, and
+  `tests/test_action_manifest.py` pins the limit along with the other fields
+  the Marketplace requires (name, description, `branding.icon`, and a
+  `branding.color` from GitHub's closed list).
+
+  Shortening it also broke the manifest once: an unquoted colon in a YAML
+  scalar turns the line into a mapping. A test now reparses the file and
+  asserts the description is still a string.
+
+---
+
 ## [0.5.0] — 2026-07-29 — measured against 356 real prompts
 
 The corpus study `docs/validation.md` withdrew is back, as code. Two rules
