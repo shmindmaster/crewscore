@@ -568,3 +568,54 @@ def test_readme_output_guard_example_uses_scored():
     text = Path("README.md").read_text(encoding="utf-8")
     assert "outputs.scored == 'true'" in text
     assert "outputs.score != ''" not in text
+
+# ─── GitHub Marketplace listing requirements ──────────────────────────
+#
+# The Marketplace publish form validates action.yml and refuses the listing if
+# any of these is wrong. Discovering that in a browser, after the release is
+# already tagged and published, costs an extra release to fix - which is
+# exactly what the 211-character description on v0.5.0 cost.
+
+MARKETPLACE_DESCRIPTION_LIMIT = 125
+
+
+def _action_manifest() -> dict:
+    import yaml
+
+    return yaml.safe_load(_action_text())
+
+
+def test_action_description_fits_the_marketplace_limit():
+    """GitHub rejects the listing over 125 characters and the form offers no
+    override - the fix has to ship in a new tagged release."""
+    desc = _action_manifest()["description"]
+    assert len(desc) < MARKETPLACE_DESCRIPTION_LIMIT, (
+        f"{len(desc)} chars; Marketplace requires < "
+        f"{MARKETPLACE_DESCRIPTION_LIMIT}"
+    )
+
+
+def test_action_declares_every_field_the_marketplace_requires():
+    m = _action_manifest()
+    assert m.get("name"), "Marketplace requires a name"
+    assert m.get("description"), "Marketplace requires a description"
+    branding = m.get("branding") or {}
+    assert branding.get("icon"), "Marketplace requires branding.icon"
+    assert branding.get("color"), "Marketplace requires branding.color"
+    # The colour list is closed; anything outside it is refused at publish.
+    assert branding["color"] in {
+        "white", "yellow", "blue", "green",
+        "orange", "red", "purple", "gray-dark",
+    }, branding["color"]
+
+
+def test_action_description_parses_as_a_string_not_a_broken_mapping():
+    """An unquoted colon in a YAML scalar turns the line into a mapping and
+    breaks the whole manifest. Hit once while shortening the description for
+    the Marketplace limit; this reparse is the guard."""
+    m = _action_manifest()
+    assert isinstance(m["description"], str), (
+        f"description parsed as {type(m['description']).__name__} - "
+        "an unquoted colon has broken the manifest"
+    )
+
