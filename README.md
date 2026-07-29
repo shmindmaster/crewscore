@@ -185,6 +185,7 @@ synonym for a control that is already covered changes no score, by design.
 | [Scoring governance](docs/scoring-governance.md) | How public rules and validation change |
 | [Roadmap](docs/roadmap.md) | Available work and deliberately deferred capabilities |
 | [Security](SECURITY.md) | Private vulnerability reporting |
+| [Community discussions](https://github.com/shmindmaster/crewscore/discussions) | Questions, adoption feedback, and open-ended ideas |
 | [Comparison](docs/comparison.md) | Other tools, and what to use after this one |
 | [CHANGELOG](CHANGELOG.md) | Including every scoring change and its measured delta |
 
