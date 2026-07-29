@@ -42,6 +42,11 @@ numeric JSON fields, and Action outputs are unchanged.
   and cross-browser coverage verifies that applying one control updates the
   result by one control.
 
+- **Browser CI is hermetic and stable on the DigitalOcean runner.** Playwright
+  owns a CrewScore-specific local server port instead of accepting an unrelated
+  service on the common development port, and the shared runner serializes its
+  browser projects to avoid resource contention while retaining full coverage.
+
 - **Clipboard fallback no longer waits forever on a blocked browser API.** A
   bounded write attempt now falls through to the in-page copy path with user
   feedback when a browser leaves the asynchronous clipboard permission request
