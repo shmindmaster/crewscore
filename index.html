@@ -579,7 +579,7 @@ body.sheet-open{overflow:hidden}
 
   <footer class="foot">
     CI: <code>pip install crewscore</code> ·
-    <code>uses: shmindmaster/crewscore@v1</code><br>
+    <code>uses: shmindmaster/crewscore@v2</code><br>
     <a href="https://github.com/shmindmaster/crewscore">Open source on GitHub</a>
     · structural scan only · templates must be paired with runtime gates<br>
     Same rules in the browser and the CLI. The number is coverage, not quality -
@@ -1165,7 +1165,7 @@ body.sheet-open{overflow:hidden}
 # 0 is strict: the paper found Context Bloat alone in ~42% of popular repos,
 # so this will red-build most codebases on day one. Start at your current
 # count and ratchet down, or keep 0 and treat it as a blocking standard.
-- uses: shmindmaster/crewscore@v1
+- uses: shmindmaster/crewscore@v2
   with:
     scan-path: "."
     max-smells: "0"
@@ -1220,7 +1220,7 @@ body.sheet-open{overflow:hidden}
 # quality bar and not a safety bar - see docs/validation.md.
 # Stating all 8 controls clearly, once each, scores 28/100, so set the
 # threshold against what your files actually score, not against the tier ladder.
-- uses: shmindmaster/crewscore@v1
+- uses: shmindmaster/crewscore@v2
   with:
     scan-path: "."
     threshold: "50"

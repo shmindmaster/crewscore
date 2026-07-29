@@ -199,7 +199,11 @@ def test_ci_gate_export_markers():
     html = _html()
     assert "ci-block" in html
     assert "Gate this in CI" in html
-    assert "shmindmaster/crewscore@v1" in html
+    # @v1 was moved off 0.2.7 (script-injection exposure) and the docs
+    # now point at @v2; pin the current major so a stale reference is
+    # caught rather than silently shipped.
+    assert "shmindmaster/crewscore@v2" in html
+    assert "shmindmaster/crewscore@v1" not in html
 
 
 def test_config_ci_snippet_does_not_pin_partial_browser_smell_count():

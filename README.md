@@ -27,7 +27,7 @@ crewscore test --prompt "You are a helpful assistant."
 ```
 
 **Coverage, not quality** — [stating all eight controls clearly, once each, scores 28/100](docs/validation.md).  
-**CI:** `crewscore scan . --threshold 50` · Action `shmindmaster/crewscore@v1`  
+**CI:** `crewscore scan . --threshold 50` · Action `shmindmaster/crewscore@v2`  
 Structural hygiene only — **not a red-team**, not a certification.
 
 [Read the validation study](docs/validation.md) · [Install](#install) · [Usage](#usage) · [Scoring charter](#scoring-charter-not-a-black-box) · [Two rulesets](#two-artifacts-two-rulesets) · [Config smells](#configuration-smells) · [How scoring works](#how-scoring-works) · [What changed](#what-changed-in-040) · [CI](#ci-integration) · [Limits](#what-this-is-and-is-not)
@@ -431,7 +431,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: CrewScore
         id: crewscore
-        uses: shmindmaster/crewscore@v1
+        uses: shmindmaster/crewscore@v2
         with:
           # Prefer repo scan when you have multiple agent artifacts:
           # scan-path: "."
@@ -467,7 +467,7 @@ Sticky PR comments need `permissions: pull-requests: write` on the job. Set `pr-
 
 The composite action installs CrewScore from the action path (`pip install "${{ github.action_path }}"`), so monorepo / pre-PyPI self-tests work with `uses: ./`.
 
-`uses: shmindmaster/crewscore@v1` requires a floating major tag `v1` on the release commit (in addition to the immutable `vX.Y.Z` tag). Maintainers create or move `v1` after each compatible release so workflows pick up compatible Action fixes without editing every consumer.
+`uses: shmindmaster/crewscore@v2` requires a floating major tag `v2` on the release commit (in addition to the immutable `vX.Y.Z` tag). Maintainers create or move it after each compatible release so workflows pick up compatible Action fixes without editing every consumer.
 
 See [`.github/workflows/example-ci.yml`](.github/workflows/example-ci.yml) for a documented consumer template and [`.github/workflows/crewscore-selftest.yml`](.github/workflows/crewscore-selftest.yml) for this repo’s smoke self-test.
 
