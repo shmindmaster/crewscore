@@ -4,11 +4,17 @@ name: CrewScore Self-Test
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 jobs:
   selftest:
-    runs-on: ubuntu-latest
+    # This job executes checked-out code through the composite Action. Keep
+    # untrusted PR code (forks, bots, or collaborators) off the persistent
+    # DigitalOcean runner. Only maintainer-owned PRs are allowed here.
+    if: github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == github.repository_owner)
+    runs-on: [self-hosted, Linux, X64, sh-runner, docker]
+    timeout-minutes: 30
     permissions:
       contents: read
       pull-requests: write

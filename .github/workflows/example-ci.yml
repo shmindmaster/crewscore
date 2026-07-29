@@ -21,6 +21,7 @@ on:
 
 jobs:
   score:
+    # This is a consumer copy-paste template, not CrewScore's own CI.
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -29,7 +30,7 @@ jobs:
       # Published action (recommended for consumer repos):
       # permissions: { contents: read, pull-requests: write }  # for sticky PR comments
       # - name: CrewScore
-      #   uses: shmindmaster/crewscore@v1
+      #   uses: shmindmaster/crewscore@v2
       #   with:
       #     prompt-file: agents/system-prompt.md
       #     threshold: "50"
@@ -39,7 +40,7 @@ jobs:
       # Repo-wide structural scan (preferred when you have multiple agent files):
       # - name: CrewScore scan
       #   id: crewscore
-      #   uses: shmindmaster/crewscore@v1
+      #   uses: shmindmaster/crewscore@v2
       #   with:
       #     scan-path: "."
       #     threshold: "50"
