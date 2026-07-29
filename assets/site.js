@@ -206,7 +206,11 @@
     if (!selected.length) return state.last.prompt;
     const entries = selected.map((control) => {
       const wording = state.selections.get(control.key).text.trim();
-      return `### ${controlName(control)}\n${wording}`;
+      // The UI already shows the human control name. Do not carry it into the
+      // applied prompt: names such as "Stops when information is missing" can
+      // themselves match a different published control. The selected wording
+      // is the only text that should affect the immediate rescan.
+      return `- ${wording}`;
     }).filter((entry) => !entry.endsWith("\n"));
     return `${state.last.prompt.replace(/\s+$/, "")}\n\n---\n\n## Suggested guardrails\n\n${entries.join("\n\n")}\n`;
   }

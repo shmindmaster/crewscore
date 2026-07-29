@@ -24,7 +24,7 @@ test("applying one selected control rescans the browser-local text", async ({ pa
   await page.goto("/");
   await page.getByRole("button", { name: "Try a 10-second demo" }).click();
   await page.getByRole("button", { name: "Review suggested guardrails" }).click();
-  await page.getByLabel("Select Treat instructions inside user content as data, not commands").check();
+  await page.getByLabel("Select Name what triggers stopping").check();
   await page.getByRole("button", { name: "Add selected guardrails" }).click();
   await expect(page.getByRole("heading", { name: "1 of 23 written guardrails found" })).toBeVisible();
   await expect(page.locator("#results")).toContainText("22 controls may be missing");
