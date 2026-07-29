@@ -28,8 +28,8 @@ keywords = [
 classifiers = [
     # Still Alpha, not Beta: this very release breaks the --json payload
     # shape and `fix` exit codes, three governance dimensions ship with
-    # disclosed low validity (docs/validation.md), and the scoring formula
-    # has a known defect tracked for a future release. Beta implies the
+    # disclosed low validity (docs/validation.md), and browser/product
+    # behavior is still evolving. Beta implies the
     # public surface and behavior have settled; this project's contract is
     # still actively changing release to release.
     "Development Status :: 3 - Alpha",

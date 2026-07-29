@@ -51,10 +51,10 @@ def main() -> int:
         "**Structural scores only** — not red-team results, not runtime proof.",
         "",
         "> **These are fixtures, not evidence.** They were written to exercise "
-        "the rules, which is why the top one scores well. Across 1,368 real "
-        "system prompts, nothing scored above 50/100 and the score did not "
-        "separate production prompts from amateur ones once length was "
-        "controlled. Read [`docs/validation.md`](../../docs/validation.md) "
+        "the rules, which is why the top one scores well. The reproducible "
+        "public validation corpus contains 356 prompts (83 production-agent "
+        "and 273 general-purpose); it supports coverage observations, not a "
+        "quality ranking. Read [`docs/validation.md`](../../docs/validation.md) "
         "before reading anything into a number here.",
         "",
         f"- **Ruleset:** `{RULESET_ID}`",

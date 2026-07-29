@@ -12,13 +12,17 @@ inaccuracy it could ship. These tests fail if the two ever drift apart again.
 
 from __future__ import annotations
 
+import json
 import re
+import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
 
 ANALYTICS = Path("analytics.js")
 INDEX = Path("index.html")
+SITE_JS = Path("assets/site.js")
 
 
 def _index() -> str:
@@ -72,7 +76,7 @@ def test_transmission_is_disclosed_on_the_page():
 def test_the_claim_that_survives_is_about_the_prompt():
     """The honest claim is narrower and stronger: the prompt is not uploaded."""
     page = _index().lower()
-    assert "never uploaded" in page or "stays in your browser" in page
+    assert "never uploaded" in page or "stays in your browser" in page or "prompt text never leaves your browser" in page
 
 
 def test_prompt_text_cannot_reach_the_analytics_payload():
@@ -102,4 +106,109 @@ def test_analytics_never_breaks_scoring():
     assert ".catch(" in js, "an unhandled rejection on a blocked request"
     # Optional-call at the call site, so a blocked or absent analytics.js
     # cannot throw into the scoring path.
-    assert "window.CrewScoreAnalytics?." in _index()
+    assert "window.CrewScoreAnalytics?." in SITE_JS.read_text(encoding="utf-8")
+
+
+def test_analytics_has_a_persistent_opt_out_that_stops_capture():
+    """The privacy toggle must change behavior, not merely hide a preference."""
+    js = _analytics()
+    page = _index()
+    assert "crewscore_analytics_opt_out_v1" in js
+    assert "isOptedOut()" in js
+    assert "|| isOptedOut()" in js
+    assert "setOptOut" in js
+    assert 'id="analytics-opt-out"' in page
+
+
+def test_opt_out_is_a_runtime_capture_no_op_when_node_present():
+    """Exercise the production hostname branch, not just source-code shape."""
+    if not shutil.which("node"):
+        pytest.skip("node not installed; skipping analytics runtime test")
+
+    script = f"""
+const fs = require("fs");
+const vm = require("vm");
+const source = fs.readFileSync({json.dumps(str(ANALYTICS))}, "utf8");
+const local = new Map([["crewscore_analytics_opt_out_v1", "1"]]);
+const session = new Map();
+const calls = [];
+const storage = (store) => ({{
+  getItem: (key) => store.has(key) ? store.get(key) : null,
+  setItem: (key, value) => store.set(key, String(value)),
+}});
+const context = {{
+  window: {{}},
+  localStorage: storage(local),
+  sessionStorage: storage(session),
+  location: {{ hostname: "crewscore.ai" }},
+  crypto: {{ randomUUID: () => "test-session" }},
+  fetch: (...args) => {{ calls.push(args); return Promise.resolve(); }},
+}};
+vm.createContext(context);
+vm.runInContext(source, context);
+const analytics = context.window.CrewScoreAnalytics;
+analytics.capture("cs_check_completed", {{ prompt: "SENTINEL_PROMPT", source: "paste" }});
+const whileOptedOut = calls.length;
+analytics.setOptOut(false);
+analytics.capture("cs_check_completed", {{ prompt: "SENTINEL_PROMPT", source: "paste" }});
+const afterEnabled = calls.length;
+const body = calls.length ? JSON.parse(calls[0][1].body) : null;
+analytics.setOptOut(true);
+analytics.capture("cs_check_completed", {{ source: "paste" }});
+process.stdout.write(JSON.stringify({{ whileOptedOut, afterEnabled, body, finalCalls: calls.length }}));
+"""
+    proc = subprocess.run(
+        ["node", "-e", script],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    result = json.loads(proc.stdout)
+    assert result["whileOptedOut"] == 0
+    assert result["afterEnabled"] == 1
+    assert result["finalCalls"] == 1
+    assert result["body"]["properties"]["source"] == "paste"
+    assert "SENTINEL_PROMPT" not in json.dumps(result["body"])
+
+
+def test_opt_out_still_blocks_capture_when_storage_is_unavailable():
+    """Privacy mode cannot depend on localStorage being writable."""
+    if not shutil.which("node"):
+        pytest.skip("node not installed; skipping analytics runtime test")
+
+    script = f"""
+const fs = require("fs");
+const vm = require("vm");
+const source = fs.readFileSync({json.dumps(str(ANALYTICS))}, "utf8");
+const calls = [];
+const session = new Map();
+const context = {{
+  window: {{}},
+  localStorage: {{
+    getItem: () => {{ throw new Error("storage blocked"); }},
+    setItem: () => {{ throw new Error("storage blocked"); }},
+  }},
+  sessionStorage: {{
+    getItem: (key) => session.get(key) || null,
+    setItem: (key, value) => session.set(key, String(value)),
+  }},
+  location: {{ hostname: "crewscore.ai" }},
+  crypto: {{ randomUUID: () => "test-session" }},
+  fetch: (...args) => {{ calls.push(args); return Promise.resolve(); }},
+}};
+vm.createContext(context);
+vm.runInContext(source, context);
+const analytics = context.window.CrewScoreAnalytics;
+const before = calls.length;
+analytics.setOptOut(true);
+analytics.capture("cs_check_completed", {{ source: "paste" }});
+process.stdout.write(JSON.stringify({{ before, after: calls.length, optedOut: analytics.isOptedOut() }}));
+"""
+    proc = subprocess.run(
+        ["node", "-e", script],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    result = json.loads(proc.stdout)
+    assert result == {"before": 1, "after": 1, "optedOut": True}
