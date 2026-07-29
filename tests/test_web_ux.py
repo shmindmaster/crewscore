@@ -328,11 +328,13 @@ def test_hero_frames_the_number_as_coverage_not_quality():
     """A visitor who reads nothing but the hero must still learn that the
     number does not rank prompt quality — and see the figure that says so."""
     html = _html()
-    # The headline speaks to the reader's actual fear - the agent doing
-    # something they never told it not to - rather than to a compliance
-    # department. "Governance" described real failure modes in words only
-    # an auditor uses, and it is also a bigger claim than we make.
-    assert "forget to tell your AI agent" in html
+    # The headline names the consequence - the agent doing something nobody
+    # told it not to - rather than the compliance category. "Governance"
+    # described real failure modes in words only an auditor uses, and claimed
+    # more than we deliver. The earlier "what did you forget to tell your AI
+    # agent?" was closer but still a riddle: the reader had to decode it before
+    # learning what the tool does.
+    assert "not allowed to do" in html.lower()
     for mode in ("prompt injection", "hallucination", "runaway cost"):
         assert mode in html.lower(), mode
     # Reframing the pitch must not soften the limit.
@@ -396,12 +398,18 @@ def test_readme_headline_is_a_checklist_not_a_score():
     the length-matched study could not demonstrate."""
     md = _readme()
     assert "Free structural score for AI agent prompts" not in md
-    # Names the failure modes rather than the compliance category, and
-    # still never calls the number a "score" in the headline.
-    assert "forget to tell your AI agent" in md
-    assert "prompt injection" in md.lower()
     headline = next(line for line in md.splitlines() if line.startswith("### "))
+    # The headline must not call the number a score - that claims a ranking
+    # nothing here demonstrates.
     assert "score" not in headline.lower(), headline
+    # It must state a consequence the reader recognises, not list features.
+    # "What did you forget to tell your AI agent?" was a riddle: the reader had
+    # to decode it before learning what the tool does.
+    assert "agent" in headline.lower(), headline
+    assert len(headline) < 90, f"headline is a paragraph: {headline}"
+    # The concrete failure modes still appear, just below the headline rather
+    # than inside it.
+    assert "injection" in md.lower()
 
 
 def test_readme_links_validation_study_above_the_fold():
@@ -420,54 +428,65 @@ def test_readme_states_the_coverage_proof_with_numbers():
     each, scores 28/100 -- below the lowest tier boundary of 50.
     """
     md = _readme()
-    assert "28/100" in md, "README omits the fully-compliant-prompt score"
-    assert "50" in md
-    # The withdrawn figures must not reappear anywhere.
+    # Concrete endpoints, not adjectives: a reader must be able to calibrate
+    # what the number means before setting a threshold on it.
+    assert "**0**" in md and "**100**" in md, "README hedges instead of stating the scale"
+    assert "23" in md, "README omits the control count the score is a share of"
+    # The 28/100 defect is history as of 0.3.0. It stays documented, but in the
+    # study rather than on the landing page - quoting it as current is false.
+    doc = Path("docs/validation.md").read_text(encoding="utf-8")
+    assert "28/100" in doc, "validation study drops the defect it exists to record"
     for stat in ("+0.061", "p=0.36", "0.863", "+0.601", "99.3%"):
         assert stat not in md, f"withdrawn statistic {stat} is still in README"
+        assert stat not in doc, f"withdrawn statistic {stat} is back in the study"
 
 
 def test_readme_draws_the_checklist_versus_benchmark_line():
     """The is/is-not table must name the distinction outright: a checklist
     answers "did you write a rule for X"; a benchmark ranks A against B."""
-    md = _readme()
-    rows = [
-        line
-        for line in md.splitlines()
-        if line.startswith("|")
-        and "checklist" in line.lower()
-        and "benchmark" in line.lower()
-    ]
-    assert rows, "no is/is-not row drawing the checklist vs benchmark line"
+    md = _readme().lower()
+    # Prose or table - what matters is that the distinction is drawn on the
+    # landing page, above the usage section, not buried in a linked doc.
+    assert "checklist, not a benchmark" in md, (
+        "README never draws the checklist vs benchmark line"
+    )
+    head = md[: md.find("## usage")] if "## usage" in md else md
+    assert "checklist, not a benchmark" in head, (
+        "the distinction appears only after the usage section"
+    )
 
 
 def test_readme_charter_carries_discrimination_and_validity_disclosure():
     """The charter is where honesty principles live, so the discrimination
     result and the three low-validity dimensions live there too."""
+    # The charter moved to docs/scoring.md when the README was cut down, but
+    # the three weak dimensions stay named on the landing page: a reader who
+    # never opens a linked doc still has to learn that a 0 in Compliance means
+    # "the rules found nothing", not "you failed to write it".
     md = _readme()
-    start = md.find("## Scoring charter")
-    end = md.find("## Install", start)
-    assert start > 0 and end > start, "scoring charter section not found"
-    charter = md[start:end]
-    assert "crewscore-hygiene@0.1.0" in charter
-    assert "28/100" in charter, "charter omits the coverage-not-quality proof"
+    for dim in ("Cost", "Compliance", "Audit"):
+        assert dim in md, f"README omits low-validity dimension {dim}"
+    assert "docs/validation.md" in md
+
+    charter = Path("docs/scoring.md").read_text(encoding="utf-8")
+    assert "Charter" in charter, "scoring doc lost the charter"
+    assert "author-intuition" in charter
     for dim in ("Cost", "Compliance", "Audit"):
         assert dim in charter, f"charter omits low-validity dimension {dim}"
-    assert "docs/validation.md" in charter
+    assert "validation.md" in charter
 
 
 def test_readme_documents_040_breaking_changes():
     """0.1.0 drops four fields from config `--json` payloads and changes a
     `fix` exit code. A consumer who upgrades blind breaks; say so."""
-    md = _readme()
-    start = md.find("## What changed in 0.1.0")
-    assert start > 0, "0.1.0 release-notes section not found"
-    end = md.find("## CI integration", start)
-    assert end > start
-    section = md[start:end]
+    # Release notes belong in the changelog, not on the landing page - the
+    # README carried a "What changed in 0.1.0" heading for four releases after
+    # it had stopped being what changed. The invariant is that the breaking
+    # payload change is documented where a consumer will actually look.
+    md = Path("CHANGELOG.md").read_text(encoding="utf-8")
     for field in ("`overall`", "`dimensions`", "`findings`", "`transparency`"):
-        assert field in section, f"0.1.0 notes omit dropped field {field}"
-    assert "exit" in section.lower()
+        assert field in md, f"changelog omits dropped field {field}"
+    assert "exit" in md.lower()
 
 
 def test_readme_tier_table_says_what_the_ladder_measures():
@@ -479,16 +498,17 @@ def test_readme_tier_table_says_what_the_ladder_measures():
     it did not go away. The ladder still ranks *coverage*, and a reader who
     reads 90-100 as "good prompt" is being misled either way.
     """
-    md = _readme()
-    start = md.find("### Score tiers")
-    end = md.find("## Two artifacts", start)
-    assert start > 0 and end > start, "score tiers section not found"
-    tiers = md[start:end]
+    doc = Path("docs/scoring.md").read_text(encoding="utf-8")
+    start = doc.find("## Score tiers")
+    assert start > 0, "score tiers section not found"
+    # Section break, not the table separator - a markdown table contains
+    # "---" on its own header row and would truncate the slice to nothing.
+    tiers = doc[start : doc.find("\n---\n", start)]
     assert "coverage" in tiers.lower(), "tier table does not say it ranks coverage"
-    # Both ends of the scale must be pinned to something concrete, so the
-    # reader can calibrate a threshold instead of guessing.
+    # Both ends pinned to something concrete, so a reader can calibrate a
+    # threshold instead of guessing.
     assert "100" in tiers and "0" in tiers
-    assert "docs/validation.md" in tiers
+    assert "not production certification" in tiers.lower()
 
 
 def test_readme_config_smells_marked_unaffected_by_the_study():
@@ -496,11 +516,13 @@ def test_readme_config_smells_marked_unaffected_by_the_study():
     The reframe must not read as if they were implicated too."""
     md = _readme()
     start = md.find("## Configuration smells")
-    end = md.find("## What changed", start)
+    end = md.find("## Development", start)
     assert start > 0 and end > start, "configuration smells section not found"
     section = md[start:end]
-    assert "validation study" in section.lower()
     assert "arxiv.org/abs/2606.15828" in section
+    assert "never change the score" in section.lower(), (
+        "smells section must say it is advisory"
+    )
 
 
 def test_readme_does_not_point_readers_at_a_withdrawn_version():
@@ -511,9 +533,14 @@ def test_readme_does_not_point_readers_at_a_withdrawn_version():
     dead end.
     """
     md = _readme()
-    for bad in ("crewscore==0.2", "crewscore==0.3", "crewscore==0.4"):
-        assert bad not in md, bad
-    assert "first supported release" in md.lower()
+    # 0.2.x and 0.4.0 were published and deleted; PyPI never re-issues a
+    # deleted version, so any pin naming one is a permanent dead end.
+    for bad in ("crewscore==0.2", "crewscore==0.4"):
+        assert bad not in md, f"README pins {bad}, deleted from PyPI"
+    # The withdrawal record lives in the changelog, where someone chasing an
+    # old version number actually looks.
+    changelog = Path("CHANGELOG.md").read_text(encoding="utf-8")
+    assert "withdrawn" in changelog.lower()
 
 def test_panel_lifted_from_bg():
     """Panel surface color is distinct from page background (lifted card)."""

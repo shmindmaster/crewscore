@@ -78,7 +78,7 @@ def main() -> int:
     d.text((88, 92), "CrewScore", font=f_brand, fill=WHITE)
     d.text(
         (88, 172),
-        "What did you forget to tell your AI agent?",
+        "Your AI agent doesn't know what it's not allowed to do",
         font=f_tag,
         fill=MUTED,
     )
