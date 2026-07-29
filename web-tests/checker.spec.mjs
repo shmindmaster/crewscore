@@ -17,8 +17,10 @@ test("public security page exposes the private reporting route", async ({ page }
 test("demo produces controls-first results and an editable review", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Try a 10-second demo" }).click();
-  await expect(page.getByRole("heading", { name: /written guardrails found/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "20 of 23 written guardrails found" })).toBeVisible();
   await expect(page.locator("#results").getByText("Written-control coverage, not runtime proof.")).toBeVisible();
+  await expect(page.locator("#results")).toContainText("3 controls may be missing");
+  await expect(page.locator("#results")).toContainText("A human must approve");
   await page.getByRole("button", { name: "Review suggested guardrails" }).click();
   const choices = page.locator("[data-select]");
   await expect(choices.first()).toBeVisible();
@@ -37,15 +39,15 @@ test("applying one selected control rescans the browser-local text", async ({ pa
   await page.getByRole("button", { name: "Try a 10-second demo" }).click();
   await expect(page.getByRole("heading", { name: /written guardrails found/ })).toBeVisible();
   await page.getByRole("button", { name: "Review suggested guardrails" }).click();
-  // The reviewer intentionally limits its suggestions to the highest-priority
-  // missing controls. Verify the selected control's effect without coupling
-  // this browser journey to one specific priority ordering.
-  const suggestedControl = page.locator("[data-select]").first();
+  // This deterministic public fixture is the release-demo source. It starts
+  // with the human-approval control missing, then exercises the real selector,
+  // diff, apply, and browser-local rescan flow.
+  const suggestedControl = page.locator('[data-select="human_gate.approval_required"]');
   await expect(suggestedControl).toBeVisible();
   await suggestedControl.click();
   await page.getByRole("button", { name: "Add selected guardrails" }).click();
-  await expect(page.getByRole("heading", { name: "1 of 23 written guardrails found" })).toBeVisible();
-  await expect(page.locator("#results")).toContainText("22 controls may be missing");
+  await expect(page.getByRole("heading", { name: "21 of 23 written guardrails found" })).toBeVisible();
+  await expect(page.locator("#results")).toContainText("2 controls may be missing");
 });
 
 test("supports local file upload and a mocked public GitHub import", async ({ page }) => {

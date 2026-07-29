@@ -4,7 +4,10 @@
   "version": "0.0.0",
   "description": "Browser verification for the static CrewScore website",
   "scripts": {
-    "test:web": "playwright test"
+    "test:web": "playwright test",
+    "demo:narration": "powershell -ExecutionPolicy Bypass -File scripts/demo/generate-local-narration.ps1",
+    "demo:capture": "node scripts/demo/capture-release-demo.mjs",
+    "demo:render": "node scripts/demo/render-release-demo.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.12.1",

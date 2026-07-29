@@ -35,11 +35,20 @@ permissions:
 jobs:
   verify:
     name: Test, build, and verify artifacts
-    runs-on: ${{ matrix.os }}
+    # Ordinary Linux release verification can use the existing DigitalOcean
+    # runner. Keep Windows and macOS on their native hosted runners: those
+    # checks exercise platform-specific behavior the Linux host cannot cover.
+    runs-on: ${{ fromJSON(matrix.runner) }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: Linux
+            runner: '["self-hosted", "Linux", "X64", "sh-runner", "docker"]'
+          - os: Windows
+            runner: '"windows-latest"'
+          - os: macOS
+            runner: '"macos-latest"'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
