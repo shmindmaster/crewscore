@@ -791,6 +791,13 @@ def test_version():
     assert __version__ in result.output
 
 
+def test_python_m_crewscore_entry_exists():
+    """`python -m crewscore` is a supported alternate entry (not only the script)."""
+    import crewscore.__main__ as module
+
+    assert callable(module.main)
+
+
 def test_version_is_0_5_1():
     """This release breaks the --json payload shape and `fix` exit codes;
     semver requires a minor bump, not the previous 0.3.1 patch bump.
