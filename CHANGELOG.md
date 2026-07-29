@@ -14,6 +14,42 @@ install them, and do not compare their numbers to these.
 
 ---
 
+## [0.6.0] — 2026-07-29 — explicit control-policy stabilization
+
+No scoring change. `crewscore-hygiene@0.5.0` remains the ruleset, so the
+published coverage arithmetic, control count, numeric JSON fields, and Action
+outputs remain comparable with 0.5.1.
+
+### Added
+
+- **Explicit control policies instead of score chasing.** `test` and `scan`
+  can now require public control IDs/dimensions, protect a prompt-free
+  baseline with `--fail-on-regression`, or read the deliberately small
+  `.crewscore.yml` schema. These options report and gate only controls; they
+  do not modify the score, tier, ruleset, or the coding-agent-config exemption.
+
+- **`crewscore baseline` and `crewscore init`.** Baselines store only paths,
+  profiles, found control IDs, and the ruleset - never prompt text. `init`
+  creates a reviewable baseline, config, and non-deploying pull-request
+  workflow without overwriting existing files.
+
+- **Prompt-free SARIF.** `--sarif` writes missing-control IDs and artifact
+  paths without matched snippets. The Action exposes the same optional inputs
+  and is now report-only by default; its established score/tier/scored outputs
+  are unchanged.
+
+- **Community and discoverability foundations.** Security reporting, a full
+  code of conduct, PR and structured scoring/adapter issue templates, scoring
+  governance, roadmap, runnable quickstart, static docs/rules pages, sitemap,
+  robots, and SoftwareApplication/FAQ structured data.
+
+### Validation
+
+- Added focused policy/SARIF/init, Action, SEO, and community-contract tests;
+  Python and browser suites remain required before merge.
+
+---
+
 ## [0.5.1] — 2026-07-29 — Marketplace listing
 
 No scoring change. `crewscore-hygiene@0.5.0` is unchanged, so scores from

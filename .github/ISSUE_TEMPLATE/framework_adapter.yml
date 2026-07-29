@@ -1,0 +1,36 @@
+name: Framework adapter proposal
+description: Propose a real prompt-discovery adapter with a bounded extraction contract.
+title: "adapter: "
+labels: ["framework-adapter", "proposal"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not propose a placeholder loader. Describe a testable extraction path and keep runtime enforcement claims separate from prompt discovery.
+  - type: input
+    id: framework
+    attributes:
+      label: Framework and supported version range
+      placeholder: "Example Framework 1.x"
+    validations:
+      required: true
+  - type: textarea
+    id: discovery
+    attributes:
+      label: Prompt discovery contract
+      description: Which local files or public API objects are read? How are multiple prompts named?
+    validations:
+      required: true
+  - type: textarea
+    id: fixture
+    attributes:
+      label: Minimal synthetic fixture and expected artifacts
+    validations:
+      required: true
+  - type: textarea
+    id: limits
+    attributes:
+      label: Limits and non-goals
+      description: State what this adapter does not enforce or evaluate at runtime.
+    validations:
+      required: true

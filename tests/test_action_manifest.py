@@ -307,6 +307,32 @@ def test_action_script_runs_scan_when_scan_path_set():
     assert "isinstance(data, list)" in text
 
 
+def test_action_defaults_to_report_only_and_exposes_control_policy_inputs():
+    """The Action must not silently treat coverage as a safety threshold.
+
+    Existing consumers can still opt into the legacy threshold, but a new
+    workflow starts report-only and chooses either exact controls or a
+    prompt-free regression baseline before it can fail.
+    """
+    manifest = _action_manifest()
+    assert manifest["inputs"]["threshold"]["default"] == ""
+    for name in (
+        "required-controls",
+        "forbid-missing",
+        "baseline",
+        "fail-on-regression",
+        "config",
+        "sarif",
+    ):
+        assert name in manifest["inputs"]
+    text = _action_text()
+    assert 'ARGS=(scan "$SCAN_PATH" --json)' in text
+    assert 'ARGS=(test --prompt-file "$PROMPT_FILE" --json)' in text
+    assert 'ARGS+=(--require "$REQUIRED_CONTROLS")' in text
+    assert 'ARGS+=(--fail-on-regression)' in text
+    assert 'ARGS+=(--sarif "$SARIF")' in text
+
+
 def test_action_scan_and_test_both_pass_summary():
     """Both scan and single-file paths must write --summary when configured."""
     text = _action_text()

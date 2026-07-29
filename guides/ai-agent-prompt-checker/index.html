@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A practical, local checklist for written AI agent prompt guardrails.">
+  <link rel="canonical" href="https://crewscore.ai/guides/ai-agent-prompt-checker/"><title>AI agent prompt checker | CrewScore</title>
+  <link rel="stylesheet" href="../../assets/site.css">
+</head>
+<body><div class="site-shell"><header class="site-header"><a class="brand" href="../../"><span class="brand-mark" aria-hidden="true">CS</span><span>CrewScore</span></a><nav class="site-nav"><a href="../../">Checker</a><a href="../../rules/">Public controls</a></nav></header>
+<main class="hero longform"><p class="eyebrow">Guide</p><h1>Check AI agent instructions for missing written guardrails</h1><p class="hero-copy">A useful prompt review starts by separating what is written from what is enforced. Written guardrails clarify intent; runtime tools, approvals, and tests enforce behavior.</p>
+<h2>Start with the instructions you own</h2><p>Paste a system prompt, custom-instructions field, support-bot setup, or agent instruction file into the local checker. It reports 23 public controls across injection handling, evidence, sources, cost limits, human approval, stopping, records, and sensitive data.</p>
+<h2>Review omissions one control at a time</h2><p>Do not append every template just to raise a number. Choose wording that fits the agent's actual tools and authority, then make the runtime behavior match it. For a bot that sends messages, a written human-approval rule should be paired with a real approval hook.</p>
+<h2>Make meaningful controls recurring</h2><p>For repositories, use `crewscore init .` to create a prompt-free baseline and pull-request workflow. Require precise public controls such as <code>human_gate.approval_required</code> instead of interpreting an average coverage number as a safety threshold.</p>
+<h2>Know the limit</h2><p>CrewScore uses deterministic text matching. It does not execute tools, attack a model, certify compliance, or prove that an agent follows the instructions. Use evaluation and runtime controls alongside prompt review.</p>
+<p><a class="button" href="../../">Check my instructions locally</a></p></main></div></body>
+</html>

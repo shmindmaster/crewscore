@@ -16,9 +16,11 @@ Discovers likely agent instruction files (`AGENTS.md`, `CLAUDE.md`,
 ```bash
 crewscore scan .
 crewscore scan ./agents --json
-crewscore scan . --threshold 50            # gates system prompts
+crewscore scan . --require human_gate.approval_required
+crewscore scan . --baseline .crewscore-baseline.json --fail-on-regression
 crewscore scan . --max-smells 0            # gates coding-agent config
 crewscore scan . --summary crewscore-summary.md
+crewscore scan . --sarif crewscore.sarif
 
 # synthetic demo gradient (bare -> hardened)
 crewscore scan examples/corpus
@@ -37,6 +39,21 @@ crewscore scan examples/corpus
 
 This is the default CI gate for repos with more than one agent artifact.
 
+### Explicit control policies (recommended for CI)
+
+```bash
+crewscore init .
+crewscore baseline . --output .crewscore-baseline.json
+crewscore scan . --config .crewscore.yml
+crewscore scan . --require human_gate,safe_stop
+```
+
+`--require` and `--forbid-missing` accept public control IDs or a dimension
+name; a dimension expands to all of its published controls. `--baseline FILE
+--fail-on-regression` fails only when a previously found control disappears.
+`--sarif FILE` writes missing-control findings without prompt text or snippets.
+See [policies.md](policies.md) for the small `.crewscore.yml` schema.
+
 ---
 
 ## `test` — score a single prompt
@@ -49,6 +66,25 @@ crewscore test --prompt-file ./my-agent/system-prompt.md --json --threshold 50
 ```
 
 `--threshold N` exits `2` when the overall score is below `N`.
+
+`test` also accepts `--require`, `--forbid-missing`, `--baseline`,
+`--fail-on-regression`, `--config`, and `--sarif` with the same semantics as
+`scan`. They are explicit control policies; they do not alter `overall`,
+dimensions, tier, or the ruleset.
+
+---
+
+## `baseline` and `init` — recurring checks without score chasing
+
+```bash
+crewscore baseline . --output .crewscore-baseline.json
+crewscore init .
+```
+
+`baseline` records only artifact path, profile, and found control IDs. It
+never stores prompt text. `init` creates `.crewscore.yml`, the baseline, and a
+non-deploying GitHub pull-request workflow; it refuses to overwrite those
+files without `--force`.
 
 ### Share a result
 
