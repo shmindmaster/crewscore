@@ -22,6 +22,7 @@ from crewscore.web_export import build_payload, render_js
 
 ROOT = Path(__file__).resolve().parents[1]
 ENGINE_JS = ROOT / "score-engine.js"
+SITE_JS = ROOT / "assets" / "site.js"
 
 BARE = "You are a helpful assistant that answers customer questions."
 GUARDED = """
@@ -54,6 +55,8 @@ def test_export_payload_matches_scorer_map():
     }
     assert len(payload["vendor_questions"]) == 10
     assert "injection" in payload["fix_templates"]
+    assert "injection.override_resistance" in payload["control_fix_templates"]
+    assert payload["control_fix_templates"]["injection.override_resistance"]
     assert "Guardrails" in payload["fix_templates"]["injection"] or "injection" in payload[
         "fix_templates"
     ]["injection"].lower() or "NEVER" in payload["fix_templates"]["injection"]
@@ -99,18 +102,15 @@ def test_score_engine_js_is_current():
 
 def test_index_loads_shared_engine():
     html = (ROOT / "index.html").read_text(encoding="utf-8")
+    site_js = SITE_JS.read_text(encoding="utf-8")
     assert 'src="score-engine.js"' in html
-    assert "CrewScoreEngine" in html
-    assert "analyzeWithFindings" in html
-    # Fix path uses plan → generateFixes/applyFixes (or legacy fixAndRescore)
-    assert "generateFixes" in html or "fixAndRescore" in html
-    assert "applyFixes" in html or "fixAndRescore" in html
-    assert "No signup" in html or "no install" in html.lower()
-    assert "template-chips" in html
-    assert "downloadScoreCard" in html or "share-canvas" in html
-    # Preflight workflow stages (product experience redesign)
-    assert "Plan fix" in html or "plan" in html.lower()
-    assert "Structural pre-gate" in html or "not a red-team" in html.lower()
+    assert 'src="assets/site.js"' in html
+    assert "CrewScoreEngine" in site_js
+    assert "analyzeArtifact" in site_js
+    assert "control_fix_templates" in site_js
+    assert "no prompt upload" in html.lower()
+    assert "Try a 10-second demo" in html
+    assert "Written-control coverage" in html
 
 
 def test_index_declares_artifact_type_instead_of_guessing():
@@ -129,24 +129,24 @@ def test_index_declares_artifact_type_instead_of_guessing():
 
 def test_index_branches_on_governance_applicable():
     """AGENTS.md invariant: every output surface branches on the profile."""
-    html = (ROOT / "index.html").read_text(encoding="utf-8")
-    assert "analyzeArtifact" in html
-    assert "governance_applicable" in html
+    script = SITE_JS.read_text(encoding="utf-8")
+    assert "analyzeArtifact" in script
+    assert "governance_applicable" in script
     # A config verdict is rendered on its own path, not through scoreTier.
-    assert "renderConfigVerdict" in html
+    assert "Configuration smells, not a governance score" in script
 
 
 def test_index_admits_the_browser_runs_one_of_three_detectors():
     """A browser-clean config must not read as a full check."""
-    html = (ROOT / "index.html").read_text(encoding="utf-8")
+    script = SITE_JS.read_text(encoding="utf-8")
     # Rendered from the engine's own counts, so the sentence cannot drift from
     # what actually ran; the counts themselves are asserted in the Node test.
-    assert "${ran} of ${total} detectors" in html
-    assert "Context Bloat" in html
+    assert "${result.detectors_run} of ${result.detectors_total} detectors" in script
+    assert "browser-detectable" in script
     # The two names it cannot run come from the engine payload rather than
     # being duplicated here, so they cannot drift from crewscore/smells.py.
-    assert "undetectable" in html
-    assert "crewscore scan" in html or "pip install crewscore" in html
+    assert "detectors_run" in script
+    assert "crewscore scan" in script or "pip install crewscore" in script
     names = {s["name"] for s in build_payload()["browser_undetectable_smells"]}
     assert names == {"Init Fossilization", "Lint Leakage"}
 
@@ -295,9 +295,9 @@ def test_js_classifies_a_real_filename_like_the_cli_when_node_present():
 
 def test_index_classifies_loaded_urls_by_filename():
     """The URL loader must not leave a config file declared as a system prompt."""
-    html = (ROOT / "index.html").read_text(encoding="utf-8")
+    script = SITE_JS.read_text(encoding="utf-8")
     # profileForLoadedUrl wraps classifyFilename with the promotion-only rule.
-    assert "profileForLoadedUrl" in html
+    assert "profileForLoadedUrl" in script
 
 
 def test_js_url_load_never_demotes_a_declared_config_when_node_present():
@@ -359,9 +359,9 @@ def test_js_demoted_url_load_would_have_produced_a_grade_when_node_present():
 
 def test_index_labels_are_not_score_worded_for_config():
     """A config verdict is not a score, so the chrome must not say 'score'."""
-    html = (ROOT / "index.html").read_text(encoding="utf-8")
-    assert "Configuration verdict</" in html or "Configuration verdict\"" in html
-    assert "Check configuration" in html
+    script = SITE_JS.read_text(encoding="utf-8")
+    assert "Configuration smells, not a governance score" in script
+    assert "governance score" in script
 
 
 def test_js_python_score_parity_when_node_present():

@@ -31,6 +31,7 @@ Design constraints, from SH-2402:
 from __future__ import annotations
 
 import argparse
+from datetime import date
 import json
 import math
 import random
@@ -51,6 +52,7 @@ from crewscore.scorers.structural_analysis import (  # noqa: E402
     covered_concepts,
 )
 from crewscore.scoring import RULESET_ID, overall_score  # noqa: E402
+from crewscore import __version__  # noqa: E402
 
 CACHE = REPO / ".corpus-cache"
 REPORT = REPO / "docs" / "validation-corpus.md"
@@ -499,8 +501,8 @@ def render(payload: dict) -> str:
         "# Corpus validation: does CrewScore coverage separate production "
         "prompts from general-purpose ones?",
         "",
-        f"Ruleset `{payload['ruleset']}`. Regenerate with "
-        "`py scripts/validate_corpus.py`.",
+        f"Validation ruleset `{payload['ruleset']}` · package `{__version__}` · generated `{date.today().isoformat()}`.",
+        "Reproducible command: `py scripts/validate_corpus.py`. This supersedes the withdrawn 1,368-prompt study.",
         "",
         "## Corpora",
         "",

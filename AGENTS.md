@@ -5,7 +5,7 @@
 Offline CLI that classifies an agent-instruction file by name and judges it one of two ways:
 
 - **Coding-agent config** (`AGENTS.md`, `CLAUDE.md`, `.cursorrules`, and friends — see `crewscore/profiles.py`) is scanned for **configuration smells** (Context Bloat, Init Fossilization, Lint Leakage — arXiv:2606.15828) and gets **no governance score at all**.
-- **Agent system prompts** (everything else) are scanned for **coverage of 8 governance-signal dimensions** (injection defense, hallucination policy, citations, cost limits, human gates, safe-stop, audit, compliance). The number is a match count against a published pattern list, not a validated quality or maturity ranking — **read `docs/validation.md` before trusting it for anything more than "which controls are missing."** In short: at matched length, CrewScore could not show production prompts scoring higher than amateur ones (delta +0.061, 95% CI −0.05 to +0.17, p=0.36), and three of the eight dimensions (Cost, Compliance, Audit) ship with known-poor construct validity.
+- **Agent system prompts** (everything else) are scanned for **coverage of 8 governance-signal dimensions** (injection defense, hallucination policy, citations, cost limits, human gates, safe-stop, audit, compliance). The number is a match count against a published pattern list, not a validated quality or maturity ranking — **read `docs/validation.md` before trusting it for anything more than "which controls are missing."** The reproducible public corpus contains 356 prompts (83 production-agent and 273 general-purpose); it supports a coverage-separation observation, not a quality claim. Cost, Compliance, and Audit ship with known-poor construct validity.
 
 It also applies fix patterns (system-prompt profile only — `fix` refuses to write governance templates into coding-agent config) and optionally runs a non-technical AI vendor checklist (self-attest only).
 
@@ -13,7 +13,7 @@ Public brand: **CrewScore** · Domain: **https://crewscore.ai** · PyPI: **`crew
 
 It does **not** (yet) run live adversarial LLM attacks or parse LangGraph/CrewAI runtimes. For live testing, hand off to Promptfoo / garak — see `docs/next-steps-eval.md`.
 
-Ruleset id: **`crewscore-hygiene@0.1.0`** (`crewscore rules` prints it; `crewscore/scoring.py:RULESET_ID` is the source of truth — it may lag this doc by a patch release mid-work).
+Ruleset id: **`crewscore-hygiene@0.5.0`** (`crewscore rules` prints it; `crewscore/scoring.py:RULESET_ID` is the source of truth).
 
 ## Stack
 
@@ -132,7 +132,7 @@ tests/
 - Fame follows usefulness: explainable findings, fix, CI gate before launch theater.
 - Breaking CLI flags are acceptable if all docs and tests update in the same change.
 - Never document `pip install agent-guard` as *this* product (that PyPI name is taken by another package).
-- **Read `docs/validation.md` before writing or editing any claim about what the governance score proves.** It documents a discrimination study against 1,368 real prompts; do not re-inflate the "production-readiness" framing this file used before 0.1.0 without new evidence to support it.
+- **Read `docs/validation.md` before writing or editing any claim about what the governance score proves.** It documents the reproducible 356-prompt corpus and the withdrawn 1,368-prompt study; do not re-inflate a "production-readiness" framing without new evidence.
 
 ## Do not
 

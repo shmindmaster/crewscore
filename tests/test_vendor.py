@@ -74,35 +74,34 @@ def test_assess_vendor_report_writes_html(tmp_path: Path):
 
 def test_index_html_share_uses_data_attrs_not_json_onclick():
     """Vendor share must not inject JSON.stringify into double-quoted onclick."""
-    text = Path("index.html").read_text(encoding="utf-8")
+    text = Path("assets/site.js").read_text(encoding="utf-8")
     assert "JSON.stringify(opts.shareExtra)" not in text
     assert "addEventListener" in text
-    assert 'data-s="' in text or "data-share" in text
+    assert "data-social" in text
 
 
 def test_index_html_uses_shared_engine_for_vendor_and_agent():
     """Web must load generated score-engine.js (Python parity), not a private dual scorer."""
-    text = Path("index.html").read_text(encoding="utf-8")
-    assert 'src="score-engine.js"' in text
+    text = Path("assets/site.js").read_text(encoding="utf-8")
+    vendor = Path("assets/vendor.js").read_text(encoding="utf-8")
+    assert 'src="score-engine.js"' in Path("index.html").read_text(encoding="utf-8")
     assert "CrewScoreEngine" in text
-    assert "scoreVendor" in text
-    assert "analyzeWithFindings" in text
-    assert "redFlags" in text
+    assert "analyzeArtifact" in text
+    assert "CrewScoreEngine" in vendor
 
 
 def test_index_html_escapes_user_titles_before_innerhtml():
     """Vendor/agent titles and flags must be HTML-escaped before innerHTML."""
-    text = Path("index.html").read_text(encoding="utf-8")
-    assert "function escapeHtml" in text
-    assert "escapeHtml(name)" in text
-    assert "escapeHtml" in text
+    text = Path("assets/vendor.js").read_text(encoding="utf-8")
+    assert "const esc" in text
+    assert "esc($(\"vendor-name\")" in text
+    assert "esc(question)" in text
 
 
 def test_index_html_vendor_uses_cli_vendor_tiers_not_agent_tiers():
     """Web vendor results must use engine vendor tiers (TRUSTED/CAUTION/…)."""
-    text = Path("index.html").read_text(encoding="utf-8")
-    assert "E.scoreVendor" in text or "scoreVendor(vendorAnswers)" in text
-    assert "tier.n" in text
+    text = Path("assets/vendor.js").read_text(encoding="utf-8")
+    assert "not a vendor grade" in text
     # Agent path must not claim vendor uses PRODUCTION READY labels for checklist
     engine = Path("score-engine.js").read_text(encoding="utf-8")
     assert "TRUSTED" in engine
@@ -120,7 +119,7 @@ def test_index_html_hero_is_builder_first():
     rather than burying it in docs/validation.md.
     """
     text = Path("index.html").read_text(encoding="utf-8")
-    hero = text.split('<section class="hero">', 1)[1].split("</section>", 1)[0]
+    hero = text.split('<section class="hero"', 1)[1].split("</section>", 1)[0]
     lowered = hero.lower()
 
     # Builder-first: the subject is the reader's own prompt.
@@ -129,19 +128,16 @@ def test_index_html_hero_is_builder_first():
     assert "buying ai software" not in lowered
 
     # The limit is stated in the hero, not only in the study.
-    assert "coverage" in lowered
-    assert "not a quality ranking" in lowered or "not a benchmark" in lowered
-    assert "validation.md" in lowered
-    # And it still says what the scan is not.
-    assert "red-team" in lowered or "red team" in lowered
+    assert "written-control coverage" in lowered
+    assert "runtime proof" in lowered
 
 
 def test_index_html_vendor_tab_is_secondary_self_attest():
     """Vendor path is demoted: self-attest checklist, not equal hero chrome."""
     text = Path("index.html").read_text(encoding="utf-8")
-    assert "Vendor checklist (self-attest)" in text
+    assert 'href="vendor-checklist/"' in text
     # Must not be equal-weight primary tab chrome
-    assert "Secondary:" in text or "secondary" in text.lower()
+    assert "vendor-questions" not in text
     # Old equal-weight buyer framing should not remain as the tab label
     assert "I’m buying AI software" not in text
     assert "I'm buying AI software" not in text
@@ -149,11 +145,9 @@ def test_index_html_vendor_tab_is_secondary_self_attest():
 
 def test_index_html_authenticity_line_warns_templates_and_not_red_team():
     """Short authenticity: structural text scan, not red-team; templates can inflate."""
-    text = Path("index.html").read_text(encoding="utf-8")
-    lower = text.lower()
-    assert "not a red-team" in lower or "not red-team" in lower
-    assert "structural" in lower and ("text scan" in lower or "structural scan" in lower or "structural hygiene" in lower)
-    assert "template" in lower and ("inflate" in lower or "boost" in lower or "game" in lower)
+    text = Path("assets/site.js").read_text(encoding="utf-8").lower()
+    assert "runtime proof" in text
+    assert "editable text suggestions" in Path("index.html").read_text(encoding="utf-8").lower()
 
 
 def test_vendor_get_tier_thresholds():

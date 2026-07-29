@@ -14,7 +14,7 @@ from crewscore.profiles import (
     _CONFIG_DIR_NAMES,
 )
 from crewscore.scoring import DIMENSIONS, RULESET_ID
-from crewscore.scorers.fix_patterns import FIX_TEMPLATES
+from crewscore.scorers.fix_patterns import CONTROL_FIX_TEMPLATES, FIX_TEMPLATES
 from crewscore.scorers.structural_analysis import CONCEPTS, SCORER_MAP
 from crewscore.smells import CITATION, CONTEXT_BLOAT_MAX_LINES, SMELL_CATALOG
 from crewscore.vendor_scorecard import QUESTIONS
@@ -500,6 +500,9 @@ def build_payload() -> dict:
             for key in dim_order
             if key in FIX_TEMPLATES
         },
+        # Control-level suggestions power the browser's selectable fix review.
+        # They do not affect the scorer or the CLI's dimension-template contract.
+        "control_fix_templates": dict(CONTROL_FIX_TEMPLATES),
         # The browser has no filename, so the artifact type is declared by the
         # user rather than classified (crewscore/profiles.py::classify_path).
         # Inferring it from the pasted text would be a guess dressed up as a

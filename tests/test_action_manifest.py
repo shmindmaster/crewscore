@@ -101,9 +101,12 @@ def _run_crewscore_step_via_bash(
     stub = bin_dir / "crewscore"
     # Write with explicit LF — bash's shebang line rejects a CRLF-terminated
     # interpreter path, and Path.write_text translates \n to \r\n on Windows.
+    shell_stdout = stub_stdout.replace("'", "'\"'\"'")
     with open(stub, "w", encoding="utf-8", newline="\n") as f:
         f.write("#!/bin/bash\n")
-        f.write(f"cat <<'STUBEOF'\n{stub_stdout}\nSTUBEOF\n")
+        # printf is a POSIX shell builtin.  Using it instead of `cat` keeps
+        # this hermetic even when Git Bash receives a Windows-style PATH.
+        f.write(f"printf '%s\\n' '{shell_stdout}'\n")
         f.write(f"exit {stub_exit}\n")
     stub.chmod(0o755)
 

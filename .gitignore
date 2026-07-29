@@ -27,3 +27,6 @@ docs/ui-*.png
 scripts/record-hero-demo.mjs
 
 .corpus-cache/
+node_modules/
+playwright-report/
+test-results/

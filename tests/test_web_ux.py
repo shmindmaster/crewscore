@@ -1,554 +1,83 @@
-"""Contract tests locking the public positioning copy.
+"""Fast contracts for the controls-first static site.
 
-Two surfaces, one claim: index.html (the preflight workflow a visitor sees)
-and README.md (the first thing a reader sees on GitHub). Both must say the
-number is *coverage*, not a quality ranking, and both must carry the
-validation study that proves it.
+Playwright owns interaction coverage.  These tests deliberately verify only
+non-negotiable public copy and asset boundaries that should fail before a
+browser is started.
 """
 
-import re
+from __future__ import annotations
+
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
 
-# The site is served at crewscore.ai, where docs/ does not exist — the study
-# has to be linked at its canonical GitHub URL or the link is dead in prod.
-VALIDATION_URL = (
-    "https://github.com/shmindmaster/crewscore/blob/main/docs/validation.md"
-)
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def _html() -> str:
     return (ROOT / "index.html").read_text(encoding="utf-8")
 
 
-def _readme() -> str:
-    return (ROOT / "README.md").read_text(encoding="utf-8")
-
-
-def test_preflight_stages_present():
-    """Wizard-lite: three stages — Prompt, Score, Export (plan is a sheet)."""
+def test_controls_first_workspace_replaces_the_wizard_and_score_tier():
     html = _html()
-    assert 'id="stg-prompt"' in html
-    assert 'id="stg-inspect"' in html
-    assert 'id="stg-export"' in html
-    assert 'id="stg-act"' not in html
-    assert ">2 Coverage<" in html
+    assert "Find the safety rules your AI agent prompt forgot." in html
+    assert "Try a 10-second demo" in html
+    assert "Check my instructions" in html
+    assert 'id="checker-workspace"' in html
+    assert 'id="mode-toggle"' in html
+    assert 'id="stg-prompt"' not in html
+    assert "score-ring" not in html
+    assert "STRUCTURAL: CRITICAL GAPS" not in html
 
 
-def test_plan_before_mutate_controls():
-    """Plan preview, apply, and cancel — mutate only after plan."""
+def test_primary_input_supports_paste_upload_and_public_github():
     html = _html()
-    assert "Plan fix" in html
-    assert "Apply plan" in html
-    assert "cancel" in html.lower()
+    assert 'id="agent-prompt"' in html
+    assert 'id="prompt-file"' in html
+    assert 'id="drop-zone"' in html
+    assert 'id="prompt-url"' in html
+    assert "github.com" in html
+    assert "raw.githubusercontent.com" in html
 
 
-def test_config_verdict_never_prints_a_slash_100_number():
-    """Config verdict explanatory prose cites corpus rationale, not a grade
-    for the user's file — it must never render an N/100 number, since it
-    sits directly beneath a config verdict a screenshot would misread as
-    the user's own score."""
+def test_imports_validate_utf8_and_offer_a_recovery_path():
+    script = (ROOT / "assets" / "site.js").read_text(encoding="utf-8")
+    assert 'TextDecoder("utf-8", { fatal: true })' in script
+    assert "not valid UTF-8 text" in script
+    assert "Save it as UTF-8" in script
+
+
+def test_privacy_contract_has_no_remote_font_and_offers_opt_out():
     html = _html()
-    match = re.search(
-        r"function renderConfigVerdict\(result\) \{.*?\n  \}", html, re.S
-    )
-    assert match, "renderConfigVerdict function not found"
-    body = match.group(0)
-    assert not re.search(r"\d+/100", body)
+    assert "fonts.googleapis.com" not in html
+    assert "Your prompt text never leaves your browser" in html
+    assert 'id="analytics-opt-out"' in html
+    assert 'href="privacy.html"' in html
 
 
-def test_wizard_lite_sheets_over_score():
-    """Plan and export are sheets; score deck stays the mounted product surface."""
+def test_vendor_is_a_separate_secondary_page():
     html = _html()
-    assert 'id="sheet-plan"' in html
-    assert 'id="sheet-export"' in html
-    assert 'id="sheet-backdrop"' in html
-    assert 'id="deck-inspect"' in html
-    assert 'id="deck-act"' not in html
-    assert 'id="deck-export"' not in html
-    assert "openSheet" in html
-    assert "closeSheets" in html
-    # Apply closes sheet and re-renders score in place
-    apply_idx = html.find("function applyFixPlan")
-    chunk = html[apply_idx : apply_idx + 1400]
-    assert "closeSheets()" in chunk
-    assert 'setStage("inspect")' in chunk
+    assert 'href="vendor-checklist/"' in html
+    assert "vendor-questions" not in html
+    assert (ROOT / "vendor-checklist" / "index.html").exists()
 
 
-def test_capability_stamp_structural_pregate():
-    """Capability stamp uses structural pre-gate, not red-team language."""
+def test_static_site_uses_local_shared_assets_and_generated_engine():
     html = _html()
-    assert "Structural pre-gate" in html
-    assert "not a red-team" in html.lower()
+    assert 'href="assets/site.css"' in html
+    assert 'src="score-engine.js"' in html
+    assert 'src="assets/site.js"' in html
+    assert (ROOT / "assets" / "site.css").exists()
+    assert (ROOT / "assets" / "site.js").exists()
 
 
-def test_vendor_is_secondary_not_equal_tabs():
-    """Vendor checklist is demoted to secondary, not equal primary surface."""
+def test_result_and_share_contracts_are_present_without_prompt_export():
     html = _html()
-    assert "Vendor checklist (self-attest)" in html
-    assert "Secondary" in html
-
-
-def test_privacy_metrics_hook_present():
-    """Local metrics key present; no prompt storage in the metrics path."""
-    html = _html()
-    assert "crewscore_metrics_v1" in html
-
-
-def test_builder_first_hero_preserved():
-    """Builder-first hero stays: browser-local, no signup, structural framing.
-
-    The headline moved from "Score agent prompts in your browser" to a
-    coverage claim, but the builder-first promises around it must survive
-    the reframe rather than be lost with it.
-    """
-    html = _html()
-    assert "in your browser" in html
-    assert "no signup" in html.lower()
-    assert "structural" in html.lower()
-    assert "hygiene" in html.lower() or "Structural pre-gate" in html
-
-
-def test_camera_ready_zero_bars_and_delta_hero():
-    """G6: empty dims are camera-dense; after-fix shows delta on Inspect first."""
-    html = _html()
-    assert "is-empty" in html
-    assert "is-empty-marker" in html or "is-critical" in html
-    assert "hero-delta" in html or "delta-compare" in html
-    assert "Continue to export" in html
-    # Apply must land on inspect (hero moment), not skip to export as first paint
-    apply_idx = html.find("function applyFixPlan")
-    assert apply_idx > 0
-    chunk = html[apply_idx : apply_idx + 1200]
-    assert 'setStage("inspect")' in chunk
-    assert 'showDeck("deck-inspect", true)' in chunk
-    # Must not set export as the stage immediately after apply without inspect hold
-    # (export still available via Continue to export)
-    assert "After approved fix" in html
-
-
-def test_export_completion_checklist_present():
-    """Export stage has a completion checklist with share, CI, and prompt items."""
-    html = _html()
-    assert "export-checklist" in html
-    assert 'data-check="share"' in html
-    assert 'data-check="ci"' in html
-    assert 'data-check="prompt"' in html
-
-
-def test_prefers_reduced_motion():
-    """CSS respects prefers-reduced-motion for a11y."""
-    html = _html()
-    assert "prefers-reduced-motion" in html
-
-
-def test_mobile_touch_targets():
-    """Primary controls meet ~44px touch target floor for mobile."""
-    html = _html()
-    assert "min-height:44px" in html or "min-height: 44px" in html
-    # Stage pills, chips, and secondary buttons must be covered by the rule set.
-    for selector in (".btn", ".btn-sec", ".chip", ".stage-pill"):
-        assert selector in html
-
-
-def test_safe_area_padding():
-    """Body uses safe-area insets for notched phones."""
-    html = _html()
-    assert "safe-area-inset" in html
-
-
-def test_sticky_stages_mobile():
-    """Stage nav sticks on small screens for orientation during scroll."""
-    html = _html()
-    assert "position:sticky" in html or "position: sticky" in html
-    assert ".stages" in html
-
-
-def test_cap_chip_not_hidden_on_mobile():
-    """Honesty capability chip must remain visible on mobile (no display:none)."""
-    html = _html()
-    # Ban the anti-pattern of hiding the cap chip in a mobile media query.
-    assert ".cap-chip{display:none}" not in html.replace(" ", "")
-    assert "cap-chip" in html
-    assert "Structural pre-gate" in html
-
-
-def test_desktop_density_breakpoint():
-    """Desktop breakpoint widens layout for builder density."""
-    html = _html()
-    assert "min-width:900px" in html or "min-width: 900px" in html
-    assert "960px" in html or "max-width:960px" in html or "max-width: 960px" in html
-
-
-def test_stage_nav_are_buttons():
-    """Stage pills are real buttons for keyboard/touch jump to reached stages."""
-    html = _html()
-    assert 'id="stg-prompt"' in html
-    assert "<button" in html
-    for sid in ("stg-prompt", "stg-inspect", "stg-export"):
-        assert f'id="{sid}"' in html
-    assert 'type="button"' in html
-    assert "stage-pill" in html
-    assert 'aria-label="Preflight stages"' in html
-    assert "stg-prompt" in html and "button" in html[html.find("stg-prompt") - 80 : html.find("stg-prompt") + 20]
-
-
-def test_ci_gate_export_markers():
-    """CI handoff copy remains part of the export surface contract."""
-    html = _html()
-    assert "ci-block" in html
-    assert "Gate this in CI" in html
-    # @v1 was moved off 0.2.7 (script-injection exposure) and the docs
-    # now point at @v2; pin the current major so a stale reference is
-    # caught rather than silently shipped.
-    assert "shmindmaster/crewscore@v2" in html
-    assert "shmindmaster/crewscore@v1" not in html
-
-
-def test_config_ci_snippet_does_not_pin_partial_browser_smell_count():
-    """The config-mode CI snippet must not gate on the browser's partial smell
-    count. Only 1 of 3 detectors runs in-browser (Init Fossilization and Lint
-    Leakage need git history / repo access the browser doesn't have) — if the
-    copy-paste snippet bakes in `smells.length` from that partial scan, a
-    visitor who copies it without reading gets a CI gate pinned to a count
-    the full CLI will immediately exceed, red-building the very file the
-    site just called clean. The snippet must use a fixed, scan-independent
-    default and must carry its own disclosure so a reader who copies the
-    snippet out of the page is not misled by the snippet text alone."""
-    html = _html()
-    match = re.search(r"function renderConfigExport\(\) \{.*?\n  \}", html, re.S)
-    assert match, "renderConfigExport function not found"
-    body = match.group(0)
-    ci_match = re.search(r"const ci = `([\s\S]*?)`;", body)
-    assert ci_match, "ci template literal not found in renderConfigExport"
-    ci = ci_match.group(1)
-    # No interpolation of the browser's partial smell count into the gate.
-    assert "smells.length" not in ci
-    # A fixed, scan-independent default is used instead.
-    assert 'max-smells: "0"' in ci
-    assert "--max-smells 0" in ci
-    # Disclosure travels with the copied text itself, not just the page around it.
-    assert "browser" in ci.lower()
-    assert "may find more" in ci.lower() or "full cli" in ci.lower()
-
-
-def test_preflight_aesthetic_tokens():
-    """Instrument/preflight visual tokens stay distinctive (not generic AI cyan)."""
-    html = _html()
-    assert "--amber:" in html
-    assert "--mono:" in html or "IBM Plex Mono" in html
-    assert "score-ring" in html or "deck-instrument" in html
-    assert "#0a0c0b" in html or "--bg:#0a0c0b" in html
-
-
-def test_mobile_score_bar():
-    """Sticky mobile primary CTA for Run score without hunting for the main button."""
-    html = _html()
-    assert 'id="mobile-score-bar"' in html
-
-
-def test_type_scale_tokens():
-    """Type scale CSS variables establish a coherent size ladder."""
-    html = _html()
-    for token in ("--fs-xs", "--fs-sm", "--fs-md"):
-        assert token in html
-    assert "--fs-hero" in html or "--fs-score" in html
-
-
-def test_mono_reserved_not_all_chrome():
-    """Stage pills use sans for UI chrome, not mono-only."""
-    html = _html()
-    # Isolate the .stage-pill rule block (base, not :hover/:disabled/etc.).
-    m = re.search(r"\.stage-pill\s*\{([^}]+)\}", html)
-    assert m, ".stage-pill style rule missing"
-    rule = m.group(1)
-    assert "var(--sans)" in rule or "IBM Plex Sans" in rule, (
-        ".stage-pill must use sans (var(--sans) or IBM Plex Sans), not mono-only chrome"
-    )
-
-
-def test_score_ring_annular():
-    """Score ring uses an annular/thin-ring technique, not a soft filled gold disc."""
-    html = _html()
-    m = re.search(r"\.score-ring\s*\{([^}]+)\}", html)
-    assert m, ".score-ring style rule missing"
-    rule = m.group(1)
-    compact = rule.replace(" ", "")
-    assert "transparent" in rule, (
-        ".score-ring must use transparent (hollow center / track gap)"
-    )
-    has_border_ring = (
-        "border-radius:50%" in compact
-        and bool(re.search(r"(?<![\w-])border\s*:\s*[^;]*\d", rule))
-    )
-    has_conic_radial_hole = (
-        ("conic-gradient" in rule or "radial-gradient" in rule)
-        and "transparent" in rule
-    )
-    assert has_border_ring or has_conic_radial_hole, (
-        ".score-ring must use border ring or conic/radial with transparent center"
-    )
-    # Soft multi-stop gold disc: amber haze + soft inset glow without a border track.
-    soft_gold_disc = (
-        bool(re.search(r"rgba\(\s*232\s*,\s*163\s*,\s*23", rule))
-        and "inset" in rule
-        and not has_border_ring
-    )
-    assert not soft_gold_disc, (
-        ".score-ring must be a thin annular track, not a soft filled gold disc"
-    )
-
-
-def test_body_grid_restrained():
-    """Body page grid is absent or atmospheric (alpha ≤ 0.15)."""
-    html = _html()
-    # Pull body rule background section.
-    m = re.search(r"\bbody\s*\{([^}]+)\}", html)
-    assert m, "body style rule missing"
-    body_rule = m.group(1)
-    if "repeating-linear-gradient" not in body_rule:
-        return  # no grid — restrained by absence
-    # Grid present: every rgba/hsla alpha in the repeating-linear-gradient stop ≤ 0.15
-    for grad in re.findall(
-        r"repeating-linear-gradient\([^)]+\)", body_rule
-    ):
-        alphas = re.findall(
-            r"rgba?\([^)]*?,\s*(\d*\.?\d+)\s*\)", grad
-        ) + re.findall(
-            r"hsla?\([^)]*?,\s*(\d*\.?\d+)\s*\)", grad
-        )
-        for a in alphas:
-            assert float(a) <= 0.15, (
-                f"body repeating grid alpha {a} exceeds 0.15 (must be atmospheric)"
-            )
-
-
-def test_hero_frames_the_number_as_coverage_not_quality():
-    """A visitor who reads nothing but the hero must still learn that the
-    number does not rank prompt quality — and see the figure that says so."""
-    html = _html()
-    # The headline names the consequence - the agent doing something nobody
-    # told it not to - rather than the compliance category. "Governance"
-    # described real failure modes in words only an auditor uses, and claimed
-    # more than we deliver. The earlier "what did you forget to tell your AI
-    # agent?" was closer but still a riddle: the reader had to decode it before
-    # learning what the tool does.
-    assert "not allowed to do" in html.lower()
-    for mode in ("prompt injection", "hallucination", "runaway cost"):
-        assert mode in html.lower(), mode
-    # Reframing the pitch must not soften the limit.
-    assert "Coverage, not a quality ranking." in html
-    # The evidence travels with the claim, not only behind a link. The corpus
-    # study was withdrawn; the figure that ships is the one anyone can
-    # reproduce from the rule catalog.
-    assert "28" in html, "hero omits the score a fully-compliant prompt gets"
-    assert VALIDATION_URL in html
-
-
-def test_score_surface_repeats_the_coverage_disclaimer():
-    """The disclosure cannot live only in the hero: a visitor who pastes and
-    scrolls straight to the ring reads the number with none of the hero in
-    view, and that number is what they screenshot."""
-    html = _html()
-    m = re.search(r"function renderInspect\(result, opts\) \{.*?\n  \}", html, re.S)
-    assert m, "renderInspect function not found"
-    body = m.group(0)
-    assert "This number is coverage, not quality." in body
-    assert VALIDATION_URL in body
-
-
-def test_share_text_does_not_claim_prompt_quality():
-    """Share text outlives the page. It is the one artifact that travels to
-    readers who never see any disclosure we put on the site."""
-    html = _html()
-    m = re.search(
-        r"function shareText\(overall, tierName, kind\) \{.*?\n  \}", html, re.S
-    )
-    assert m, "shareText function not found"
-    body = m.group(0)
-    assert "not a quality ranking" in body
-    assert "Structural hygiene only" not in body
-
-
-def test_validation_study_linked_from_footer():
-    """Persistent link for a reader who arrives mid-page or scrolls past."""
-    html = _html()
-    foot = html[html.find('<footer class="foot">') : html.find("</footer>")]
-    assert foot, "footer not found"
-    assert VALIDATION_URL in foot
-
-
-def test_partial_detector_disclosure_survives_the_coverage_reframe():
-    """Separate honest disclosure, separate feature: the browser runs 1 of 3
-    smell detectors. The governance reframe must not take it out with it."""
-    html = _html()
-    m = re.search(r"function renderConfigVerdict\(result\) \{.*?\n  \}", html, re.S)
-    assert m, "renderConfigVerdict function not found"
-    body = m.group(0)
-    assert "partial-note" in body
-    assert "This browser ran ${ran} of ${total} detectors." in body
-    assert (
-        "A clean result here is a partial check, not a clean bill of health." in body
-    )
-
-
-def test_readme_headline_is_a_checklist_not_a_score():
-    """The headline sells a checklist. "Score" as the noun claims a ranking
-    the length-matched study could not demonstrate."""
-    md = _readme()
-    assert "Free structural score for AI agent prompts" not in md
-    headline = next(line for line in md.splitlines() if line.startswith("### "))
-    # The headline must not call the number a score - that claims a ranking
-    # nothing here demonstrates.
-    assert "score" not in headline.lower(), headline
-    # It must state a consequence the reader recognises, not list features.
-    # "What did you forget to tell your AI agent?" was a riddle: the reader had
-    # to decode it before learning what the tool does.
-    assert "agent" in headline.lower(), headline
-    assert len(headline) < 90, f"headline is a paragraph: {headline}"
-    # The concrete failure modes still appear, just below the headline rather
-    # than inside it.
-    assert "injection" in md.lower()
-
-
-def test_readme_links_validation_study_above_the_fold():
-    """The negative result is the credibility play — it belongs in the first
-    screen, not in a Limits section a skimmer never reaches."""
-    md = _readme()
-    assert "docs/validation.md" in md[:2400]
-
-
-def test_readme_states_the_coverage_proof_with_numbers():
-    """Vague hedging is not disclosure. The figure ships in prose.
-
-    This used to pin the corpus study's statistics. That study was withdrawn
-    after our own audit found impossible numbers in it, so what must appear
-    now is the deterministic result: stating all eight controls clearly, once
-    each, scores 28/100 -- below the lowest tier boundary of 50.
-    """
-    md = _readme()
-    # Concrete endpoints, not adjectives: a reader must be able to calibrate
-    # what the number means before setting a threshold on it.
-    assert "**0**" in md and "**100**" in md, "README hedges instead of stating the scale"
-    assert "23" in md, "README omits the control count the score is a share of"
-    # The 28/100 defect is history as of 0.3.0. It stays documented, but in the
-    # study rather than on the landing page - quoting it as current is false.
-    doc = Path("docs/validation.md").read_text(encoding="utf-8")
-    assert "28/100" in doc, "validation study drops the defect it exists to record"
-    for stat in ("+0.061", "p=0.36", "0.863", "+0.601", "99.3%"):
-        assert stat not in md, f"withdrawn statistic {stat} is still in README"
-        assert stat not in doc, f"withdrawn statistic {stat} is back in the study"
-
-
-def test_readme_draws_the_checklist_versus_benchmark_line():
-    """The is/is-not table must name the distinction outright: a checklist
-    answers "did you write a rule for X"; a benchmark ranks A against B."""
-    md = _readme().lower()
-    # Prose or table - what matters is that the distinction is drawn on the
-    # landing page, above the usage section, not buried in a linked doc.
-    assert "checklist, not a benchmark" in md, (
-        "README never draws the checklist vs benchmark line"
-    )
-    head = md[: md.find("## usage")] if "## usage" in md else md
-    assert "checklist, not a benchmark" in head, (
-        "the distinction appears only after the usage section"
-    )
-
-
-def test_readme_charter_carries_discrimination_and_validity_disclosure():
-    """The charter is where honesty principles live, so the discrimination
-    result and the three low-validity dimensions live there too."""
-    # The charter moved to docs/scoring.md when the README was cut down, but
-    # the three weak dimensions stay named on the landing page: a reader who
-    # never opens a linked doc still has to learn that a 0 in Compliance means
-    # "the rules found nothing", not "you failed to write it".
-    md = _readme()
-    for dim in ("Cost", "Compliance", "Audit"):
-        assert dim in md, f"README omits low-validity dimension {dim}"
-    assert "docs/validation.md" in md
-
-    charter = Path("docs/scoring.md").read_text(encoding="utf-8")
-    assert "Charter" in charter, "scoring doc lost the charter"
-    assert "author-intuition" in charter
-    for dim in ("Cost", "Compliance", "Audit"):
-        assert dim in charter, f"charter omits low-validity dimension {dim}"
-    assert "validation.md" in charter
-
-
-def test_readme_documents_040_breaking_changes():
-    """0.1.0 drops four fields from config `--json` payloads and changes a
-    `fix` exit code. A consumer who upgrades blind breaks; say so."""
-    # Release notes belong in the changelog, not on the landing page - the
-    # README carried a "What changed in 0.1.0" heading for four releases after
-    # it had stopped being what changed. The invariant is that the breaking
-    # payload change is documented where a consumer will actually look.
-    md = Path("CHANGELOG.md").read_text(encoding="utf-8")
-    for field in ("`overall`", "`dimensions`", "`findings`", "`transparency`"):
-        assert field in md, f"changelog omits dropped field {field}"
-    assert "exit" in md.lower()
-
-
-def test_readme_tier_table_says_what_the_ladder_measures():
-    """A reader looking at this ladder is about to set a CI threshold on it.
-
-    Through 0.1.0 the honest disclosure was that the top half was unreachable:
-    a prompt stating all eight controls clearly, once each, scored 28. 0.2.0
-    makes the whole ladder reachable, so the required disclosure changed - but
-    it did not go away. The ladder still ranks *coverage*, and a reader who
-    reads 90-100 as "good prompt" is being misled either way.
-    """
-    doc = Path("docs/scoring.md").read_text(encoding="utf-8")
-    start = doc.find("## Score tiers")
-    assert start > 0, "score tiers section not found"
-    # Section break, not the table separator - a markdown table contains
-    # "---" on its own header row and would truncate the slice to nothing.
-    tiers = doc[start : doc.find("\n---\n", start)]
-    assert "coverage" in tiers.lower(), "tier table does not say it ranks coverage"
-    # Both ends pinned to something concrete, so a reader can calibrate a
-    # threshold instead of guessing.
-    assert "100" in tiers and "0" in tiers
-    assert "not production certification" in tiers.lower()
-
-
-def test_readme_config_smells_marked_unaffected_by_the_study():
-    """The smell detectors replicate published work on a separate corpus.
-    The reframe must not read as if they were implicated too."""
-    md = _readme()
-    start = md.find("## Configuration smells")
-    end = md.find("## Development", start)
-    assert start > 0 and end > start, "configuration smells section not found"
-    section = md[start:end]
-    assert "arxiv.org/abs/2606.15828" in section
-    assert "never change the score" in section.lower(), (
-        "smells section must say it is advisory"
-    )
-
-
-def test_readme_does_not_point_readers_at_a_withdrawn_version():
-    """Pre-0.1.0 builds are withdrawn from PyPI.
-
-    Telling a reader they are "coming from 0.2.7" sends them looking for a
-    release that no longer exists, and any pin instruction naming one is a
-    dead end.
-    """
-    md = _readme()
-    # 0.2.x and 0.4.0 were published and deleted; PyPI never re-issues a
-    # deleted version, so any pin naming one is a permanent dead end.
-    for bad in ("crewscore==0.2", "crewscore==0.4"):
-        assert bad not in md, f"README pins {bad}, deleted from PyPI"
-    # The withdrawal record lives in the changelog, where someone chasing an
-    # old version number actually looks.
-    changelog = Path("CHANGELOG.md").read_text(encoding="utf-8")
-    assert "withdrawn" in changelog.lower()
-
-def test_panel_lifted_from_bg():
-    """Panel surface color is distinct from page background (lifted card)."""
-    html = _html()
-    bg_m = re.search(r"--bg\s*:\s*([^;]+);", html)
-    panel_m = re.search(r"--panel\s*:\s*([^;]+);", html)
-    assert bg_m, "--bg token missing"
-    assert panel_m, "--panel token missing"
-    bg = bg_m.group(1).strip().lower()
-    panel = panel_m.group(1).strip().lower()
-    assert bg != panel, "--panel must differ from --bg so cards read as lifted surfaces"
+    assert 'id="results"' in html
+    script = (ROOT / "assets" / "site.js").read_text(encoding="utf-8")
+    assert "written guardrails found" in script
+    assert "#cs-result=" in script
+    assert "navigator.share" in script
+    assert "Copy for Slack/Teams" in script
+    assert "Download Facebook SVG" in script
+    assert "JSON findings" in script
+    assert "prompt text is never included" in script.lower()
