@@ -48,6 +48,12 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
+    # Tests only. action.yml and the release workflow are YAML contracts, and
+    # validating them with a real parser is the point: a hand-rolled subset
+    # parser would not have caught the unquoted colon that silently turned the
+    # action description into a mapping. The shipped package stays
+    # dependency-free.
+    "pyyaml>=6.0",
 ]
 
 [project.scripts]

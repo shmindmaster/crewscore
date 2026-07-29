@@ -33,6 +33,17 @@ No scoring change. `crewscore-hygiene@0.5.0` is unchanged, so scores from
   scalar turns the line into a mapping. A test now reparses the file and
   asserts the description is still a string.
 
+- **A test imported `pyyaml`, which was declared nowhere.** It was installed
+  on the author's machine, so the suite passed locally and failed on every CI
+  runner — after the tag was pushed, which is the most expensive moment to
+  learn it. The release gate was right and published nothing.
+
+  `pyyaml` is now in the `dev` extra (test-only; the shipped package stays on
+  `click` and `rich`), and `tests/test_packaging_contract.py` statically checks
+  every test import against the declared dependency set. A local `pytest` run
+  cannot catch this class of error — the module is already installed — so the
+  check reads `pyproject.toml` rather than the environment.
+
 ---
 
 ## [0.5.0] — 2026-07-29 — measured against 356 real prompts
