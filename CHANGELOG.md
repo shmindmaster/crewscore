@@ -39,6 +39,11 @@ install them, and do not compare their numbers to these.
 
 ### Improved
 
+- **Share cards download as PNG** (2x, rasterized in the browser from the same
+  SVG source; SVG fallback if encoding fails). Social sites reject SVG uploads,
+  so the previous SVG-only download dead-ended for most users. The README
+  badge stays SVG. Browser tests assert the PNG bytes and that the SVG source
+  still never contains prompt text.
 - X and LinkedIn share buttons moved out of the collapsed disclosure into the
   primary share row; badge markdown now explains where `crewscore-result.svg`
   comes from.

@@ -156,12 +156,23 @@ test("sanitized result links and SVG cards exclude the original instructions", a
   expect(copied).toContain("#cs-result=");
   expect(copied).not.toContain("SENTINEL_PROMPT_CONTENT_NEVER_SHARE");
   await page.locator(".share-more summary").click();
-  const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Download LinkedIn SVG" }).click();
-  const download = await downloadPromise;
-  const svg = await readFile(await download.path(), "utf8");
+  // The SVG string is the single source every card format renders from, so the
+  // sanitization guarantee is asserted on it directly.
+  const svg = await page.evaluate(() => window.__crewscoreUX.svgCard("linkedin"));
   expect(svg).not.toContain("SENTINEL_PROMPT_CONTENT_NEVER_SHARE");
   expect(svg).toMatchSnapshot("share-card.svg");
+  const pngPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download LinkedIn PNG" }).click();
+  const pngDownload = await pngPromise;
+  expect(pngDownload.suggestedFilename()).toBe("crewscore-linkedin-result.png");
+  const png = await readFile(await pngDownload.path());
+  expect(png.subarray(0, 8)).toEqual(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  const badgePromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download badge SVG" }).click();
+  const badgeDownload = await badgePromise;
+  expect(badgeDownload.suggestedFilename()).toBe("crewscore-badge-result.svg");
+  const badgeSvg = await readFile(await badgeDownload.path(), "utf8");
+  expect(badgeSvg).not.toContain("SENTINEL_PROMPT_CONTENT_NEVER_SHARE");
 });
 
 test("mobile control stays reachable and the main surface has no axe violations", async ({ page }, testInfo) => {

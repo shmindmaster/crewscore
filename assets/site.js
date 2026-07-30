@@ -192,7 +192,7 @@
     mount.querySelector("#native-share")?.addEventListener("click", nativeShare);
     mount.querySelectorAll("[data-social]").forEach((button) => button.addEventListener("click", () => shareTo(button.dataset.social)));
     mount.querySelector("#copy-badge")?.addEventListener("click", () => copyText(badgeMarkdown(), "README badge snippet copied"));
-    mount.querySelectorAll("[data-card]").forEach((button) => button.addEventListener("click", () => downloadCard(button.dataset.card)));
+    mount.querySelectorAll("[data-card]").forEach((button) => button.addEventListener("click", () => downloadCard(button.dataset.card, button.dataset.format || "png")));
   }
 
   function renderResult(result, prompt, options) {
@@ -218,7 +218,7 @@
     const heroCard = hero
       ? `<div class="hero-gap-card"><span class="gap-eyebrow">Biggest gap</span><strong>${escapeHtml(hero.title)}</strong><p>${escapeHtml(hero.detail)}</p>${state.mode === "developer" && hero.concept ? `<small><code>${escapeHtml(hero.concept)}</code></small>` : ""}</div>`
       : `<div class="hero-gap-card is-clear"><span class="gap-eyebrow">Biggest gap</span><strong>No missing published control detected</strong><p>Text matches all 23 controls. That is coverage, not proof the agent obeys them.</p></div>`;
-    const viralShare = `<div class="viral-share"><p class="share-lead">Share without sending your prompt</p><button class="button" id="copy-share-text" type="button">Copy share text</button>${navigator.share ? '<button class="button-secondary" id="native-share" type="button">Share…</button>' : ""}<button class="button-secondary" id="copy-result" type="button">Copy result link</button><button class="button-ghost" data-social="x" type="button">X</button><button class="button-ghost" data-social="linkedin" type="button">LinkedIn</button></div><details class="share-more"><summary>More share options</summary><div class="share-actions"><button class="button-ghost" data-social="facebook" type="button">Facebook</button><button class="button-ghost" data-social="reddit" type="button">Reddit</button><button class="button-ghost" id="copy-team" type="button">Copy for Slack/Teams</button><button class="button-ghost" id="copy-badge" type="button">Add badge to README</button></div><div class="share-actions"><button class="button-ghost" data-card="linkedin" type="button">Download LinkedIn SVG</button><button class="button-ghost" data-card="x" type="button">Download X SVG</button><button class="button-ghost" data-card="facebook" type="button">Download Facebook SVG</button><button class="button-ghost" data-card="square" type="button">Download square SVG</button><button class="button-ghost" data-card="badge" type="button">Download badge SVG</button></div><p class="help">A result link includes ruleset and control IDs only; prompt text is never included.</p></details>`;
+    const viralShare = `<div class="viral-share"><p class="share-lead">Share without sending your prompt</p><button class="button" id="copy-share-text" type="button">Copy share text</button>${navigator.share ? '<button class="button-secondary" id="native-share" type="button">Share…</button>' : ""}<button class="button-secondary" id="copy-result" type="button">Copy result link</button><button class="button-ghost" data-social="x" type="button">X</button><button class="button-ghost" data-social="linkedin" type="button">LinkedIn</button></div><details class="share-more"><summary>More share options</summary><div class="share-actions"><button class="button-ghost" data-social="facebook" type="button">Facebook</button><button class="button-ghost" data-social="reddit" type="button">Reddit</button><button class="button-ghost" id="copy-team" type="button">Copy for Slack/Teams</button><button class="button-ghost" id="copy-badge" type="button">Add badge to README</button></div><div class="share-actions"><button class="button-ghost" data-card="linkedin" data-format="png" type="button">Download LinkedIn PNG</button><button class="button-ghost" data-card="x" data-format="png" type="button">Download X PNG</button><button class="button-ghost" data-card="facebook" data-format="png" type="button">Download Facebook PNG</button><button class="button-ghost" data-card="square" data-format="png" type="button">Download square PNG</button><button class="button-ghost" data-card="badge" data-format="svg" type="button">Download badge SVG</button></div><p class="help">A result link includes ruleset and control IDs only; prompt text is never included.</p></details>`;
     mount.innerHTML = `<div class="result-moment${fresh ? " is-fresh" : ""}" aria-labelledby="results-heading"><div class="result-kicker">Written-control coverage</div><div class="result-fraction" aria-hidden="true"><span class="found">${found.length}</span><span class="of">of</span><span class="total">${total}</span></div><h2 id="results-heading" class="result-fraction-label">${found.length} of ${total} written guardrails found</h2><div class="coverage-meter" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="${found.length} of ${total} controls written"><span style="width:${pct}%"></span></div><p class="result-summary">${missing.length} control${missing.length === 1 ? " may" : "s may"} be missing from this text.</p>${heroCard}</div><div class="coverage-disclosure"><strong>Written-control coverage, not runtime proof.</strong> CrewScore detected text patterns; it did not test whether an agent follows them.</div>${viralShare}<div class="result-actions">${missing.length ? '<button class="button" id="review-fixes" type="button">Review suggested guardrails</button>' : ""}</div><h3>Other gaps to review</h3>${gapMarkup}${developer}`;
     bindResultActions(mount, result);
     if (fresh) {
@@ -412,9 +412,9 @@
     track("cs_share", { kind: target });
   }
   function badgeMarkdown() { return `<!-- Use "Download badge SVG" and commit the file as crewscore-result.svg next to this README -->\n[![CrewScore: ${controlsForResult(state.last.result).found.length}/${allControls().length} controls found](crewscore-result.svg)](${shareUrl()})`; }
+  const CARD_DIMENSIONS = { linkedin: [1200, 627], x: [1200, 675], facebook: [1200, 630], square: [1080, 1080], badge: [760, 180] };
   function svgCard(kind) {
-    const dimensions = { linkedin: [1200, 627], x: [1200, 675], facebook: [1200, 630], square: [1080, 1080], badge: [760, 180] }[kind] || [1200, 627];
-    const [width, height] = dimensions;
+    const [width, height] = CARD_DIMENSIONS[kind] || [1200, 627];
     const result = state.last.result;
     const { found, missing } = controlsForResult(result);
     const total = allControls().length;
@@ -429,10 +429,46 @@
       : `${missing.length} may be missing · ${gapLine}`;
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(headline)}"><rect width="100%" height="100%" fill="#102319"/><rect x="${compact ? 20 : 70}" y="${compact ? 20 : 70}" width="${width - (compact ? 40 : 140)}" height="${height - (compact ? 40 : 140)}" rx="${compact ? 18 : 28}" fill="#173629" stroke="#6fdaa6"/><text x="${compact ? 54 : 120}" y="${compact ? 72 : 150}" fill="#b6f3cf" font-family="system-ui, sans-serif" font-size="${compact ? 26 : 34}" font-weight="700">CrewScore</text><text x="${compact ? 54 : 120}" y="${compact ? 122 : 290}" fill="#ffffff" font-family="system-ui, sans-serif" font-size="${compact ? 32 : 64}" font-weight="800">${escapeHtml(headline)}</text><text x="${compact ? 54 : 120}" y="${compact ? 158 : 370}" fill="#d5e7dc" font-family="system-ui, sans-serif" font-size="${compact ? 19 : 28}">${escapeHtml(subtitle)}</text>${compact ? "" : `<text x="120" y="${height - 120}" fill="#b6c9bd" font-family="system-ui, sans-serif" font-size="25">Scanned locally · written-control coverage, not runtime proof</text>`}</svg>`;
   }
-  function downloadCard(kind) {
-    const blob = new Blob([svgCard(kind)], { type: "image/svg+xml" }); const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob); link.download = `crewscore-${kind}-result.svg`; link.click(); URL.revokeObjectURL(link.href);
-    toast("SVG result card downloaded"); track("cs_share", { kind: `svg_${kind}` });
+  function triggerDownload(blob, filename) {
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob); link.download = filename; link.click(); URL.revokeObjectURL(link.href);
+  }
+  function rasterizeCard(kind) {
+    // Social sites reject SVG uploads, so cards ship as PNG. The SVG stays the
+    // single source of truth; it references no external resources, so drawing
+    // it never taints the canvas.
+    return new Promise((resolve, reject) => {
+      const [width, height] = CARD_DIMENSIONS[kind] || [1200, 627];
+      const url = URL.createObjectURL(new Blob([svgCard(kind)], { type: "image/svg+xml" }));
+      const image = new Image();
+      image.onload = () => {
+        try {
+          const scale = 2;
+          const canvas = document.createElement("canvas");
+          canvas.width = width * scale; canvas.height = height * scale;
+          const context = canvas.getContext("2d");
+          context.scale(scale, scale);
+          context.drawImage(image, 0, 0, width, height);
+          canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("png encode failed"))), "image/png");
+        } catch (error) { reject(error); } finally { URL.revokeObjectURL(url); }
+      };
+      image.onerror = () => { URL.revokeObjectURL(url); reject(new Error("svg render failed")); };
+      image.src = url;
+    });
+  }
+  function downloadSvgCard(kind, message) {
+    triggerDownload(new Blob([svgCard(kind)], { type: "image/svg+xml" }), `crewscore-${kind}-result.svg`);
+    toast(message || "SVG result card downloaded"); track("cs_share", { kind: `svg_${kind}` });
+  }
+  async function downloadCard(kind, format) {
+    if (format === "svg") { downloadSvgCard(kind); return; }
+    try {
+      const blob = await rasterizeCard(kind);
+      triggerDownload(blob, `crewscore-${kind}-result.png`);
+      toast("PNG result card downloaded"); track("cs_share", { kind: `png_${kind}` });
+    } catch (_) {
+      downloadSvgCard(kind, "PNG export failed here — downloaded the SVG instead");
+    }
   }
 
   function decodeSharedResult() {
@@ -590,5 +626,5 @@
   setMode(readStorage(MODE_KEY) || "simple", false);
   bindEvents();
   decodeSharedResult();
-  window.__crewscoreUX = Object.freeze({ score, sharePayload, supportedGithubUrl, fullAppendDiff });
+  window.__crewscoreUX = Object.freeze({ score, sharePayload, supportedGithubUrl, fullAppendDiff, svgCard });
 })();
