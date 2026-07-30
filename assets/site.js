@@ -74,6 +74,9 @@
     lastFocus: null,
     productPath: null,
     autoDeveloper: false,
+    // Bumped whenever the reader picks an input tab themselves. An import that
+    // finishes afterwards must not drag them back to the paste panel.
+    methodEpoch: 0,
   };
   const $ = (id) => document.getElementById(id);
   const text = (value) => String(value == null ? "" : value);
@@ -562,6 +565,7 @@
     let url;
     try { url = supportedGithubUrl(raw); } catch (error) { updateInputStatus(error.message); return; }
     updateInputStatus("Loading the public GitHub file...");
+    const epoch = state.methodEpoch;
     try {
       const response = await fetch(url, { credentials: "omit" });
       if (!response.ok) throw new Error(`GitHub returned ${response.status}.`);
@@ -574,7 +578,7 @@
       $("agent-prompt").value = imported;
       const profile = E.profileForLoadedUrl(currentProfile(), new URL(url).pathname);
       setProfile(profile); autoDeveloperFor(profile);
-      setMethod("paste");
+      if (state.methodEpoch === epoch) setMethod("paste");
       score("github_import"); toast("Public GitHub file loaded locally");
     } catch (error) { updateInputStatus(importFailureMessage(error)); }
   }
@@ -583,6 +587,7 @@
     if (!file) return;
     if (file.size > MAX_IMPORT_BYTES) { updateInputStatus("That file is larger than 500 KB. Paste a smaller instruction file instead."); return; }
     const reader = new FileReader();
+    const epoch = state.methodEpoch;
     reader.onerror = () => updateInputStatus("That file could not be read as text. Choose a UTF-8 text file or paste the instructions.");
     reader.onload = () => {
       let imported;
@@ -592,7 +597,7 @@
       $("agent-prompt").value = imported;
       const profile = E.profileForLoadedUrl(currentProfile(), file.name);
       setProfile(profile); autoDeveloperFor(profile);
-      setMethod("paste");
+      if (state.methodEpoch === epoch) setMethod("paste");
       score("file_upload"); toast("Local file loaded - it was not uploaded");
     };
     reader.readAsArrayBuffer(file);
@@ -636,7 +641,7 @@
     $("check-instructions").addEventListener("click", () => score("paste"));
     $("mobile-check").addEventListener("click", () => score("mobile"));
     $("load-url").addEventListener("click", loadUrl);
-    document.querySelectorAll(".method-button").forEach((tab) => tab.addEventListener("click", () => setMethod(tab.dataset.method, true)));
+    document.querySelectorAll(".method-button").forEach((tab) => tab.addEventListener("click", () => { state.methodEpoch += 1; setMethod(tab.dataset.method, true); }));
     $("drop-choose").addEventListener("click", () => $("prompt-file").click());
     $("prompt-file").addEventListener("change", (event) => importFile(event.target.files[0]));
     ["dragenter", "dragover"].forEach((eventName) => $("drop-zone").addEventListener(eventName, (event) => { event.preventDefault(); $("drop-zone").classList.add("is-dragging"); }));
@@ -669,4 +674,8 @@
   if (stamp) stamp.textContent = `v${E.ENGINE?.version || ""} · ${E.ruleset || ""}`.trim();
   decodeSharedResult();
   window.__crewscoreUX = Object.freeze({ score, sharePayload, supportedGithubUrl, fullAppendDiff, svgCard });
+  // Listeners are bound; a click before this point hits inert markup. The body
+  // carries data-mode from static HTML, so that attribute cannot serve as the
+  // readiness signal for tests or for anything else that automates the page.
+  document.body.dataset.ready = "true";
 })();

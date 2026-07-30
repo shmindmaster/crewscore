@@ -16,6 +16,40 @@ install them, and do not compare their numbers to these.
 
 ---
 
+## [0.6.5] — 2026-07-30 — the hero image is a claim too
+
+No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
+
+### Fixed
+
+- **The README's demo image overstated the tool.** `docs/demo.svg` claimed a
+  bare assistant prompt reaches **14/23** after `crewscore fix`; the shipped
+  scorer produces **13/23**. It also still read "Biggest gap" after 0.6.4
+  renamed that label everywhere else. A project that publishes a validation
+  study does not get to hand-type the number on its own hero image, so
+  `tests/test_demo_asset.py` now runs the scorer and fails if the picture and
+  the product disagree — including the width of the progress bar.
+- **A slow import no longer steals the panel you switched to.** Both the
+  GitHub import and the local-file read finished by revealing the paste panel
+  unconditionally. Move to another input tab while a fetch is in flight and
+  the app yanked you back when it landed. Each import now records the tab you
+  were on and defers to a later choice of yours.
+- The GitHub banner derived its median from the corpus report but hard-coded
+  "83 production" and "356 total" beside it. All three now come from the
+  generated data.
+
+### Improved
+
+- `assets/site.js` sets `data-ready` on the body once listeners are bound.
+  `data-mode` ships in the static HTML, so nothing could previously distinguish
+  a hydrated page from inert markup — a click could land on a dead button and
+  fail an assertion two steps later. The browser suite now waits on it, which
+  removed three flakes that only appeared under parallel load.
+- README: dropped a stray logo mark between the badges and the demo, and gave
+  the GPT-Store median its scale.
+
+---
+
 ## [0.6.4] — 2026-07-30 — honest labels, legible CI failures
 
 No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.

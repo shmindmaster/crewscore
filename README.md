@@ -16,7 +16,7 @@ text is present.
 
 **We scanned 356 real agent prompts: 83 production prompts and 273
 general-purpose prompts. Among the production subset, median coverage was 10
-of 100.** GPT-Store median: 0.
+of 100.** GPT-Store median: 0 of 100.
 [Numbers →](docs/validation-corpus.md) · [Shareable card →](docs/corpus-card.svg) · [Live checker →](https://crewscore.ai)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -26,16 +26,12 @@ of 100.** GPT-Store median: 0.
 
 <br/>
 
-<p>
-  <img src="assets/brand/logo-mark.svg" alt="CrewScore mark" width="48" height="48">
-</p>
-
 > Example: **control coverage 8/23 written** · first gap to review: *A human must approve*.
 > CrewScore checks whether controls are written down, not whether an agent obeys them.
 
 **Try it live, no install:** [crewscore.ai](https://crewscore.ai)
 
-<img src="docs/demo.svg" alt="Before and after: a bare assistant prompt covers 0 of 23 written controls with 'a human must approve' as the biggest gap; after adding suggested guardrail wording it covers 14 of 23. Coverage is not runtime proof." width="720">
+<img src="docs/demo.svg" alt="Before and after: a bare assistant prompt covers 0 of 23 written controls, with 'a human must approve' as the first gap to review; after adding the suggested guardrail wording it covers 13 of 23. Coverage is not runtime proof." width="720">
 
 </div>
 
