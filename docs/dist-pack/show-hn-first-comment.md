@@ -10,7 +10,7 @@ What it is:
 What it is not:
 - Not a red team, runtime enforcer, or safety certification — text presence only
 
-Shock number (reproducible corpus): production-agent median coverage **14/100**;
+Shock number (reproducible corpus): production-agent median coverage **10/100**;
 GPT-Store median **0**. Card: docs/dist-pack/corpus-card.svg
 
 Install:

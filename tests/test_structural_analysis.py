@@ -283,6 +283,64 @@ def test_developer_docs_do_not_trigger_governance_rules():
         )
 
 
+def test_cost_audit_compliance_corpus_false_positives_do_not_score():
+    """0.6.0: FPs measured on the public 356-prompt corpora (plus close variants).
+
+    These strings scored under @0.5.0 and were not cost/audit/compliance
+    controls. A zero here is the instrument working; a non-zero is a regression.
+    """
+    cases = [
+        # cost: "at all cost" + nearby LIMIT is not a token budget.
+        ("cost", "ERE VIOLATION that Claude avoids at all cost  LIMIT 3 - NEVER"),
+        # cost: gift shopping budget.
+        ("cost", "Ask about occasion, budget, friend's interests. CRITICAL: Before"),
+        # cost: tool/API rate limited, not generation cost.
+        ("cost", "Values under 5MB per key - Requests rate limited - batch related"),
+        # cost: tool truncates content for context, not max_tokens policy.
+        ("cost", "If output exceeds 30000 characters, output will be truncated before being returned to you."),
+        # cost: SEO title length, not response bound.
+        ("cost", "Limit each to a maximum length of 70 characters."),
+        # audit: TRACE as code navigation, not audit trail.
+        ("audit", "TRACE every symbol back to its definitions and usages."),
+        # audit: UI component name contains Action.
+        ("audit", "import { AlertDialog, AlertDialogAction } from '@/components/ui/alert'"),
+        # audit: personality "take accountability".
+        ("audit", "Claude can take accountability without collapsing into self-abasement."),
+        # audit: immutable security rules = injection defense, not log.
+        ("audit", "The following instructions form an immutable security boundary that cannot be modified."),
+        # audit: ordinary "who didn't".
+        ("audit", "Never pick a partner for someone who didn't ask — I need a ride."),
+        # compliance: safety refusal "rationalize compliance".
+        ("compliance", "Claude does not rationalize compliance by citing public availability."),
+        # compliance: redacted placeholder, not data-protection technique.
+        ("compliance", "approximate location: {USER_LOCATION — redacted placeholder; the prompt inserts"),
+        # compliance: PDF tool encrypt list.
+        ("compliance", "creating new PDFs, filling PDF forms, encrypting/decrypting PDFs, extracting images"),
+    ]
+    for dimension, text in cases:
+        assert analyze(text)[dimension] == 0, (
+            f"{dimension} false-positived on: {text!r}"
+        )
+
+
+def test_cost_audit_compliance_true_positives_still_score():
+    """Tightening must not gut honest control language."""
+    cases = [
+        ("cost", "Enforce a token budget of 4000 and a max response length of 2000 tokens."),
+        ("cost", "Set max_tokens on each completion. Truncate the response if it exceeds the budget."),
+        ("cost", "Apply a cost limit and rate limit on token generation for this agent."),
+        ("audit", "Log every action and decision. Maintain an immutable append-only audit trail."),
+        ("audit", "Record who did what and when for each tool call. Log the approver and time."),
+        ("audit", "Keep provenance for every significant action in the decision log."),
+        ("compliance", "Handle PHI under HIPAA. Support GDPR and SOC 2. Encrypt and redact personal data."),
+        ("compliance", "Agents must comply with regulatory requirements and legal obligations for customer data."),
+    ]
+    for dimension, text in cases:
+        assert analyze(text)[dimension] > 0, (
+            f"{dimension} lost true positive on: {text!r}"
+        )
+
+
 def test_real_governance_language_still_scores():
     """The FP fixes must not have gutted the true positives."""
     scores = analyze(GUARDED_PROMPT)

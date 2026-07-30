@@ -22,7 +22,7 @@ def test_render_corpus_card_svg_includes_key_numbers_and_honesty():
         gpt_store_n=273,
         gpt_store_median=0,
         cliffs_delta=0.672,
-        ruleset="crewscore-hygiene@0.5.0",
+        ruleset="crewscore-hygiene@0.6.0",
         homepage="https://crewscore.ai",
     )
 
@@ -33,7 +33,7 @@ def test_render_corpus_card_svg_includes_key_numbers_and_honesty():
     assert "83" in svg
     assert "273" in svg
     assert "0.672" in svg or "0.67" in svg
-    assert "crewscore-hygiene@0.5.0" in svg
+    assert "crewscore-hygiene@0.6.0" in svg
     assert "https://crewscore.ai" in svg
     assert "written-control coverage" in svg.lower() or "not runtime proof" in svg.lower()
     # Honesty: must not overclaim
@@ -72,8 +72,8 @@ def test_parse_validation_corpus_stats_from_real_file():
     assert stats["gpt_store_median"] == int(gpt_row.group(2))
     assert abs(stats["cliffs_delta"] - float(delta_m.group(1))) < 1e-9
 
-    # Sanity: current published shock numbers (regression anchors)
-    assert stats["production_median"] == 14
+    # Sanity: current published shock numbers (regression anchors under @0.6.0)
+    assert stats["production_median"] == 10
     assert stats["gpt_store_median"] == 0
     assert stats["production_n"] == 83
     assert stats["gpt_store_n"] == 273
@@ -106,11 +106,11 @@ def test_generate_corpus_card_round_trip(tmp_path, monkeypatch):
 
     svg = svg_path.read_text(encoding="utf-8")
     assert svg.lstrip().startswith("<svg")
-    assert "14" in svg
+    assert "10" in svg
     assert "CrewScore" in svg
 
     data = json.loads(json_path.read_text(encoding="utf-8"))
-    assert data["production_median"] == 14
+    assert data["production_median"] == 10
     assert data["gpt_store_median"] == 0
     assert data["production_n"] == 83
     assert data["gpt_store_n"] == 273

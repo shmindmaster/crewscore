@@ -165,12 +165,40 @@ CITATION_PATTERNS: list[tuple[str, str]] = [
     ("citation.05", r"\[\d+\]|\[source[:\s]|\[ref[:\s]"),
 ]
 
+# 0.6.0: corpus FP pass on 364 production/GPT-Store prompts. Prior rules
+# matched gift "budget", "at all cost LIMIT", tool "rate limited", SEO
+# "maximum length", and content "truncated before being returned". Cost
+# controls must name *inference/token/spend* bounds, not ordinary English.
 COST_PATTERNS: list[tuple[str, str]] = [
-    ("cost.01", r"(?:token|cost|budget|spend)\s*(?:limit|cap|max|ceiling|threshold)"),
-    ("cost.02", r"(?:max|maximum)\s*(?:token|tokens|length|response)"),
-    ("cost.03", r"(?:rate|cost)\s*limit"),
-    ("cost.04", r"budget|spending|cost\s*control"),
-    ("cost.05", r"truncat(?:e|ion)|max_tokens|max_length"),
+    (
+        "cost.01",
+        r"(?:token|inference|spend(?:ing)?)\s*(?:limit|cap|ceiling|threshold)|"
+        r"(?<!at all )(?<!all )cost\s*(?:limit|cap|ceiling|threshold|max)",
+    ),
+    (
+        "cost.02",
+        r"(?:max|maximum)\s*(?:token|tokens|response\s*length|output\s*length|"
+        r"completion\s*length)|max\s*response\s*length",
+    ),
+    (
+        "cost.03",
+        # Not "at all cost LIMIT" (safety copy) — require cost/token sense.
+        r"(?<!at all )(?<!all )cost\s*limit|"
+        r"(?:token|inference|generation)\s*rate\s*limit|"
+        r"rate\s*limit(?:ing)?\s+(?:on\s+)?(?:token|cost|spend|generation|completion)",
+    ),
+    (
+        "cost.04",
+        r"(?:token|cost|spend(?:ing)?|inference)\s*budget|"
+        r"budget\s*(?:cap|limit|ceiling|for\s+tokens?)|cost\s*control|"
+        r"spending\s*(?:limit|cap|control)",
+    ),
+    (
+        "cost.05",
+        r"\bmax_tokens\b|\bmax_output_tokens\b|"
+        r"(?:truncat(?:e|ion)\s+(?:the\s+)?(?:response|output|answer|completion))|"
+        r"(?:response|output|completion)\s*(?:max_length|length\s*limit)",
+    ),
 ]
 
 HUMAN_GATE_PATTERNS: list[tuple[str, str]] = [
@@ -235,24 +263,47 @@ SAFE_STOP_PATTERNS: list[tuple[str, str]] = [
     ("safe_stop.07", r"refuse|disclaim|opt\s*out"),
 ]
 
+# 0.6.0: corpus FP pass. Prior rules matched "TRACE every symbol",
+# "AlertDialogAction", personality "take accountability", injection
+# "immutable security boundary", and "who didn't". Audit language must
+# be about recording actions/decisions, not ordinary English.
 AUDIT_PATTERNS: list[tuple[str, str]] = [
     (
         "audit.01",
-        r"(?:log|record|track|trace|audit)\s*(?:trail|history|event|action|decision|every|all|each)",
+        # Word boundaries: bare "log"+"Action" matched AlertDialogAction.
+        r"\b(?:log|record|track|audit)\b\s+"
+        r"(?:trail|history|event|action|decision|every|all|each)|"
+        r"\b(?:log|record)\s+(?:every|all|each)\s+(?:\w+\s+){0,3}?"
+        r"(?:action|decision|tool|call|step)",
     ),
-    # 0.3.1: was `audit|logging|trace|provenance|accountab`. Bare "logging"
-    # and "trace" are everyday build-doc words and fired on 30/100 real files.
+    # 0.3.1 dropped bare logging/trace; 0.6.0 also drops bare "accountab"
+    # (Claude "take accountability") and keeps provenance + audit trail.
     (
         "audit.02",
-        r"audit\s+(?:trail|log|record)|\bprovenance\b|\baccountab|"
-        r"immutable\s+log|log\s+(?:every|all|each)\b",
+        r"\baudit\s+(?:trail|log|record)\b|\bprovenance\b|"
+        r"\bimmutable\s+log\b|\blog\s+(?:every|all|each)\s+(?:\w+\s+){0,3}?"
+        r"(?:action|decision|event)",
     ),
     (
         "audit.03",
-        r"(?:record|preserve|retain)\s*(?:the|all|every|each)\s*(?:decision|action|step|reason|source)",
+        r"\b(?:record|preserve|retain)\s+(?:the\s+|all\s+|every\s+|each\s+)?"
+        r"(?:decision|action|step|reason|source)\b|"
+        r"\b(?:decision|action)\s+log\b",
     ),
-    ("audit.04", r"immutable|append.only|tamper.proof|write.once"),
-    ("audit.05", r"(?:who|what|when|why|how)\s*(?:did|made|took|decided|executed)"),
+    (
+        "audit.04",
+        r"\b(?:immutable|append[\s-]?only|tamper[\s-]?proof|write[\s-]?once)\s+"
+        r"(?:log|trail|audit|record)\b|"
+        r"\b(?:audit|log)\s+(?:is\s+)?(?:immutable|append[\s-]?only|tamper[\s-]?proof)\b",
+    ),
+    (
+        "audit.05",
+        r"\b(?:record|log|track)\s+(?:who|what|when).{0,60}?"
+        r"(?:did|made|took|decided|executed|approved)|"
+        r"\bwho\s+did\s+what\b|"
+        r"\b(?:actor|operator)\s+attribution\b|"
+        r"\bapprover\s+and\s+time\b",
+    ),
 ]
 
 COMPLIANCE_PATTERNS: list[tuple[str, str]] = [
@@ -279,8 +330,27 @@ COMPLIANCE_PATTERNS: list[tuple[str, str]] = [
     # 0.3.1: bare `pci` matched "pcie" and similar hardware terms.
     ("compliance.06", r"\bpci(?:[-\s]?dss)?\b|payment\s+card"),
     ("compliance.07", r"(?:ferpa|student\s+data|education\s+record)"),
-    ("compliance.08", r"(?:compliance|regulat|govern|legal|legal\s+requirement)"),
-    ("compliance.09", r"(?:encrypt|redact|de.identif|anonymi|pseudonymi)"),
+    # 0.6.0: bare "compliance|regulat|govern|legal" matched "rationalize
+    # compliance" (safety refusal copy) and ordinary "legal" language.
+    # Require an obligation / constraint sense.
+    (
+        "compliance.08",
+        r"(?:comply\s+with|in\s+compliance\s+with|"
+        r"regulatory\s+(?:requirement|constraint|obligation|compliance)|"
+        r"legal\s+(?:requirement|obligation|constraint)|"
+        r"must\s+(?:comply|meet)\s+(?:with\s+)?(?:regulat|legal|compliance)|"
+        r"data\s+governance\s+(?:polic|require|rule))",
+    ),
+    # 0.6.0: bare encrypt/redact matched PDF tool lists and "redacted
+    # placeholder". Require a personal/sensitive-data closer nearby.
+    (
+        "compliance.09",
+        r"(?:encrypt|redact|de[\s-]?identif|anonymi|pseudonymi).{0,60}?"
+        r"(?:personal|pii|phi|sensitive|user\s+data|customer\s+data|patient)|"
+        r"(?:personal|pii|phi|sensitive)\s+(?:data\s+)?"
+        r"(?:must\s+be\s+|should\s+be\s+)?(?:encrypt|redact|de[\s-]?identif|"
+        r"anonymi|pseudonymi)",
+    ),
 ]
 
 SCORER_MAP: dict[str, list[tuple[str, str]]] = {
@@ -332,11 +402,11 @@ RULE_LABELS: dict[str, str] = {
     "citation.03": "Every claim must cite its source",
     "citation.04": "Link claims back to source evidence",
     "citation.05": "Use an inline citation marker such as [1]",
-    "cost.01": "Token / cost / budget limit or cap",
-    "cost.02": "Max token or response length constraint",
-    "cost.03": "Rate or cost limiting",
-    "cost.04": "Budget or spend control",
-    "cost.05": "Truncation or max_tokens bound",
+    "cost.01": "Token / cost / spend limit or cap",
+    "cost.02": "Max token or response/output length constraint",
+    "cost.03": "Token/cost rate limiting",
+    "cost.04": "Token or spend budget control",
+    "cost.05": "max_tokens or response truncation bound",
     "human_gate.01": "Human / supervisor must approve or review",
     "human_gate.02": "Human-in-the-loop review or approval gate",
     "human_gate.03": "Approval required before execute / send / publish",
@@ -352,7 +422,7 @@ RULE_LABELS: dict[str, str] = {
     "safe_stop.06": "Define a safe or graceful stop",
     "safe_stop.07": "Refuse or disclaim rather than comply",
     "audit.01": "Log or audit trail for actions and decisions",
-    "audit.02": "Audit / logging / provenance accountability",
+    "audit.02": "Audit trail / provenance language",
     "audit.03": "Record or retain each decision and its reason",
     "audit.04": "Immutable or append-only audit trail",
     "audit.05": "Record who did what, when, and why",
@@ -363,7 +433,7 @@ RULE_LABELS: dict[str, str] = {
     "compliance.05": "FDA / medical device regulation",
     "compliance.06": "PCI DSS / payment card data",
     "compliance.07": "FERPA / student education records",
-    "compliance.08": "State that legal or regulatory constraints apply",
+    "compliance.08": "State a legal or regulatory obligation",
     "compliance.09": "Encrypt, redact, or de-identify personal data",
 }
 

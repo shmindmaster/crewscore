@@ -60,7 +60,7 @@ def render_corpus_card_svg(
     gpt_store_n: int,
     gpt_store_median: int,
     cliffs_delta: float,
-    ruleset: str = "crewscore-hygiene@0.5.0",
+    ruleset: str = "crewscore-hygiene@0.6.0",
     homepage: str = "https://crewscore.ai",
 ) -> str:
     """Render a self-contained SVG card from corpus stats. Stdlib only."""

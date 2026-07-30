@@ -5,7 +5,7 @@
 (function (global) {
   const ENGINE = {
   "version": "0.6.1",
-  "ruleset": "crewscore-hygiene@0.5.0",
+  "ruleset": "crewscore-hygiene@0.6.0",
   "dimensions": [
     {
       "key": "injection",
@@ -142,23 +142,23 @@
     "cost": [
       [
         "cost.01",
-        "(?:token|cost|budget|spend)\\s*(?:limit|cap|max|ceiling|threshold)"
+        "(?:token|inference|spend(?:ing)?)\\s*(?:limit|cap|ceiling|threshold)|(?<!at all )(?<!all )cost\\s*(?:limit|cap|ceiling|threshold|max)"
       ],
       [
         "cost.02",
-        "(?:max|maximum)\\s*(?:token|tokens|length|response)"
+        "(?:max|maximum)\\s*(?:token|tokens|response\\s*length|output\\s*length|completion\\s*length)|max\\s*response\\s*length"
       ],
       [
         "cost.03",
-        "(?:rate|cost)\\s*limit"
+        "(?<!at all )(?<!all )cost\\s*limit|(?:token|inference|generation)\\s*rate\\s*limit|rate\\s*limit(?:ing)?\\s+(?:on\\s+)?(?:token|cost|spend|generation|completion)"
       ],
       [
         "cost.04",
-        "budget|spending|cost\\s*control"
+        "(?:token|cost|spend(?:ing)?|inference)\\s*budget|budget\\s*(?:cap|limit|ceiling|for\\s+tokens?)|cost\\s*control|spending\\s*(?:limit|cap|control)"
       ],
       [
         "cost.05",
-        "truncat(?:e|ion)|max_tokens|max_length"
+        "\\bmax_tokens\\b|\\bmax_output_tokens\\b|(?:truncat(?:e|ion)\\s+(?:the\\s+)?(?:response|output|answer|completion))|(?:response|output|completion)\\s*(?:max_length|length\\s*limit)"
       ]
     ],
     "human_gate": [
@@ -224,23 +224,23 @@
     "audit": [
       [
         "audit.01",
-        "(?:log|record|track|trace|audit)\\s*(?:trail|history|event|action|decision|every|all|each)"
+        "\\b(?:log|record|track|audit)\\b\\s+(?:trail|history|event|action|decision|every|all|each)|\\b(?:log|record)\\s+(?:every|all|each)\\s+(?:\\w+\\s+){0,3}?(?:action|decision|tool|call|step)"
       ],
       [
         "audit.02",
-        "audit\\s+(?:trail|log|record)|\\bprovenance\\b|\\baccountab|immutable\\s+log|log\\s+(?:every|all|each)\\b"
+        "\\baudit\\s+(?:trail|log|record)\\b|\\bprovenance\\b|\\bimmutable\\s+log\\b|\\blog\\s+(?:every|all|each)\\s+(?:\\w+\\s+){0,3}?(?:action|decision|event)"
       ],
       [
         "audit.03",
-        "(?:record|preserve|retain)\\s*(?:the|all|every|each)\\s*(?:decision|action|step|reason|source)"
+        "\\b(?:record|preserve|retain)\\s+(?:the\\s+|all\\s+|every\\s+|each\\s+)?(?:decision|action|step|reason|source)\\b|\\b(?:decision|action)\\s+log\\b"
       ],
       [
         "audit.04",
-        "immutable|append.only|tamper.proof|write.once"
+        "\\b(?:immutable|append[\\s-]?only|tamper[\\s-]?proof|write[\\s-]?once)\\s+(?:log|trail|audit|record)\\b|\\b(?:audit|log)\\s+(?:is\\s+)?(?:immutable|append[\\s-]?only|tamper[\\s-]?proof)\\b"
       ],
       [
         "audit.05",
-        "(?:who|what|when|why|how)\\s*(?:did|made|took|decided|executed)"
+        "\\b(?:record|log|track)\\s+(?:who|what|when).{0,60}?(?:did|made|took|decided|executed|approved)|\\bwho\\s+did\\s+what\\b|\\b(?:actor|operator)\\s+attribution\\b|\\bapprover\\s+and\\s+time\\b"
       ]
     ],
     "compliance": [
@@ -274,11 +274,11 @@
       ],
       [
         "compliance.08",
-        "(?:compliance|regulat|govern|legal|legal\\s+requirement)"
+        "(?:comply\\s+with|in\\s+compliance\\s+with|regulatory\\s+(?:requirement|constraint|obligation|compliance)|legal\\s+(?:requirement|obligation|constraint)|must\\s+(?:comply|meet)\\s+(?:with\\s+)?(?:regulat|legal|compliance)|data\\s+governance\\s+(?:polic|require|rule))"
       ],
       [
         "compliance.09",
-        "(?:encrypt|redact|de.identif|anonymi|pseudonymi)"
+        "(?:encrypt|redact|de[\\s-]?identif|anonymi|pseudonymi).{0,60}?(?:personal|pii|phi|sensitive|user\\s+data|customer\\s+data|patient)|(?:personal|pii|phi|sensitive)\\s+(?:data\\s+)?(?:must\\s+be\\s+|should\\s+be\\s+)?(?:encrypt|redact|de[\\s-]?identif|anonymi|pseudonymi)"
       ]
     ]
   },

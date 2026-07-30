@@ -171,13 +171,13 @@ def test_test_human_shows_ruleset_and_method_without_explain_flag():
     assert "missing" in result.output.lower() or "Findings" in result.output
 
 
-def test_ruleset_id_is_0_5_0():
-    """The ruleset remains at 0.5.0 while package 0.6.0 adds policy tooling.
+def test_ruleset_id_is_0_6_0():
+    """Ruleset 0.6.0 tightens cost/audit/compliance against measured corpus FPs.
 
-    Versioned in lockstep with the package so any score can be traced back
-    to the exact rules that produced it.
+    Versioned so any score can be traced back to the exact rules that
+    produced it. Package version may lag until the next release cut.
     """
-    assert RULESET_ID == "crewscore-hygiene@0.5.0"
+    assert RULESET_ID == "crewscore-hygiene@0.6.0"
 
 
 def test_changelog_does_not_reference_withdrawn_versions():

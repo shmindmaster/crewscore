@@ -6,7 +6,7 @@
 
 # Corpus validation: does CrewScore coverage separate production prompts from general-purpose ones?
 
-Validation ruleset `crewscore-hygiene@0.5.0` · package `0.6.1` · generated `2026-07-29`.
+Validation ruleset `crewscore-hygiene@0.6.0` · package `0.6.1` · generated `2026-07-29`.
 Reproducible command: `py scripts/validate_corpus.py`. This supersedes the withdrawn 1,368-prompt study.
 
 ## Corpora
@@ -27,8 +27,8 @@ Licensing:
 
 | Corpus | n | Median | IQR | Mean | Scored 0 | Max |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Production agent system prompts | 83 | 14 | 4–20 | 14.36 | 17/83 (20.5%) | 49 |
-| General-purpose GPT-Store prompts | 273 | 0 | 0–4 | 1.88 | 186/273 (68.1%) | 20 |
+| Production agent system prompts | 83 | 10 | 3–15 | 9.46 | 20/83 (24.1%) | 34 |
+| General-purpose GPT-Store prompts | 273 | 0 | 0–4 | 1.61 | 193/273 (70.7%) | 16 |
 
 ## Discrimination
 
@@ -36,7 +36,7 @@ Licensing:
 - **Significance:** two-sided permutation test on Cliff's delta, 10000 relabelings, seed 20260729, add-one corrected
 - **Interval:** percentile bootstrap on the same statistic, 10000 resamples within groups, seed 20260730
 
-**Cliff's delta = 0.672**, 95% CI [0.549, 0.781], *p* = 0.0001.
+**Cliff's delta = 0.614**, 95% CI [0.491, 0.729], *p* = 0.0001.
 
 At alpha = 0.05, coverage **separates** the two corpora.
 
@@ -46,8 +46,8 @@ A mass of exact zeros creates ties, and ties **attenuate** a rank
 statistic rather than leaving it untouched. The withdrawn study
 claimed the opposite. Re-running on non-zero scores only:
 
-- n = 66 production, 87 GPT-Store (scores above 0 only)
-- Cliff's delta = 0.77, *p* = 0.0001
+- n = 63 production, 80 GPT-Store (scores above 0 only)
+- Cliff's delta = 0.667, *p* = 0.0001
 
 Report both. If they point the same way the zero mass is not
 driving the result; if they diverge, that divergence is the
@@ -70,25 +70,29 @@ Every rate carries its denominator. A percentage without one is how
 | Require citations for claims | 27/83 (32.5%) | 19/273 (7.0%) |
 | Link each claim to its source | 1/83 (1.2%) | 1/273 (0.4%) |
 | Use an inline citation marker format | 7/83 (8.4%) | 4/273 (1.5%) |
-| Cap spend, tokens, or rate | 17/83 (20.5%) | 2/273 (0.7%) |
-| Bound output length | 33/83 (39.8%) | 3/273 (1.1%) |
+| Cap spend, tokens, or rate | 5/83 (6.0%) | 0/273 (0.0%) |
+| Bound output length | 4/83 (4.8%) | 0/273 (0.0%) |
 | A human must approve | 18/83 (21.7%) | 0/273 (0.0%) |
 | Do not act autonomously before approval | 17/83 (20.5%) | 2/273 (0.7%) |
 | Stop or refuse rather than proceed | 35/83 (42.2%) | 45/273 (16.5%) |
 | Name what triggers stopping | 21/83 (25.3%) | 0/273 (0.0%) |
 | Escalate to a human | 0/83 (0.0%) | 1/273 (0.4%) |
-| Log actions and decisions | 6/83 (7.2%) | 0/273 (0.0%) |
-| Keep the log tamper-evident | 2/83 (2.4%) | 0/273 (0.0%) |
-| Record who did what and when | 8/83 (9.6%) | 0/273 (0.0%) |
+| Log actions and decisions | 0/83 (0.0%) | 0/273 (0.0%) |
+| Keep the log tamper-evident | 0/83 (0.0%) | 0/273 (0.0%) |
+| Record who did what and when | 0/83 (0.0%) | 0/273 (0.0%) |
 | Name the regime that applies | 1/83 (1.2%) | 1/273 (0.4%) |
-| State that legal or regulatory constraints apply | 12/83 (14.5%) | 9/273 (3.3%) |
-| State a data-protection technique | 11/83 (13.3%) | 2/273 (0.7%) |
+| State that legal or regulatory constraints apply | 2/83 (2.4%) | 0/273 (0.0%) |
+| State a data-protection technique | 0/83 (0.0%) | 0/273 (0.0%) |
 
 ## Controls that never fired
 
-**1 of 23 controls matched nothing in 356 real prompts.**
+**5 of 23 controls matched nothing in 356 real prompts.**
 
 - `hallucination.grounding` — Ground answers in provided sources
+- `audit.log_actions` — Log actions and decisions
+- `audit.tamper_evident` — Keep the log tamper-evident
+- `audit.actor_attribution` — Record who did what and when
+- `compliance.data_protection` — State a data-protection technique
 
 A control that never fires contributes a guaranteed zero to every
 score, which caps the reachable maximum for reasons no reader can
@@ -108,6 +112,10 @@ rules did not, the rules are the problem.
 | Control | Shipped rules | Loose probe | Reading |
 | --- | ---: | ---: | --- |
 | Ground answers in provided sources | 0/356 | 1/356 (0.3%), 5 patterns | genuinely absent from these corpora |
+| Log actions and decisions | 0/356 | 1/356 (0.3%), 3 patterns | genuinely absent from these corpora |
+| Keep the log tamper-evident | 0/356 | 2/356 (0.6%), 1 patterns | genuinely absent from these corpora |
+| Record who did what and when | 0/356 | 0/356 (0.0%), 4 patterns | genuinely absent from these corpora |
+| State a data-protection technique | 0/356 | 0/356 (0.0%), 2 patterns | genuinely absent from these corpora |
 
 Where the reading is *genuinely absent*, note what that says about
 the corpora rather than only about the rules: both collections are

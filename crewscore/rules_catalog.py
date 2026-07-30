@@ -72,7 +72,9 @@ DIMENSION_PROVENANCE: dict[str, dict[str, Any]] = {
         "grade": "evidence-backed",
         "rationale": (
             "Inference cost from instruction text is measured, and cost is a "
-            "named driver of agentic project cancellation."
+            "named driver of agentic project cancellation. Patterns were "
+            "tightened in 0.6.0 so gift 'budget', tool 'rate limited', and "
+            "content 'truncated' no longer score as cost controls."
         ),
         "citations": [
             "Evaluating AGENTS.md (arXiv:2602.11988) — >20% inference-cost "
@@ -112,17 +114,21 @@ DIMENSION_PROVENANCE: dict[str, dict[str, Any]] = {
         "rationale": (
             "Reconstructing what an agent did is a real compliance need. "
             "Whether asking for it in a prompt produces it is unmeasured — "
-            "logging is an application concern."
+            "logging is an application concern. Patterns were tightened in "
+            "0.6.0 against 'TRACE every symbol', personality "
+            "'accountability', and 'immutable security boundary' false "
+            "positives measured on the public corpus."
         ),
         "citations": [],
     },
     "compliance": {
         "grade": "author-intuition",
         "rationale": (
-            "The weakest dimension by design: it detects regulatory "
-            "vocabulary, which is the easiest signal to game and the least "
-            "connected to whether data is actually handled lawfully. "
-            "Naming a regulation is not complying with it."
+            "Still the weakest dimension by design: regime names and data-"
+            "protection techniques in prompt text are not lawful handling. "
+            "0.6.0 dropped bare 'compliance|legal|encrypt|redact' so refusal "
+            "copy and PDF tool lists no longer inflate coverage; the grade "
+            "stays author-intuition because the construct remains thin."
         ),
         "citations": [],
     },

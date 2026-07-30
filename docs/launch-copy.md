@@ -10,10 +10,10 @@ The numbers you may use:
 | Claim | Value | Source |
 | --- | --- | --- |
 | Corpus size | 356 prompts | 83 production + 273 GPT-Store |
-| Production median | 14/100 | `groups.production.describe.median` |
+| Production median | 10/100 | `groups.production.describe.median` |
 | GPT-Store median | 0/100 | `groups.gpt_store.describe.median` |
-| Production prompts scoring 0 | 17/83 | `describe.zeros` |
-| Separation | Cliff's δ = 0.672, *p* = 0.0001 | `analysis` |
+| Production prompts scoring 0 | 20/83 | `describe.zeros` |
+| Separation | Cliff's δ = 0.614, *p* = 0.0001 | `analysis` |
 | Controls | 23 across 8 dimensions | rule catalog |
 
 **What you may not claim.** That the score measures prompt quality, that it
@@ -33,7 +33,7 @@ the launch buys.
 > We checked whether each one writes down 23 basic safety controls: injection
 > defense, human approval, cost caps, stop conditions.
 >
-> Among the 83 production prompts, median coverage was 14 out of 100.
+> Among the 83 production prompts, median coverage was 10 out of 100.
 
 **2/**
 > This isn't a dunk. These are good prompts written by good teams.
@@ -73,7 +73,7 @@ the launch buys.
 > its own report*. Every stat is emitted by code — hand-transcription is what
 > got our previous study withdrawn.
 >
-> Cliff's δ = 0.672, p = 0.0001
+> Cliff's δ = 0.614, p = 0.0001
 
 **7/**
 > Free, MIT, runs in your browser too (your prompt never leaves the page).
@@ -90,7 +90,7 @@ the launch buys.
 >
 > Among the 83 production prompts, median coverage of 23 basic safety controls
 > — injection defense, human approval, cost caps, stop conditions — was
-> **14/100**.
+> **10/100**.
 >
 > Free tool, runs offline: crewscore.ai
 
@@ -99,7 +99,7 @@ the launch buys.
 ## LinkedIn
 
 > **We scanned 356 real AI agent prompts. Among the 83 production prompts, the
-> median states 14% of basic safety controls.**
+> median states 10% of basic safety controls.**
 >
 > That includes shipped system prompts from Anthropic, OpenAI, Cursor and
 > Perplexity — teams who are very good at this.
@@ -146,7 +146,7 @@ the launch buys.
 > hidden in user content, stop when you're unsure, get a human to approve
 > anything irreversible.
 >
-> Among the 83 production prompts, the median states 14 out of 100.
+> Among the 83 production prompts, the median states 10 out of 100.
 >
 > We built a free tool that reads your prompt and tells you which ones are
 > missing. Browser scoring happens locally and your prompt is never uploaded;
@@ -172,7 +172,7 @@ the launch buys.
 >
 > The thing that surprised me: I ran it over 356 real prompts (83 shipped
 > production prompts from Anthropic/OpenAI/Cursor/Perplexity, 273 GPT-Store
-> ones). Production median is 14/100, GPT-Store is 0. Cliff's δ = 0.672,
+> ones). Production median is 10/100, GPT-Store is 0. Cliff's δ = 0.614,
 > p = 0.0001, two-sided permutation test. The harness is committed, fetches
 > both corpora at pinned SHAs, and writes its own report — an earlier version
 > of this study was hand-written and I had to withdraw it after auditing my own
@@ -208,7 +208,7 @@ the launch buys.
 - *"Your corpus is leaked prompts of unknown provenance."* True and stated in
   the report. Neither corpus is a random sample of anything; group membership
   is assigned by source repo, not by inspection.
-- *"14/100 sounds like a made-up number."* Run the harness. One command, pinned
+- *"10/100 sounds like a made-up number."* Run the harness. One command, pinned
   SHAs, writes its own report.
 
 ---
@@ -219,7 +219,7 @@ Lead with the data, not the tool. HN body works with the first line changed to:
 
 > I scanned 356 real agent system prompts to see how many actually write down
 > basic safety controls. Among the 83 production prompts, median coverage was
-> 14/100. Method and harness below.
+> 10/100. Method and harness below.
 
 ---
 

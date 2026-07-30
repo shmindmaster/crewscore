@@ -13,7 +13,7 @@ Public brand: **CrewScore** · Domain: **https://crewscore.ai** · PyPI: **`crew
 
 It does **not** (yet) run live adversarial LLM attacks or parse LangGraph/CrewAI runtimes. For live testing, hand off to Promptfoo / garak — see `docs/next-steps-eval.md`.
 
-Ruleset id: **`crewscore-hygiene@0.5.0`** (`crewscore rules` prints it; `crewscore/scoring.py:RULESET_ID` is the source of truth).
+Ruleset id: **`crewscore-hygiene@0.6.0`** (`crewscore rules` prints it; `crewscore/scoring.py:RULESET_ID` is the source of truth).
 
 ## Stack
 

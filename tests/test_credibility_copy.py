@@ -42,11 +42,12 @@ def test_validation_documentation_is_honest_about_the_optional_corpus_cache():
     assert "routine ci does not download or redistribute the source prompts" in text
 
 
-def test_readme_scopes_the_14_of_100_median_to_production_prompts():
+def test_readme_scopes_the_production_median_to_production_prompts():
     text = (REPO / "README.md").read_text(encoding="utf-8").lower()
     assert "83 production prompts" in text
-    assert "among the production subset, median coverage was 14" in text
-    assert "the median states 14 of 100" not in text
+    assert "among the production subset, median coverage was 10" in text
+    # Unscoped whole-corpus median claim is banned.
+    assert "the median states 10 of 100" not in text
 
 
 def test_live_eval_scoring_charter_link_targets_the_current_document():

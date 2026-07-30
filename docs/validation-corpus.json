@@ -2,21 +2,21 @@
   "analysis": {
     "alpha": 0.05,
     "ci95": [
-      0.549,
-      0.781
+      0.491,
+      0.729
     ],
     "ci_and_p_agree": true,
     "ci_excludes_zero": true,
-    "delta": 0.672,
+    "delta": 0.614,
     "interval_method": "percentile bootstrap on the same statistic, 10000 resamples within groups, seed 20260730",
     "p_value": 0.0001,
     "significance_test": "two-sided permutation test on Cliff's delta, 10000 relabelings, seed 20260729, add-one corrected",
     "significant": true,
     "statistic": "Cliff's delta (Mann-Whitney U identity, midranks for ties)",
     "zero_floor_sensitivity": {
-      "delta": 0.77,
-      "n_gpt_store": 87,
-      "n_production": 66,
+      "delta": 0.667,
+      "n_gpt_store": 80,
+      "n_production": 63,
       "p": 0.0001
     }
   },
@@ -134,24 +134,24 @@
     {
       "control": "cost.budget_cap",
       "dimension": "cost",
-      "gpt_store_hits": 2,
+      "gpt_store_hits": 0,
       "gpt_store_n": 273,
-      "gpt_store_pct": 0.7,
+      "gpt_store_pct": 0.0,
       "label": "Cap spend, tokens, or rate",
-      "production_hits": 17,
+      "production_hits": 5,
       "production_n": 83,
-      "production_pct": 20.5
+      "production_pct": 6.0
     },
     {
       "control": "cost.output_bound",
       "dimension": "cost",
-      "gpt_store_hits": 3,
+      "gpt_store_hits": 0,
       "gpt_store_n": 273,
-      "gpt_store_pct": 1.1,
+      "gpt_store_pct": 0.0,
       "label": "Bound output length",
-      "production_hits": 33,
+      "production_hits": 4,
       "production_n": 83,
-      "production_pct": 39.8
+      "production_pct": 4.8
     },
     {
       "control": "human_gate.approval_required",
@@ -215,9 +215,9 @@
       "gpt_store_n": 273,
       "gpt_store_pct": 0.0,
       "label": "Log actions and decisions",
-      "production_hits": 6,
+      "production_hits": 0,
       "production_n": 83,
-      "production_pct": 7.2
+      "production_pct": 0.0
     },
     {
       "control": "audit.tamper_evident",
@@ -226,9 +226,9 @@
       "gpt_store_n": 273,
       "gpt_store_pct": 0.0,
       "label": "Keep the log tamper-evident",
-      "production_hits": 2,
+      "production_hits": 0,
       "production_n": 83,
-      "production_pct": 2.4
+      "production_pct": 0.0
     },
     {
       "control": "audit.actor_attribution",
@@ -237,9 +237,9 @@
       "gpt_store_n": 273,
       "gpt_store_pct": 0.0,
       "label": "Record who did what and when",
-      "production_hits": 8,
+      "production_hits": 0,
       "production_n": 83,
-      "production_pct": 9.6
+      "production_pct": 0.0
     },
     {
       "control": "compliance.named_regime",
@@ -255,24 +255,24 @@
     {
       "control": "compliance.stated_obligation",
       "dimension": "compliance",
-      "gpt_store_hits": 9,
+      "gpt_store_hits": 0,
       "gpt_store_n": 273,
-      "gpt_store_pct": 3.3,
+      "gpt_store_pct": 0.0,
       "label": "State that legal or regulatory constraints apply",
-      "production_hits": 12,
+      "production_hits": 2,
       "production_n": 83,
-      "production_pct": 14.5
+      "production_pct": 2.4
     },
     {
       "control": "compliance.data_protection",
       "dimension": "compliance",
-      "gpt_store_hits": 2,
+      "gpt_store_hits": 0,
       "gpt_store_n": 273,
-      "gpt_store_pct": 0.7,
+      "gpt_store_pct": 0.0,
       "label": "State a data-protection technique",
-      "production_hits": 11,
+      "production_hits": 0,
       "production_n": 83,
-      "production_pct": 13.3
+      "production_pct": 0.0
     }
   ],
   "corpora": [
@@ -300,27 +300,27 @@
   "groups": {
     "gpt_store": {
       "describe": {
-        "max": 20,
-        "mean": 1.88,
+        "max": 16,
+        "mean": 1.61,
         "median": 0,
         "n": 273,
         "q1": 0,
         "q3": 4,
-        "zero_rate_pct": 68.1,
-        "zeros": 186
+        "zero_rate_pct": 70.7,
+        "zeros": 193
       },
       "files": 273
     },
     "production": {
       "describe": {
-        "max": 49,
-        "mean": 14.36,
-        "median": 14,
+        "max": 34,
+        "mean": 9.46,
+        "median": 10,
         "n": 83,
-        "q1": 4,
-        "q3": 20,
-        "zero_rate_pct": 20.5,
-        "zeros": 17
+        "q1": 3,
+        "q3": 15,
+        "zero_rate_pct": 24.1,
+        "zeros": 20
       },
       "files": 83
     }
@@ -330,14 +330,70 @@
       "control": "hallucination.grounding",
       "dimension": "hallucination",
       "label": "Ground answers in provided sources"
+    },
+    {
+      "control": "audit.log_actions",
+      "dimension": "audit",
+      "label": "Log actions and decisions"
+    },
+    {
+      "control": "audit.tamper_evident",
+      "dimension": "audit",
+      "label": "Keep the log tamper-evident"
+    },
+    {
+      "control": "audit.actor_attribution",
+      "dimension": "audit",
+      "label": "Record who did what and when"
+    },
+    {
+      "control": "compliance.data_protection",
+      "dimension": "compliance",
+      "label": "State a data-protection technique"
     }
   ],
   "probes": {
+    "audit.actor_attribution": {
+      "hits": 0,
+      "n": 356,
+      "patterns": 4,
+      "pct": 0.0
+    },
+    "audit.log_actions": {
+      "hits": 1,
+      "n": 356,
+      "patterns": 3,
+      "pct": 0.3
+    },
     "audit.tamper_evident": {
       "hits": 2,
       "n": 356,
       "patterns": 1,
       "pct": 0.6
+    },
+    "compliance.data_protection": {
+      "hits": 0,
+      "n": 356,
+      "patterns": 2,
+      "pct": 0.0
+    },
+    "compliance.named_regime": {
+      "hits": 1,
+      "n": 356,
+      "patterns": 1,
+      "pct": 0.3
+    },
+    "cost.budget_cap": {
+      "hits": 7,
+      "n": 356,
+      "patterns": 3,
+      "pct": 2.0
+    },
+    "cost.output_bound": {
+      "hits": 5,
+      "n": 356,
+      "patterns": 3,
+      "pct": 1.4
     },
     "hallucination.defer_to_expert": {
       "hits": 3,
@@ -371,7 +427,7 @@
     }
   },
   "resamples": 10000,
-  "ruleset": "crewscore-hygiene@0.5.0",
+  "ruleset": "crewscore-hygiene@0.6.0",
   "seed": 20260729,
   "self_checks": 104
 }

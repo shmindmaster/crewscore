@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="800" height="420" viewBox="0 0 800 420" role="img" aria-labelledby="title desc">
-  <title id="title">CrewScore: production median 14, GPT-Store median 0</title>
-  <desc id="desc">written-control coverage — not runtime proof. Production agents n=83 median 14/100; GPT-Store prompts n=273 median 0/100. Cliff's delta = 0.672.</desc>
+  <title id="title">CrewScore: production median 10, GPT-Store median 0</title>
+  <desc id="desc">written-control coverage — not runtime proof. Production agents n=83 median 10/100; GPT-Store prompts n=273 median 0/100. Cliff's delta = 0.614.</desc>
   <defs>
     <style>
       .bg { fill: #0f0f1a; }
@@ -25,10 +25,10 @@
 
   <!-- Production column -->
   <text class="t muted" x="56" y="180" font-size="14">Production agents</text>
-  <text class="t amber" x="56" y="250" font-size="64" font-weight="700">14</text>
+  <text class="t amber" x="56" y="250" font-size="64" font-weight="700">10</text>
   <text class="t dim" x="56" y="278" font-size="14">/100 median  ·  n=83</text>
   <rect class="track" x="56" y="296" width="280" height="10" rx="4"/>
-  <rect class="bar-prod" x="56" y="296" width="39" height="10" rx="4"/>
+  <rect class="bar-prod" x="56" y="296" width="28" height="10" rx="4"/>
 
   <!-- GPT-Store column -->
   <text class="t muted" x="420" y="180" font-size="14">GPT-Store prompts</text>
@@ -37,6 +37,6 @@
   <rect class="track" x="420" y="296" width="280" height="10" rx="4"/>
   <rect class="bar-gpt" x="420" y="296" width="2" height="10" rx="4"/>
 
-  <text class="t muted" x="56" y="350" font-size="14">Cliff's delta = 0.672  ·  n=83 vs n=273</text>
-  <text class="t dim" x="56" y="382" font-size="12">crewscore-hygiene@0.5.0  ·  https://crewscore.ai</text>
+  <text class="t muted" x="56" y="350" font-size="14">Cliff's delta = 0.614  ·  n=83 vs n=273</text>
+  <text class="t dim" x="56" y="382" font-size="12">crewscore-hygiene@0.6.0  ·  https://crewscore.ai</text>
 </svg>

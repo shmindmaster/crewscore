@@ -57,8 +57,10 @@ Grades are per dimension, not per rule. Full rationale and citations:
 
 **Read `audit`, `cost`, and `compliance` results with suspicion.** A `0` there
 means the rules did not find something, not that you failed to write it.
-Compliance in particular is keyword detection: naming a regulation is not
-complying with it.
+Ruleset `0.6.0` tightened those dimensions against measured corpus false
+positives (gift "budget", tool "rate limited", bare "compliance", PDF
+"encrypt", etc.). Compliance in particular is still not lawful handling:
+naming a regulation is not complying with it.
 
 List every control ID:
 

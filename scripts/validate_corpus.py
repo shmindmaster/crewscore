@@ -157,6 +157,39 @@ ABSENCE_PROBES: dict[str, tuple[str, ...]] = {
     "audit.tamper_evident": (
         r"immutab|append.only|tamper|write.once|read.only\s+log",
     ),
+    # 0.6.0 diagnostics: separate "rules too narrow" from "absent" for the
+    # three historically weak dimensions without scoring on these probes.
+    "cost.budget_cap": (
+        r"(?:token|cost|spend|inference)\s*(?:budget|limit|cap|ceiling)",
+        r"budget\s*(?:for\s+)?(?:token|cost|spend|inference)",
+        r"max_tokens|max_output_tokens",
+    ),
+    "cost.output_bound": (
+        r"(?:max|maximum)\s*(?:response|output|completion|token)",
+        r"(?:response|output)\s*(?:length|limit|cap)",
+        r"truncat(?:e|ion)\s+(?:response|output|answer)",
+    ),
+    "audit.log_actions": (
+        r"\b(?:log|record|track)\b.{0,40}?\b(?:action|decision|tool|call)\b",
+        r"\baudit\s+trail\b",
+        r"\bdecision\s+log\b",
+    ),
+    "audit.actor_attribution": (
+        r"who\s+did\s+what",
+        r"(?:record|log)\s+who",
+        r"approver\s+and\s+time",
+        r"actor\s+attribution",
+    ),
+    "compliance.named_regime": (
+        r"\bhipaa\b|\bgdpr\b|\bsoc\s*2\b|\beu\s+ai\s+act\b|\bferpa\b|"
+        r"\bpci[\s-]?dss\b|\bphi\b",
+    ),
+    "compliance.data_protection": (
+        r"(?:encrypt|redact|de[\s-]?identif|anonymi).{0,40}?"
+        r"(?:personal|pii|phi|sensitive|user\s+data)",
+        r"(?:personal|pii|phi|sensitive).{0,40}?"
+        r"(?:encrypt|redact|de[\s-]?identif|anonymi)",
+    ),
     "human_gate.approval_required": (
         r"(?:ask|request|obtain|get|seek)\s+(?:for\s+)?(?:the\s+)?"
         r"(?:user|human|explicit)?\s*(?:permission|approval|consent|confirmation)",

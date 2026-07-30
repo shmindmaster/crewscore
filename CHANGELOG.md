@@ -14,6 +14,27 @@ install them, and do not compare their numbers to these.
 
 ---
 
+## [Unreleased] — ruleset 0.6.0 cost/audit/compliance validity
+
+### Scoring (ruleset `crewscore-hygiene@0.6.0`)
+
+- **Cost / Audit / Compliance patterns tightened** against false positives
+  measured on the public 356-prompt corpora. Gift "budget", tool "rate
+  limited", content "truncated", "TRACE every symbol", personality
+  "accountability", "immutable security boundary", bare "compliance", and
+  PDF "encrypt" no longer inflate coverage.
+- **Same 23 controls and 8 dimensions.** Denominator and formula unchanged;
+  only which phrasings count as a hit changed. Scores from `@0.5.0` are **not**
+  comparable one-for-one on those three dimensions.
+- Provenance notes updated; Compliance remains `author-intuition`.
+
+### Added
+
+- Regression tests locking the measured corpus false positives and the true
+  positives that must still score.
+
+---
+
 ## [0.6.1] — 2026-07-30 — secondary handoffs complete + machine merge gates
 
 No scoring change. Ruleset remains `crewscore-hygiene@0.5.0`.
