@@ -2,8 +2,10 @@ name: CrewScore
 description: Find the guardrails your AI agent prompt forgot - injection, hallucination, cost, human approval. Offline, no API key.
 author: shmindmaster
 branding:
-  icon: shield
-  color: blue
+  # GitHub Marketplace closed list (no custom logo). "check-circle" matches
+  # written-control coverage better than a generic shield.
+  icon: check-circle
+  color: green
 
 inputs:
   prompt-file:

@@ -100,16 +100,16 @@ viewBox="0 0 {_WIDTH} {_HEIGHT}" role="img" aria-labelledby="title desc">
 {e_gpt_label} n={e_gpt_n} median {e_gpt_med}/100. {e_delta}.</desc>
   <defs>
     <style>
-      .bg {{ fill: #0f0f1a; }}
-      .panel {{ fill: #1a1f2e; stroke: #334155; stroke-width: 1; }}
-      .t {{ font-family: Consolas, 'SF Mono', 'Liberation Mono', Menlo, monospace; }}
-      .white {{ fill: #ffffff; }}
-      .muted {{ fill: #94a3b8; }}
-      .dim {{ fill: #64748b; }}
-      .amber {{ fill: #f59e0b; }}
-      .red {{ fill: #ef4444; }}
-      .track {{ fill: #1e293b; }}
-      .bar-prod {{ fill: #f59e0b; }}
+      .bg {{ fill: #0E1612; }}
+      .panel {{ fill: #17201B; stroke: #405147; stroke-width: 1; }}
+      .t {{ font-family: system-ui, -apple-system, Segoe UI, sans-serif; }}
+      .white {{ fill: #EEF4EF; }}
+      .muted {{ fill: #B1BCB4; }}
+      .dim {{ fill: #829189; }}
+      .mint {{ fill: #6FDAA6; }}
+      .warn {{ fill: #EDCC7A; }}
+      .track {{ fill: #202B24; }}
+      .bar-prod {{ fill: #6FDAA6; }}
       .bar-gpt {{ fill: #64748b; }}
     </style>
   </defs>
@@ -122,14 +122,14 @@ viewBox="0 0 {_WIDTH} {_HEIGHT}" role="img" aria-labelledby="title desc">
 
   <!-- Production column -->
   <text class="t muted" x="56" y="180" font-size="14">{e_prod_label}</text>
-  <text class="t amber" x="56" y="250" font-size="64" font-weight="700">{e_prod_med}</text>
+  <text class="t mint" x="56" y="250" font-size="64" font-weight="700">{e_prod_med}</text>
   <text class="t dim" x="56" y="278" font-size="14">/100 median  ·  n={e_prod_n}</text>
   <rect class="track" x="56" y="296" width="{track_w}" height="10" rx="4"/>
   <rect class="bar-prod" x="56" y="296" width="{prod_bar}" height="10" rx="4"/>
 
   <!-- GPT-Store column -->
   <text class="t muted" x="420" y="180" font-size="14">{e_gpt_label}</text>
-  <text class="t red" x="420" y="250" font-size="64" font-weight="700">{e_gpt_med}</text>
+  <text class="t warn" x="420" y="250" font-size="64" font-weight="700">{e_gpt_med}</text>
   <text class="t dim" x="420" y="278" font-size="14">/100 median  ·  n={e_gpt_n}</text>
   <rect class="track" x="420" y="296" width="{track_w}" height="10" rx="4"/>
   <rect class="bar-gpt" x="420" y="296" width="{gpt_bar}" height="10" rx="4"/>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">CrewScore</title>
+  <desc id="desc">Coverage bars: written guardrail controls checked off</desc>
+  <!-- Ink tile + mint edge: offline checklist, not a generic shield -->
+  <rect width="64" height="64" rx="16" fill="#0B4F33"/>
+  <rect x="2.5" y="2.5" width="59" height="59" rx="14" fill="none" stroke="#6FDAA6" stroke-width="1.5" opacity="0.55"/>
+  <!-- Four control bars = coverage, not a grade ring -->
+  <g fill="none" stroke-linecap="round">
+    <rect x="14" y="16" width="36" height="7" rx="3.5" fill="#173F2B"/>
+    <rect x="14" y="16" width="28" height="7" rx="3.5" fill="#6FDAA6"/>
+    <rect x="14" y="28" width="36" height="7" rx="3.5" fill="#173F2B"/>
+    <rect x="14" y="28" width="18" height="7" rx="3.5" fill="#A3EDC4"/>
+    <rect x="14" y="40" width="36" height="7" rx="3.5" fill="#173F2B"/>
+    <rect x="14" y="40" width="10" height="7" rx="3.5" fill="#6FDAA6" opacity="0.75"/>
+  </g>
+  <!-- Missing control gap (the product's job) -->
+  <rect x="14" y="52" width="36" height="7" rx="3.5" fill="#173F2B" stroke="#EDCC7A" stroke-width="1.25" stroke-dasharray="3 2.5"/>
+</svg>

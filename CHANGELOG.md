@@ -22,6 +22,11 @@ install them, and do not compare their numbers to these.
   hero card, product paths (ChatGPT / Claude / Cursor / Other), corpus shock
   strip (production-scoped 10/100), primary **Copy share text**, and share
   cards that lead with coverage + hero gap — still coverage, not a safety grade.
+- **Brand system:** coverage-bars logo mark (SVG), green forest palette aligned to
+  the site, regenerated `favicon` / apple-touch icon, Open Graph social card
+  (23 controls + production median 10/100), GitHub README banner, refreshed
+  demo + corpus cards. Run `py scripts/make_social_card.py` after catalog or
+  corpus number changes.
 
 ---
 

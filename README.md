@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/github-banner.png" alt="CrewScore — find the safety rules your AI agent prompt forgot. 23 public controls. Offline. No API key." width="100%">
+
 # CrewScore
 
 ### CI that fails when your agent prompt never says “a human must approve.”
@@ -15,7 +17,7 @@ text is present.
 **We scanned 356 real agent prompts: 83 production prompts and 273
 general-purpose prompts. Among the production subset, median coverage was 10
 of 100.** GPT-Store median: 0.
-[Numbers →](docs/validation-corpus.md) · [Shareable card →](docs/dist-pack/corpus-card.svg)
+[Numbers →](docs/validation-corpus.md) · [Shareable card →](docs/dist-pack/corpus-card.svg) · [Live checker →](https://crewscore.ai)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11+-green.svg)](https://python.org)
@@ -23,6 +25,10 @@ of 100.** GPT-Store median: 0.
 [![GitHub Action](https://img.shields.io/badge/Action-shmindmaster%2Fcrewscore%40v2-blue.svg)](https://github.com/marketplace/actions/crewscore)
 
 <br/>
+
+<p>
+  <img src="assets/brand/logo-mark.svg" alt="CrewScore mark" width="48" height="48">
+</p>
 
 > Example: **control coverage 8/23 written** · hero gap: *A human must approve*.
 > CrewScore checks whether controls are written down, not whether an agent obeys them.

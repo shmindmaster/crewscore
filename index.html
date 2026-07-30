@@ -7,14 +7,19 @@
   <link rel="canonical" href="https://crewscore.ai/">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="icon" href="favicon.ico" sizes="any">
-  <meta property="og:title" content="CrewScore - written guardrails, checked locally">
-  <meta property="og:description" content="Find written guardrails missing from AI assistant instructions. Prompt text stays in your browser.">
+  <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+  <meta property="og:title" content="CrewScore — find missing written guardrails">
+  <meta property="og:description" content="Check AI agent instructions against 23 public controls in your browser. Coverage, not a safety grade. Prompt text stays local.">
   <meta property="og:image" content="https://crewscore.ai/docs/social-card.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   <meta property="og:url" content="https://crewscore.ai/">
+  <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="CrewScore - written guardrails, checked locally">
-  <meta name="twitter:description" content="Find written guardrails missing from AI assistant instructions. Prompt text stays in your browser.">
-  <title>CrewScore - find missing written guardrails</title>
+  <meta name="twitter:title" content="CrewScore — find missing written guardrails">
+  <meta name="twitter:description" content="23 public controls. Local browser check. Coverage, not a safety grade.">
+  <meta name="twitter:image" content="https://crewscore.ai/docs/social-card.png">
+  <title>CrewScore — find missing written guardrails</title>
   <link rel="stylesheet" href="assets/site.css">
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"CrewScore","applicationCategory":"DeveloperApplication","operatingSystem":"Web, Python 3.11+","description":"A browser-local and offline CLI checker for written AI-agent guardrail controls.","url":"https://crewscore.ai/","codeRepository":"https://github.com/shmindmaster/crewscore","license":"https://spdx.org/licenses/MIT.html","isAccessibleForFree":true}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Does CrewScore upload my prompt?","acceptedAnswer":{"@type":"Answer","text":"No. Scoring happens locally in your browser and prompt text never leaves the page."}},{"@type":"Question","name":"Does a high result prove an AI agent is safe?","acceptedAnswer":{"@type":"Answer","text":"No. CrewScore checks whether published guardrails are written down, not whether an agent follows them at runtime."}},{"@type":"Question","name":"Can I use CrewScore in CI?","acceptedAnswer":{"@type":"Answer","text":"Yes. The open-source CLI and GitHub Action can report controls, protect a prompt-free baseline, require specific controls, and emit SARIF."}}]}</script>
@@ -22,7 +27,7 @@
 <body data-mode="simple">
   <div class="site-shell">
     <header class="site-header">
-      <a class="brand" href="./" aria-label="CrewScore home"><span class="brand-mark" aria-hidden="true">CS</span><span>CrewScore</span></a>
+      <a class="brand" href="./" aria-label="CrewScore home"><img class="brand-mark" src="assets/brand/logo-mark.svg" width="34" height="34" alt=""><span>CrewScore</span></a>
       <nav class="site-nav" aria-label="Primary navigation">
         <a href="#product">Product</a><a href="#examples">Examples</a><a href="#rules">Rules</a><a href="#ci">CI</a><a href="#methodology">Methodology</a>
         <a href="vendor-checklist/">Vendor checklist</a><a href="https://github.com/shmindmaster/crewscore">GitHub</a>

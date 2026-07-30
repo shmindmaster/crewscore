@@ -134,3 +134,21 @@ def test_corpus_shock_strip_is_honest_and_scoped():
     assert "10/100" in html or "10 of 100" in html
     assert "production" in html.lower()
     assert "not a quality ranking" in html.lower() or "not runtime" in html.lower()
+
+
+def test_brand_assets_are_present_and_wired():
+    """Logo mark, social OG card, and favicons ship with the static site."""
+    html = _html()
+    assert "assets/brand/logo-mark.svg" in html
+    assert "assets/brand/apple-touch-icon.png" in html
+    assert 'href="favicon.svg"' in html
+    assert "docs/social-card.png" in html or "social-card.png" in html
+    assert (ROOT / "assets" / "brand" / "logo-mark.svg").is_file()
+    assert (ROOT / "assets" / "brand" / "logo-horizontal.svg").is_file()
+    assert (ROOT / "docs" / "social-card.png").is_file()
+    assert (ROOT / "docs" / "github-banner.png").is_file()
+    assert (ROOT / "favicon.svg").is_file()
+    assert (ROOT / "favicon.ico").is_file()
+    mark = (ROOT / "assets" / "brand" / "logo-mark.svg").read_text(encoding="utf-8")
+    assert "#0B4F33" in mark or "#0b4f33" in mark.lower()
+    assert "coverage" in mark.lower() or "bars" in mark.lower() or "CrewScore" in mark

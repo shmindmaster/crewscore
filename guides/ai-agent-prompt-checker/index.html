@@ -6,7 +6,7 @@
   <link rel="canonical" href="https://crewscore.ai/guides/ai-agent-prompt-checker/"><title>AI agent prompt checker | CrewScore</title>
   <link rel="stylesheet" href="../../assets/site.css">
 </head>
-<body><div class="site-shell"><header class="site-header"><a class="brand" href="../../"><span class="brand-mark" aria-hidden="true">CS</span><span>CrewScore</span></a><nav class="site-nav"><a href="../../">Checker</a><a href="../../rules/">Public controls</a></nav></header>
+<body><div class="site-shell"><header class="site-header"><a class="brand" href="../../"><img class="brand-mark" src="../../assets/brand/logo-mark.svg" width="34" height="34" alt=""><span>CrewScore</span></a><nav class="site-nav"><a href="../../">Checker</a><a href="../../rules/">Public controls</a></nav></header>
 <main class="hero longform"><p class="eyebrow">Guide</p><h1>Check AI agent instructions for missing written guardrails</h1><p class="hero-copy">A useful prompt review starts by separating what is written from what is enforced. Written guardrails clarify intent; runtime tools, approvals, and tests enforce behavior.</p>
 <h2>Start with the instructions you own</h2><p>Paste a system prompt, custom-instructions field, support-bot setup, or agent instruction file into the local checker. It reports 23 public controls across injection handling, evidence, sources, cost limits, human approval, stopping, records, and sensitive data.</p>
 <h2>Review omissions one control at a time</h2><p>Do not append every template just to raise a number. Choose wording that fits the agent's actual tools and authority, then make the runtime behavior match it. For a bot that sends messages, a written human-approval rule should be paired with a real approval hook.</p>

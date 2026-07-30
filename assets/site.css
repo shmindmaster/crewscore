@@ -60,7 +60,16 @@ a { color: var(--accent-strong); }
   padding: 20px 0; border-bottom: 1px solid var(--border);
 }
 .brand { display: inline-flex; gap: 10px; align-items: center; color: var(--text); text-decoration: none; font-weight: 800; }
-.brand-mark { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 9px; background: var(--accent); color: white; font-size: 13px; }
+.brand-mark {
+  display: block; width: 34px; height: 34px; border-radius: 9px;
+  flex: 0 0 34px; object-fit: contain;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+/* Fallback if image path is missing (subpages use CSS letter mark) */
+span.brand-mark {
+  display: grid; place-items: center; background: var(--accent-strong);
+  color: white; font-size: 12px; font-weight: 800; letter-spacing: -0.02em;
+}
 .site-nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 14px; font-size: .9rem; }
 .site-nav a { text-decoration: none; color: var(--muted); }
 .site-nav a:hover { color: var(--accent-strong); text-decoration: underline; }
