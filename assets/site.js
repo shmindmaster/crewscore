@@ -79,6 +79,16 @@
     methodEpoch: 0,
   };
   const $ = (id) => document.getElementById(id);
+
+  // CSS `scroll-behavior` honours prefers-reduced-motion, but an explicit
+  // `behavior: "smooth"` in script overrides the stylesheet and animates
+  // anyway. Ask the preference directly so reduced-motion readers get the jump
+  // they asked for — and so nothing is mid-flight when the page is driven.
+  function scrollTo(element, block) {
+    if (!element) return;
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    element.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: block || "nearest" });
+  }
   const text = (value) => String(value == null ? "" : value);
   const escapeHtml = (value) => text(value).replace(/[&<>'"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[c]);
 
@@ -202,7 +212,7 @@
     state.selections.clear();
     renderResult(result, prompt, { fresh: true });
     const resultsEl = $("results");
-    resultsEl?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    scrollTo(resultsEl, "nearest");
     track("cs_score", { source: source || "paste", profile, ruleset: result.ruleset, overall_bucket: result.overall == null ? null : Math.floor(result.overall / 10) * 10, controls_found: result.findings ? result.findings.filter((f) => f.status === "matched").length : 0, product_path: state.productPath || null });
     track("cs_check_completed", { source: source || "paste", profile, ruleset: result.ruleset });
   }
@@ -218,16 +228,35 @@
     };
   }
 
-  function bindResultActions(mount, result) {
-    mount.querySelector("#review-fixes")?.addEventListener("click", openFixReview);
-    mount.querySelector("#copy-result")?.addEventListener("click", () => copyText(shareUrl(result), "Result link copied"));
-    mount.querySelector("#copy-share-text")?.addEventListener("click", () => copyText(`${shareText()}\n${shareUrl(result)}`, "Share text copied"));
-    mount.querySelector("#copy-team")?.addEventListener("click", () => copyText(`${shareText()}\n${shareUrl(result)}`, "Slack/Teams result copied"));
-    mount.querySelector("#copy-ci")?.addEventListener("click", () => copyText(`# Example policy: select controls your workflow actually needs\n- uses: shmindmaster/crewscore@v2\n  with:\n    scan-path: "."\n    required-controls: "human_gate.approval_required,safe_stop.stop_condition"`, "CI snippet copied"));
-    mount.querySelector("#native-share")?.addEventListener("click", nativeShare);
-    mount.querySelectorAll("[data-social]").forEach((button) => button.addEventListener("click", () => shareTo(button.dataset.social)));
-    mount.querySelector("#copy-badge")?.addEventListener("click", () => copyText(badgeMarkdown(), "README badge snippet copied"));
-    mount.querySelectorAll("[data-card]").forEach((button) => button.addEventListener("click", () => downloadCard(button.dataset.card, button.dataset.format || "png")));
+  /**
+   * One delegated listener for everything inside the results panel.
+   *
+   * The panel is rebuilt with innerHTML on every score and every mode change,
+   * which detaches whatever was there. Rebinding per render leaves a window
+   * where the visible button is new and the listener still points at the node
+   * that was just thrown away — the click does nothing at all, with no error.
+   * Delegating to the container survives every rebuild.
+   */
+  function bindResultActions() {
+    const CI_SNIPPET = `# Example policy: select controls your workflow actually needs\n- uses: shmindmaster/crewscore@v2\n  with:\n    scan-path: "."\n    required-controls: "human_gate.approval_required,safe_stop.stop_condition"`;
+    $("results").addEventListener("click", (event) => {
+      const hit = (selector) => event.target.closest(selector);
+      if (hit("#review-fixes")) return openFixReview();
+
+      // The rest quote the rendered result, so they need one to exist.
+      const result = state.last && state.last.result;
+      if (!result) return;
+      if (hit("#copy-result")) return copyText(shareUrl(result), "Result link copied");
+      if (hit("#copy-share-text")) return copyText(`${shareText()}\n${shareUrl(result)}`, "Share text copied");
+      if (hit("#copy-team")) return copyText(`${shareText()}\n${shareUrl(result)}`, "Slack/Teams result copied");
+      if (hit("#copy-ci")) return copyText(CI_SNIPPET, "CI snippet copied");
+      if (hit("#copy-badge")) return copyText(badgeMarkdown(), "README badge snippet copied");
+      if (hit("#native-share")) return nativeShare();
+      const social = hit("[data-social]");
+      if (social) return shareTo(social.dataset.social);
+      const card = hit("[data-card]");
+      if (card) return downloadCard(card.dataset.card, card.dataset.format || "png");
+    });
   }
 
   function renderResult(result, prompt, options) {
@@ -255,7 +284,6 @@
       : `<div class="hero-gap-card is-clear"><span class="gap-eyebrow">First gap to review</span><strong>No missing published control detected</strong><p>Text matches all 23 controls. That is coverage, not proof the agent obeys them.</p></div>`;
     const viralShare = `<div class="viral-share"><p class="share-lead">Share without sending your prompt</p><button class="button" id="copy-share-text" type="button">Copy share text</button>${navigator.share ? '<button class="button-secondary" id="native-share" type="button">Share…</button>' : ""}<button class="button-secondary" id="copy-result" type="button">Copy result link</button><button class="button-ghost" data-social="x" type="button">X</button><button class="button-ghost" data-social="linkedin" type="button">LinkedIn</button></div><details class="share-more"><summary>More share options</summary><div class="share-actions"><button class="button-ghost" data-social="facebook" type="button">Facebook</button><button class="button-ghost" data-social="reddit" type="button">Reddit</button><button class="button-ghost" id="copy-team" type="button">Copy for Slack/Teams</button><button class="button-ghost" id="copy-badge" type="button">Add badge to README</button></div><div class="share-actions"><button class="button-ghost" data-card="linkedin" data-format="png" type="button">Download LinkedIn PNG</button><button class="button-ghost" data-card="x" data-format="png" type="button">Download X PNG</button><button class="button-ghost" data-card="facebook" data-format="png" type="button">Download Facebook PNG</button><button class="button-ghost" data-card="square" data-format="png" type="button">Download square PNG</button><button class="button-ghost" data-card="badge" data-format="svg" type="button">Download badge SVG</button></div><p class="help">A result link includes ruleset and control IDs only; prompt text is never included.</p></details>`;
     mount.innerHTML = `<div class="result-moment${fresh ? " is-fresh" : ""}" aria-labelledby="results-heading"><div class="result-kicker">Written-control coverage</div><div class="result-fraction" aria-hidden="true"><span class="found">${found.length}</span><span class="of">of</span><span class="total">${total}</span></div><h2 id="results-heading" class="result-fraction-label">${found.length} of ${total} written guardrails found</h2><div class="coverage-meter" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="${found.length} of ${total} controls written"><span style="width:${pct}%"></span></div><p class="result-summary">${missing.length} control${missing.length === 1 ? " may" : "s may"} be missing from this text.</p>${heroCard}</div><div class="coverage-disclosure"><strong>Written-control coverage, not runtime proof.</strong> CrewScore detected text patterns; it did not test whether an agent follows them.</div><div class="result-actions">${missing.length ? '<button class="button" id="review-fixes" type="button">Review suggested wording</button>' : ""}</div><h3>Other gaps to review</h3>${gapMarkup}${viralShare}${developer}`;
-    bindResultActions(mount, result);
     if (fresh) {
       const moment = mount.querySelector(".result-moment");
       if (moment) {
@@ -286,7 +314,7 @@
     });
     renderFixReview();
     $("fix-review").hidden = false;
-    $("fix-review").scrollIntoView({ behavior: "smooth", block: "start" });
+    scrollTo($("fix-review"), "start");
     track("cs_fix_review", { dims_to_fix_count: controls.length });
   }
 
@@ -534,7 +562,7 @@
         ? `<div class="hero-gap-card"><span class="gap-eyebrow">First gap to review</span><strong>${escapeHtml(gapTitle)}</strong><p>Shared as missing. Original prompt text was not included.</p></div>`
         : `<div class="hero-gap-card is-clear"><span class="gap-eyebrow">First gap to review</span><strong>No missing controls in this share</strong><p>Original prompt text was not included.</p></div>`;
       mount.innerHTML = `<div class="result-moment is-fresh"><div class="result-kicker">Shared CrewScore result</div><div class="result-fraction" aria-hidden="true"><span class="found">${foundN}</span><span class="of">of</span><span class="total">${total}</span></div><h2 id="results-heading" class="result-fraction-label">${foundN} of ${total} written guardrails found</h2><div class="coverage-meter" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="${foundN} of ${total} controls"><span style="width:${pct}%"></span></div><p class="result-summary">${missingN} controls were shared as missing. The original instructions were not included.</p>${heroShared}</div><div class="coverage-disclosure">Written-control coverage, not runtime proof. A shared result is a historical summary, not a live scan.</div>${!current || !valid ? `<div class="warning">This result uses ${escapeHtml(shared.ruleset)} and cannot be edited or rescored here. Check your own instructions with the current rules.</div>` : ""}<button class="button" id="shared-check" type="button">Check my instructions</button>`;
-      $("shared-check").addEventListener("click", () => { $("agent-prompt").focus(); $("checker-workspace").scrollIntoView({ behavior: "smooth", block: "start" }); });
+      $("shared-check").addEventListener("click", () => { $("agent-prompt").focus(); scrollTo($("checker-workspace"), "start"); });
     } catch (_) { toast("This shared CrewScore result could not be read."); }
   }
 
@@ -632,12 +660,12 @@
       setMethod("paste");
       $("agent-prompt").value = DEMO;
       score("demo");
-      $("results")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      scrollTo($("results"), "nearest");
       track("cs_demo_started");
     });
     $("example-support").addEventListener("click", () => { setProfile("system_prompt"); setMethod("paste"); $("agent-prompt").value = SUPPORT_EXAMPLE; score("example"); });
     $("example-config").addEventListener("click", () => { setProfile("coding_agent_config"); setMethod("paste"); $("agent-prompt").value = CONFIG_EXAMPLE; score("example"); });
-    $("focus-checker").addEventListener("click", () => { $("checker-workspace").scrollIntoView({ behavior: "smooth", block: "start" }); $("agent-prompt").focus(); });
+    $("focus-checker").addEventListener("click", () => { scrollTo($("checker-workspace"), "start"); $("agent-prompt").focus(); });
     $("check-instructions").addEventListener("click", () => score("paste"));
     $("mobile-check").addEventListener("click", () => score("mobile"));
     $("load-url").addEventListener("click", loadUrl);
@@ -669,6 +697,7 @@
   setMode(readStorage(MODE_KEY) || "simple", false);
   setMethod(readStorage(METHOD_KEY) || "paste", false);
   bindEvents();
+  bindResultActions();
   $("placeholder-demo")?.addEventListener("click", () => $("try-demo").click());
   const stamp = $("build-stamp");
   if (stamp) stamp.textContent = `v${E.ENGINE?.version || ""} · ${E.ruleset || ""}`.trim();
