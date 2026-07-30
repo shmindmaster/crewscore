@@ -26,6 +26,8 @@ from crewscore.scorers.structural_analysis import analyze
         "repo/sub/AGENTS.md",
         ".github/copilot-instructions.md",
         ".cursor/rules/testing.mdc",
+        ".cursor/rules/conventions.md",  # rules dir, not only .mdc
+        ".windsurf/rules/style.md",
     ],
 )
 def test_coding_agent_config_is_recognised(path):
@@ -40,6 +42,7 @@ def test_coding_agent_config_is_recognised(path):
         "agents/triage/system.md",
         "my-agent/instructions.txt",
         "docs/notes.mdc",  # .mdc outside a config dir is not config
+        ".cursor/commands/snippet.md",  # Cursor slash commands are not config rules
     ],
 )
 def test_system_prompts_stay_governed(path):

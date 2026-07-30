@@ -1,0 +1,2775 @@
+[
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "adapters\\qoder\\agents\\implementer.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\adapters\\qoder\\agents\\implementer.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "adapters\\qoder\\agents\\reviewer.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\adapters\\qoder\\agents\\reviewer.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "adapters\\qoder\\agents\\scout.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\adapters\\qoder\\agents\\scout.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "adapters\\qoder\\agents\\verifier.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\adapters\\qoder\\agents\\verifier.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "adapters\\qwen-code\\agents\\implementer.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\adapters\\qwen-code\\agents\\implementer.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "adapters\\qwen-code\\agents\\reviewer.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\adapters\\qwen-code\\agents\\reviewer.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "adapters\\qwen-code\\agents\\scout.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\adapters\\qwen-code\\agents\\scout.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "adapters\\qwen-code\\agents\\verifier.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\adapters\\qwen-code\\agents\\verifier.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "governance_applicable": false,
+    "path": "AGENTS.md",
+    "profile": "coding_agent_config",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\AGENTS.md",
+    "tier": "CONFIG: 1 SMELL",
+    "warnings": []
+  },
+  {
+    "governance_applicable": false,
+    "path": "CLAUDE.md",
+    "profile": "coding_agent_config",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\CLAUDE.md",
+    "tier": "CONFIG: 1 SMELL",
+    "warnings": []
+  },
+  {
+    "governance_applicable": false,
+    "path": "generated\\amp\\AGENTS.md",
+    "profile": "coding_agent_config",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\generated\\amp\\AGENTS.md",
+    "tier": "CONFIG: NO SMELLS DETECTED",
+    "warnings": []
+  },
+  {
+    "governance_applicable": false,
+    "path": "generated\\claude\\CLAUDE.md",
+    "profile": "coding_agent_config",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\generated\\claude\\CLAUDE.md",
+    "tier": "CONFIG: NO SMELLS DETECTED",
+    "warnings": []
+  },
+  {
+    "governance_applicable": false,
+    "path": "generated\\codex\\AGENTS.md",
+    "profile": "coding_agent_config",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\generated\\codex\\AGENTS.md",
+    "tier": "CONFIG: NO SMELLS DETECTED",
+    "warnings": []
+  },
+  {
+    "governance_applicable": false,
+    "path": "generated\\factory\\AGENTS.md",
+    "profile": "coding_agent_config",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\generated\\factory\\AGENTS.md",
+    "tier": "CONFIG: NO SMELLS DETECTED",
+    "warnings": []
+  },
+  {
+    "governance_applicable": false,
+    "path": "generated\\gemini\\GEMINI.md",
+    "profile": "coding_agent_config",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\generated\\gemini\\GEMINI.md",
+    "tier": "CONFIG: NO SMELLS DETECTED",
+    "warnings": []
+  },
+  {
+    "governance_applicable": false,
+    "path": "generated\\grok\\AGENTS.md",
+    "profile": "coding_agent_config",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\generated\\grok\\AGENTS.md",
+    "tier": "CONFIG: NO SMELLS DETECTED",
+    "warnings": []
+  },
+  {
+    "governance_applicable": false,
+    "path": "generated\\opencode\\AGENTS.md",
+    "profile": "coding_agent_config",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\generated\\opencode\\AGENTS.md",
+    "tier": "CONFIG: NO SMELLS DETECTED",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\agents\\audio-reviewer.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\agents\\audio-reviewer.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 67,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 50,
+      "injection": 0,
+      "safe_stop": 33
+    },
+    "governance_applicable": true,
+    "overall": 18,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\agents\\product-truth-reviewer.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\agents\\product-truth-reviewer.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\agents\\story-reviewer.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\agents\\story-reviewer.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\agents\\technical-reviewer.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\agents\\technical-reviewer.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\agents\\visual-reviewer.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\agents\\visual-reviewer.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\3d.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\3d.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\audio-visualization.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\audio-visualization.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\audio.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\audio.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 33
+    },
+    "governance_applicable": true,
+    "overall": 4,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\calculate-metadata.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\calculate-metadata.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\can-decode.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\can-decode.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\charts.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\charts.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\compositions.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\compositions.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\display-captions.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\display-captions.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\effects.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "detail": "235 lines (threshold 200). Long files raise token cost and reduce adherence to the rules that matter.",
+        "deterministic": true,
+        "heuristic": ">= 200 lines",
+        "line_count": 235,
+        "name": "Context Bloat",
+        "paper_prevalence": "42% of 100 popular OSS projects",
+        "smell_id": "smell.context_bloat"
+      },
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\effects.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\extract-frames.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "detail": "229 lines (threshold 200). Long files raise token cost and reduce adherence to the rules that matter.",
+        "deterministic": true,
+        "heuristic": ">= 200 lines",
+        "line_count": 229,
+        "name": "Context Bloat",
+        "paper_prevalence": "42% of 100 popular OSS projects",
+        "smell_id": "smell.context_bloat"
+      },
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\extract-frames.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\ffmpeg.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\ffmpeg.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\get-audio-duration.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\get-audio-duration.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\get-video-dimensions.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\get-video-dimensions.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\get-video-duration.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\get-video-duration.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\gifs.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\gifs.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\google-fonts.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\google-fonts.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\html-in-canvas.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\html-in-canvas.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\images.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\images.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\import-srt-captions.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\import-srt-captions.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\light-leaks.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\light-leaks.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\local-fonts.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\local-fonts.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\lottie.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\lottie.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\map.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\map.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\mapbox.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "detail": "442 lines (threshold 200). Long files raise token cost and reduce adherence to the rules that matter.",
+        "deterministic": true,
+        "heuristic": ">= 200 lines",
+        "line_count": 442,
+        "name": "Context Bloat",
+        "paper_prevalence": "42% of 100 popular OSS projects",
+        "smell_id": "smell.context_bloat"
+      },
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\mapbox.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 33,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 4,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\maplibre.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "detail": "458 lines (threshold 200). Long files raise token cost and reduce adherence to the rules that matter.",
+        "deterministic": true,
+        "heuristic": ">= 200 lines",
+        "line_count": 458,
+        "name": "Context Bloat",
+        "paper_prevalence": "42% of 100 popular OSS projects",
+        "smell_id": "smell.context_bloat"
+      },
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\maplibre.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\measuring-dom-nodes.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\measuring-dom-nodes.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\measuring-text.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\measuring-text.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\overlay-placement.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\overlay-placement.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\parameters.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\parameters.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\sequencing.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\sequencing.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\sfx.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\sfx.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\silence-detection.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\silence-detection.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\subtitles.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\subtitles.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\tailwind.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\tailwind.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\text-animations.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\text-animations.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\timing.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\timing.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\transcribe-captions.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\transcribe-captions.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\transitions.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\transitions.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\transparent-videos.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\transparent-videos.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\trimming.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\trimming.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\video-layout.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\video-layout.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\videos.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\videos.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\voiceover.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-demo-studio\\skills\\product-demo-studio-remotion\\rules\\voiceover.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-experience-engineering\\skills\\audit-product-experience\\agents\\openai.yaml",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-experience-engineering\\skills\\audit-product-experience\\agents\\openai.yaml",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-experience-engineering\\skills\\design-agentic-experiences\\agents\\openai.yaml",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-experience-engineering\\skills\\design-agentic-experiences\\agents\\openai.yaml",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-experience-engineering\\skills\\design-new-application-experience\\agents\\openai.yaml",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-experience-engineering\\skills\\design-new-application-experience\\agents\\openai.yaml",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-experience-engineering\\skills\\design-workflows-and-features\\agents\\openai.yaml",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-experience-engineering\\skills\\design-workflows-and-features\\agents\\openai.yaml",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-experience-engineering\\skills\\discover-application\\agents\\openai.yaml",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-experience-engineering\\skills\\discover-application\\agents\\openai.yaml",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-experience-engineering\\skills\\engineer-product-experience\\agents\\openai.yaml",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-experience-engineering\\skills\\engineer-product-experience\\agents\\openai.yaml",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-experience-engineering\\skills\\implement-experience-improvements\\agents\\openai.yaml",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-experience-engineering\\skills\\implement-experience-improvements\\agents\\openai.yaml",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-experience-engineering\\skills\\measure-experience-outcomes\\agents\\openai.yaml",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-experience-engineering\\skills\\measure-experience-outcomes\\agents\\openai.yaml",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-experience-engineering\\skills\\prepare-product-for-demo\\agents\\openai.yaml",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-experience-engineering\\skills\\prepare-product-for-demo\\agents\\openai.yaml",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-experience-engineering\\skills\\specify-experience-improvements\\agents\\openai.yaml",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-experience-engineering\\skills\\specify-experience-improvements\\agents\\openai.yaml",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\handoff-plugins\\plugins\\product-experience-engineering\\skills\\validate-product-experience\\agents\\openai.yaml",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\handoff-plugins\\plugins\\product-experience-engineering\\skills\\validate-product-experience\\agents\\openai.yaml",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\portfolio-plugins\\firecrawl-ops\\skills\\firecrawl-codex-research\\agents\\openai.yaml",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\portfolio-plugins\\firecrawl-ops\\skills\\firecrawl-codex-research\\agents\\openai.yaml",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\portfolio-plugins\\firecrawl-ops\\skills\\firecrawl-monitoring\\agents\\openai.yaml",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\portfolio-plugins\\firecrawl-ops\\skills\\firecrawl-monitoring\\agents\\openai.yaml",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\portfolio-plugins\\firecrawl-ops\\skills\\firecrawl-product-integration\\agents\\openai.yaml",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\portfolio-plugins\\firecrawl-ops\\skills\\firecrawl-product-integration\\agents\\openai.yaml",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 33,
+      "citation": 0,
+      "compliance": 33,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 8,
+    "path": "packages\\portfolio-plugins\\firecrawl-ops\\skills\\firecrawl-web-ingestion\\agents\\openai.yaml",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\portfolio-plugins\\firecrawl-ops\\skills\\firecrawl-web-ingestion\\agents\\openai.yaml",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\portfolio-plugins\\use-digitalocean\\skills\\digitalocean-app-platform\\agents\\openai.yaml",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\portfolio-plugins\\use-digitalocean\\skills\\digitalocean-app-platform\\agents\\openai.yaml",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\portfolio-plugins\\use-digitalocean\\skills\\digitalocean-data-storage\\agents\\openai.yaml",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\portfolio-plugins\\use-digitalocean\\skills\\digitalocean-data-storage\\agents\\openai.yaml",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\portfolio-plugins\\use-digitalocean\\skills\\digitalocean-dns\\agents\\openai.yaml",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\portfolio-plugins\\use-digitalocean\\skills\\digitalocean-dns\\agents\\openai.yaml",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\portfolio-plugins\\use-digitalocean\\skills\\digitalocean-incident-response\\agents\\openai.yaml",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\portfolio-plugins\\use-digitalocean\\skills\\digitalocean-incident-response\\agents\\openai.yaml",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\portfolio-plugins\\use-digitalocean\\skills\\digitalocean-portfolio\\agents\\openai.yaml",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\portfolio-plugins\\use-digitalocean\\skills\\digitalocean-portfolio\\agents\\openai.yaml",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "packages\\portfolio-plugins\\use-digitalocean\\skills\\digitalocean-provision-droplet\\agents\\openai.yaml",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\packages\\portfolio-plugins\\use-digitalocean\\skills\\digitalocean-provision-droplet\\agents\\openai.yaml",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  },
+  {
+    "governance_applicable": false,
+    "path": "templates\\AGENTS.md",
+    "profile": "coding_agent_config",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\templates\\AGENTS.md",
+    "tier": "CONFIG: NO SMELLS DETECTED",
+    "warnings": []
+  },
+  {
+    "governance_applicable": false,
+    "path": "templates\\CLAUDE.md",
+    "profile": "coding_agent_config",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\templates\\CLAUDE.md",
+    "tier": "CONFIG: NO SMELLS DETECTED",
+    "warnings": []
+  },
+  {
+    "governance_applicable": false,
+    "path": "templates\\GEMINI.md",
+    "profile": "coding_agent_config",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [],
+    "source": "C:\\Repos\\shmindmaster\\agenthub\\templates\\GEMINI.md",
+    "tier": "CONFIG: NO SMELLS DETECTED",
+    "warnings": []
+  }
+]

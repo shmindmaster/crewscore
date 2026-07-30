@@ -1,0 +1,88 @@
+[
+  {
+    "governance_applicable": false,
+    "path": "v1\\AGENTS.md",
+    "profile": "coding_agent_config",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "detail": "387 lines (threshold 200). Long files raise token cost and reduce adherence to the rules that matter.",
+        "deterministic": true,
+        "heuristic": ">= 200 lines",
+        "line_count": 387,
+        "name": "Context Bloat",
+        "paper_prevalence": "42% of 100 popular OSS projects",
+        "smell_id": "smell.context_bloat"
+      }
+    ],
+    "source": "C:\\Repos\\sh-pendoah\\tellgence\\v1\\AGENTS.md",
+    "tier": "CONFIG: 1 SMELL",
+    "warnings": []
+  },
+  {
+    "governance_applicable": false,
+    "path": "v1\\apps\\admin\\AGENTS.md",
+    "profile": "coding_agent_config",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "detail": "211 lines (threshold 200). Long files raise token cost and reduce adherence to the rules that matter.",
+        "deterministic": true,
+        "heuristic": ">= 200 lines",
+        "line_count": 211,
+        "name": "Context Bloat",
+        "paper_prevalence": "42% of 100 popular OSS projects",
+        "smell_id": "smell.context_bloat"
+      }
+    ],
+    "source": "C:\\Repos\\sh-pendoah\\tellgence\\v1\\apps\\admin\\AGENTS.md",
+    "tier": "CONFIG: 1 SMELL",
+    "warnings": []
+  },
+  {
+    "governance_applicable": false,
+    "path": "v1\\apps\\api\\AGENTS.md",
+    "profile": "coding_agent_config",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [],
+    "source": "C:\\Repos\\sh-pendoah\\tellgence\\v1\\apps\\api\\AGENTS.md",
+    "tier": "CONFIG: NO SMELLS DETECTED",
+    "warnings": []
+  },
+  {
+    "governance_applicable": false,
+    "path": "v1\\apps\\web\\AGENTS.md",
+    "profile": "coding_agent_config",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [],
+    "source": "C:\\Repos\\sh-pendoah\\tellgence\\v1\\apps\\web\\AGENTS.md",
+    "tier": "CONFIG: NO SMELLS DETECTED",
+    "warnings": []
+  },
+  {
+    "governance_applicable": false,
+    "path": "v1\\CLAUDE.md",
+    "profile": "coding_agent_config",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [],
+    "source": "C:\\Repos\\sh-pendoah\\tellgence\\v1\\CLAUDE.md",
+    "tier": "CONFIG: NO SMELLS DETECTED",
+    "warnings": []
+  },
+  {
+    "governance_applicable": false,
+    "path": "v1\\GEMINI.md",
+    "profile": "coding_agent_config",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [],
+    "source": "C:\\Repos\\sh-pendoah\\tellgence\\v1\\GEMINI.md",
+    "tier": "CONFIG: NO SMELLS DETECTED",
+    "warnings": []
+  }
+]

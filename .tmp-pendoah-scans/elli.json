@@ -1,0 +1,36 @@
+[
+  {
+    "dimensions": {
+      "audit": 0,
+      "citation": 0,
+      "compliance": 0,
+      "cost": 0,
+      "hallucination": 0,
+      "human_gate": 0,
+      "injection": 0,
+      "safe_stop": 0
+    },
+    "governance_applicable": true,
+    "overall": 0,
+    "path": "mobile-app\\.cursor\\commands\\miblanchardreact-native-slider150.md",
+    "profile": "system_prompt",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "smells": [
+      {
+        "affects_score": false,
+        "approximates_paper": false,
+        "citation": "dos Santos et al., 'Configuration Smells in AGENTS.md Files' (arXiv:2606.15828)",
+        "commit_count": 1,
+        "detail": "Tracked by git with exactly one commit \u2014 never revised since creation. Init-generated guidance drifts out of date as the project moves.",
+        "deterministic": true,
+        "heuristic": "tracked by git with exactly one commit",
+        "name": "Init Fossilization",
+        "paper_prevalence": "24% of 100 popular OSS projects",
+        "smell_id": "smell.init_fossilization"
+      }
+    ],
+    "source": "C:\\Repos\\sh-pendoah\\elli\\mobile-app\\.cursor\\commands\\miblanchardreact-native-slider150.md",
+    "tier": "STRUCTURAL: CRITICAL GAPS",
+    "warnings": []
+  }
+]

@@ -1,0 +1,9 @@
+name: Copilot setup
+description: Configure the Copilot agent execution environment for this repository.
+runs:
+  using: "composite"
+  steps:
+    - name: Mark runner context
+      run: |
+        echo "repo: crewscore"
+        echo "runner-label: sh-runner-crewscore"

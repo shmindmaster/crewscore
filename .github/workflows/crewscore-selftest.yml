@@ -13,7 +13,7 @@ jobs:
     # untrusted PR code (forks, bots, or collaborators) off the persistent
     # DigitalOcean runner. Only maintainer-owned PRs are allowed here.
     if: github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == github.repository_owner)
-    runs-on: [self-hosted, Linux, X64, sh-runner, docker]
+    runs-on: [self-hosted, Linux, X64, sh-runner-crewscore, docker]
     timeout-minutes: 30
     permissions:
       contents: read
@@ -122,3 +122,4 @@ jobs:
               assert 'dimensions' not in r, name + ' was handed dimension scores'
           print('OK corpus', by, 'ungraded config', sorted(config))
           "
+
