@@ -12,7 +12,7 @@ jobs:
     # persistent self-hosted machine. Maintainer-owned PRs are the only PRs
     # permitted onto this runner.
     if: github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == github.repository_owner)
-    runs-on: [self-hosted, Linux, X64, sh-runner, docker]
+    runs-on: [self-hosted, Linux, X64, sh-runner-crewscore, docker]
     timeout-minutes: 30
     strategy:
       # One runner is allocated to CrewScore, so run the supported Python
@@ -37,7 +37,7 @@ jobs:
   browser:
     name: browser tests
     if: github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == github.repository_owner)
-    runs-on: [self-hosted, Linux, X64, sh-runner, docker]
+    runs-on: [self-hosted, Linux, X64, sh-runner-crewscore, docker]
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
@@ -53,3 +53,4 @@ jobs:
         # Firefox/WebKit do not contend for its browser resources; all browser
         # projects still run on every non-deploying validation pass.
         run: npm run test:web -- --workers=1
+

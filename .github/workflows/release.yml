@@ -44,7 +44,7 @@ jobs:
       matrix:
         include:
           - os: Linux
-            runner: '["self-hosted", "Linux", "X64", "sh-runner", "docker"]'
+            runner: '["self-hosted", "Linux", "X64", "sh-runner-crewscore", "docker"]'
           - os: Windows
             runner: '"windows-latest"'
           - os: macOS
@@ -241,3 +241,4 @@ jobs:
             git push -f origin "refs/tags/$TAG"
             echo "moved $TAG -> $REF_NAME (${{ github.sha }})"
           done
+

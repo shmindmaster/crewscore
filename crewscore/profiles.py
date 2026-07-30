@@ -86,12 +86,20 @@ def classify_path(path: str | Path | None) -> str:
     if name in _CONFIG_BASENAMES:
         return CODING_AGENT_CONFIG
 
-    # `.cursor/rules/*.mdc` and friends are coding-agent config regardless of
-    # the leaf filename, which is usually a topic name like `testing.mdc`.
-    if p.suffix.lower() == ".mdc":
-        for part in p.parts[:-1]:
-            if part.lower() in _CONFIG_DIR_NAMES:
-                return CODING_AGENT_CONFIG
+    # Tool-dir rule trees (Cursor / Windsurf / …) are coding-agent config:
+    # - any `.mdc` under `.cursor`, `.windsurf`, …
+    # - any file under `.cursor/rules/`, `.windsurf/rules/`, …
+    # Leaf names are usually topics (`testing.mdc`), not AGENTS.md.
+    parts_lower = [part.lower() for part in p.parts]
+    for i, part in enumerate(parts_lower[:-1]):
+        if part not in _CONFIG_DIR_NAMES:
+            continue
+        if p.suffix.lower() == ".mdc":
+            return CODING_AGENT_CONFIG
+        # Direct or nested under a `rules` subdirectory of the tool dir.
+        rest = parts_lower[i + 1 : -1]
+        if rest and rest[0] == "rules":
+            return CODING_AGENT_CONFIG
 
     if name == "copilot-instructions.md":
         return CODING_AGENT_CONFIG

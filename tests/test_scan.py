@@ -138,6 +138,84 @@ def test_discover_empty_repo(tmp_path: Path):
     assert discover_prompt_files(tmp_path) == []
 
 
+def test_discover_skips_local_non_product_cache_dirs(tmp_path: Path):
+    """Local-only/generated trees must not pollute scan results.
+
+    Field scan of the crewscore repo with a populated .corpus-cache scored
+    hundreds of validation fixtures as if they were product prompts. Docs list
+    these as local-only; discovery must match.
+    """
+    for dirname in (
+        ".corpus-cache",
+        "test-results",
+        "_production",
+        "_product-experience",
+    ):
+        _write(tmp_path / dirname / "prompts" / "AGENTS.md", GUARDED)
+        _write(tmp_path / dirname / "system-prompt.md", GUARDED)
+
+    real = _write(tmp_path / "AGENTS.md", BARE)
+    found = {p.resolve() for p in discover_prompt_files(tmp_path)}
+    assert found == {real.resolve()}
+    assert all(
+        part not in {".corpus-cache", "test-results", "_production", "_product-experience"}
+        for p in found
+        for part in p.parts
+    )
+
+
+def test_discover_skips_cursor_command_noise_keeps_rules(tmp_path: Path):
+    """`.cursor/commands` snippets are not agent system prompts; rules are config.
+
+    Real monorepos (e.g. elli) ship Cursor slash-command markdown under
+    `.cursor/commands/`. Scooping every file under `.cursor` grades those as
+    governed system prompts with CRITICAL GAPS — noise, not signal.
+    """
+    command = _write(
+        tmp_path / ".cursor" / "commands" / "miblanchardreact-native-slider150.md",
+        BARE,
+    )
+    rule_mdc = _write(tmp_path / ".cursor" / "rules" / "testing.mdc", BARE)
+    rule_md = _write(tmp_path / ".cursor" / "rules" / "conventions.md", BARE)
+    # Legitimate product prompt still found
+    real = _write(tmp_path / "agents" / "support.md", BARE)
+    agents_md = _write(tmp_path / "AGENTS.md", BARE)
+
+    found = {p.resolve() for p in discover_prompt_files(tmp_path)}
+    assert command.resolve() not in found
+    assert rule_mdc.resolve() in found
+    assert rule_md.resolve() in found
+    assert real.resolve() in found
+    assert agents_md.resolve() in found
+
+    by_name = {p.name: p for p in found}
+    from crewscore.profiles import CODING_AGENT_CONFIG, classify_path
+
+    assert classify_path(by_name["testing.mdc"]) == CODING_AGENT_CONFIG
+    assert classify_path(by_name["conventions.md"]) == CODING_AGENT_CONFIG
+    scored = {Path(r["path"]).name: r for r in score_paths([rule_mdc, rule_md])}
+    assert scored["testing.mdc"]["governance_applicable"] is False
+    assert scored["conventions.md"]["governance_applicable"] is False
+    assert "overall" not in scored["testing.mdc"]
+    assert "overall" not in scored["conventions.md"]
+
+
+def test_scan_cli_empty_json_is_valid_empty_array(tmp_path: Path):
+    """Zero-file scan --json must emit parseable empty array and exit non-zero.
+
+    Human-only text on stdout broke CI consumers that always parse --json.
+    Fail-closed exit remains (no silent green on empty repos).
+    """
+    (tmp_path / "src").mkdir()
+    runner = CliRunner()
+    result = runner.invoke(main, ["scan", str(tmp_path), "--json"])
+    assert result.exit_code != 0
+    assert result.exit_code == 1
+    # stdout only — stderr may hold the human message
+    payload = json.loads(result.output)
+    assert payload == []
+
+
 # ---------------------------------------------------------------------------
 # score_paths
 # ---------------------------------------------------------------------------

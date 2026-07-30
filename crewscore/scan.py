@@ -28,6 +28,9 @@ KNOWN_NAMES = frozenset(
 )
 
 # Directory names that mark a tree as containing prompt/agent files.
+# Note: bare `.cursor` is intentionally NOT listed — Cursor slash-command
+# snippets under `.cursor/commands/` are not agent system prompts. Rules still
+# match via the `rules` component (e.g. `.cursor/rules/*.mdc`).
 PROMPT_DIR_NAMES = frozenset(
     {
         "agents",
@@ -35,7 +38,6 @@ PROMPT_DIR_NAMES = frozenset(
         "prompt",
         "system-prompts",
         "system_prompts",
-        ".cursor",
         "rules",
     }
 )
@@ -44,6 +46,8 @@ PROMPT_DIR_NAMES = frozenset(
 PROMPT_DIR_EXTENSIONS = frozenset({".md", ".txt", ".yaml", ".yml", ".mdc"})
 
 # Directories never traversed during discovery.
+# Includes local-only / generated trees documented in docs/architecture.md so a
+# developer cache (e.g. .corpus-cache) cannot flood scan results.
 SKIP_DIRS = frozenset(
     {
         ".git",
@@ -57,6 +61,10 @@ SKIP_DIRS = frozenset(
         ".pytest_cache",
         "build",
         ".mypy_cache",
+        ".corpus-cache",
+        "test-results",
+        "_production",
+        "_product-experience",
     }
 )
 
@@ -78,6 +86,19 @@ def _is_under_prompt_dir(path: Path, root: Path) -> bool:
     return False
 
 
+def _is_cursor_command_noise(path: Path, root: Path) -> bool:
+    """True for Cursor slash-command markdown under `.cursor/commands/`."""
+    try:
+        relative = path.relative_to(root)
+    except ValueError:
+        relative = path
+    parts = [p.lower() for p in relative.parts[:-1]]
+    for i, part in enumerate(parts):
+        if part == ".cursor" and i + 1 < len(parts) and parts[i + 1] == "commands":
+            return True
+    return False
+
+
 def _should_include(path: Path, root: Path) -> bool:
     if not path.is_file():
         return False
@@ -85,6 +106,11 @@ def _should_include(path: Path, root: Path) -> bool:
         if path.stat().st_size > MAX_FILE_BYTES:
             return False
     except OSError:
+        return False
+
+    # Cursor command snippets are never agent system prompts, even if a known
+    # basename somehow lands there.
+    if _is_cursor_command_noise(path, root):
         return False
 
     if path.name in KNOWN_NAMES:

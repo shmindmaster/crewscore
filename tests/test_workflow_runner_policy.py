@@ -8,7 +8,7 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RUNNER = ["self-hosted", "Linux", "X64", "sh-runner", "docker"]
+RUNNER = ["self-hosted", "Linux", "X64", "sh-runner-crewscore", "docker"]
 
 
 def _workflow(name: str) -> dict:
@@ -55,7 +55,7 @@ def test_release_linux_verification_uses_digitalocean_but_publishing_stays_ephem
     verify = release["verify"]
     assert verify["runs-on"] == "${{ fromJSON(matrix.runner) }}"
     assert verify["strategy"]["matrix"]["include"] == [
-        {"os": "Linux", "runner": '["self-hosted", "Linux", "X64", "sh-runner", "docker"]'},
+        {"os": "Linux", "runner": '["self-hosted", "Linux", "X64", "sh-runner-crewscore", "docker"]'},
         {"os": "Windows", "runner": '"windows-latest"'},
         {"os": "macOS", "runner": '"macos-latest"'},
     ]

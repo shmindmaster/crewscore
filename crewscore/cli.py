@@ -1440,14 +1440,21 @@ def scan(
     files = discover_prompt_files(root)
 
     if not files:
-        err_console.print(
-            f"[red]No agent prompt files found under {root}[/red]"
-        )
-        err_console.print(
-            "[dim]Looking for AGENTS.md, CLAUDE.md, system-prompt.md, "
-            "system_prompt.md, AGENT.md, prompts.md, and files under "
-            "agents/, prompts/, or prompt/ directories.[/dim]"
-        )
+        # Machine path: stdout must be valid JSON (same array shape as a
+        # non-empty scan) so CI consumers never fail on json.loads. Human path
+        # keeps the explanatory message. Exit stays non-zero either way so
+        # empty repos fail closed.
+        if as_json:
+            click.echo("[]")
+        else:
+            err_console.print(
+                f"[red]No agent prompt files found under {root}[/red]"
+            )
+            err_console.print(
+                "[dim]Looking for AGENTS.md, CLAUDE.md, system-prompt.md, "
+                "system_prompt.md, AGENT.md, prompts.md, and files under "
+                "agents/, prompts/, or prompt/ directories.[/dim]"
+            )
         sys.exit(1)
 
     forced_profile = None if profile == "auto" else profile.lower()
