@@ -196,6 +196,19 @@ runs:
             f.write('scored={}\n'.format('true' if governed else 'false'))
             f.write(f'score={score}\n')
             f.write(f'tier={tier}\n')
+        # Gate failures become file-level annotations so the reason a check
+        # went red is visible on the PR itself, not only in the raw log.
+        for item in items:
+            details = item.get('policy') or {}
+            path = item.get('path') or 'the prompt'
+            props = f' file={path}' if item.get('path') else ''
+            props = f'{props},title=CrewScore' if props else ' title=CrewScore'
+            for control in details.get('missing_required_controls') or []:
+                print(f'::error{props}::Required control {control} not found in '
+                      f'{path}. Add the missing wording or adjust required-controls.')
+            for control in details.get('regressed_controls') or []:
+                print(f'::error{props}::Control {control} was in the baseline '
+                      f'but is gone from {path}.')
         "
         exit "$EXIT"
 
@@ -223,9 +236,19 @@ runs:
           printf '%s\n\n' "$MARKER"
           cat "$SUMMARY_PATH"
         } > "$BODY_FILE"
+        # A missing pull-requests:write permission (or a fork PR's read-only
+        # token) must degrade to a warning, not fail an otherwise-green check:
+        # the scan already ran and the summary is in the job summary.
+        PERMISSION_HINT="CrewScore could not post the sticky PR comment (no pull-requests write permission - fork PRs always run with a read-only token). The summary is still in the job summary. To enable comments on same-repo PRs, add 'permissions: pull-requests: write' to the job, or set pr-comment: 'false' to silence this warning."
         # Find existing sticky comment by marker (gh --paginate yields JSON array).
+        if ! COMMENTS_JSON=$(gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" --paginate 2>&1); then
+          echo "::warning title=CrewScore PR comment skipped::${PERMISSION_HINT}"
+          echo "$COMMENTS_JSON"
+          rm -f "$BODY_FILE"
+          exit 0
+        fi
         COMMENT_ID=$(
-          gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" --paginate \
+          printf '%s' "$COMMENTS_JSON" \
           | MARKER="$MARKER" python -c "
         import json, os, sys
         marker = os.environ['MARKER']
@@ -253,12 +276,18 @@ runs:
         print(json.dumps({'body': body}))
         " "$BODY_FILE" > "${BODY_FILE}.json"
         if [ -n "${COMMENT_ID:-}" ]; then
-          gh api --method PATCH "repos/${REPO}/issues/comments/${COMMENT_ID}" \
-            --input "${BODY_FILE}.json"
-          echo "Updated sticky PR comment id=$COMMENT_ID"
+          if gh api --method PATCH "repos/${REPO}/issues/comments/${COMMENT_ID}" \
+            --input "${BODY_FILE}.json" > /dev/null; then
+            echo "Updated sticky PR comment id=$COMMENT_ID"
+          else
+            echo "::warning title=CrewScore PR comment skipped::${PERMISSION_HINT}"
+          fi
         else
-          gh api --method POST "repos/${REPO}/issues/${PR_NUMBER}/comments" \
-            --input "${BODY_FILE}.json"
-          echo "Created sticky PR comment"
+          if gh api --method POST "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+            --input "${BODY_FILE}.json" > /dev/null; then
+            echo "Created sticky PR comment"
+          else
+            echo "::warning title=CrewScore PR comment skipped::${PERMISSION_HINT}"
+          fi
         fi
         rm -f "$BODY_FILE" "${BODY_FILE}.json"

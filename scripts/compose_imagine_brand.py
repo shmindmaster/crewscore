@@ -39,12 +39,21 @@ def load(kind: str, size: int):
     return ImageFont.load_default()
 
 
-def median() -> int | None:
+def corpus_stats() -> dict[str, int] | None:
+    """Median, production n, and total n — all read back out of the generated
+    harness report. Hand-typing any of them is how a banner ends up quoting a
+    corpus that no longer exists.
+    """
     if not CORPUS.exists():
         return None
     data = json.loads(CORPUS.read_text(encoding="utf-8"))
     try:
-        return int(data["groups"]["production"]["describe"]["median"])
+        groups = data["groups"]
+        return {
+            "median": int(groups["production"]["describe"]["median"]),
+            "production_n": int(groups["production"]["files"]),
+            "total_n": sum(int(g["files"]) for g in groups.values()),
+        }
     except Exception:
         return None
 
@@ -107,7 +116,7 @@ def composite_banner(mood_path: Path, out: Path, w: int, h: int) -> None:
     d.text((56, 340), "injection · human approval · cost · stop · and more", font=f_label, fill=DIM)
     d.text((56, 378), "Coverage of written controls — not a safety grade.", font=f_label, fill=MUTED)
 
-    med = median()
+    stats = corpus_stats()
     # right glass panel
     px0, py0, px1, py1 = w - 360, 180, w - 56, h - 100
     panel = Image.new("RGBA", (w, h), (0, 0, 0, 0))
@@ -115,11 +124,11 @@ def composite_banner(mood_path: Path, out: Path, w: int, h: int) -> None:
     pd.rounded_rectangle([px0, py0, px1, py1], radius=18, fill=(20, 32, 26, 200), outline=(111, 218, 166, 90), width=2)
     base = Image.alpha_composite(base.convert("RGBA"), panel).convert("RGB")
     d = ImageDraw.Draw(base)
-    if med is not None:
+    if stats is not None:
         d.text((px0 + 28, py0 + 28), "Production median", font=f_small, fill=DIM)
-        d.text((px0 + 28, py0 + 58), f"{med}/100", font=load("bold", 52), fill=WARN)
-        d.text((px0 + 28, py0 + 130), "among 83 production", font=f_small, fill=MUTED)
-        d.text((px0 + 28, py0 + 156), "agent prompts (356 total)", font=f_small, fill=MUTED)
+        d.text((px0 + 28, py0 + 58), f"{stats['median']}/100", font=load("bold", 52), fill=WARN)
+        d.text((px0 + 28, py0 + 130), f"among {stats['production_n']} production", font=f_small, fill=MUTED)
+        d.text((px0 + 28, py0 + 156), f"agent prompts ({stats['total_n']} total)", font=f_small, fill=MUTED)
         d.text((px0 + 28, py0 + 200), "Not a quality ranking.", font=f_small, fill=DIM)
 
     d.line([(56, h - 70), (w - 56, h - 70)], fill=(64, 81, 71), width=1)
@@ -166,7 +175,7 @@ def main():
     composite_banner(IMAGINE / "github-mood-source.jpg", OUT_BANNER, 1280, 640)
     process_icon()
     hero_full()
-    print("done controls=", CONCEPT_COUNT, "median=", median())
+    print("done controls=", CONCEPT_COUNT, "corpus=", corpus_stats())
 
 
 if __name__ == "__main__":

@@ -26,8 +26,16 @@ from crewscore.scorers.structural_analysis import (
 
 RULE_COUNT = sum(len(v) for v in SCORER_MAP.values())
 
-# Files that quote the counts to a reader.
-SURFACES = ["README.md", "index.html", "docs/validation.md", "CHANGELOG.md"]
+# Files that quote the counts to a reader. Images count: docs/demo.svg is the
+# README's hero, and it drifted to a number the scorer never produced precisely
+# because nothing in here read it.
+SURFACES = [
+    "README.md",
+    "index.html",
+    "docs/validation.md",
+    "CHANGELOG.md",
+    "docs/demo.svg",
+]
 
 
 def _read(name: str) -> str:

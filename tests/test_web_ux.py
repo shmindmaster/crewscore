@@ -79,7 +79,8 @@ def test_result_and_share_contracts_are_present_without_prompt_export():
     assert "#cs-result=" in script
     assert "navigator.share" in script
     assert "Copy for Slack/Teams" in script
-    assert "Download Facebook SVG" in script
+    assert "Download Facebook PNG" in script
+    assert "Download badge SVG" in script
     assert "JSON findings" in script
     assert "prompt text is never included" in script.lower()
 
@@ -110,7 +111,7 @@ def test_result_moment_leads_with_coverage_and_hero_gap():
     assert "result-moment" in script
     assert "coverage-meter" in script
     assert "hero-gap-card" in script
-    assert "HERO GAP" in script or "Biggest gap" in script
+    assert "First gap to review" in script
     assert "result-moment" in css
     assert "coverage-meter" in css
     assert "hero-gap-card" in css
