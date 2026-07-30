@@ -1,0 +1,1 @@
+CrewScore 0.6.1: find the written safety controls your agent prompt forgot. Offline, no API key. Find the safety rules your AI agent prompt forgot. https://crewscore.ai

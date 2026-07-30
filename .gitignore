@@ -14,6 +14,9 @@ agent-guard-report-*.html
 .worktrees/
 _product-experience/
 _production/
+# Generated distribution drafts may be committed under docs/dist-pack;
+# keep ad-hoc local variants out of the tree.
+_dist-pack/
 docs/superpowers/
 docs/research/
 docs/launch/
