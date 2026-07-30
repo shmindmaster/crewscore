@@ -1,0 +1,27 @@
+{
+  "automation_policy": {
+    "category_vocab": "configuration-smells-and-written-controls",
+    "gate0": "community-credibility-default",
+    "merge": "required-ci-checks-and-owner-automerge",
+    "pmf_interviews": "canceled"
+  },
+  "corpus": {
+    "groups": {
+      "gpt_store": {
+        "files": 273,
+        "median": 0
+      },
+      "production": {
+        "files": 83,
+        "median": 14
+      }
+    },
+    "present": true
+  },
+  "generated_utc": "2026-07-30T00:12:24.753634+00:00",
+  "github": null,
+  "method": "repo-facts + optional public APIs; replaces interview PMF backlog",
+  "package_version": "0.6.1",
+  "pypi": null,
+  "ruleset": "crewscore-hygiene@0.5.0"
+}
