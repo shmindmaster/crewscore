@@ -155,6 +155,7 @@ test("sanitized result links and SVG cards exclude the original instructions", a
   const copied = await page.evaluate(() => window.__copiedResult);
   expect(copied).toContain("#cs-result=");
   expect(copied).not.toContain("SENTINEL_PROMPT_CONTENT_NEVER_SHARE");
+  await page.locator(".share-more summary").click();
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download LinkedIn SVG" }).click();
   const download = await downloadPromise;

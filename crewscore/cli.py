@@ -1493,8 +1493,15 @@ def scan(
         baseline=baseline,
         fail_on_regression=fail_on_regression,
     )
-    files = discover_prompt_files(root)
+    oversized: list[Path] = []
+    files = discover_prompt_files(root, oversized=oversized)
     inlines = discover_inline_prompt_sources(root) if include_inline else []
+    if oversized and not as_json:
+        for skipped in oversized:
+            err_console.print(
+                f"[yellow]Skipped {skipped} — larger than 500KB. "
+                "Score it directly with crewscore test --prompt-file.[/yellow]"
+            )
 
     if not files and not inlines:
         # Machine path: stdout must be valid JSON (same array shape as a
@@ -1794,6 +1801,18 @@ def scan(
                         f"  [red]Regression failure: {item['path']} "
                         f"lost {', '.join(regressions)}[/red]"
                     )
+    elif not as_json:
+        gated = sorted(
+            {
+                control
+                for item in scored
+                for control in item.get("policy", {}).get("required_controls") or []
+            }
+        )
+        if gated:
+            err_console.print(
+                f"  [green]Required controls present:[/green] {', '.join(gated)}"
+            )
 
     if failed:
         sys.exit(2)

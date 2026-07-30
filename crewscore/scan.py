@@ -107,7 +107,10 @@ def _should_include(path: Path, root: Path) -> bool:
             return False
     except OSError:
         return False
+    return _matches_prompt_conventions(path, root)
 
+
+def _matches_prompt_conventions(path: Path, root: Path) -> bool:
     # Cursor command snippets are never agent system prompts, even if a known
     # basename somehow lands there.
     if _is_cursor_command_noise(path, root):
@@ -137,7 +140,9 @@ def _should_include(path: Path, root: Path) -> bool:
     return False
 
 
-def discover_prompt_files(root: Path) -> list[Path]:
+def discover_prompt_files(
+    root: Path, *, oversized: list[Path] | None = None
+) -> list[Path]:
     """Find likely agent instruction / system-prompt files under root.
 
     Discovers:
@@ -147,6 +152,10 @@ def discover_prompt_files(root: Path) -> list[Path]:
 
     Skips excluded directories, files larger than 500KB, and depth beyond
     MAX_DEPTH. Returns sorted unique absolute paths.
+
+    `oversized`, when provided, collects files that match the discovery
+    conventions but were skipped only for exceeding MAX_FILE_BYTES, so the
+    caller can tell the user instead of dropping them silently.
     """
     root = Path(root).resolve()
     if not root.is_dir():
@@ -173,6 +182,12 @@ def discover_prompt_files(root: Path) -> list[Path]:
                 elif entry.is_file():
                     if _should_include(entry, root):
                         found.add(entry.resolve())
+                    elif (
+                        oversized is not None
+                        and entry.stat().st_size > MAX_FILE_BYTES
+                        and _matches_prompt_conventions(entry, root)
+                    ):
+                        oversized.append(entry.resolve())
             except OSError:
                 continue
 

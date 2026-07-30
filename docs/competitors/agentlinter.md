@@ -1,6 +1,6 @@
 # Competitive matrix: CrewScore vs AgentLinter
 
-Generated: `2026-07-29` · method: public-docs-and-live-crewscore-metadata; no interviews
+Generated: `2026-07-30` · method: public-docs-and-live-crewscore-metadata; no interviews
 
 | | CrewScore | AgentLinter |
 | --- | --- | --- |

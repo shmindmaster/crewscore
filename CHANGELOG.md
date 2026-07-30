@@ -16,7 +16,34 @@ install them, and do not compare their numbers to these.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Internal scan dumps removed from the public tree** (`.tmp-pendoah-scans/`,
+  now gitignored) — they were CrewScore self-scan output over unrelated local
+  repositories and should never have been published.
+- `scan` no longer drops files over 500KB silently; it now says which file it
+  skipped and how to score it directly with `crewscore test --prompt-file`.
+- `scan --require` prints a confirmation line when every required control is
+  present, instead of passing silently.
+- Corrected the described sample size of the configuration-smells study
+  (arXiv:2606.15828) in `docs/validation.md` and an old changelog entry: the
+  paper's corpus is 100 popular projects, not 2,000. All other quoted figures
+  were already consistent.
+- Regenerated `docs/validation-corpus.md` and `examples/corpus/LEADERBOARD.md`
+  stamps (ruleset `@0.6.0`, no numeric changes) so the committed reports match
+  a fresh harness run again.
+- Browser share tests expand the collapsed "More share options" disclosure, so
+  the assertion that downloaded SVG cards exclude prompt text runs again;
+  refreshed the stale share-card snapshot from the viral-result-moment copy
+  change.
+
 ### Improved
+
+- X and LinkedIn share buttons moved out of the collapsed disclosure into the
+  primary share row; badge markdown now explains where `crewscore-result.svg`
+  comes from.
+- README embeds the terminal demo GIF; sitemap gained `lastmod`; the site
+  declares `og:site_name`; dependabot now watches pip, npm, and Actions.
 
 - **Browser UX (viral result moment):** large **N/23** coverage meter, **Biggest gap**
   hero card, product paths (ChatGPT / Claude / Cursor / Other), corpus shock
@@ -391,7 +418,7 @@ arithmetic.
   designed to earn. Classification is by filename/path only — content sniffing
   is deliberately not done.
 - **Configuration-smell detectors** (Context Bloat, Init Fossilization, Lint
-  Leakage), replicating published work on a 2,000-repository corpus
+  Leakage), replicating published work on a 100-repository corpus
   ([arXiv:2606.15828](https://arxiv.org/abs/2606.15828)). Advisory only — never
   folded into any score.
 - **`--max-smells`** gate, on the CLI and as an Action input. This is the gate

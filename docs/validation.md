@@ -192,7 +192,7 @@ total.
 
 The **configuration-smell detectors** (Context Bloat, Init Fossilization, Lint
 Leakage) are a separate feature replicating published work on a
-2,000-repository corpus. They are advisory, never folded into any score, and
+100-repository corpus of popular OSS projects. They are advisory, never folded into any score, and
 nothing here bears on them.
 
 ---

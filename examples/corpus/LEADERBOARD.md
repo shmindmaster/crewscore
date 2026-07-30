@@ -4,8 +4,8 @@ Synthetic fixtures representing common agent-prompt shapes (bare demo → partia
 
 > **These are fixtures, not evidence.** They were written to exercise the rules, which is why the top one scores well. The reproducible public validation corpus contains 356 prompts (83 production-agent and 273 general-purpose); it supports coverage observations, not a quality ranking. Read [`docs/validation.md`](../../docs/validation.md) before reading anything into a number here.
 
-- **Ruleset:** `crewscore-hygiene@0.5.0`
-- **Generated:** 2026-07-28
+- **Ruleset:** `crewscore-hygiene@0.6.0`
+- **Generated:** 2026-07-30
 - **Command:** `crewscore scan examples/corpus`
 - **Regenerate:** `python scripts/score_corpus.py`
 

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://crewscore.ai/</loc></url>
-  <url><loc>https://crewscore.ai/privacy.html</loc></url>
-  <url><loc>https://crewscore.ai/security.html</loc></url>
-  <url><loc>https://crewscore.ai/vendor-checklist/</loc></url>
-  <url><loc>https://crewscore.ai/docs/</loc></url>
-  <url><loc>https://crewscore.ai/rules/</loc></url>
-  <url><loc>https://crewscore.ai/guides/ai-agent-prompt-checker/</loc></url>
+  <url><loc>https://crewscore.ai/</loc><lastmod>2026-07-30</lastmod></url>
+  <url><loc>https://crewscore.ai/privacy.html</loc><lastmod>2026-07-30</lastmod></url>
+  <url><loc>https://crewscore.ai/security.html</loc><lastmod>2026-07-30</lastmod></url>
+  <url><loc>https://crewscore.ai/vendor-checklist/</loc><lastmod>2026-07-30</lastmod></url>
+  <url><loc>https://crewscore.ai/docs/</loc><lastmod>2026-07-30</lastmod></url>
+  <url><loc>https://crewscore.ai/rules/</loc><lastmod>2026-07-30</lastmod></url>
+  <url><loc>https://crewscore.ai/guides/ai-agent-prompt-checker/</loc><lastmod>2026-07-30</lastmod></url>
 </urlset>

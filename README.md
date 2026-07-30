@@ -35,6 +35,8 @@ of 100.** GPT-Store median: 0.
 
 **Try it live, no install:** [crewscore.ai](https://crewscore.ai)
 
+<img src="docs/hero-demo.gif" alt="Terminal demo: crewscore test reports 8 of 23 written guardrails found, with the biggest gap — a human must approve — and the CI command to gate on it" width="720">
+
 </div>
 
 ```bash

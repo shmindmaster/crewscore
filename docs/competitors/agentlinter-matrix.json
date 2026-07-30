@@ -50,8 +50,8 @@
     "CrewScore score is equal-weight coverage of 23 controls unless corpus automation changes it.",
     "Neither product replaces runtime enforcement or live red-teaming."
   ],
-  "generated": "2026-07-29",
-  "generated_utc": "2026-07-30T04:31:26.315745+00:00",
+  "generated": "2026-07-30",
+  "generated_utc": "2026-07-30T07:42:22.601575+00:00",
   "method": "public-docs-and-live-crewscore-metadata; no interviews",
   "online": false
 }
