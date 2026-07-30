@@ -242,7 +242,11 @@ dialog::backdrop { background: rgb(0 0 0 / 45%); }
 .dialog-head { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
 
 .mobile-action { display: none; }
-.toast { position: fixed; right: 18px; bottom: 18px; z-index: 20; max-width: min(420px, calc(100% - 36px)); border: 1px solid var(--border); border-radius: 9px; background: var(--surface); box-shadow: var(--shadow); padding: 11px 14px; color: var(--text); }
+/* pointer-events: none because this is an announcement, not a control. It is
+   fixed over the bottom-right corner for three seconds and holds nothing you
+   can click, so without this it silently swallows clicks on the content it
+   happens to cover. */
+.toast { position: fixed; right: 18px; bottom: 18px; z-index: 20; pointer-events: none; max-width: min(420px, calc(100% - 36px)); border: 1px solid var(--border); border-radius: 9px; background: var(--surface); box-shadow: var(--shadow); padding: 11px 14px; color: var(--text); }
 body[data-mode="simple"] .developer-only { display: none !important; }
 
 @media (max-width: 840px) {
