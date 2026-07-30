@@ -34,16 +34,29 @@
       <section class="hero" id="product" aria-labelledby="hero-title">
         <p class="eyebrow">Browser-local guardrail checklist</p>
         <h1 id="hero-title">Find the safety rules your AI agent prompt forgot.</h1>
-        <p class="hero-copy">Paste your AI instructions. CrewScore checks them against 23 public guardrail controls directly in your browser - no prompt upload, signup, API key, or model call.</p>
+        <p class="hero-copy">Paste your AI instructions. CrewScore checks them against 23 public guardrail controls in your browser — no prompt upload, signup, API key, or model call.</p>
         <div class="hero-actions"><button class="button" id="try-demo" type="button">Try a 10-second demo</button><button class="button-secondary" id="focus-checker" type="button">Check my instructions</button></div>
-        <div class="trust-chips" aria-label="Trust signals"><span class="chip">Runs locally</span><span class="chip">23 public controls</span><span class="chip">Open source</span></div>
-        <p class="always-visible"><strong>Written-control coverage, not runtime proof.</strong> It checks whether guardrails are written down - not whether an agent follows them.</p>
+        <div class="trust-chips" aria-label="Trust signals"><span class="chip">Runs locally</span><span class="chip">23 public controls</span><span class="chip">Open source</span><span class="chip">No API key</span></div>
+        <p class="always-visible"><strong>Written-control coverage, not runtime proof.</strong> It checks whether guardrails are written down — not whether an agent follows them.</p>
       </section>
+
+      <aside class="shock-strip" id="shock-strip" aria-label="Measured corpus finding">
+        <p class="shock-stat"><strong>10/100</strong> median coverage among <strong>83 production</strong> agent prompts</p>
+        <p class="shock-note">356 prompts scored offline · not a quality ranking · <a href="docs/validation-corpus.md">method &amp; harness</a></p>
+      </aside>
 
       <section class="workspace" id="checker-workspace" aria-label="AI instructions checker">
         <div class="workspace-grid">
           <section class="panel" aria-labelledby="input-heading">
             <div class="panel-heading"><h2 id="input-heading">What are you checking?</h2><button class="button-ghost" id="where-find" type="button">Where do I find my instructions?</button></div>
+            <div class="product-paths" id="product-paths" role="group" aria-label="Where your instructions live">
+              <span class="paths-label">I use</span>
+              <button class="path-chip" type="button" data-path="chatgpt">ChatGPT</button>
+              <button class="path-chip" type="button" data-path="claude">Claude</button>
+              <button class="path-chip" type="button" data-path="cursor">Cursor</button>
+              <button class="path-chip" type="button" data-path="other">Other / paste</button>
+            </div>
+            <p class="help path-hint" id="path-hint">Pick where your AI instructions live — or paste them below.</p>
             <div class="method-tabs" aria-label="Input methods"><button class="method-button is-active" type="button" data-method="paste">Paste instructions</button><button class="method-button" type="button" id="choose-file">Upload a local file</button><button class="method-button" type="button" id="focus-url">Import a public GitHub file</button></div>
             <input id="prompt-file" type="file" accept=".md,.mdc,.txt,text/plain,text/markdown" hidden>
             <div id="drop-zone" class="drop-zone">Drop a local text file here, or <button type="button" id="drop-choose">choose a file</button>. It stays on this device.</div>
@@ -80,7 +93,7 @@
     <footer class="footer"><p><strong>Scoring happens locally. Your prompt text never leaves your browser.</strong> Anonymous allowlisted usage events exclude prompt text; <a href="privacy.html">read privacy details</a>.</p><p>Use <label style="display:inline;font:inherit"><input id="analytics-opt-out" type="checkbox"> disable anonymous usage events on this device</label>.</p><p><code>pip install crewscore</code> · <code>uses: shmindmaster/crewscore@v2</code> · <a href="security.html">Security</a> · <a href="https://github.com/shmindmaster/crewscore">GitHub</a></p></footer>
   </div>
   <div class="mobile-action"><button class="button" id="mobile-check" type="button">Find missing guardrails</button></div>
-  <dialog id="find-instructions-dialog" aria-labelledby="find-dialog-title"><div class="dialog-head"><h2 id="find-dialog-title">Where to find AI instructions</h2><button class="button-ghost" id="close-find" type="button">Close</button></div><p><strong>ChatGPT:</strong> Settings → Personalization → Custom Instructions.</p><p><strong>Claude:</strong> open a Project and edit its instructions.</p><p><strong>Teams or apps:</strong> look for a system prompt, assistant setup, or AI instructions field. Copy only instructions you are allowed to inspect.</p></dialog>
+  <dialog id="find-instructions-dialog" aria-labelledby="find-dialog-title"><div class="dialog-head"><h2 id="find-dialog-title">Where to find AI instructions</h2><button class="button-ghost" id="close-find" type="button">Close</button></div><div id="find-dialog-body"><p><strong>ChatGPT:</strong> Settings → Personalization → Custom Instructions. Copy the custom instructions text.</p><p><strong>Claude:</strong> open a Project → Project instructions (or Claude.ai custom instructions). Copy the instruction text.</p><p><strong>Cursor:</strong> open <code>AGENTS.md</code>, <code>.cursorrules</code>, or project rules in the repo root. Coding-agent files are scored for config smells, not a governance grade.</p><p><strong>Teams or apps:</strong> look for a system prompt, assistant setup, or AI instructions field. Copy only text you are allowed to inspect.</p></div></dialog>
   <div id="toast" role="status" aria-live="polite" hidden></div>
   <script src="score-engine.js"></script><script src="assets/demo-fixture.js"></script><script src="analytics.js"></script><script src="assets/site.js"></script>
 </body>

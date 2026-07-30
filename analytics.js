@@ -20,6 +20,7 @@
     "cs_fix_review",
     "cs_mode_change",
     "cs_share",
+    "cs_product_path",
   ]);
   const ALLOWED_PROPERTIES = new Set([
     "source",
@@ -32,6 +33,8 @@
     "kind",
     "controls_found",
     "mode",
+    "path",
+    "product_path",
   ]);
 
   function isOptedOut() {
@@ -93,7 +96,7 @@
         distinct_id: anonymousId(),
         $process_person_profile: false,
         product: "crewscore",
-        schema_version: "2026-07-28",
+        schema_version: "2026-07-30",
         ...safeProperties(properties),
       },
     });

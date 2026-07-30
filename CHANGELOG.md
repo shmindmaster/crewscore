@@ -14,6 +14,17 @@ install them, and do not compare their numbers to these.
 
 ---
 
+## [Unreleased]
+
+### Improved
+
+- **Browser UX (viral result moment):** large **N/23** coverage meter, **Biggest gap**
+  hero card, product paths (ChatGPT / Claude / Cursor / Other), corpus shock
+  strip (production-scoped 10/100), primary **Copy share text**, and share
+  cards that lead with coverage + hero gap — still coverage, not a safety grade.
+
+---
+
 ## [0.6.2] — 2026-07-30 — viral wedge + ruleset 0.6.0 validity
 
 ### Scoring (ruleset `crewscore-hygiene@0.6.0`)

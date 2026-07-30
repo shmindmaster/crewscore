@@ -89,3 +89,48 @@ def test_copy_fallback_is_not_held_by_a_stuck_browser_clipboard_api():
     assert "writeClipboardWithFallbackTimeout" in script
     assert "Clipboard write timed out." in script
     assert "await writeClipboardWithFallbackTimeout(value)" in script
+
+
+def test_non_dev_product_paths_are_first_class():
+    """ChatGPT / Claude / Cursor paths beat a blank paste box for first-run."""
+    html = _html()
+    assert 'id="product-paths"' in html
+    assert "ChatGPT" in html
+    assert "Claude" in html
+    assert "Cursor" in html
+    script = (ROOT / "assets" / "site.js").read_text(encoding="utf-8")
+    assert "PRODUCT_PATHS" in script
+    assert "chatgpt" in script.lower()
+
+
+def test_result_moment_leads_with_coverage_and_hero_gap():
+    """Viral result: N/23 + one hero gap above the fold of the result panel."""
+    script = (ROOT / "assets" / "site.js").read_text(encoding="utf-8")
+    css = (ROOT / "assets" / "site.css").read_text(encoding="utf-8")
+    assert "result-moment" in script
+    assert "coverage-meter" in script
+    assert "hero-gap-card" in script
+    assert "HERO GAP" in script or "Biggest gap" in script
+    assert "result-moment" in css
+    assert "coverage-meter" in css
+    assert "hero-gap-card" in css
+    # Still not a quality grade ring
+    assert "score-ring" not in script
+    assert "STRUCTURAL: CRITICAL GAPS" not in script
+
+
+def test_share_copy_leads_with_shock_not_jargon():
+    script = (ROOT / "assets" / "site.js").read_text(encoding="utf-8")
+    assert "shareText" in script
+    assert "of 23 written controls" in script or "of ${total} written" in script
+    assert "not runtime proof" in script.lower()
+    assert "Copy share text" in script or "copy-share-text" in script
+
+
+def test_corpus_shock_strip_is_honest_and_scoped():
+    """Homepage may cite the corpus, but only with production-scoped median."""
+    html = _html()
+    assert 'id="shock-strip"' in html
+    assert "10/100" in html or "10 of 100" in html
+    assert "production" in html.lower()
+    assert "not a quality ranking" in html.lower() or "not runtime" in html.lower()

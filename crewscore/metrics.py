@@ -12,7 +12,7 @@ import time
 from typing import Any
 
 # Bump when allowlists change; analytics.js must carry the same string.
-SCHEMA_VERSION = "2026-07-28"
+SCHEMA_VERSION = "2026-07-30"
 
 # Keys that must never appear in metrics payloads (case-insensitive).
 FORBIDDEN_PROP_KEYS = frozenset(
@@ -41,6 +41,7 @@ ALLOWED_EVENTS = frozenset(
         "cs_fix_review",
         "cs_mode_change",
         "cs_share",
+        "cs_product_path",
     }
 )
 
@@ -57,6 +58,8 @@ ALLOWED_PROPERTIES = frozenset(
         "kind",
         "controls_found",
         "mode",
+        "path",
+        "product_path",
     }
 )
 
