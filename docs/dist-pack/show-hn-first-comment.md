@@ -1,4 +1,4 @@
-CrewScore (0.6.2) is an offline, deterministic checker for AI agent system
+CrewScore (0.6.3) is an offline, deterministic checker for AI agent system
 prompts and coding-agent config (AGENTS.md smells).
 
 What it is:

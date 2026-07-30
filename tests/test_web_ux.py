@@ -79,7 +79,8 @@ def test_result_and_share_contracts_are_present_without_prompt_export():
     assert "#cs-result=" in script
     assert "navigator.share" in script
     assert "Copy for Slack/Teams" in script
-    assert "Download Facebook SVG" in script
+    assert "Download Facebook PNG" in script
+    assert "Download badge SVG" in script
     assert "JSON findings" in script
     assert "prompt text is never included" in script.lower()
 

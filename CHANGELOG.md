@@ -14,7 +14,9 @@ install them, and do not compare their numbers to these.
 
 ---
 
-## [Unreleased]
+## [0.6.3] — 2026-07-30 — launch hardening
+
+No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
 
 ### Fixed
 

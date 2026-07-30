@@ -798,13 +798,14 @@ def test_python_m_crewscore_entry_exists():
     assert callable(module.main)
 
 
-def test_version_is_0_5_1():
-    """This release breaks the --json payload shape and `fix` exit codes;
-    semver requires a minor bump, not the previous 0.3.1 patch bump.
+def test_version_matches_release():
+    """Pin the package version so a release cut cannot forget the bump; the
+    0.6 line broke the --json payload shape and `fix` exit codes, hence the
+    minor bump over the previous 0.3.1 patch line.
     """
     from crewscore import __version__
 
-    assert __version__ == "0.6.2"
+    assert __version__ == "0.6.3"
 
 
 def test_fix_plan_json_lists_dimensions_without_writing(tmp_path: Path):

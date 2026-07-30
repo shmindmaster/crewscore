@@ -1,6 +1,6 @@
 CI that fails when your agent prompt never says “a human must approve.”
 
-CrewScore 0.6.2 scores whether published guardrails are written down —
+CrewScore 0.6.3 scores whether published guardrails are written down —
 injection defense, human approval, stop conditions, and more — for system
 prompts and coding-agent config.
 

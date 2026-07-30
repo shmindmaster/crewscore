@@ -13,7 +13,7 @@ Generated: `2026-07-30` · method: public-docs-and-live-crewscore-metadata; no i
 | Config smells path | True | (workspace lint framing) |
 | Live adversarial | False | (not claimed here) |
 | Certification claim | False | (not claimed here) |
-| CrewScore package | `0.6.2` · `crewscore-hygiene@0.6.0` · 23 controls | — |
+| CrewScore package | `0.6.3` · `crewscore-hygiene@0.6.0` · 23 controls | — |
 
 ## Differentiation
 
