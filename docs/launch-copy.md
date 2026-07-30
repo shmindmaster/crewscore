@@ -210,6 +210,59 @@ the launch buys.
   is assigned by source repo, not by inspection.
 - *"10/100 sounds like a made-up number."* Run the harness. One command, pinned
   SHAs, writes its own report.
+- *"Static guardrails were just proven insufficient."* The impossibility
+  results are about runtime robustness of guardrail *filters* against
+  adversaries. CrewScore is a documentation checker — the layer NIST AI RMF
+  and ISO 42001 audits actually ask about is whether controls are written
+  down at all. Pair it with runtime enforcement; the README says the same.
+- *"AgentLinter already does this."* There are two products named AgentLinter
+  (an indie CLI and Codacy's scanner). Both lint coding-agent *config* files
+  for hygiene — useful, adjacent, different artifact. Neither checks whether
+  an agent *system prompt* ever states a human-approval gate, a cost ceiling,
+  or a stop condition. Comparison is in `docs/comparison.md`.
+- *"How will you maintain the rules as attacks evolve?"* The 23 controls track
+  slow-moving governance requirements, not attack signatures — "a human must
+  approve" does not rot the way an injection payload list does. The ruleset is
+  versioned (`crewscore-hygiene@0.6.0`), and corpus regression tests gate every
+  pattern change against measured false positives.
+- *"I can paste boilerplate and score 100."* Yes — a checklist is satisfied by
+  writing the thing down, and writing it down is the point. The pasted control
+  now exists in a PR diff where a reviewer can judge whether it's real. The
+  score cannot tell sincere from pasted; that's why we say don't rank prompts
+  with it.
+
+---
+
+## Demo scripts
+
+**30 seconds (terminal only).**
+
+1. (0-5s) Blank terminal: `pip install crewscore` — cut to installed.
+2. (5-15s) `crewscore test --prompt-file system-prompt.md` on a real-looking
+   agent prompt → scorecard renders: **8/23 written**, hero gap
+   `A human must approve`.
+3. (15-25s) Say/caption: "This prompt never says a human must approve
+   anything. Most don't — median production coverage is 10/100."
+4. (25-30s) `crewscore scan . --require human_gate.approval_required` → exit 2,
+   red line. Caption: "Now CI fails until you write it down. Offline, no API
+   key. crewscore.ai"
+
+**60-90 seconds (terminal + browser).**
+
+1. (0-10s) Hook: "We scanned 356 real agent system prompts. Median production
+   coverage of 23 written safety controls: 10 out of 100."
+2. (10-25s) Browser at crewscore.ai: paste a prompt, result renders locally —
+   coverage meter, biggest gap. "Nothing is uploaded; scoring runs in the tab."
+3. (25-45s) Terminal: `crewscore scan .` on a repo with `AGENTS.md` + a
+   `prompts/` dir — show it classifying config vs system prompt differently
+   ("config gets smells, not a governance grade — scoring your AGENTS.md
+   against HIPAA language is a category error").
+4. (45-60s) `crewscore fix --prompt-file ... --plan` → the missing-control
+   plan; paste one suggested control in, re-run, coverage moves 8→9.
+5. (60-75s) GitHub Action YAML + a PR with the sticky comment; `--require
+   human_gate.approval_required` failing red, then green after the edit.
+6. (75-90s) Close: "Coverage, not a safety grade. It tells you what you never
+   wrote down — the rest is still your job. MIT, offline, crewscore.ai."
 
 ---
 
