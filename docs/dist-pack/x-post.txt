@@ -1,1 +1,0 @@
-CrewScore 0.6.2: find the written safety controls your agent prompt forgot. Offline, no API key. CI that fails when your agent prompt never says “a human must approve.” https://crewscore.ai

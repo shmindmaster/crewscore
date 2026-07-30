@@ -98,8 +98,7 @@ Breaking any of them needs a minor version bump and CHANGELOG entry.
 | `docs/demo.svg` | Lightweight README/diagram asset | Keep in repo |
 | `docs/social-card.png` | OG / Twitter / GitHub link preview (1200×630) | **Generate** via `py scripts/make_social_card.py` |
 | `docs/github-banner.png` | README hero banner (1280×640) | Same script |
-| `docs/dist-pack/corpus-card.svg` | Shareable corpus shock card | `py scripts/generate_corpus_card.py` |
-| `docs/hero-demo.gif`, `docs/hero-demo.mp4` | Marketing hero motion | Keep for product demo; large binaries (~3.4 MB). Prefer SVG/poster for new embeds when possible |
+| `docs/corpus-card.svg` | Shareable corpus shock card | `py scripts/generate_corpus_card.py` |
 | `demo/release-demo/` | Storyboard / truth sheet for release videos | Keep; not part of the Python package |
 | `scripts/demo/` | Capture/render helpers for release demos | Keep; optional Node pipeline |
 

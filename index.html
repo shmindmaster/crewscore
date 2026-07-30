@@ -31,7 +31,7 @@
       <a class="brand" href="./" aria-label="CrewScore home"><img class="brand-mark" src="assets/brand/logo-mark.svg" width="34" height="34" alt=""><span>CrewScore</span></a>
       <nav class="site-nav" aria-label="Primary navigation">
         <a href="#product">Product</a><a href="#examples">Examples</a><a href="#rules">Rules</a><a href="#ci">CI</a><a href="#methodology">Methodology</a>
-        <a href="vendor-checklist/">Vendor checklist</a><a href="https://github.com/shmindmaster/crewscore">GitHub</a>
+        <a href="https://github.com/shmindmaster/crewscore">GitHub</a>
         <button class="mode-toggle" id="mode-toggle" type="button" aria-pressed="false">Developer mode</button>
       </nav>
     </header>
@@ -63,27 +63,33 @@
               <button class="path-chip" type="button" data-path="other">Other / paste</button>
             </div>
             <p class="help path-hint" id="path-hint">Pick where your AI instructions live — or paste them below.</p>
-            <div class="method-tabs" aria-label="Input methods"><button class="method-button is-active" type="button" data-method="paste">Paste instructions</button><button class="method-button" type="button" id="choose-file">Upload a local file</button><button class="method-button" type="button" id="focus-url">Import a public GitHub file</button></div>
+            <div class="method-tabs" role="tablist" aria-label="Input methods"><button class="method-button is-active" role="tab" aria-selected="true" aria-controls="method-panel-paste" type="button" data-method="paste">Paste instructions</button><button class="method-button" role="tab" aria-selected="false" aria-controls="method-panel-upload" type="button" data-method="upload">Upload a local file</button><button class="method-button" role="tab" aria-selected="false" aria-controls="method-panel-url" type="button" data-method="url">Import a public GitHub file</button></div>
             <input id="prompt-file" type="file" accept=".md,.mdc,.txt,text/plain,text/markdown" hidden>
-            <div id="drop-zone" class="drop-zone">Drop a local text file here, or <button type="button" id="drop-choose">choose a file</button>. It stays on this device.</div>
             <div class="developer-only profile-picker" aria-label="Technical artifact type">
               <label><input type="radio" name="artifact-type" value="system_prompt" checked> System prompt / AI instructions</label>
               <label><input type="radio" name="artifact-type" value="coding_agent_config"> Coding-agent instructions</label>
             </div>
-            <label for="agent-prompt">AI assistant instructions</label>
-            <p class="help">Paste ChatGPT custom instructions, a Claude Project prompt, a support-bot prompt, or another system prompt.</p>
-            <textarea id="agent-prompt" spellcheck="false" placeholder="Paste your AI assistant instructions here..."></textarea>
-            <div class="url-row"><input id="prompt-url" type="url" inputmode="url" placeholder="https://github.com/owner/repo/blob/main/prompt.md"><button class="button-secondary" id="load-url" type="button">Import GitHub file</button></div>
-            <p class="help">Supported: public <code>github.com/.../blob/...</code> and <code>raw.githubusercontent.com</code> files only.</p>
+            <div id="method-panel-paste" role="tabpanel" aria-label="Paste instructions">
+              <label for="agent-prompt">AI assistant instructions</label>
+              <p class="help">Paste ChatGPT custom instructions, a Claude Project prompt, a support-bot prompt, or another system prompt.</p>
+              <textarea id="agent-prompt" spellcheck="false" placeholder="Paste your AI assistant instructions here..."></textarea>
+            </div>
+            <div id="method-panel-upload" role="tabpanel" aria-label="Upload a local file" hidden>
+              <div id="drop-zone" class="drop-zone">Drop a local text file here, or <button type="button" id="drop-choose">choose a file</button>. It stays on this device.</div>
+            </div>
+            <div id="method-panel-url" role="tabpanel" aria-label="Import a public GitHub file" hidden>
+              <div class="url-row"><input id="prompt-url" type="url" inputmode="url" placeholder="https://github.com/owner/repo/blob/main/prompt.md"><button class="button-secondary" id="load-url" type="button">Import GitHub file</button></div>
+              <p class="help">Supported: public <code>github.com/.../blob/...</code> and <code>raw.githubusercontent.com</code> files only.</p>
+            </div>
             <div class="input-actions"><button class="button" id="check-instructions" type="button">Find missing guardrails</button><span class="quiet">Scoring happens locally.</span></div>
             <p class="status-message" id="input-status" role="alert"></p>
           </section>
 
           <section class="panel" id="results" aria-live="polite" aria-labelledby="results-heading">
-            <div class="placeholder"><h2 id="results-heading">Your result will appear here</h2><p>Start with a demo or paste instructions. CrewScore will show written controls it detected and suggested controls to review.</p></div>
+            <div class="placeholder"><h2 id="results-heading">Your result will appear here</h2><p>Start with a demo or paste instructions. CrewScore will show written controls it detected and suggested controls to review.</p><button class="button-ghost" id="placeholder-demo" type="button">Run a sample check</button></div>
           </section>
 
-          <section class="panel fix-review" id="fix-review" hidden aria-labelledby="fix-heading"><h2 id="fix-heading">Review suggested guardrails</h2><p class="help">Select only wording that belongs in this prompt. These are editable text suggestions, not runtime enforcement.</p><div id="suggestion-list" class="suggestion-list"></div><div id="fix-warnings"></div><p class="cost" id="fix-cost"></p><pre class="diff" id="fix-diff" aria-label="Full before and after diff"></pre><div class="result-actions"><button class="button" id="apply-selected" type="button">Add selected guardrails</button><button class="button-secondary" id="cancel-selected" type="button">Cancel review</button></div><p class="help">Pair written guardrails with runtime approvals, tool restrictions, and evaluation. <a href="docs/next-steps-eval.md">See runtime next steps</a>.</p></section>
+          <section class="panel fix-review" id="fix-review" hidden aria-labelledby="fix-heading"><h2 id="fix-heading">Review suggested wording</h2><p class="help">Select only wording that belongs in this prompt. These are editable text suggestions, not runtime enforcement.</p><div id="suggestion-list" class="suggestion-list"></div><div id="fix-warnings"></div><p class="cost" id="fix-cost"></p><pre class="diff" id="fix-diff" aria-label="Full before and after diff"></pre><div class="result-actions"><button class="button" id="apply-selected" type="button">Apply to working copy</button><button class="button-secondary" id="cancel-selected" type="button">Cancel review</button></div><p class="help">Pair written guardrails with runtime approvals, tool restrictions, and evaluation. <a href="docs/next-steps-eval.md">See runtime next steps</a>.</p></section>
         </div>
       </section>
 
@@ -96,7 +102,7 @@
       <section class="faq" id="faq" aria-labelledby="faq-heading"><h2 id="faq-heading">Questions, answered plainly</h2><details><summary>Does CrewScore upload my instructions?</summary><p>No. Scoring happens locally; prompt text never leaves this browser.</p></details><details><summary>Does a high result prove an agent is safe?</summary><p>No. It means public text patterns for written controls were detected. Runtime enforcement and testing remain separate.</p></details><details><summary>Can I make this a recurring check?</summary><p>Yes. Use the open-source CLI or GitHub Action to require particular controls, protect a prompt-free baseline, and emit SARIF.</p></details></section>
     </main>
 
-    <footer class="footer"><p><strong>Scoring happens locally. Your prompt text never leaves your browser.</strong> Anonymous allowlisted usage events exclude prompt text; <a href="privacy.html">read privacy details</a>.</p><p>Use <label style="display:inline;font:inherit"><input id="analytics-opt-out" type="checkbox"> disable anonymous usage events on this device</label>.</p><p><code>pip install crewscore</code> · <code>uses: shmindmaster/crewscore@v2</code> · <a href="security.html">Security</a> · <a href="https://github.com/shmindmaster/crewscore">GitHub</a></p></footer>
+    <footer class="footer"><p><strong>Scoring happens locally. Your prompt text never leaves your browser.</strong> Anonymous allowlisted usage events exclude prompt text; <a href="privacy.html">read privacy details</a>.</p><p>Use <label style="display:inline;font:inherit"><input id="analytics-opt-out" type="checkbox"> disable anonymous usage events on this device</label>.</p><p><code>pip install crewscore</code> · <code>uses: shmindmaster/crewscore@v2</code> · <a href="security.html">Security</a> · <a href="vendor-checklist/">Vendor checklist</a> · <a href="https://github.com/shmindmaster/crewscore">GitHub</a> · <span class="quiet" id="build-stamp"></span></p></footer>
   </div>
   <div class="mobile-action"><button class="button" id="mobile-check" type="button">Find missing guardrails</button></div>
   <dialog id="find-instructions-dialog" aria-labelledby="find-dialog-title"><div class="dialog-head"><h2 id="find-dialog-title">Where to find AI instructions</h2><button class="button-ghost" id="close-find" type="button">Close</button></div><div id="find-dialog-body"><p><strong>ChatGPT:</strong> Settings → Personalization → Custom Instructions. Copy the custom instructions text.</p><p><strong>Claude:</strong> open a Project → Project instructions (or Claude.ai custom instructions). Copy the instruction text.</p><p><strong>Cursor:</strong> open <code>AGENTS.md</code>, <code>.cursorrules</code>, or project rules in the repo root. Coding-agent files are scored for config smells, not a governance grade.</p><p><strong>Teams or apps:</strong> look for a system prompt, assistant setup, or AI instructions field. Copy only text you are allowed to inspect.</p></div></dialog>

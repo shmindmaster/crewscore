@@ -34,14 +34,14 @@ def test_competitor_matrix_offline_writes_docs():
         text=True,
     )
     matrix = json.loads(
-        (ROOT / "docs" / "competitors" / "agentlinter-matrix.json").read_text(
+        (ROOT / "_production" / "competitors" / "agentlinter-matrix.json").read_text(
             encoding="utf-8"
         )
     )
     assert matrix["method"].startswith("public-docs")
     assert matrix["crewscore"]["live_adversarial"] is False
     assert matrix["crewscore"]["certification_claim"] is False
-    md = (ROOT / "docs" / "competitors" / "agentlinter.md").read_text(encoding="utf-8")
+    md = (ROOT / "_production" / "competitors" / "agentlinter.md").read_text(encoding="utf-8")
     assert "CrewScore" in md and "AgentLinter" in md
 
 
@@ -54,7 +54,7 @@ def test_product_signals_offline_replaces_interview_pmf():
         text=True,
     )
     payload = json.loads(
-        (ROOT / "docs" / "signals" / "latest.json").read_text(encoding="utf-8")
+        (ROOT / "_production" / "signals" / "latest.json").read_text(encoding="utf-8")
     )
     assert payload["automation_policy"]["pmf_interviews"] == "canceled"
     assert payload["package_version"]

@@ -11,10 +11,10 @@
 
 | Step | Expected visible value | Source |
 | --- | --- | --- |
-| Initial scan | `20 of 23 written guardrails found` | `assets/demo-fixture.js` and generated `score-engine.js` |
+| Initial scan | `8 of 23 written guardrails found` | `assets/demo-fixture.js` and generated `score-engine.js` |
 | Initial gaps | Human approval, tamper-evident record, redaction of personal data | `assets/demo-fixture.js` `expected.missing` |
 | Selected wording | `A human must approve.` | `CONTROL_FIX_TEMPLATES[human_gate.approval_required]` |
-| After apply | `21 of 23 written guardrails found` and `2 controls may be missing` | Real in-browser rescan in `assets/site.js` |
+| After apply | `9 of 23 written guardrails found` and `14 controls may be missing` | Real in-browser rescan in `assets/site.js` |
 | Share boundary | Ruleset, artifact profile, and found/missing control IDs only | `assets/site.js` `sharePayload` |
 
 ## Demonstrated claims
