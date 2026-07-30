@@ -64,11 +64,15 @@ test("applying one selected control rescans the browser-local text", async ({ pa
   const suggestedControl = page.locator('[data-select="human_gate.approval_required"]');
   await expect(suggestedControl).toBeVisible();
   await suggestedControl.click();
-  // Apply acts on the registered selection, not on the pixel that was clicked.
-  // Without this, a click WebKit has not finished dispatching applies nothing
-  // and the failure surfaces later as an unchanged score.
+  // Apply acts on the registered selection, not on the pixel that was clicked,
+  // and selecting rebuilds the diff. Wait for both to settle: a WebKit click
+  // that lands mid-rebuild otherwise applies nothing, and the failure surfaces
+  // much later as an unchanged score.
   await expect(suggestedControl).toBeChecked();
-  await page.getByRole("button", { name: "Apply to working copy" }).click();
+  await expect(page.getByLabel("Full before and after diff")).toContainText("+++ Suggested instructions");
+  const apply = page.getByRole("button", { name: "Apply to working copy" });
+  await expect(apply).toBeEnabled();
+  await apply.click();
   await expect(page.getByRole("heading", { name: "9 of 23 written guardrails found" })).toBeVisible();
   await expect(page.locator("#results")).toContainText("14 controls may be missing");
 });
