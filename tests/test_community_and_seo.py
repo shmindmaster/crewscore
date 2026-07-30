@@ -44,7 +44,11 @@ def test_community_governance_and_safe_reporting_surfaces_exist():
     assert "github.com/shmindmaster/crewscore/discussions" in contributing
     for name in ("false_positive.yml", "false_negative.yml", "framework_adapter.yml"):
         assert (ROOT / ".github" / "ISSUE_TEMPLATE" / name).exists(), name
-    assert (ROOT / "docs" / "scoring-governance.md").exists()
+    assert (ROOT / "docs" / "scoring-and-controls.md").exists()
+    assert (ROOT / "docs" / "scoring-governance.md").exists()  # stable redirect
+    assert (ROOT / "docs" / "github-action.md").exists()
+    assert (ROOT / "docs" / "development.md").exists()
+    assert (ROOT / "docs" / "architecture.md").exists()
     assert (ROOT / "docs" / "roadmap.md").exists()
 
 

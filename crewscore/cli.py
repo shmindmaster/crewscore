@@ -789,12 +789,21 @@ def rules_cmd(as_json: bool, show_concepts: bool, dimension: str | None):
     "-o",
     type=click.Path(),
     default="./crewscore-eval",
-    help="Directory for Promptfoo / garak handoff stubs (default: ./crewscore-eval)",
+    help="Directory for Promptfoo / garak handoff artifacts (default: ./crewscore-eval)",
 )
-def export_eval(prompt, prompt_file, output_dir):
-    """Write live-eval stubs (Promptfoo config + garak notes) after structural gate.
+@click.option(
+    "--provider",
+    default="openai:gpt-4o-mini",
+    show_default=True,
+    help="Promptfoo provider id placeholder (not called by CrewScore).",
+)
+def export_eval(prompt, prompt_file, output_dir, provider):
+    """Write live-eval handoff artifacts from structural gaps.
 
-    Does not run Promptfoo or garak. Honest handoff only.
+    Scores the prompt offline, then writes Promptfoo config, garak notes, and a
+    prompt-free JSON manifest biased toward missing written controls.
+
+    Does not run Promptfoo or garak.
     """
     if prompt:
         system_prompt = prompt
@@ -810,11 +819,14 @@ def export_eval(prompt, prompt_file, output_dir):
         Path(output_dir),
         system_prompt=system_prompt,
         prompt_source=source,
+        provider=provider,
     )
     console.print()
     console.print(
         Panel(
-            "[bold]Live eval handoff stubs[/bold]",
+            "[bold]Live eval handoff[/bold]\n"
+            "[dim]Structural gaps mapped to starter Promptfoo cases + garak probes. "
+            "CrewScore does not run either tool.[/dim]",
             border_style="cyan",
             expand=False,
         )
@@ -824,8 +836,8 @@ def export_eval(prompt, prompt_file, output_dir):
         console.print(f"  [green]wrote[/green] {p}")
     console.print()
     console.print(
-        "  [dim]CrewScore remains structural only. "
-        "Run Promptfoo/garak yourself — see README-EVAL.md[/dim]"
+        "  [dim]Next: edit providers in promptfooconfig.yaml, then "
+        "npx promptfoo@latest eval — see README-EVAL.md[/dim]"
     )
     console.print()
 

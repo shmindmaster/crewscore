@@ -14,6 +14,37 @@ install them, and do not compare their numbers to these.
 
 ---
 
+## [Unreleased] — complete secondary handoffs + docs regeneration
+
+No scoring change. Ruleset remains `crewscore-hygiene@0.5.0`.
+
+### Improved
+
+- **`export-eval`** maps offline missing controls into Promptfoo starter cases,
+  garak probe suggestions, ruleset/version headers, optional `--provider`, and a
+  prompt-free `crewscore-eval-manifest.json`. Still does not run live evals.
+- **`assess-vendor`** JSON schema (`schema_version`, theme metadata per answer,
+  `next_crewscore_checks` with published control IDs and suggested CLI). HTML
+  and console show follow-ups for your prompts/CI, not a vendor grade.
+- **Metrics contract** centralizes event/property allowlists in
+  `crewscore/metrics.py` with parity tests against `analytics.js`.
+
+### Documentation
+
+- Regenerated **architecture**, **scoring-and-controls**, **github-action**, and
+  **development** guides from the current implementation.
+- Stable redirects: `docs/scoring.md`, `docs/scoring-governance.md`, and
+  `docs/ci.md` point at the canonical pages (no silent 404 for old links).
+- README, CONTRIBUTING, AGENTS, SARIF help URL, and static docs index updated.
+- Media policy documented (hero/demo assets retained; large binaries noted).
+- Inventory of the lean-product pass: [cleanup-and-completion.md](docs/cleanup-and-completion.md).
+- `python -m crewscore` works via `crewscore/__main__.py`.
+- **Machine merge gates:** required CI checks on `main` (no required human
+  reviews); owner same-repo PRs auto-squash-merge when green; docs in
+  `docs/automation.md`.
+
+---
+
 ## [0.6.0] — 2026-07-29 — explicit control-policy stabilization
 
 No scoring change. `crewscore-hygiene@0.5.0`, the 23-control denominator,

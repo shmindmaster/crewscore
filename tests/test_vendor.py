@@ -29,7 +29,7 @@ def test_mixed_answers_red_flags_only_nos_or_critical_dk():
     assert soft["red_flags"] == []
 
 
-def test_json_includes_red_flags():
+def test_json_includes_red_flags_and_stable_schema():
     runner = CliRunner()
     result = runner.invoke(
         main,
@@ -50,6 +50,19 @@ def test_json_includes_red_flags():
     assert len(payload["red_flags"]) >= 3
     assert payload["self_attested"] is True
     assert payload["not_independent_audit"] is True
+    assert payload["not_vendor_safety_grade"] is True
+    assert payload["schema_version"]
+    assert payload["question_count"] == 10
+    assert "next_crewscore_checks" in payload
+    # Gaps should map to at least one real follow-up with published control IDs.
+    assert payload["next_crewscore_checks"]
+    for item in payload["next_crewscore_checks"]:
+        assert "from_question_key" in item
+        assert "suggested_cli" in item
+        assert item["suggested_cli"].startswith("crewscore")
+    # Answer rows carry theme metadata for machine consumers.
+    assert all("crewscore_dimensions" in a for a in payload["answers"])
+    assert all("key" in a for a in payload["answers"])
 
 
 def test_assess_vendor_report_writes_html(tmp_path: Path):
@@ -73,6 +86,18 @@ def test_assess_vendor_report_writes_html(tmp_path: Path):
     assert "Acme AI" in html
     assert "crewscore" in html.lower()
     assert "not an independent audit, certification, or vendor verdict" in html
+    assert "Suggested CrewScore follow-ups" in html or "crewscore" in html.lower()
+
+
+def test_next_crewscore_checks_use_published_control_ids():
+    from crewscore.scorers.structural_analysis import CONCEPTS
+    from crewscore.vendor_scorecard import build_vendor_result
+
+    published = {c.key for concepts in CONCEPTS.values() for c in concepts}
+    payload = build_vendor_result("Acme", "n,n,n,n,n,n,n,n,n,n")
+    for item in payload["next_crewscore_checks"]:
+        for control in item.get("controls") or []:
+            assert control in published, f"unknown control id: {control}"
 
 
 def test_index_html_share_uses_data_attrs_not_json_onclick():

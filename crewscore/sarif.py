@@ -13,7 +13,7 @@ from crewscore.scorers.structural_analysis import CONCEPTS
 
 
 SARIF_VERSION = "2.1.0"
-_HELP_BASE = "https://github.com/shmindmaster/crewscore/blob/main/docs/scoring.md"
+_HELP_BASE = "https://github.com/shmindmaster/crewscore/blob/main/docs/scoring-and-controls.md"
 
 
 def _rules() -> list[dict[str, Any]]:
