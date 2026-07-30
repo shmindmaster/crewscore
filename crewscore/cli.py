@@ -488,7 +488,7 @@ def test(
             if hero:
                 console.print()
                 console.print(
-                    f"  [bold red]HERO GAP:[/bold red] {hero.get('label')}"
+                    f"  [bold red]FIRST GAP TO REVIEW:[/bold red] {hero.get('label')}"
                 )
                 if hero.get("concept"):
                     console.print(
@@ -1684,7 +1684,7 @@ def scan(
 
         if scan_hero:
             console.print(
-                f"  [bold red]HERO GAP:[/bold red] {scan_hero.get('label')}"
+                f"  [bold red]FIRST GAP TO REVIEW:[/bold red] {scan_hero.get('label')}"
             )
             if scan_hero.get("concept"):
                 console.print(

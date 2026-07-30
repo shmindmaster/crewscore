@@ -17,11 +17,11 @@ test("public security page exposes the private reporting route", async ({ page }
 test("demo produces controls-first results and an editable review", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Try a 10-second demo" }).click();
-  await expect(page.getByRole("heading", { name: "20 of 23 written guardrails found" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "8 of 23 written guardrails found" })).toBeVisible();
   await expect(page.locator("#results").getByText("Written-control coverage, not runtime proof.")).toBeVisible();
-  await expect(page.locator("#results")).toContainText("3 controls may be missing");
+  await expect(page.locator("#results")).toContainText("15 controls may be missing");
   await expect(page.locator("#results")).toContainText("A human must approve");
-  await page.getByRole("button", { name: "Review suggested guardrails" }).click();
+  await page.getByRole("button", { name: "Review suggested wording" }).click();
   const choices = page.locator("[data-select]");
   await expect(choices.first()).toBeVisible();
   // The change handler immediately rerenders the list, so `.check()` can
@@ -38,16 +38,16 @@ test("applying one selected control rescans the browser-local text", async ({ pa
   await page.goto("/");
   await page.getByRole("button", { name: "Try a 10-second demo" }).click();
   await expect(page.getByRole("heading", { name: /written guardrails found/ })).toBeVisible();
-  await page.getByRole("button", { name: "Review suggested guardrails" }).click();
+  await page.getByRole("button", { name: "Review suggested wording" }).click();
   // This deterministic public fixture is the release-demo source. It starts
   // with the human-approval control missing, then exercises the real selector,
   // diff, apply, and browser-local rescan flow.
   const suggestedControl = page.locator('[data-select="human_gate.approval_required"]');
   await expect(suggestedControl).toBeVisible();
   await suggestedControl.click();
-  await page.getByRole("button", { name: "Add selected guardrails" }).click();
-  await expect(page.getByRole("heading", { name: "21 of 23 written guardrails found" })).toBeVisible();
-  await expect(page.locator("#results")).toContainText("2 controls may be missing");
+  await page.getByRole("button", { name: "Apply to working copy" }).click();
+  await expect(page.getByRole("heading", { name: "9 of 23 written guardrails found" })).toBeVisible();
+  await expect(page.locator("#results")).toContainText("14 controls may be missing");
 });
 
 test("supports local file upload and a mocked public GitHub import", async ({ page }) => {
@@ -57,9 +57,12 @@ test("supports local file upload and a mocked public GitHub import", async ({ pa
   await page.route("https://raw.githubusercontent.com/**", async (route) => {
     await route.fulfill({ status: 200, contentType: "text/plain", body: "Do not fabricate facts. Stop when evidence is missing." });
   });
+  await page.getByRole("tab", { name: "Import a public GitHub file" }).click();
   await page.locator("#prompt-url").fill("https://github.com/example/repo/blob/main/prompt.md");
   await page.getByRole("button", { name: "Import GitHub file" }).click();
   await expect(page.locator("#agent-prompt")).toHaveValue(/Stop when evidence is missing/);
+  // A successful import reveals the paste panel; reopen the import tab.
+  await page.getByRole("tab", { name: "Import a public GitHub file" }).click();
   await page.locator("#prompt-url").fill("https://example.com/prompt.md");
   await page.getByRole("button", { name: "Import GitHub file" }).click();
   await expect(page.locator("#input-status")).toContainText("Only github.com");
@@ -77,6 +80,7 @@ test("gives a clear recovery path for invalid UTF-8 imports", async ({ page }) =
   await page.route("https://raw.githubusercontent.com/**", async (route) => {
     await route.fulfill({ status: 200, contentType: "text/plain", body: invalidUtf8 });
   });
+  await page.getByRole("tab", { name: "Import a public GitHub file" }).click();
   await page.locator("#prompt-url").fill("https://github.com/example/repo/blob/main/prompt.txt");
   await page.getByRole("button", { name: "Import GitHub file" }).click();
   await expect(page.locator("#input-status")).toContainText("Save it as UTF-8");
@@ -87,6 +91,7 @@ test("explains private and offline GitHub import failures", async ({ page }) => 
   await page.route("https://raw.githubusercontent.com/**", async (route) => {
     await route.fulfill({ status: 404, contentType: "text/plain", body: "Not found" });
   });
+  await page.getByRole("tab", { name: "Import a public GitHub file" }).click();
   await page.locator("#prompt-url").fill("https://github.com/example/repo/blob/main/private.txt");
   await page.getByRole("button", { name: "Import GitHub file" }).click();
   await expect(page.locator("#input-status")).toContainText("may be private");
@@ -173,6 +178,31 @@ test("sanitized result links and SVG cards exclude the original instructions", a
   expect(badgeDownload.suggestedFilename()).toBe("crewscore-badge-result.svg");
   const badgeSvg = await readFile(await badgeDownload.path(), "utf8");
   expect(badgeSvg).not.toContain("SENTINEL_PROMPT_CONTENT_NEVER_SHARE");
+});
+
+test("input methods are real tabs: one panel visible at a time", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#agent-prompt")).toBeVisible();
+  await expect(page.locator("#drop-zone")).toBeHidden();
+  await expect(page.locator("#prompt-url")).toBeHidden();
+  await page.getByRole("tab", { name: "Upload a local file" }).click();
+  await expect(page.locator("#drop-zone")).toBeVisible();
+  await expect(page.locator("#agent-prompt")).toBeHidden();
+  await page.getByRole("tab", { name: "Import a public GitHub file" }).click();
+  await expect(page.locator("#prompt-url")).toBeVisible();
+  await expect(page.locator("#drop-zone")).toBeHidden();
+  await page.getByRole("tab", { name: "Paste instructions" }).click();
+  await expect(page.locator("#agent-prompt")).toBeVisible();
+});
+
+test("selecting Cursor then ChatGPT returns auto-entered developer mode to simple", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("body")).toHaveAttribute("data-mode", "simple");
+  await page.getByRole("button", { name: "Cursor" }).click();
+  await expect(page.locator("body")).toHaveAttribute("data-mode", "developer");
+  await page.getByRole("button", { name: "Close" }).click();
+  await page.getByRole("button", { name: "ChatGPT" }).click();
+  await expect(page.locator("body")).toHaveAttribute("data-mode", "simple");
 });
 
 test("coding-agent config example renders smells, not a governance grade", async ({ page }) => {

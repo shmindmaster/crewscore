@@ -37,7 +37,7 @@ def test_test_human_shows_control_coverage_and_hero_gap():
     assert result.exit_code == 0, result.output
     assert "CONTROL COVERAGE:" in result.output
     assert "0/23" in result.output
-    assert "HERO GAP:" in result.output
+    assert "FIRST GAP TO REVIEW:" in result.output
     assert "human must approve" in result.output.lower() or "A human must approve" in result.output
     assert "--require human_gate.approval_required" in result.output
     assert "Control coverage" in result.output or "CONTROL COVERAGE" in result.output
@@ -83,6 +83,6 @@ def test_scan_human_shows_hero_when_inline_present(tmp_path: Path):
     runner = CliRunner()
     result = runner.invoke(main, ["scan", str(tmp_path)])
     assert result.exit_code == 0, result.output
-    assert "HERO GAP:" in result.output
+    assert "FIRST GAP TO REVIEW:" in result.output
     assert "--require human_gate.approval_required" in result.output
     assert "Coverage" in result.output or "coverage" in result.output.lower()

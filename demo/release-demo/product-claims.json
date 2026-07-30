@@ -14,7 +14,7 @@
     },
     {
       "id": "claim-20-of-23",
-      "text": "The fictional fixture initially has 20 of 23 written controls found.",
+      "text": "The fictional fixture initially has 8 of 23 written controls found.",
       "audience": "Prompt author",
       "episode": "written-controls-review",
       "scene": "missing-controls",
@@ -50,7 +50,7 @@
     },
     {
       "id": "claim-21-of-23",
-      "text": "After the selected wording is applied, the real browser checker updates to 21 of 23 written controls found.",
+      "text": "After the selected wording is applied, the real browser checker updates to 9 of 23 written controls found.",
       "audience": "Prompt author",
       "episode": "written-controls-review",
       "scene": "local-rescan",

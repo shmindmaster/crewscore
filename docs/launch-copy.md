@@ -239,7 +239,7 @@ the launch buys.
 
 1. (0-5s) Blank terminal: `pip install crewscore` — cut to installed.
 2. (5-15s) `crewscore test --prompt-file system-prompt.md` on a real-looking
-   agent prompt → scorecard renders: **8/23 written**, hero gap
+   agent prompt → scorecard renders: **8/23 written**, first gap to review
    `A human must approve`.
 3. (15-25s) Say/caption: "This prompt never says a human must approve
    anything. Most don't — median production coverage is 10/100."

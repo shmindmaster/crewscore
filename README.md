@@ -30,12 +30,12 @@ of 100.** GPT-Store median: 0.
   <img src="assets/brand/logo-mark.svg" alt="CrewScore mark" width="48" height="48">
 </p>
 
-> Example: **control coverage 8/23 written** · hero gap: *A human must approve*.
+> Example: **control coverage 8/23 written** · first gap to review: *A human must approve*.
 > CrewScore checks whether controls are written down, not whether an agent obeys them.
 
 **Try it live, no install:** [crewscore.ai](https://crewscore.ai)
 
-<img src="docs/hero-demo.gif" alt="Terminal demo: crewscore test reports 8 of 23 written guardrails found, with the biggest gap — a human must approve — and the CI command to gate on it" width="720">
+<img src="docs/hero-demo.gif" alt="Terminal demo: crewscore test reports 8 of 23 written guardrails found, with the first gap to review — a human must approve — and the CI command to gate on it" width="720">
 
 </div>
 
@@ -92,7 +92,7 @@ crewscore scan . --no-inline              # file discovery only
 crewscore init .                          # prompt-free regression baseline + PR workflow
 crewscore scan . --fail-on-regression --baseline .crewscore-baseline.json
 crewscore scan . --require human_gate.approval_required   # one-control CI habit
-crewscore test --prompt-file ./prompt.md  # coverage N/23 + hero gap
+crewscore test --prompt-file ./prompt.md  # coverage N/23 + first gap to review
 crewscore fix  --prompt-file ./prompt.md --plan   # what's missing, no writes
 crewscore rules --concepts                # the 23 controls, and the rules behind them
 ```

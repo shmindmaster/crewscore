@@ -2,6 +2,34 @@
 
 All notable changes to CrewScore are documented here.
 
+## [Unreleased]
+
+### Improved
+
+- **Input methods are real tabs.** Paste / Upload / Import looked like tabs
+  but showed all three inputs at once; now one panel is visible at a time,
+  with correct tab/tabpanel semantics and the last method remembered locally.
+- **"Biggest gap" renamed to "First gap to review"** everywhere (site, share
+  text, cards, CLI's `FIRST GAP TO REVIEW:`, README). The selection is the
+  first missing control from the weakest dimension — calling that "biggest"
+  implied a risk ranking the tool does not do.
+- **Canonical 8/23 demo.** The browser demo fixture now scores 8 of 23 with
+  human approval as the first gap — the same example the README, demo scripts,
+  and launch copy use. Previously the site demo showed 20/23 while marketing
+  showed 8/23.
+- **Remediation before sharing.** The result panel now orders: result → first
+  gap → review suggested wording → other gaps → share. Buttons renamed for
+  accuracy: "Review suggested wording", "Apply to working copy".
+- **Mode symmetry:** picking Cursor auto-enters developer mode; picking a
+  ChatGPT/Claude path afterwards now returns to simple mode when developer
+  mode was auto-entered (an explicit toggle is never overridden).
+- Checkbox changes in the fix review no longer re-render the whole list, so
+  keyboard focus stays put; applying twice extends the existing "Suggested
+  guardrails" section instead of stacking a second header.
+- Vendor checklist moved from primary navigation to the footer; empty result
+  panel gained a "Run a sample check" button; footer shows a build stamp
+  (package version + ruleset) for deployment-parity checks.
+
 This project follows [Semantic Versioning](https://semver.org/). The `--json`
 payload shape, the CLI exit codes, and the GitHub Action's outputs are treated
 as the public contract; while the project is pre-1.0 a breaking change to any

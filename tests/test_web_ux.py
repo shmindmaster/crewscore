@@ -111,7 +111,7 @@ def test_result_moment_leads_with_coverage_and_hero_gap():
     assert "result-moment" in script
     assert "coverage-meter" in script
     assert "hero-gap-card" in script
-    assert "HERO GAP" in script or "Biggest gap" in script
+    assert "First gap to review" in script
     assert "result-moment" in css
     assert "coverage-meter" in css
     assert "hero-gap-card" in css

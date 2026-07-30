@@ -73,6 +73,7 @@
     selections: new Map(),
     lastFocus: null,
     productPath: null,
+    autoDeveloper: false,
   };
   const $ = (id) => document.getElementById(id);
   const text = (value) => String(value == null ? "" : value);
@@ -107,6 +108,30 @@
     writeStorage(MODE_KEY, state.mode);
     if (announce) toast(state.mode === "developer" ? "Developer details are shown" : "Simple language is shown");
     if (state.last) renderResult(state.last.result, state.last.prompt);
+  }
+
+  const METHOD_KEY = "crewscore_web_method_v1";
+  function setMethod(method, focus) {
+    const chosen = ["paste", "upload", "url"].includes(method) ? method : "paste";
+    document.querySelectorAll(".method-button").forEach((tab) => {
+      const active = tab.dataset.method === chosen;
+      tab.classList.toggle("is-active", active);
+      tab.setAttribute("aria-selected", String(active));
+    });
+    ["paste", "upload", "url"].forEach((name) => { const panel = $(`method-panel-${name}`); if (panel) panel.hidden = name !== chosen; });
+    writeStorage(METHOD_KEY, chosen);
+    if (focus) {
+      if (chosen === "paste") $("agent-prompt").focus();
+      if (chosen === "url") $("prompt-url").focus();
+    }
+  }
+
+  function autoDeveloperFor(profile) {
+    if (profile === E.configProfile) {
+      if (state.mode === "simple") { state.autoDeveloper = true; setMode("developer", false); }
+    } else if (state.autoDeveloper && state.mode === "developer") {
+      state.autoDeveloper = false; setMode("simple", false);
+    }
   }
 
   function currentProfile() {
@@ -223,10 +248,10 @@
     const gapMarkup = gaps.length ? `<div class="gap-list">${gaps.map(({ dimension, finding }) => `<div class="gap"><strong>${escapeHtml(SIMPLE_NAMES[dimension.key] || dimension.label)}</strong><p>${escapeHtml(finding.pattern_or_reason || "Written control not detected")}</p>${state.mode === "developer" ? `<small><code>${escapeHtml(finding.concept || finding.rule_id || "")}</code></small>` : ""}</div>`).join("")}</div>` : `<p class="help">All published controls were detected. Review the wording and runtime behavior before relying on it.</p>`;
     const developer = state.mode === "developer" ? renderDeveloperDetails(result, found, missing) : "";
     const heroCard = hero
-      ? `<div class="hero-gap-card"><span class="gap-eyebrow">Biggest gap</span><strong>${escapeHtml(hero.title)}</strong><p>${escapeHtml(hero.detail)}</p>${state.mode === "developer" && hero.concept ? `<small><code>${escapeHtml(hero.concept)}</code></small>` : ""}</div>`
-      : `<div class="hero-gap-card is-clear"><span class="gap-eyebrow">Biggest gap</span><strong>No missing published control detected</strong><p>Text matches all 23 controls. That is coverage, not proof the agent obeys them.</p></div>`;
+      ? `<div class="hero-gap-card"><span class="gap-eyebrow">First gap to review</span><strong>${escapeHtml(hero.title)}</strong><p>${escapeHtml(hero.detail)}</p>${state.mode === "developer" && hero.concept ? `<small><code>${escapeHtml(hero.concept)}</code></small>` : ""}</div>`
+      : `<div class="hero-gap-card is-clear"><span class="gap-eyebrow">First gap to review</span><strong>No missing published control detected</strong><p>Text matches all 23 controls. That is coverage, not proof the agent obeys them.</p></div>`;
     const viralShare = `<div class="viral-share"><p class="share-lead">Share without sending your prompt</p><button class="button" id="copy-share-text" type="button">Copy share text</button>${navigator.share ? '<button class="button-secondary" id="native-share" type="button">Share…</button>' : ""}<button class="button-secondary" id="copy-result" type="button">Copy result link</button><button class="button-ghost" data-social="x" type="button">X</button><button class="button-ghost" data-social="linkedin" type="button">LinkedIn</button></div><details class="share-more"><summary>More share options</summary><div class="share-actions"><button class="button-ghost" data-social="facebook" type="button">Facebook</button><button class="button-ghost" data-social="reddit" type="button">Reddit</button><button class="button-ghost" id="copy-team" type="button">Copy for Slack/Teams</button><button class="button-ghost" id="copy-badge" type="button">Add badge to README</button></div><div class="share-actions"><button class="button-ghost" data-card="linkedin" data-format="png" type="button">Download LinkedIn PNG</button><button class="button-ghost" data-card="x" data-format="png" type="button">Download X PNG</button><button class="button-ghost" data-card="facebook" data-format="png" type="button">Download Facebook PNG</button><button class="button-ghost" data-card="square" data-format="png" type="button">Download square PNG</button><button class="button-ghost" data-card="badge" data-format="svg" type="button">Download badge SVG</button></div><p class="help">A result link includes ruleset and control IDs only; prompt text is never included.</p></details>`;
-    mount.innerHTML = `<div class="result-moment${fresh ? " is-fresh" : ""}" aria-labelledby="results-heading"><div class="result-kicker">Written-control coverage</div><div class="result-fraction" aria-hidden="true"><span class="found">${found.length}</span><span class="of">of</span><span class="total">${total}</span></div><h2 id="results-heading" class="result-fraction-label">${found.length} of ${total} written guardrails found</h2><div class="coverage-meter" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="${found.length} of ${total} controls written"><span style="width:${pct}%"></span></div><p class="result-summary">${missing.length} control${missing.length === 1 ? " may" : "s may"} be missing from this text.</p>${heroCard}</div><div class="coverage-disclosure"><strong>Written-control coverage, not runtime proof.</strong> CrewScore detected text patterns; it did not test whether an agent follows them.</div>${viralShare}<div class="result-actions">${missing.length ? '<button class="button" id="review-fixes" type="button">Review suggested guardrails</button>' : ""}</div><h3>Other gaps to review</h3>${gapMarkup}${developer}`;
+    mount.innerHTML = `<div class="result-moment${fresh ? " is-fresh" : ""}" aria-labelledby="results-heading"><div class="result-kicker">Written-control coverage</div><div class="result-fraction" aria-hidden="true"><span class="found">${found.length}</span><span class="of">of</span><span class="total">${total}</span></div><h2 id="results-heading" class="result-fraction-label">${found.length} of ${total} written guardrails found</h2><div class="coverage-meter" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="${found.length} of ${total} controls written"><span style="width:${pct}%"></span></div><p class="result-summary">${missing.length} control${missing.length === 1 ? " may" : "s may"} be missing from this text.</p>${heroCard}</div><div class="coverage-disclosure"><strong>Written-control coverage, not runtime proof.</strong> CrewScore detected text patterns; it did not test whether an agent follows them.</div><div class="result-actions">${missing.length ? '<button class="button" id="review-fixes" type="button">Review suggested wording</button>' : ""}</div><h3>Other gaps to review</h3>${gapMarkup}${viralShare}${developer}`;
     bindResultActions(mount, result);
     if (fresh) {
       const moment = mount.querySelector(".result-moment");
@@ -280,7 +305,11 @@
       // is the only text that should affect the immediate rescan.
       return `- ${wording}`;
     }).filter((entry) => !entry.endsWith("\n"));
-    return `${state.last.prompt.replace(/\s+$/, "")}\n\n---\n\n## Suggested guardrails\n\n${entries.join("\n\n")}\n`;
+    const base = state.last.prompt.replace(/\s+$/, "");
+    // Appending twice must extend the existing section, not stack a second
+    // "## Suggested guardrails" header under the first.
+    if (/## Suggested guardrails/.test(base)) return `${base}\n\n${entries.join("\n\n")}\n`;
+    return `${base}\n\n---\n\n## Suggested guardrails\n\n${entries.join("\n\n")}\n`;
   }
 
   function selectionWarnings() {
@@ -313,7 +342,9 @@
       return `<div class="suggestion"><input id="select-${escapeHtml(control.key)}" data-select="${escapeHtml(control.key)}" type="checkbox" aria-label="Select ${escapeHtml(control.label)}" ${selection.selected ? "checked" : ""}><div><label class="suggestion-title" for="select-${escapeHtml(control.key)}">${escapeHtml(controlName(control))}</label><small>${escapeHtml(control.label)}</small><textarea data-wording="${escapeHtml(control.key)}" aria-label="Suggested wording for ${escapeHtml(control.label)}">${escapeHtml(selection.text)}</textarea><button class="button-ghost" type="button" data-copy-control="${escapeHtml(control.key)}" aria-label="Copy wording for ${escapeHtml(control.label)}">Copy this control only</button></div></div>`;
     }).join("");
     list.querySelectorAll("[data-select]").forEach((input) => input.addEventListener("change", () => {
-      const current = state.selections.get(input.dataset.select); current.selected = input.checked; renderFixReview();
+      // Update the preview only — re-rendering the list here destroys the
+      // keyboard user's focus position among 20+ checkboxes.
+      const current = state.selections.get(input.dataset.select); current.selected = input.checked; updateFixPreview();
     }));
     list.querySelectorAll("[data-wording]").forEach((input) => input.addEventListener("input", () => {
       const current = state.selections.get(input.dataset.wording); current.text = input.value; updateFixPreview();
@@ -342,7 +373,7 @@
     state.selections.clear();
     $("fix-review").hidden = true;
     score("fix_apply");
-    toast("Selected guardrails added to the in-browser text");
+    toast("Added to the working copy below — rescored");
     track("cs_fix_apply", { controls_found: selected.length });
   }
 
@@ -399,7 +430,7 @@
     const total = allControls().length;
     const hero = heroGapFromResult(result);
     const gapLine = hero
-      ? `Biggest gap: ${hero.title}.`
+      ? `First gap to review: ${hero.title}.`
       : "All published controls were detected in the text.";
     return `${found.length} of ${total} written controls found. ${missing.length} may be missing. ${gapLine} CrewScore · written-control coverage, not runtime proof.`;
   }
@@ -426,7 +457,7 @@
     const { found, missing } = controlsForResult(result);
     const total = allControls().length;
     const hero = heroGapFromResult(result);
-    const gapLine = hero ? `Biggest gap: ${hero.title}` : "No missing published controls detected";
+    const gapLine = hero ? `First gap to review: ${hero.title}` : "No missing published controls detected";
     const compact = kind === "badge";
     const headline = compact
       ? `CrewScore: ${found.length}/${total} controls found`
@@ -497,8 +528,8 @@
         ? (SIMPLE_NAMES[gapControl.dimension] || gapControl.label)
         : (gapKey || null);
       const heroShared = gapTitle
-        ? `<div class="hero-gap-card"><span class="gap-eyebrow">Biggest gap</span><strong>${escapeHtml(gapTitle)}</strong><p>Shared as missing. Original prompt text was not included.</p></div>`
-        : `<div class="hero-gap-card is-clear"><span class="gap-eyebrow">Biggest gap</span><strong>No missing controls in this share</strong><p>Original prompt text was not included.</p></div>`;
+        ? `<div class="hero-gap-card"><span class="gap-eyebrow">First gap to review</span><strong>${escapeHtml(gapTitle)}</strong><p>Shared as missing. Original prompt text was not included.</p></div>`
+        : `<div class="hero-gap-card is-clear"><span class="gap-eyebrow">First gap to review</span><strong>No missing controls in this share</strong><p>Original prompt text was not included.</p></div>`;
       mount.innerHTML = `<div class="result-moment is-fresh"><div class="result-kicker">Shared CrewScore result</div><div class="result-fraction" aria-hidden="true"><span class="found">${foundN}</span><span class="of">of</span><span class="total">${total}</span></div><h2 id="results-heading" class="result-fraction-label">${foundN} of ${total} written guardrails found</h2><div class="coverage-meter" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="${foundN} of ${total} controls"><span style="width:${pct}%"></span></div><p class="result-summary">${missingN} controls were shared as missing. The original instructions were not included.</p>${heroShared}</div><div class="coverage-disclosure">Written-control coverage, not runtime proof. A shared result is a historical summary, not a live scan.</div>${!current || !valid ? `<div class="warning">This result uses ${escapeHtml(shared.ruleset)} and cannot be edited or rescored here. Check your own instructions with the current rules.</div>` : ""}<button class="button" id="shared-check" type="button">Check my instructions</button>`;
       $("shared-check").addEventListener("click", () => { $("agent-prompt").focus(); $("checker-workspace").scrollIntoView({ behavior: "smooth", block: "start" }); });
     } catch (_) { toast("This shared CrewScore result could not be read."); }
@@ -542,7 +573,8 @@
       if (!imported.trim()) throw new Error("The file is empty.");
       $("agent-prompt").value = imported;
       const profile = E.profileForLoadedUrl(currentProfile(), new URL(url).pathname);
-      setProfile(profile); if (profile === E.configProfile) setMode("developer", false);
+      setProfile(profile); autoDeveloperFor(profile);
+      setMethod("paste");
       score("github_import"); toast("Public GitHub file loaded locally");
     } catch (error) { updateInputStatus(importFailureMessage(error)); }
   }
@@ -559,7 +591,8 @@
       if (!imported.trim()) { updateInputStatus("That file is empty."); return; }
       $("agent-prompt").value = imported;
       const profile = E.profileForLoadedUrl(currentProfile(), file.name);
-      setProfile(profile); if (profile === E.configProfile) setMode("developer", false);
+      setProfile(profile); autoDeveloperFor(profile);
+      setMethod("paste");
       score("file_upload"); toast("Local file loaded - it was not uploaded");
     };
     reader.readAsArrayBuffer(file);
@@ -575,10 +608,7 @@
     const hint = $("path-hint");
     if (hint) hint.textContent = path.hint;
     setProfile(path.profile);
-    if (path.profile === E.configProfile) setMode("developer", false);
-    else if (state.mode === "developer" && pathKey !== "cursor") {
-      /* leave developer mode alone if already on; simple stays simple */
-    }
+    autoDeveloperFor(path.profile);
     $("agent-prompt")?.focus();
     if (options && options.openDialog) {
       const body = $("find-dialog-body");
@@ -591,22 +621,22 @@
   }
 
   function bindEvents() {
-    $("mode-toggle").addEventListener("click", () => { setMode(state.mode === "simple" ? "developer" : "simple", true); track("cs_mode_change", { mode: state.mode }); });
+    $("mode-toggle").addEventListener("click", () => { state.autoDeveloper = false; setMode(state.mode === "simple" ? "developer" : "simple", true); track("cs_mode_change", { mode: state.mode }); });
     $("try-demo").addEventListener("click", () => {
       setProfile("system_prompt");
+      setMethod("paste");
       $("agent-prompt").value = DEMO;
       score("demo");
       $("results")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
       track("cs_demo_started");
     });
-    $("example-support").addEventListener("click", () => { setProfile("system_prompt"); $("agent-prompt").value = SUPPORT_EXAMPLE; score("example"); });
-    $("example-config").addEventListener("click", () => { setProfile("coding_agent_config"); $("agent-prompt").value = CONFIG_EXAMPLE; score("example"); });
+    $("example-support").addEventListener("click", () => { setProfile("system_prompt"); setMethod("paste"); $("agent-prompt").value = SUPPORT_EXAMPLE; score("example"); });
+    $("example-config").addEventListener("click", () => { setProfile("coding_agent_config"); setMethod("paste"); $("agent-prompt").value = CONFIG_EXAMPLE; score("example"); });
     $("focus-checker").addEventListener("click", () => { $("checker-workspace").scrollIntoView({ behavior: "smooth", block: "start" }); $("agent-prompt").focus(); });
     $("check-instructions").addEventListener("click", () => score("paste"));
     $("mobile-check").addEventListener("click", () => score("mobile"));
     $("load-url").addEventListener("click", loadUrl);
-    $("focus-url").addEventListener("click", () => $("prompt-url").focus());
-    $("choose-file").addEventListener("click", () => $("prompt-file").click());
+    document.querySelectorAll(".method-button").forEach((tab) => tab.addEventListener("click", () => setMethod(tab.dataset.method, true)));
     $("drop-choose").addEventListener("click", () => $("prompt-file").click());
     $("prompt-file").addEventListener("change", (event) => importFile(event.target.files[0]));
     ["dragenter", "dragover"].forEach((eventName) => $("drop-zone").addEventListener(eventName, (event) => { event.preventDefault(); $("drop-zone").classList.add("is-dragging"); }));
@@ -632,7 +662,11 @@
   }
 
   setMode(readStorage(MODE_KEY) || "simple", false);
+  setMethod(readStorage(METHOD_KEY) || "paste", false);
   bindEvents();
+  $("placeholder-demo")?.addEventListener("click", () => $("try-demo").click());
+  const stamp = $("build-stamp");
+  if (stamp) stamp.textContent = `v${E.ENGINE?.version || ""} · ${E.ruleset || ""}`.trim();
   decodeSharedResult();
   window.__crewscoreUX = Object.freeze({ score, sharePayload, supportedGithubUrl, fullAppendDiff, svgCard });
 })();
