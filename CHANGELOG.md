@@ -165,7 +165,8 @@ No scoring change. Ruleset remains `crewscore-hygiene@0.5.0`.
 - Regenerated **architecture**, **scoring-and-controls**, **github-action**,
   **development**, and **automation** guides.
 - Stable redirects: `docs/scoring.md`, `docs/scoring-governance.md`, `docs/ci.md`.
-- Inventory: [cleanup-and-completion.md](cleanup-and-completion.md).
+- Inventory: cleanup-and-completion notes (now maintainer working material
+  under the gitignored `_production/` directory).
 - Human process theater removed from launch policy: no PMF interview gate;
   strategy defaults locked in automation.md.
 

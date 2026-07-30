@@ -17,7 +17,7 @@ text is present.
 **We scanned 356 real agent prompts: 83 production prompts and 273
 general-purpose prompts. Among the production subset, median coverage was 10
 of 100.** GPT-Store median: 0.
-[Numbers →](docs/validation-corpus.md) · [Shareable card →](docs/dist-pack/corpus-card.svg) · [Live checker →](https://crewscore.ai)
+[Numbers →](docs/validation-corpus.md) · [Shareable card →](docs/corpus-card.svg) · [Live checker →](https://crewscore.ai)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11+-green.svg)](https://python.org)
@@ -35,7 +35,7 @@ of 100.** GPT-Store median: 0.
 
 **Try it live, no install:** [crewscore.ai](https://crewscore.ai)
 
-<img src="docs/hero-demo.gif" alt="Terminal demo: crewscore test reports 8 of 23 written guardrails found, with the first gap to review — a human must approve — and the CI command to gate on it" width="720">
+<img src="docs/demo.svg" alt="Before and after: a bare assistant prompt covers 0 of 23 written controls with 'a human must approve' as the biggest gap; after adding suggested guardrail wording it covers 14 of 23. Coverage is not runtime proof." width="720">
 
 </div>
 
@@ -217,7 +217,6 @@ pytest
 | [Community discussions](https://github.com/shmindmaster/crewscore/discussions) | Questions, adoption feedback, and open-ended ideas |
 | [Comparison](docs/comparison.md) | Other tools, and what to use after this one |
 | [CHANGELOG](CHANGELOG.md) | Including every scoring change and its measured delta |
-| [Cleanup inventory](docs/cleanup-and-completion.md) | What this lean-product pass retained, completed, and deferred |
 
 ---
 
