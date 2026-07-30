@@ -1,0 +1,41 @@
+# Agent-executable release tag cut. No human code review.
+#
+# Preconditions: package version in pyproject.toml matches a CHANGELOG section,
+# and that version is not already tagged. Pushing the tag runs release.yml.
+name: Cut release tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      push:
+        description: "Create and push the annotated tag (false = dry-run only)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  cut:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Dry-run or push tag
+        env:
+          PUSH: ${{ inputs.push }}
+        run: |
+          set -euo pipefail
+          if [ "$PUSH" = "true" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            python scripts/cut_release.py --push
+          else
+            python scripts/cut_release.py
+          fi

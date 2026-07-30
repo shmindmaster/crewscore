@@ -14,7 +14,7 @@ install them, and do not compare their numbers to these.
 
 ---
 
-## [Unreleased] — complete secondary handoffs + docs regeneration
+## [0.6.1] — 2026-07-30 — secondary handoffs complete + machine merge gates
 
 No scoring change. Ruleset remains `crewscore-hygiene@0.5.0`.
 
@@ -28,22 +28,25 @@ No scoring change. Ruleset remains `crewscore-hygiene@0.5.0`.
   and console show follow-ups for your prompts/CI, not a vendor grade.
 - **Metrics contract** centralizes event/property allowlists in
   `crewscore/metrics.py` with parity tests against `analytics.js`.
+- **`python -m crewscore`** via `crewscore/__main__.py`.
+- **Machine merge gates:** required CI checks on `main` (no required human
+  reviews); owner same-repo PRs auto-squash-merge when green.
+- **Release automation:** `workflow_dispatch` cut-tag job + `scripts/cut_release.py`
+  so version tags are agent-cuttable without code-review theater.
+- **Distribution pack generator:** `scripts/generate_dist_pack.py` stages channel
+  drafts from repo truth (no interview backlog).
 
 ### Documentation
 
-- Regenerated **architecture**, **scoring-and-controls**, **github-action**, and
-  **development** guides from the current implementation.
-- Stable redirects: `docs/scoring.md`, `docs/scoring-governance.md`, and
-  `docs/ci.md` point at the canonical pages (no silent 404 for old links).
-- README, CONTRIBUTING, AGENTS, SARIF help URL, and static docs index updated.
-- Media policy documented (hero/demo assets retained; large binaries noted).
-- Inventory of the lean-product pass: [cleanup-and-completion.md](docs/cleanup-and-completion.md).
-- `python -m crewscore` works via `crewscore/__main__.py`.
-- **Machine merge gates:** required CI checks on `main` (no required human
-  reviews); owner same-repo PRs auto-squash-merge when green; docs in
-  `docs/automation.md`.
+- Regenerated **architecture**, **scoring-and-controls**, **github-action**,
+  **development**, and **automation** guides.
+- Stable redirects: `docs/scoring.md`, `docs/scoring-governance.md`, `docs/ci.md`.
+- Inventory: [cleanup-and-completion.md](cleanup-and-completion.md).
+- Human process theater removed from launch policy: no PMF interview gate;
+  strategy defaults locked in automation.md.
 
 ---
+
 
 ## [0.6.0] — 2026-07-29 — explicit control-policy stabilization
 
