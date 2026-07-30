@@ -16,7 +16,8 @@ Discovers likely agent instruction files (`AGENTS.md`, `CLAUDE.md`,
 ```bash
 crewscore scan .
 crewscore scan ./agents --json
-crewscore scan . --require human_gate.approval_required
+crewscore scan . --require human_gate.approval_required   # one-control CI habit
+crewscore scan . --no-inline               # skip SYSTEM_PROMPT=... source extraction
 crewscore scan . --baseline .crewscore-baseline.json --fail-on-regression
 crewscore scan . --max-smells 0            # gates coding-agent config
 crewscore scan . --summary crewscore-summary.md

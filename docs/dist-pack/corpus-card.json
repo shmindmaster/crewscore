@@ -1,0 +1,10 @@
+{
+  "production_n": 83,
+  "production_median": 14,
+  "gpt_store_n": 273,
+  "gpt_store_median": 0,
+  "cliffs_delta": 0.672,
+  "ruleset": "crewscore-hygiene@0.5.0",
+  "homepage": "https://crewscore.ai",
+  "source": "docs/validation-corpus.md"
+}

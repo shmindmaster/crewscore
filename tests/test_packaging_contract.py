@@ -23,7 +23,7 @@ TESTS = REPO / "tests"
 IMPORT_TO_DISTRIBUTION = {"yaml": "pyyaml"}
 
 # Modules that live in this repository rather than on an index.
-FIRST_PARTY = {"crewscore", "validate_corpus", "tests", "conftest"}
+FIRST_PARTY = {"crewscore", "validate_corpus", "tests", "conftest", "scripts"}
 
 
 def _declared() -> set[str]:

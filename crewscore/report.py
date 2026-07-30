@@ -35,8 +35,18 @@ def _bar_color(score: int) -> str:
     return _score_color_hex(score)
 
 
-def share_text(result: ScoreResult) -> str:
-    """One-line share copy with overall score and product URL."""
+def share_text(
+    result: ScoreResult,
+    *,
+    matched: int | None = None,
+    total: int | None = None,
+    hero_label: str | None = None,
+) -> str:
+    """One-line share copy: control coverage, not vanity quality score.
+
+    When matched/total are provided, prefer honest N/total language and an
+    optional hero missing-control label. Config path is unchanged (smells).
+    """
     if not result.governance_applicable:
         # Never publish a governance grade for a coding-agent config file.
         return (
@@ -45,9 +55,16 @@ def share_text(result: ScoreResult) -> str:
         )
     # Coverage, not quality: the score says which guardrails are written down,
     # not that the agent is production-ready. See docs/validation.md.
+    if matched is not None and total is not None:
+        base = f"Control coverage {matched}/{total} written"
+        if hero_label:
+            base = f"{base} · missing: {hero_label}"
+        return (
+            f"{base} · offline checklist (not runtime proof). {HOMEPAGE}"
+        )
     return (
-        f"My AI agent scored {result.overall}/100 on CrewScore "
-        f"({result.tier}) — offline guardrail coverage scan. "
+        f"Control coverage {result.overall}/100 on CrewScore "
+        f"({result.tier}) — written controls present, not runtime proof. "
         f"{HOMEPAGE}"
     )
 
