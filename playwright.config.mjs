@@ -10,6 +10,11 @@ export default defineConfig({
     baseURL: "http://127.0.0.1:41731",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
+    // Drive the page the way a reduced-motion reader experiences it. Animated
+    // scrolling meant a click could be dispatched at a coordinate the target
+    // had already left, which read as "the handler never ran" — the shared
+    // cause behind several flakes that only appeared under parallel load.
+    reducedMotion: "reduce",
   },
   webServer: {
     command: "node scripts/serve-static.mjs",
