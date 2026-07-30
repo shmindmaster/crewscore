@@ -2,18 +2,18 @@
   "anti_promise": "CrewScore checks whether written guardrails are present in prompt text. It is not a red team, runtime enforcer, or safety certification.",
   "channels": {
     "linkedin": {
-      "text": "Find the safety rules your AI agent prompt forgot.\n\nCrewScore 0.6.1 scores whether published guardrails are written down \u2014\ninjection defense, human approval, stop conditions, and more \u2014 for system\nprompts and coding-agent config.\n\nCrewScore checks whether written guardrails are present in prompt text. It is not a red team, runtime enforcer, or safety certification.\n\nTry: https://crewscore.ai\npip install crewscore\n"
+      "text": "CI that fails when your agent prompt never says \u201ca human must approve.\u201d\n\nCrewScore 0.6.2 scores whether published guardrails are written down \u2014\ninjection defense, human approval, stop conditions, and more \u2014 for system\nprompts and coding-agent config.\n\nCrewScore checks whether written guardrails are present in prompt text. It is not a red team, runtime enforcer, or safety certification.\n\nTry: https://crewscore.ai\npip install crewscore\n"
     },
     "show_hn": {
-      "first_comment": "CrewScore (0.6.1) is an offline, deterministic checker for AI agent system\nprompts and coding-agent config (AGENTS.md smells).\n\nWhat it is:\n- 23 public written controls across 8 dimensions\n- `crewscore scan .` + GitHub Action with control policies / SARIF\n- Browser checker at https://crewscore.ai (prompt text stays local)\n\nWhat it is not:\n- CrewScore checks whether written guardrails are present in prompt text. It is not a red team, runtime enforcer, or safety certification.\n\nInstall:\n```\npip install crewscore\ncrewscore scan .\n```\n\nRepo: https://github.com/shmindmaster/crewscore\nValidation: https://github.com/shmindmaster/crewscore/blob/main/docs/validation.md\n",
+      "first_comment": "CrewScore (0.6.2) is an offline, deterministic checker for AI agent system\nprompts and coding-agent config (AGENTS.md smells).\n\nWhat it is:\n- 23 public written controls across 8 dimensions\n- `crewscore scan .` + GitHub Action with control policies / SARIF\n- Browser checker at https://crewscore.ai (prompt text stays local)\n\nWhat it is not:\n- CrewScore checks whether written guardrails are present in prompt text. It is not a red team, runtime enforcer, or safety certification.\n\nInstall:\n```\npip install crewscore\ncrewscore scan .\n```\n\nRepo: https://github.com/shmindmaster/crewscore\nValidation: https://github.com/shmindmaster/crewscore/blob/main/docs/validation.md\n",
       "title": "Show HN: CrewScore \u2013 offline checklist for missing AI agent guardrails"
     },
     "x": {
-      "text": "CrewScore 0.6.1: find the written safety controls your agent prompt forgot. Offline, no API key. Find the safety rules your AI agent prompt forgot. https://crewscore.ai"
+      "text": "CrewScore 0.6.2: find the written safety controls your agent prompt forgot. Offline, no API key. CI that fails when your agent prompt never says \u201ca human must approve.\u201d https://crewscore.ai"
     }
   },
   "generated": "2026-07-29",
   "note": "Drafts only. Post via optional APIs or paste; no interview process.",
-  "package_version": "0.6.1",
+  "package_version": "0.6.2",
   "posts_automatically": false
 }

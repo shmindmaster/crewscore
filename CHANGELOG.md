@@ -14,7 +14,7 @@ install them, and do not compare their numbers to these.
 
 ---
 
-## [Unreleased] — ruleset 0.6.0 cost/audit/compliance validity
+## [0.6.2] — 2026-07-30 — viral wedge + ruleset 0.6.0 validity
 
 ### Scoring (ruleset `crewscore-hygiene@0.6.0`)
 
@@ -26,12 +26,24 @@ install them, and do not compare their numbers to these.
 - **Same 23 controls and 8 dimensions.** Denominator and formula unchanged;
   only which phrasings count as a hit changed. Scores from `@0.5.0` are **not**
   comparable one-for-one on those three dimensions.
+- Re-ran corpus harness under `@0.6.0`: production median **10/100**, Cliff's
+  delta **0.614** (still separates; p = 0.0001). Prior 14/100 and 0.672 were
+  under looser patterns.
 - Provenance notes updated; Compliance remains `author-intuition`.
 
 ### Added
 
-- Regression tests locking the measured corpus false positives and the true
-  positives that must still score.
+- **Viral wedge:** scan/test extract inline `SYSTEM_PROMPT` / `system_prompt`
+  string literals from source; hero gap (first missing control); **CONTROL
+  COVERAGE N/23** language; corpus-card SVG/JSON + generator; `--require`
+  control gate polish.
+- Regression tests locking measured corpus false positives and true positives
+  that must still score.
+
+### Documentation
+
+- README, launch copy, validation docs, and dist-pack shock numbers aligned to
+  the `@0.6.0` harness output.
 
 ---
 

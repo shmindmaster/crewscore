@@ -4,7 +4,7 @@
 /** CrewScore browser scorer — generated from Python. Do not edit by hand. */
 (function (global) {
   const ENGINE = {
-  "version": "0.6.1",
+  "version": "0.6.2",
   "ruleset": "crewscore-hygiene@0.6.0",
   "dimensions": [
     {

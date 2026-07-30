@@ -38,9 +38,9 @@
     "live_adversarial": false,
     "name": "CrewScore",
     "offline_scan": true,
-    "package_version": "0.6.1",
+    "package_version": "0.6.2",
     "repo": "shmindmaster/crewscore",
-    "ruleset": "crewscore-hygiene@0.5.0",
+    "ruleset": "crewscore-hygiene@0.6.0",
     "score_meaning": "written-control coverage (checklist), not quality ranking",
     "stars": null
   },
@@ -51,7 +51,7 @@
     "Neither product replaces runtime enforcement or live red-teaming."
   ],
   "generated": "2026-07-29",
-  "generated_utc": "2026-07-30T01:04:52.885110+00:00",
+  "generated_utc": "2026-07-30T04:31:26.315745+00:00",
   "method": "public-docs-and-live-crewscore-metadata; no interviews",
   "online": false
 }

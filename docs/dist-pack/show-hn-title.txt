@@ -1,1 +1,1 @@
-Show HN: CrewScore – CI for missing written guardrails in AI agent prompts
+Show HN: CrewScore – offline checklist for missing AI agent guardrails

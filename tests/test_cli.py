@@ -804,7 +804,7 @@ def test_version_is_0_5_1():
     """
     from crewscore import __version__
 
-    assert __version__ == "0.6.1"
+    assert __version__ == "0.6.2"
 
 
 def test_fix_plan_json_lists_dimensions_without_writing(tmp_path: Path):
