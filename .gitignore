@@ -44,3 +44,6 @@ _production/demo-review/
 node_modules/
 playwright-report/
 test-results/
+
+# Local agent config (dev-server launch profile) — not part of the product
+.claude/
