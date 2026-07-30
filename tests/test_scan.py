@@ -315,8 +315,11 @@ def test_scan_cli_threshold_fails_exit_2(tmp_path: Path):
         main, ["scan", str(tmp_path), "--json", "--threshold", "90"]
     )
     assert result.exit_code == 2
-    payload = json.loads(result.output)
+    # stdout stays pure JSON; the failure reason lands on stderr so a --json
+    # CI log still explains the exit code.
+    payload = json.loads(result.stdout)
     assert any(item["overall"] < 90 for item in payload)
+    assert "Threshold failure" in result.stderr
 
 
 def test_scan_threshold_exempts_coding_agent_config(tmp_path: Path):
@@ -496,12 +499,13 @@ def test_scan_max_smells_gates_config_files(tmp_path: Path):
         main, ["scan", str(tmp_path), "--json", "--max-smells", "0"]
     )
     assert failing.exit_code == 2
-    payload = json.loads(failing.output)
+    payload = json.loads(failing.stdout)
     assert any(
         s["smell_id"] == "smell.context_bloat"
         for item in payload
         for s in item["smells"]
     )
+    assert "Smell threshold failure" in failing.stderr
 
 
 def test_scan_profile_override_governs_config_files(tmp_path: Path):
@@ -558,7 +562,7 @@ def test_scan_profile_override_makes_threshold_apply_to_config(tmp_path: Path):
         ],
     )
     assert result.exit_code == 2
-    payload = json.loads(result.output)
+    payload = json.loads(result.stdout)
     assert all(item["governance_applicable"] is True for item in payload)
     assert any(item["overall"] < 90 for item in payload)
 

@@ -74,6 +74,61 @@ def test_scan_markdown_worst_first_table():
     assert "| Path |" in md
 
 
+def test_scan_markdown_names_the_failed_control_in_the_policy_section():
+    """A red check must say which control failed, in the PR comment itself.
+
+    An unexplained exit 2 is how CI gates get deleted; a named control is how
+    the missing sentence gets written.
+    """
+    md = format_scan_markdown(
+        [
+            {
+                "path": "prompts/sys.md",
+                "overall": 40,
+                "tier": "STRUCTURAL: WEAK",
+                "governance_applicable": True,
+                "policy": {
+                    "failed": True,
+                    "required_controls": ["human_gate.approval_required"],
+                    "missing_required_controls": ["human_gate.approval_required"],
+                    "regressed_controls": ["safe_stop.stop_condition"],
+                },
+            }
+        ]
+    )
+    assert "### Control policy" in md
+    assert "required control `human_gate.approval_required` not found" in md
+    assert "`safe_stop.stop_condition` was in the baseline" in md
+
+
+def test_scan_markdown_confirms_a_passing_policy():
+    md = format_scan_markdown(
+        [
+            {
+                "path": "prompts/sys.md",
+                "overall": 90,
+                "tier": "STRUCTURAL: OK WITH GAPS",
+                "governance_applicable": True,
+                "policy": {
+                    "failed": False,
+                    "required_controls": ["human_gate.approval_required"],
+                    "missing_required_controls": [],
+                    "regressed_controls": [],
+                },
+            }
+        ]
+    )
+    assert "All required controls present" in md
+    assert "`human_gate.approval_required`" in md
+
+
+def test_scan_markdown_has_no_policy_section_without_a_policy():
+    md = format_scan_markdown(
+        [{"path": "a.md", "overall": 40, "tier": "STRUCTURAL: WEAK"}]
+    )
+    assert "### Control policy" not in md
+
+
 def test_scan_markdown_headline_ignores_coding_agent_config():
     """A config file at 0 must never become the PR comment's headline score.
 

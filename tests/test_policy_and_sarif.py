@@ -41,8 +41,10 @@ def test_explicit_control_policy_fails_without_changing_score_payload():
     )
     assert ordinary.exit_code == 0, ordinary.output
     assert gated.exit_code == 2, gated.output
-    before = json.loads(ordinary.output)
-    after = json.loads(gated.output)
+    before = json.loads(ordinary.stdout)
+    after = json.loads(gated.stdout)
+    # The reason for exit 2 must be visible even in --json mode (stderr).
+    assert "Required-control failure" in gated.stderr
     assert after["overall"] == before["overall"]
     assert after["dimensions"] == before["dimensions"]
     assert after["tier"] == before["tier"]
@@ -103,7 +105,7 @@ def test_baseline_fails_only_after_a_found_control_regresses(tmp_path: Path):
         ],
     )
     assert regressed.exit_code == 2, regressed.output
-    row = json.loads(regressed.output)[0]
+    row = json.loads(regressed.stdout)[0]
     assert "human_gate.approval_required" in row["policy"]["regressed_controls"]
 
 
@@ -164,7 +166,7 @@ def test_small_project_config_enforces_controls_without_a_yaml_runtime_dependenc
     _prompt(tmp_path).write_text(BARE, encoding="utf-8")
     failing = runner.invoke(main, ["scan", str(tmp_path), "--json", "--config", str(policy)])
     assert failing.exit_code == 2, failing.output
-    assert json.loads(failing.output)[0]["policy"]["failed"] is True
+    assert json.loads(failing.stdout)[0]["policy"]["failed"] is True
 
 
 def test_init_creates_non_deploying_regression_setup(tmp_path: Path):
@@ -181,5 +183,8 @@ def test_init_creates_non_deploying_regression_setup(tmp_path: Path):
     assert "required_controls: []" in config
     assert "config: .crewscore.yml" in workflow
     assert "sarif: crewscore.sarif" in workflow
+    # pr-comment defaults on; without this permission every same-repo PR
+    # comment 403s and the first-run experience is a red check.
+    assert "pull-requests: write" in workflow
     assert "deploy" not in workflow.lower()
     assert baseline["format"] == BASELINE_FORMAT

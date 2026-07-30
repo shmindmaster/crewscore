@@ -114,7 +114,7 @@ try {
   await page.addStyleTag({ content: "*, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }" });
 
   const fixture = await page.evaluate(() => window.CrewScoreDemoFixture);
-  if (!fixture || fixture.id !== "fictional-clinic-support-v1") throw new Error("The public fictional demo fixture did not load.");
+  if (!fixture || fixture.id !== "fictional-clinic-support-v2") throw new Error("The public fictional demo fixture did not load.");
   if (fixture.expected?.found !== 20 || fixture.expected?.missing?.length !== 3) throw new Error("The demo fixture no longer has the declared 20/23 starting state.");
 
   const screenshots = [];
@@ -134,7 +134,7 @@ try {
   await hold("before-state");
 
   await page.locator("#check-instructions").click();
-  await page.getByRole("heading", { name: "20 of 23 written guardrails found" }).waitFor();
+  await page.getByRole("heading", { name: "8 of 23 written guardrails found" }).waitFor();
   await page.locator("#results").scrollIntoViewIfNeeded();
   await shot("02-controls-result");
   await hold("local-check");
@@ -152,7 +152,7 @@ try {
   const approvalBox = await approval.boundingBox();
   if (!approvalBox) throw new Error("The selected control had no measurable focus box.");
   await page.getByRole("button", { name: "Add selected guardrails" }).click();
-  await page.getByRole("heading", { name: "21 of 23 written guardrails found" }).waitFor();
+  await page.getByRole("heading", { name: "9 of 23 written guardrails found" }).waitFor();
   await page.locator("#results").scrollIntoViewIfNeeded();
   await shot("04-local-rescan-hero");
   await hold("local-rescan");
@@ -168,7 +168,7 @@ try {
     throw new Error(`Capture browser faults: ${JSON.stringify({ consoleErrors, failedRequests })}`);
   }
   const video = page.video();
-  const resultHeading = await page.getByRole("heading", { name: "21 of 23 written guardrails found" }).textContent();
+  const resultHeading = await page.getByRole("heading", { name: "9 of 23 written guardrails found" }).textContent();
   await context.close();
   context = null;
   const capturedVideo = resolve(runDirectory, "crewscore-written-controls-review.webm");
@@ -189,9 +189,9 @@ try {
     reducedMotion: true,
     actions: [
       "Fill the public fictional fixture in the real checker",
-      "Run the local checker and assert 20 of 23 written controls",
+      "Run the local checker and assert 8 of 23 written controls",
       "Select the real human approval suggestion and show its diff",
-      "Apply the selected wording and assert 21 of 23 written controls",
+      "Apply the selected wording and assert 9 of 23 written controls",
       "Show the prompt-free result-sharing explanation"
     ],
     focus: { x: Math.round(approvalBox.x), y: Math.round(approvalBox.y), width: Math.round(approvalBox.width), height: Math.round(approvalBox.height) },

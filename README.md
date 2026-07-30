@@ -16,8 +16,8 @@ text is present.
 
 **We scanned 356 real agent prompts: 83 production prompts and 273
 general-purpose prompts. Among the production subset, median coverage was 10
-of 100.** GPT-Store median: 0.
-[Numbers →](docs/validation-corpus.md) · [Shareable card →](docs/dist-pack/corpus-card.svg) · [Live checker →](https://crewscore.ai)
+of 100.** GPT-Store median: 0 of 100.
+[Numbers →](docs/validation-corpus.md) · [Shareable card →](docs/corpus-card.svg) · [Live checker →](https://crewscore.ai)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11+-green.svg)](https://python.org)
@@ -26,16 +26,12 @@ of 100.** GPT-Store median: 0.
 
 <br/>
 
-<p>
-  <img src="assets/brand/logo-mark.svg" alt="CrewScore mark" width="48" height="48">
-</p>
-
-> Example: **control coverage 8/23 written** · hero gap: *A human must approve*.
+> Example: **control coverage 8/23 written** · first gap to review: *A human must approve*.
 > CrewScore checks whether controls are written down, not whether an agent obeys them.
 
 **Try it live, no install:** [crewscore.ai](https://crewscore.ai)
 
-<img src="docs/hero-demo.gif" alt="Terminal demo: crewscore test reports 8 of 23 written guardrails found, with the biggest gap — a human must approve — and the CI command to gate on it" width="720">
+<img src="docs/demo.svg" alt="Before and after: a bare assistant prompt covers 0 of 23 written controls, with 'a human must approve' as the first gap to review; after adding the suggested guardrail wording it covers 13 of 23. Coverage is not runtime proof." width="720">
 
 </div>
 
@@ -92,7 +88,7 @@ crewscore scan . --no-inline              # file discovery only
 crewscore init .                          # prompt-free regression baseline + PR workflow
 crewscore scan . --fail-on-regression --baseline .crewscore-baseline.json
 crewscore scan . --require human_gate.approval_required   # one-control CI habit
-crewscore test --prompt-file ./prompt.md  # coverage N/23 + hero gap
+crewscore test --prompt-file ./prompt.md  # coverage N/23 + first gap to review
 crewscore fix  --prompt-file ./prompt.md --plan   # what's missing, no writes
 crewscore rules --concepts                # the 23 controls, and the rules behind them
 ```
@@ -103,18 +99,31 @@ crewscore rules --concepts                # the 23 controls, and the rules behin
 
 ## CI
 
+Start report-only — it never fails a build:
+
 ```yaml
 - uses: shmindmaster/crewscore@v2
   with:
     scan-path: "."
-    # Report-only by default. Protect controls explicitly instead of treating
-    # the coverage average as a safety bar:
+```
+
+When you know which controls your workflow actually needs, name them — the
+build then fails only when a named control is missing, never on the coverage
+average:
+
+```yaml
+- uses: shmindmaster/crewscore@v2
+  with:
+    scan-path: "."
     required-controls: "human_gate.approval_required,safe_stop.stop_condition"
     sarif: "crewscore.sarif"
 ```
 
-Posts a sticky PR comment with the open rule findings. Guard downstream steps
-on the `scored` output, not on `score` — an empty score casts to `0`.
+Posts a sticky PR comment with the open rule findings (give the job
+`permissions: pull-requests: write`; without it the action logs a warning and
+moves on). Failed gates surface as `::error` annotations naming the control.
+Guard downstream steps on the `scored` output, not on `score` — an empty
+score casts to `0`.
 
 **[Action inputs, outputs, and the CLI variant →](docs/github-action.md)**
 
@@ -204,7 +213,6 @@ pytest
 | [Community discussions](https://github.com/shmindmaster/crewscore/discussions) | Questions, adoption feedback, and open-ended ideas |
 | [Comparison](docs/comparison.md) | Other tools, and what to use after this one |
 | [CHANGELOG](CHANGELOG.md) | Including every scoring change and its measured delta |
-| [Cleanup inventory](docs/cleanup-and-completion.md) | What this lean-product pass retained, completed, and deferred |
 
 ---
 

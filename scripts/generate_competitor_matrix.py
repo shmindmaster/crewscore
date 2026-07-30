@@ -15,7 +15,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT_DIR = ROOT / "docs" / "competitors"
+OUT_DIR = ROOT / "_production" / "competitors"
 JSON_PATH = OUT_DIR / "agentlinter-matrix.json"
 MD_PATH = OUT_DIR / "agentlinter.md"
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Collect automation-friendly product signals that replace interview PMF theater.
 
-Outputs docs/signals/latest.json. Network optional; always includes package +
-corpus + ruleset facts from the repo.
+Outputs _production/signals/latest.json (gitignored working data). Network
+optional; always includes package + corpus + ruleset facts from the repo.
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "docs" / "signals" / "latest.json"
+OUT = ROOT / "_production" / "signals" / "latest.json"
 
 
 def package_version() -> str:

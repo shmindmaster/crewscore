@@ -33,6 +33,53 @@ def _warning_lines(warnings: list[str]) -> list[str]:
     return lines
 
 
+def _policy_lines(results: list[dict[str, Any]]) -> list[str]:
+    """Markdown for control-policy outcomes; empty when no policy was applied.
+
+    The sticky PR comment is where a contributor learns their build failed.
+    A red X with no named control teaches people to delete the gate; a named
+    control teaches them to add the missing sentence.
+    """
+    applied = [r for r in results if r.get("policy")]
+    if not applied:
+        return []
+    failures: list[str] = []
+    for r in applied:
+        details = r.get("policy") or {}
+        path = str(r.get("path", ""))
+        for control in details.get("missing_required_controls") or []:
+            failures.append(
+                f"- ❌ `{path}` — required control `{control}` not found in the text"
+            )
+        for control in details.get("regressed_controls") or []:
+            failures.append(
+                f"- ❌ `{path}` — control `{control}` was in the baseline but is gone"
+            )
+    lines = ["", "### Control policy"]
+    if failures:
+        lines.extend(failures)
+        lines.append(
+            "  - Add the missing wording (the web checker at "
+            "[crewscore.ai](https://crewscore.ai) suggests copy-ready text), "
+            "or adjust `required_controls` if the gate is wrong."
+        )
+    else:
+        gated = sorted(
+            {
+                control
+                for r in applied
+                for control in (r.get("policy") or {}).get("required_controls") or []
+            }
+        )
+        if not gated:
+            return []
+        lines.append(
+            "- ✅ All required controls present: "
+            + ", ".join(f"`{control}`" for control in gated)
+        )
+    return lines
+
+
 def _scan_warning_lines(results: list[dict[str, Any]]) -> list[str]:
     """Markdown for per-file warnings across a scan; empty when there are none.
 
@@ -231,6 +278,7 @@ def format_scan_markdown(
         lines.append(
             f"| `{r.get('path', '')}` | {score} | `{r.get('tier', '')}` |"
         )
+    lines.extend(_policy_lines(results))
     lines.extend(_scan_warning_lines(results))
     lines.extend(["", "---", "_Structural pre-gate only._", ""])
     return "\n".join(lines)

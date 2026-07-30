@@ -17,9 +17,15 @@ agent-guard-report-*.html
 .worktrees/
 _product-experience/
 _production/
-# Generated distribution drafts may be committed under docs/dist-pack;
-# keep ad-hoc local variants out of the tree.
+# Channel drafts and internal working docs live under _production/ (above).
+# Keep any ad-hoc local variants out of the tree too.
 _dist-pack/
+docs/dist-pack/
+docs/signals/
+docs/competitors/
+docs/launch-copy.md
+docs/cleanup-and-completion.md
+docs/human-gate-inventory.md
 docs/superpowers/
 docs/research/
 docs/launch/
@@ -38,3 +44,6 @@ _production/demo-review/
 node_modules/
 playwright-report/
 test-results/
+
+# Local agent config (dev-server launch profile) — not part of the product
+.claude/

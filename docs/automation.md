@@ -68,7 +68,8 @@ for `shmindmaster/crewscore` / `release.yml` / environment `pypi`.
 
 ```bash
 python scripts/generate_dist_pack.py
-# → docs/dist-pack/{show-hn-*,x-post.txt,linkedin-post.md,manifest.json,checksums.txt}
+# → _production/launch/dist-pack/{show-hn-*,x-post.txt,linkedin-post.md,manifest.json,checksums.txt}
+# (gitignored — channel drafts are working material, never published docs)
 ```
 
 Posts are **drafts** by default (`posts_automatically: false`). Optional future:
@@ -98,9 +99,9 @@ Still land via the same auto-merge path, but must include:
 
 ## Related
 
-- [Human-gate inventory](human-gate-inventory.md) — full project audit + decisions
 - [Development](development.md)
-- [Cleanup inventory](cleanup-and-completion.md)
 - [GitHub Action](github-action.md)
-- [Competitor matrix](competitors/agentlinter.md)
-- [Product signals](signals/latest.json)
+
+Internal working material (audit inventories, competitor matrix, product
+signals, channel drafts) lives under the gitignored `_production/` directory —
+it is maintainer working data, not published documentation.
