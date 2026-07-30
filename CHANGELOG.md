@@ -12,9 +12,102 @@ development and have been withdrawn from PyPI — they carried a script-injectio
 exposure in `action.yml` and a scoring term that rewarded prompt length. Do not
 install them, and do not compare their numbers to these.
 
+## [Unreleased]
+
 ---
 
-## [Unreleased]
+## [0.6.5] — 2026-07-30 — the hero image is a claim too
+
+No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
+
+### Fixed
+
+- **The README's demo image overstated the tool.** `docs/demo.svg` claimed a
+  bare assistant prompt reaches **14/23** after `crewscore fix`; the shipped
+  scorer produces **13/23**. It also still read "Biggest gap" after 0.6.4
+  renamed that label everywhere else. A project that publishes a validation
+  study does not get to hand-type the number on its own hero image, so
+  `tests/test_demo_asset.py` now runs the scorer and fails if the picture and
+  the product disagree — including the width of the progress bar.
+- **A slow import no longer steals the panel you switched to.** Both the
+  GitHub import and the local-file read finished by revealing the paste panel
+  unconditionally. Move to another input tab while a fetch is in flight and
+  the app yanked you back when it landed. Each import now records the tab you
+  were on and defers to a later choice of yours.
+- The GitHub banner derived its median from the corpus report but hard-coded
+  "83 production" and "356 total" beside it. All three now come from the
+  generated data.
+
+### Improved
+
+- `assets/site.js` sets `data-ready` on the body once listeners are bound.
+  `data-mode` ships in the static HTML, so nothing could previously distinguish
+  a hydrated page from inert markup — a click could land on a dead button and
+  fail an assertion two steps later. The browser suite now waits on it, which
+  removed three flakes that only appeared under parallel load.
+- README: dropped a stray logo mark between the badges and the demo, and gave
+  the GPT-Store median its scale.
+
+---
+
+## [0.6.4] — 2026-07-30 — honest labels, legible CI failures
+
+No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
+
+### Fixed
+
+- **The `pr-comment` default no longer 403s on the first PR.** `crewscore init`
+  now writes `pull-requests: write` into the generated workflow, and the sticky
+  comment step degrades a read-only token (every fork PR) to a `::warning` with
+  a fix hint instead of failing an otherwise green job.
+- **A red check now explains itself.** `action.yml` emits `::error` annotations
+  naming the missing or regressed control and the file it came from, and every
+  gate failure reason (threshold, smells, required controls, regressions) prints
+  to stderr — including `--json` runs, where stdout stays pure JSON.
+- `format_scan_markdown` renders a **Control policy** section: a failed gate
+  names the control in the sticky comment, a passing gate confirms it.
+
+### Improved
+
+- **Input methods are real tabs.** Paste / Upload / Import looked like tabs
+  but showed all three inputs at once; now one panel is visible at a time,
+  with correct tab/tabpanel semantics and the last method remembered locally.
+- **"Biggest gap" renamed to "First gap to review"** everywhere (site, share
+  text, cards, CLI's `FIRST GAP TO REVIEW:`, README). The selection is the
+  first missing control from the weakest dimension — calling that "biggest"
+  implied a risk ranking the tool does not do.
+- **Canonical 8/23 demo.** The browser demo fixture now scores 8 of 23 with
+  human approval as the first gap — the same example the README, demo scripts,
+  and launch copy use. Previously the site demo showed 20/23 while marketing
+  showed 8/23.
+- **Remediation before sharing.** The result panel now orders: result → first
+  gap → review suggested wording → other gaps → share. Buttons renamed for
+  accuracy: "Review suggested wording", "Apply to working copy".
+- **Mode symmetry:** picking Cursor auto-enters developer mode; picking a
+  ChatGPT/Claude path afterwards now returns to simple mode when developer
+  mode was auto-entered (an explicit toggle is never overridden).
+- Checkbox changes in the fix review no longer re-render the whole list, so
+  keyboard focus stays put; applying twice extends the existing "Suggested
+  guardrails" section instead of stacking a second header.
+- Vendor checklist moved from primary navigation to the footer; empty result
+  panel gained a "Run a sample check" button; footer shows a build stamp
+  (package version + ruleset) for deployment-parity checks.
+- README and `docs/github-action.md` split the report-only starter snippet from
+  the enforcing one, and document uploading SARIF to code scanning.
+
+### Housekeeping
+
+- The stale hero demo (`docs/hero-demo.gif`, `.mp4`) recorded the abandoned
+  wizard UI and referenced `@v1`; the README now uses the current `docs/demo.svg`.
+- Internal working documents (launch drafts, competitor notes, product signals,
+  process inventories) moved out of the published tree, along with the local
+  dev-server profile in `.claude/`.
+
+---
+
+## [0.6.3] — 2026-07-30 — launch hardening
+
+No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
 
 ### Fixed
 
@@ -135,7 +228,8 @@ No scoring change. Ruleset remains `crewscore-hygiene@0.5.0`.
 - Regenerated **architecture**, **scoring-and-controls**, **github-action**,
   **development**, and **automation** guides.
 - Stable redirects: `docs/scoring.md`, `docs/scoring-governance.md`, `docs/ci.md`.
-- Inventory: [cleanup-and-completion.md](cleanup-and-completion.md).
+- Inventory: cleanup-and-completion notes (now maintainer working material
+  under the gitignored `_production/` directory).
 - Human process theater removed from launch policy: no PMF interview gate;
   strategy defaults locked in automation.md.
 

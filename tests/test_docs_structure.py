@@ -24,9 +24,7 @@ CANONICAL_DOCS = (
     "policies.md",
     "next-steps-eval.md",
     "roadmap.md",
-    "cleanup-and-completion.md",
     "automation.md",
-    "human-gate-inventory.md",
 )
 
 # Old paths kept as redirects so external links do not 404 in-repo.

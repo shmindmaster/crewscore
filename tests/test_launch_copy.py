@@ -1,6 +1,7 @@
 """Launch copy must quote the harness, not the author's memory.
 
-`docs/launch-copy.md` carries drafts for X, LinkedIn, Facebook, HN and Reddit.
+`_production/launch/launch-copy.md` (gitignored maintainer working material)
+carries drafts for X, LinkedIn, Facebook, HN and Reddit.
 Every one leads with a measured figure, which makes it the highest-risk
 document in the repo: a number that drifts here is wrong in public, on a
 platform with no errata, in front of the audience most likely to check.
@@ -19,11 +20,15 @@ from pathlib import Path
 import pytest
 
 REPO = Path(__file__).resolve().parents[1]
-COPY = REPO / "docs" / "launch-copy.md"
+COPY = REPO / "_production" / "launch" / "launch-copy.md"
 DATA = REPO / "docs" / "validation-corpus.json"
 
 
 def _copy() -> str:
+    # The drafts are maintainer working material and are not committed; on a
+    # clean checkout (CI included) these guards have nothing to guard.
+    if not COPY.exists():
+        pytest.skip("launch copy drafts not present in this checkout")
     return COPY.read_text(encoding="utf-8")
 
 

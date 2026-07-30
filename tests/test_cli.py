@@ -94,8 +94,11 @@ def test_test_threshold_fails():
         main, ["test", "--prompt", BARE, "--json", "--threshold", "50"]
     )
     assert result.exit_code == 2
-    payload = json.loads(result.output)
+    # stdout stays pure JSON; the failure reason goes to stderr so a CI log
+    # explains the exit code even in --json mode.
+    payload = json.loads(result.stdout)
     assert payload["overall"] < 50
+    assert "Threshold failure" in result.stderr
 
 
 def test_test_threshold_human_mode_no_crash():
@@ -610,7 +613,7 @@ def test_test_max_smells_gates_system_prompts_too(tmp_path: Path):
         main,
         ["test", "--prompt-file", str(prompt_file), "--json", "--max-smells", "0"],
     )
-    payload = json.loads(result.output)
+    payload = json.loads(result.stdout)
     assert payload["governance_applicable"] is True
     assert any(s["smell_id"] == "smell.context_bloat" for s in payload["smells"])
     assert result.exit_code == 2
@@ -630,7 +633,7 @@ def test_test_max_smells_gates_coding_agent_config(tmp_path: Path):
     failing = runner.invoke(
         main, ["test", "--prompt-file", str(config), "--json", "--max-smells", "0"]
     )
-    payload = json.loads(failing.output)
+    payload = json.loads(failing.stdout)
     assert payload["governance_applicable"] is False
     assert any(s["smell_id"] == "smell.context_bloat" for s in payload["smells"])
     assert failing.exit_code == 2
@@ -798,13 +801,14 @@ def test_python_m_crewscore_entry_exists():
     assert callable(module.main)
 
 
-def test_version_is_0_5_1():
-    """This release breaks the --json payload shape and `fix` exit codes;
-    semver requires a minor bump, not the previous 0.3.1 patch bump.
+def test_version_matches_release():
+    """Pin the package version so a release cut cannot forget the bump; the
+    0.6 line broke the --json payload shape and `fix` exit codes, hence the
+    minor bump over the previous 0.3.1 patch line.
     """
     from crewscore import __version__
 
-    assert __version__ == "0.6.2"
+    assert __version__ == "0.6.5"
 
 
 def test_fix_plan_json_lists_dimensions_without_writing(tmp_path: Path):

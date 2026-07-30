@@ -12,6 +12,8 @@ workflow below uses a GitHub-hosted runner because it is a copy-paste starting
 point for your own repository. Use your own isolated self-hosted labels only
 after applying the same trust boundary.
 
+### Step 1 — report-only (never fails a build)
+
 ```yaml
 # .github/workflows/crewscore.yml
 name: CrewScore
@@ -21,17 +23,28 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write   # sticky PR comment with open rule findings
+      pull-requests: write   # sticky PR comment; omitting it degrades to a warning
     steps:
       - uses: actions/checkout@v4
+      - uses: shmindmaster/crewscore@v2
+        with:
+          scan-path: "."
+```
+
+Run this for a week. Read the sticky comments. Decide which controls your
+workflow actually needs before you make anything fail.
+
+### Step 2 — enforce named controls
+
+```yaml
       - name: CrewScore
         id: crewscore
         uses: shmindmaster/crewscore@v2
         with:
-          # Prefer a repo scan when you have multiple agent artifacts.
-          # The Action is report-only by default: use explicit public controls
-          # or regressions, not the coverage average, when failing CI.
           scan-path: "."
+          # The build fails only when a named control is missing — never on
+          # the coverage average. Failures surface as ::error annotations
+          # naming the control and the file.
           required-controls: "human_gate.approval_required,safe_stop.stop_condition"
           sarif: "crewscore.sarif"
           # explain: "true"     # matched vs missing signals
@@ -41,6 +54,20 @@ jobs:
         run: |
           echo "score=${{ steps.crewscore.outputs.score }}"
           echo "tier=${{ steps.crewscore.outputs.tier }}"
+```
+
+### Optional — inline code-scanning annotations from SARIF
+
+The SARIF report is prompt-free (control IDs and file paths, no prompt text or
+snippets), so it is safe to upload to code scanning:
+
+```yaml
+      - name: Upload SARIF to code scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: crewscore.sarif
+        # Requires: permissions: security-events: write
 ```
 
 ### Inputs
@@ -80,8 +107,10 @@ legacy numeric logic; new workflows should use an explicit control policy.
 
 ### Notes
 
-- Sticky PR comments need `permissions: pull-requests: write`. Set
-  `pr-comment: "false"` to disable.
+- Sticky PR comments need `permissions: pull-requests: write`. Without it
+  (fork PRs always run with a read-only token) the action emits a workflow
+  warning and continues — the summary is still in the job summary. Set
+  `pr-comment: "false"` to disable entirely.
 - The composite action installs from the action path
   (`pip install "${{ github.action_path }}"`), so monorepo and pre-PyPI
   self-tests work with `uses: ./`.

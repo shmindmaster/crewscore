@@ -3,7 +3,7 @@
 
     py scripts/generate_corpus_card.py
 
-Writes docs/dist-pack/corpus-card.svg and docs/dist-pack/corpus-card.json.
+Writes docs/corpus-card.svg and docs/corpus-card.json.
 No network. Safe to regenerate after a validation re-run.
 """
 
@@ -24,8 +24,8 @@ from crewscore.corpus_card import (  # noqa: E402
 from crewscore.scoring import RULESET_ID  # noqa: E402
 
 DEFAULT_MD = ROOT / "docs" / "validation-corpus.md"
-DEFAULT_SVG = ROOT / "docs" / "dist-pack" / "corpus-card.svg"
-DEFAULT_JSON = ROOT / "docs" / "dist-pack" / "corpus-card.json"
+DEFAULT_SVG = ROOT / "docs" / "corpus-card.svg"
+DEFAULT_JSON = ROOT / "docs" / "corpus-card.json"
 HOMEPAGE = "https://crewscore.ai"
 
 
