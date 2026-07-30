@@ -16,6 +16,23 @@ install them, and do not compare their numbers to these.
 
 ---
 
+## [0.6.7] — 2026-07-30 — the toast was never styled
+
+No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
+
+### Fixed
+
+- **Every confirmation message has been invisible.** `#toast` shipped without
+  `class="toast"`, so the stylesheet rule never matched it. "Result link
+  copied", "Local file loaded — it was not uploaded", "Review cancelled —
+  original instructions kept" and the rest rendered as unstyled text at the
+  very bottom of the document, below the footer, off screen. Showing and
+  hiding a block element there also reflowed the page, which is how a click
+  could be dispatched at a coordinate its target had just left. The toast is
+  now the fixed, non-interactive overlay it was always written to be.
+
+---
+
 ## [0.6.6] — 2026-07-30 — clicks that land, motion you asked for
 
 No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
