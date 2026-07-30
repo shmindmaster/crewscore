@@ -26,6 +26,7 @@ CANONICAL_DOCS = (
     "roadmap.md",
     "cleanup-and-completion.md",
     "automation.md",
+    "human-gate-inventory.md",
 )
 
 # Old paths kept as redirects so external links do not 404 in-repo.

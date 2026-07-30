@@ -1,0 +1,57 @@
+{
+  "agentlinter": {
+    "claims": [
+      "Score, diagnose, and auto-fix agent workspace",
+      "Local scanning",
+      "GitHub Action",
+      "Weighted scoring dimensions (public marketing)"
+    ],
+    "has_fix": true,
+    "has_github_action": true,
+    "homepage": "https://agentlinter.com",
+    "install": "npx agentlinter",
+    "license": "MIT",
+    "name": "AgentLinter",
+    "offline_scan": true,
+    "repo": "seojoonkim/agentlinter",
+    "stars": null
+  },
+  "crewscore": {
+    "certification_claim": false,
+    "control_count": 23,
+    "dimension_weighting": "equal",
+    "dimensions": [
+      "injection",
+      "hallucination",
+      "citation",
+      "cost",
+      "human_gate",
+      "safe_stop",
+      "audit",
+      "compliance"
+    ],
+    "has_config_smells": true,
+    "has_fix": true,
+    "has_github_action": true,
+    "homepage": "https://crewscore.ai",
+    "install": "pip install crewscore",
+    "live_adversarial": false,
+    "name": "CrewScore",
+    "offline_scan": true,
+    "package_version": "0.6.1",
+    "repo": "shmindmaster/crewscore",
+    "ruleset": "crewscore-hygiene@0.5.0",
+    "score_meaning": "written-control coverage (checklist), not quality ranking",
+    "stars": null
+  },
+  "differentiation": [
+    "CrewScore separates system prompts (governance controls) from coding-agent config (smells).",
+    "CrewScore publishes validation limits and known-poor dimensions explicitly.",
+    "CrewScore score is equal-weight coverage of 23 controls unless corpus automation changes it.",
+    "Neither product replaces runtime enforcement or live red-teaming."
+  ],
+  "generated": "2026-07-29",
+  "generated_utc": "2026-07-30T00:12:24.680261+00:00",
+  "method": "public-docs-and-live-crewscore-metadata; no interviews",
+  "online": false
+}

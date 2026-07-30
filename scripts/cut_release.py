@@ -55,17 +55,19 @@ def main() -> int:
     if not changelog_has_section(version):
         print(f"ERROR: CHANGELOG.md missing section ## [{version}]", file=sys.stderr)
         return 1
-    if tag_exists(tag):
-        print(f"ERROR: tag {tag} already exists", file=sys.stderr)
-        return 1
-
     print(f"package_version={version}")
     print(f"intended_tag={tag}")
     print("changelog_section=ok")
+    exists = tag_exists(tag)
+    print(f"tag_exists={'1' if exists else '0'}")
 
     if not args.push:
         print("dry_run=1 (pass --push to create and push the tag)")
         return 0
+
+    if exists:
+        print(f"ERROR: tag {tag} already exists", file=sys.stderr)
+        return 1
 
     msg = f"Release {tag}"
     _run(["git", "tag", "-a", tag, "-m", msg])

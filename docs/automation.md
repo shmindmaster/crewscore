@@ -98,6 +98,9 @@ Still land via the same auto-merge path, but must include:
 
 ## Related
 
+- [Human-gate inventory](human-gate-inventory.md) — full project audit + decisions
 - [Development](development.md)
 - [Cleanup inventory](cleanup-and-completion.md)
 - [GitHub Action](github-action.md)
+- [Competitor matrix](competitors/agentlinter.md)
+- [Product signals](signals/latest.json)
