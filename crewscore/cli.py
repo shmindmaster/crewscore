@@ -19,10 +19,17 @@ from crewscore.policy import (
     evaluate_policy,
     resolve_policy,
 )
+from crewscore.hero import coverage_from_findings, hero_missing_control
 from crewscore.report import render_badge_svg, render_html_report, share_text
 from crewscore.rules_catalog import SCORING_METHOD, catalog_payload, scoring_transparency_block
 from crewscore.sarif import write_sarif
-from crewscore.scan import MAX_FILE_BYTES, discover_prompt_files, score_paths
+from crewscore.scan import (
+    MAX_FILE_BYTES,
+    discover_inline_prompt_sources,
+    discover_prompt_files,
+    score_inline_prompts,
+    score_paths,
+)
 from crewscore.scoring import DIMENSIONS, RULESET_ID, build_result, tier_color
 from crewscore.scorers import structural_analysis
 from crewscore.smells import detect_smells, find_repo_root
@@ -391,6 +398,12 @@ def test(
             fh.write(md_body)
             fh.write("\n")
 
+    matched_n = total_n = 0
+    hero = None
+    if result.governance_applicable:
+        matched_n, total_n = coverage_from_findings(findings)
+        hero = hero_missing_control(findings)
+
     if as_json:
         payload = result.to_dict()
         if result.governance_applicable:
@@ -401,6 +414,12 @@ def test(
             # let a reader reconstruct a score from them alone.
             payload["findings"] = findings
             payload["transparency"] = scoring_transparency_block()
+            payload["coverage"] = {
+                "matched": matched_n,
+                "total": total_n,
+                "missing": total_n - matched_n,
+                "hero": hero,
+            }
         if policy.enabled:
             payload["policy"] = policy_result
         click.echo(json.dumps(payload, indent=2, sort_keys=True))
@@ -409,7 +428,7 @@ def test(
         console.print()
         console.print(
             Panel(
-                f"[bold]{BRAND.upper()} — Structural Hygiene Report[/bold]",
+                f"[bold]{BRAND.upper()} — Written Control Coverage[/bold]",
                 border_style="blue",
                 expand=False,
             )
@@ -449,7 +468,8 @@ def test(
                 "[dim]How scored: each dimension = "
                 "the share of that dimension's controls your prompt states; "
                 "overall = mean of 8 dimensions. "
-                "See the controls: [bold]crewscore rules --concepts[/bold] "
+                "Coverage count = matched / 23 published controls. "
+                "See: [bold]crewscore rules --concepts[/bold] "
                 "· machine: [bold]crewscore rules --json[/bold][/dim]"
             )
             console.print()
@@ -461,10 +481,21 @@ def test(
             console.print()
             console.print(f"  {'-' * 54}")
             console.print(
-                f"  [{color}]OVERALL SCORE:  {result.overall}/100  "
-                f"{result.tier}[/{color}]"
+                f"  [{color}]CONTROL COVERAGE:  {matched_n}/{total_n} written  "
+                f"({result.overall}/100 mean)  {result.tier}[/{color}]"
             )
             console.print(f"  {'-' * 54}")
+            if hero:
+                console.print()
+                console.print(
+                    f"  [bold red]HERO GAP:[/bold red] {hero.get('label')}"
+                )
+                if hero.get("concept"):
+                    console.print(
+                        f"  [dim]Gate CI on it: "
+                        f"[bold]crewscore scan . --require {hero['concept']}"
+                        f"[/bold][/dim]"
+                    )
 
         if result.warnings:
             console.print()
@@ -503,7 +534,15 @@ def test(
 
         console.print()
         if result.governance_applicable:
-            console.print(f"  Share: {share_text(result)}")
+            console.print(
+                "  Share: "
+                + share_text(
+                    result,
+                    matched=matched_n,
+                    total=total_n,
+                    hero_label=(hero or {}).get("label"),
+                )
+            )
             console.print()
         console.print(
             f"  -> Open rules: [bold]crewscore rules[/bold] "
@@ -514,6 +553,11 @@ def test(
                 f"  -> Run [bold]crewscore fix[/bold] to append templates "
                 "(still not runtime proof)."
             )
+            if hero and hero.get("concept"):
+                console.print(
+                    f"  -> CI (one control): [bold]crewscore scan . "
+                    f"--require {hero['concept']}[/bold]"
+                )
             console.print(
                 "  -> CI: [bold]--json --fail-on-regression --baseline FILE[/bold] · "
                 "repo: [bold]crewscore scan .[/bold]"
@@ -1375,6 +1419,16 @@ def init(path: Path, force: bool):
     ),
 )
 @click.option(
+    "--include-inline/--no-inline",
+    default=True,
+    show_default=True,
+    help=(
+        "Also extract system_prompt / SYSTEM_PROMPT (etc.) string literals from "
+        ".py/.ts/.js source so AI apps that bury prompts in code still get a "
+        "coverage finding. Offline pattern match only."
+    ),
+)
+@click.option(
     "--require",
     "required_controls",
     multiple=True,
@@ -1417,6 +1471,7 @@ def scan(
     explain,
     summary,
     profile,
+    include_inline,
     required_controls,
     forbidden_missing_controls,
     baseline,
@@ -1426,8 +1481,9 @@ def scan(
 ):
     """Discover and score agent prompt files under PATH (default: .).
 
-    Looks for AGENTS.md, CLAUDE.md, system-prompt.md, and files under
-    agents/prompts/prompt directories. Offline structural scan only.
+    Looks for AGENTS.md, CLAUDE.md, system-prompt.md, files under
+    agents/prompts/prompt directories, and (by default) system_prompt string
+    literals embedded in .py/.ts/.js source. Offline structural scan only.
     """
     root = Path(path).resolve()
     policy = _resolve_policy_or_exit(
@@ -1438,8 +1494,9 @@ def scan(
         fail_on_regression=fail_on_regression,
     )
     files = discover_prompt_files(root)
+    inlines = discover_inline_prompt_sources(root) if include_inline else []
 
-    if not files:
+    if not files and not inlines:
         # Machine path: stdout must be valid JSON (same array shape as a
         # non-empty scan) so CI consumers never fail on json.loads. Human path
         # keeps the explanatory message. Exit stays non-zero either way so
@@ -1452,8 +1509,10 @@ def scan(
             )
             err_console.print(
                 "[dim]Looking for AGENTS.md, CLAUDE.md, system-prompt.md, "
-                "system_prompt.md, AGENT.md, prompts.md, and files under "
-                "agents/, prompts/, or prompt/ directories.[/dim]"
+                "system_prompt.md, AGENT.md, prompts.md, files under "
+                "agents/, prompts/, or prompt/ directories, and (default) "
+                "system_prompt string literals in .py/.ts/.js source. "
+                "Disable inline with --no-inline.[/dim]"
             )
         sys.exit(1)
 
@@ -1482,20 +1541,59 @@ def scan(
         abs_by_rel[rel] = abs_path
         item["path"] = rel
 
+    # Inline literals: display path like src/a.py:SYSTEM_PROMPT; text lives on InlinePrompt.
+    text_by_path: dict[str, str] = {}
+    source_by_path: dict[str, str] = {}
+    if inlines:
+        inline_scored = score_inline_prompts(inlines, profile=forced_profile)
+        for inl, item in zip(inlines, inline_scored):
+            try:
+                rel_file = str(Path(inl.path).resolve().relative_to(root))
+            except ValueError:
+                rel_file = str(inl.path)
+            display = f"{rel_file}:{inl.name}"
+            item["path"] = display
+            text_by_path[display] = inl.text
+            source_by_path[display] = f"{inl.path}:{inl.name}:L{inl.line}"
+            scored.append(item)
+
     # Keep the established scan JSON rows and their numeric fields intact.
     # Policy evidence is an optional, control-only extension; SARIF gets the
     # same source-free findings without ever serializing prompt snippets.
     sarif_entries: list[tuple[str, bool, list[dict]]] = []
+    scan_hero: dict | None = None
+    scan_hero_matched = 10**9
     for item in scored:
-        resolved_path = abs_by_rel[item["path"]]
-        text = _read_prompt_file(resolved_path)
+        path_key = item["path"]
+        if path_key in abs_by_rel:
+            resolved_path = abs_by_rel[path_key]
+            text = _read_prompt_file(resolved_path)
+            source_for_policy = str(resolved_path)
+        else:
+            text = text_by_path.get(path_key, "")
+            source_for_policy = source_by_path.get(path_key, path_key)
+
         _dimensions, findings = structural_analysis.analyze_with_findings(text)
         applicable = item.get("governance_applicable", True)
+        if applicable:
+            matched_n, total_n = coverage_from_findings(findings)
+            hero = hero_missing_control(findings)
+            item["coverage"] = {
+                "matched": matched_n,
+                "total": total_n,
+                "missing": total_n - matched_n,
+                "hero": hero,
+            }
+            # Prefer the hero from the lowest-coverage governed artifact.
+            if hero is not None and matched_n < scan_hero_matched:
+                scan_hero = hero
+                scan_hero_matched = matched_n
+
         policy_result = _evaluate_policy_or_exit(
             policy,
             findings=findings,
             governance_applicable=applicable,
-            source=str(resolved_path),
+            source=source_for_policy,
             root=root,
         )
         if policy.enabled:
@@ -1524,25 +1622,28 @@ def scan(
         console.print()
         console.print(
             Panel(
-                f"[bold]{BRAND.upper()} — Repo Prompt Scan[/bold]",
+                f"[bold]{BRAND.upper()} — Written Control Coverage Scan[/bold]",
                 border_style="blue",
                 expand=False,
             )
         )
         console.print()
+        n_inline = sum(1 for p in scored if p["path"] not in abs_by_rel)
         console.print(
-            f"[dim]Scanned {root} — {len(scored)} file(s). "
-            "Structural offline scores only.[/dim]"
+            f"[dim]Scanned {root} — {len(scored)} artifact(s)"
+            + (f" ({n_inline} inline source literal(s))" if n_inline else "")
+            + ". Structural offline coverage only - not runtime proof.[/dim]"
         )
         console.print()
 
         any_smells = any(item.get("smells") for item in scored)
         any_config = any(not item.get("governance_applicable", True) for item in scored)
+        any_coverage = any(item.get("coverage") for item in scored)
 
         table = Table(show_header=True, header_style="bold")
         table.add_column("Path", style="cyan", overflow="fold")
         table.add_column("Artifact")
-        table.add_column("Score", justify="right")
+        table.add_column("Coverage", justify="right")
         table.add_column("Verdict")
         if any_smells:
             table.add_column("Smells")
@@ -1550,12 +1651,20 @@ def scan(
         for item in scored:
             governed = item.get("governance_applicable", True)
             color = tier_color(item["overall"]) if governed else "cyan"
+            if governed and item.get("coverage"):
+                cov = item["coverage"]
+                cov_cell = (
+                    f"[{color}]{cov['matched']}/{cov['total']}[/{color}]"
+                )
+            elif governed:
+                cov_cell = f"[{color}]{item['overall']}/100[/{color}]"
+            else:
+                cov_cell = "[dim]n/a[/dim]"
             row = [
                 item["path"],
                 "prompt" if governed else "config",
-                # A governance score on a config file is not a verdict; showing
-                # a number there is what made every real AGENTS.md look broken.
-                f"[{color}]{item['overall']}[/{color}]" if governed else "[dim]n/a[/dim]",
+                # Coverage N/23 for prompts; config never gets a governance grade.
+                cov_cell,
                 f"[{color}]{item['tier']}[/{color}]",
             ]
             if any_smells:
@@ -1565,6 +1674,17 @@ def scan(
 
         console.print(table)
         console.print()
+
+        if scan_hero:
+            console.print(
+                f"  [bold red]HERO GAP:[/bold red] {scan_hero.get('label')}"
+            )
+            if scan_hero.get("concept"):
+                console.print(
+                    f"  [dim]Gate CI on it: [bold]crewscore scan . "
+                    f"--require {scan_hero['concept']}[/bold][/dim]"
+                )
+            console.print()
 
         if any_config:
             console.print(
@@ -1577,7 +1697,12 @@ def scan(
                 "  [dim]Smells are advisory and never affect the score. "
                 "Detail: [bold]crewscore test --prompt-file <path>[/bold][/dim]"
             )
-        if any_config or any_smells:
+        if any_coverage:
+            console.print(
+                "  [dim]Coverage = written controls present / 23 published. "
+                "Not a quality ranking or runtime safety proof.[/dim]"
+            )
+        if any_config or any_smells or any_coverage:
             console.print()
 
         # `--json` already carries `threshold_ignored_for_config` per file, and

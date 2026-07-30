@@ -112,6 +112,8 @@ def test_share_text_includes_score_and_url():
     text = share_text(_result())
     assert "0/100" in text
     assert "crewscore.ai" in text
+    assert "Control coverage" in text
+    assert "not runtime proof" in text
 
 
 def test_share_text_does_not_claim_production_readiness():
@@ -125,6 +127,9 @@ def test_share_text_does_not_claim_production_readiness():
     lowered = share_text(_result()).lower()
     assert "production-readiness" not in lowered
     assert "production readiness" not in lowered
+    # Coverage language, not vanity quality ranking.
+    assert "control coverage" in lowered
+    assert "my ai agent scored" not in lowered
 
 
 def _badge_geometry(svg: str) -> dict:
