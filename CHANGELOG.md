@@ -44,6 +44,20 @@ install them, and do not compare their numbers to these.
   so the previous SVG-only download dead-ended for most users. The README
   badge stays SVG. Browser tests assert the PNG bytes and that the SVG source
   still never contains prompt text.
+- **README badge works instantly:** "Add badge to README" now copies markdown
+  using a hosted generic badge (`crewscore.ai/assets/brand/checked-badge.svg`)
+  linked to the shared result, with the personalized N/23 SVG noted as the
+  optional extra step. Previously the copied markdown 404'd until the user
+  generated and committed an SVG themselves.
+- **Coding-agent one-click example:** the site now loads an `AGENTS.md`-style
+  sample alongside the support-assistant one, demonstrating that config files
+  get a smell verdict rather than a 0-100 governance grade.
+- **External PRs get CI:** untrusted (fork/bot) pull requests were excluded
+  from the self-hosted runner for security and previously received no
+  validation at all; they now run the pytest and browser suites on ephemeral
+  GitHub-hosted runners, with Playwright traces uploaded on failure.
+- CONTRIBUTING documents the CI-gate/auto-merge review model so external
+  contributors aren't surprised by the absence of a human review gate.
 - X and LinkedIn share buttons moved out of the collapsed disclosure into the
   primary share row; badge markdown now explains where `crewscore-result.svg`
   comes from.

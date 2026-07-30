@@ -32,6 +32,13 @@
     "Do not fabricate facts. If you do not know, say so and cite the verified source for factual claims.\n" +
     "Require human approval before refunds, account changes, or sending external messages. Stop when evidence is missing.";
 
+  const CONFIG_EXAMPLE = "" +
+    "# AGENTS.md\n" +
+    "Use pnpm, not npm. Run `pnpm test` before committing.\n" +
+    "Never commit directly to main; open a PR for review.\n" +
+    "Formatting is enforced by Prettier — do not hand-format files.\n" +
+    "API routes live in src/server/routes; add a test beside each new route.\n";
+
   // Non-dev first-run paths: where instructions live and how to copy them.
   const PRODUCT_PATHS = {
     chatgpt: {
@@ -411,7 +418,7 @@
     if (!opened) toast("Your browser blocked the share window - copy the result link instead.");
     track("cs_share", { kind: target });
   }
-  function badgeMarkdown() { return `<!-- Use "Download badge SVG" and commit the file as crewscore-result.svg next to this README -->\n[![CrewScore: ${controlsForResult(state.last.result).found.length}/${allControls().length} controls found](crewscore-result.svg)](${shareUrl()})`; }
+  function badgeMarkdown() { return `[![Checked with CrewScore](https://crewscore.ai/assets/brand/checked-badge.svg)](${shareUrl()})\n<!-- Personalized N/23 badge: use "Download badge SVG" and commit it as crewscore-result.svg next to this README -->`; }
   const CARD_DIMENSIONS = { linkedin: [1200, 627], x: [1200, 675], facebook: [1200, 630], square: [1080, 1080], badge: [760, 180] };
   function svgCard(kind) {
     const [width, height] = CARD_DIMENSIONS[kind] || [1200, 627];
@@ -593,6 +600,7 @@
       track("cs_demo_started");
     });
     $("example-support").addEventListener("click", () => { setProfile("system_prompt"); $("agent-prompt").value = SUPPORT_EXAMPLE; score("example"); });
+    $("example-config").addEventListener("click", () => { setProfile("coding_agent_config"); $("agent-prompt").value = CONFIG_EXAMPLE; score("example"); });
     $("focus-checker").addEventListener("click", () => { $("checker-workspace").scrollIntoView({ behavior: "smooth", block: "start" }); $("agent-prompt").focus(); });
     $("check-instructions").addEventListener("click", () => score("paste"));
     $("mobile-check").addEventListener("click", () => score("mobile"));

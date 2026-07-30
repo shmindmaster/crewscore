@@ -175,6 +175,13 @@ test("sanitized result links and SVG cards exclude the original instructions", a
   expect(badgeSvg).not.toContain("SENTINEL_PROMPT_CONTENT_NEVER_SHARE");
 });
 
+test("coding-agent config example renders smells, not a governance grade", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: /coding-agent config example/ }).click();
+  await expect(page.getByRole("heading", { name: "Configuration smells, not a governance score" })).toBeVisible();
+  await expect(page.locator("#results")).not.toContainText("of 23");
+});
+
 test("mobile control stays reachable and the main surface has no axe violations", async ({ page }, testInfo) => {
   await page.goto("/");
   if (testInfo.project.name === "mobile-chromium") await expect(page.locator("#mobile-check")).toBeVisible();

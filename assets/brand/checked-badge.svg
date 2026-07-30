@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="196" height="28" viewBox="0 0 196 28" role="img" aria-label="Checked with CrewScore">
+  <rect width="196" height="28" rx="6" fill="#173629"/>
+  <rect x="0.5" y="0.5" width="195" height="27" rx="5.5" fill="none" stroke="#6fdaa6" stroke-opacity="0.6"/>
+  <path d="M9 14.5l4 4 7-8" fill="none" stroke="#6fdaa6" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="27" y="18.5" fill="#d5e7dc" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="12.5">Checked with</text>
+  <text x="107" y="18.5" fill="#b6f3cf" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="12.5" font-weight="700">CrewScore</text>
+</svg>

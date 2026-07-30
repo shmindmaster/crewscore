@@ -35,6 +35,12 @@ See **[docs/scoring-and-controls.md](docs/scoring-and-controls.md)**. Short vers
 
 ## PR rules
 
+- **How review works here:** merges are gated by CI status checks (pytest,
+  browser suite, self-test, web-engine drift), not by a required human
+  review. Maintainer PRs auto-merge when checks pass. External PRs are still
+  read by a maintainer before merge — the automation replaces the process
+  gate, not the attention. Don't wait on a review request to iterate; green
+  checks are the signal that matters.
 - Prefer TDD for behavior changes.
 - Keep claims honest: structural ≠ runtime red-team.
 - Never document `pip install agent-guard` as this product.
