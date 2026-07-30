@@ -256,6 +256,62 @@ def _run_outputs(payload, tmp_path) -> dict[str, str]:
     )
 
 
+def test_outputs_script_emits_error_annotations_naming_the_failed_control(tmp_path):
+    """A failed gate must say which control failed, on the PR check itself.
+
+    The step exits 2 either way; without the ::error annotation the only
+    explanation lives in the raw log, and unexplained red checks get their
+    gate deleted rather than their prompt fixed.
+    """
+    gh_output = tmp_path / "github_output.txt"
+    gh_output.write_text("", encoding="utf-8")
+    payload = [
+        {
+            "path": "prompts/sys.md",
+            "overall": 40,
+            "tier": "STRUCTURAL: WEAK",
+            "governance_applicable": True,
+            "policy": {
+                "failed": True,
+                "required_controls": ["human_gate.approval_required"],
+                "missing_required_controls": ["human_gate.approval_required"],
+                "regressed_controls": ["safe_stop.stop_condition"],
+            },
+        }
+    ]
+    proc = subprocess.run(
+        [sys.executable, "-c", _outputs_script()],
+        input=json.dumps(payload),
+        text=True,
+        capture_output=True,
+        env={**os.environ, "GITHUB_OUTPUT": str(gh_output)},
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert (
+        "::error file=prompts/sys.md,title=CrewScore::Required control "
+        "human_gate.approval_required not found" in proc.stdout
+    )
+    assert "safe_stop.stop_condition was in the baseline" in proc.stdout
+
+
+def test_outputs_script_emits_no_annotations_without_policy_failures(tmp_path):
+    proc_outputs = _run_outputs(
+        {"overall": 87, "tier": "STRUCTURAL: OK WITH GAPS"}, tmp_path
+    )
+    assert proc_outputs["score"] == "87"
+
+
+def test_sticky_comment_step_degrades_permission_failures_to_a_warning():
+    """A read-only token (every fork PR) must not fail an otherwise-green job."""
+    text = _action_text()
+    comment_step = text.split("- name: Sticky PR comment", 1)[1]
+    assert "::warning" in comment_step
+    assert "pull-requests write" in comment_step
+    # Both the list call and the create/update calls are guarded.
+    assert "if ! COMMENTS_JSON=" in comment_step
+    assert comment_step.count("PERMISSION_HINT") >= 3
+
+
 def test_action_yml_present():
     text = _action_text()
     assert "prompt-file" in text

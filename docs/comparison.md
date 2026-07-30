@@ -9,7 +9,7 @@ way to lose your trust.
 |------|--------------|------------------|
 | [AgentLinter](https://github.com/seojoonkim/agentlinter) | *"Will this file make the coding agent work well?"* | npm / `npx`, weighted dimensions, cross-file contradiction detection across a workspace |
 | [lintlang](https://github.com/hermes-labs-ai/lintlang) | Static gating for agent configs | Zero-LLM CI linting |
-| **CrewScore** | *"Which published written controls does this system prompt not state — and will CI fail if human_gate is missing?"* | Offline coverage N/23 + hero gap + inline `SYSTEM_PROMPT` extraction + AGENTS.md smells; not craft scoring |
+| **CrewScore** | *"Which published written controls does this system prompt not state — and will CI fail if human_gate is missing?"* | Offline coverage N/23 + first-gap-to-review + inline `SYSTEM_PROMPT` extraction + AGENTS.md smells; not craft scoring |
 
 If you want agent-config *craft* — clarity, structure, memory layout —
 AgentLinter is aimed squarely at that and is worth your time. CrewScore's lens

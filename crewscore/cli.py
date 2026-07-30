@@ -488,7 +488,7 @@ def test(
             if hero:
                 console.print()
                 console.print(
-                    f"  [bold red]HERO GAP:[/bold red] {hero.get('label')}"
+                    f"  [bold red]FIRST GAP TO REVIEW:[/bold red] {hero.get('label')}"
                 )
                 if hero.get("concept"):
                     console.print(
@@ -576,10 +576,9 @@ def test(
 
     if result.governance_applicable:
         if threshold is not None and result.overall < threshold:
-            if not as_json:
-                err_console.print(
-                    f"  [red]Threshold failure: {result.overall} < {threshold}[/red]"
-                )
+            err_console.print(
+                f"  [red]Threshold failure: {result.overall} < {threshold}[/red]"
+            )
             sys.exit(2)
     elif threshold is not None and not as_json:
         # --threshold gates the governance score, which this artifact is not
@@ -595,25 +594,26 @@ def test(
     # to gate on them — and it has to mean the same thing here as in `scan`,
     # which applies it to every file regardless of profile.
     if max_smells is not None and len(result.smells) > max_smells:
-        if not as_json:
-            err_console.print(
-                f"  [red]Smell threshold failure: {len(result.smells)} "
-                f"> {max_smells}[/red]"
-            )
+        # Failure reasons always reach stderr, including --json runs: an exit
+        # code 2 with a silent log is why CI gates get deleted instead of
+        # fixed. stdout stays pure JSON.
+        err_console.print(
+            f"  [red]Smell threshold failure: {len(result.smells)} "
+            f"> {max_smells}[/red]"
+        )
         sys.exit(2)
 
     if policy_result["failed"]:
-        if not as_json:
-            missing = policy_result.get("missing_required_controls") or []
-            regressions = policy_result.get("regressed_controls") or []
-            if missing:
-                err_console.print(
-                    "  [red]Required-control failure:[/red] " + ", ".join(missing)
-                )
-            if regressions:
-                err_console.print(
-                    "  [red]Regression failure:[/red] " + ", ".join(regressions)
-                )
+        missing = policy_result.get("missing_required_controls") or []
+        regressions = policy_result.get("regressed_controls") or []
+        if missing:
+            err_console.print(
+                "  [red]Required-control failure:[/red] " + ", ".join(missing)
+            )
+        if regressions:
+            err_console.print(
+                "  [red]Regression failure:[/red] " + ", ".join(regressions)
+            )
         sys.exit(2)
 
 
@@ -1339,7 +1339,10 @@ def init(path: Path, force: bool):
         "  pull_request:\n"
         "  workflow_dispatch:\n\n"
         "permissions:\n"
-        "  contents: read\n\n"
+        "  contents: read\n"
+        "  # Sticky PR comment. Fork PRs still get a read-only token; the\n"
+        "  # action degrades to a workflow warning instead of failing the job.\n"
+        "  pull-requests: write\n\n"
         "jobs:\n"
         "  written-controls:\n"
         "    runs-on: ubuntu-latest\n"
@@ -1684,7 +1687,7 @@ def scan(
 
         if scan_hero:
             console.print(
-                f"  [bold red]HERO GAP:[/bold red] {scan_hero.get('label')}"
+                f"  [bold red]FIRST GAP TO REVIEW:[/bold red] {scan_hero.get('label')}"
             )
             if scan_hero.get("concept"):
                 console.print(
@@ -1763,44 +1766,44 @@ def scan(
         ]
         if below:
             failed = True
-            if not as_json:
-                for item in below:
-                    err_console.print(
-                        f"  [red]Threshold failure: {item['path']} "
-                        f"{item['overall']} < {threshold}[/red]"
-                    )
+            # Failure reasons always reach stderr, including --json runs: an
+            # exit code 2 with a silent log is the single most common reason
+            # a CI gate gets deleted instead of fixed. stdout stays pure JSON.
+            for item in below:
+                err_console.print(
+                    f"  [red]Threshold failure: {item['path']} "
+                    f"{item['overall']} < {threshold}[/red]"
+                )
 
     if max_smells is not None:
         over = [item for item in scored if len(item.get("smells", [])) > max_smells]
         if over:
             failed = True
-            if not as_json:
-                for item in over:
-                    err_console.print(
-                        f"  [red]Smell threshold failure: {item['path']} "
-                        f"{len(item['smells'])} > {max_smells}[/red]"
-                    )
+            for item in over:
+                err_console.print(
+                    f"  [red]Smell threshold failure: {item['path']} "
+                    f"{len(item['smells'])} > {max_smells}[/red]"
+                )
 
     policy_failures = [
         item for item in scored if item.get("policy", {}).get("failed")
     ]
     if policy_failures:
         failed = True
-        if not as_json:
-            for item in policy_failures:
-                details = item["policy"]
-                missing = details.get("missing_required_controls") or []
-                regressions = details.get("regressed_controls") or []
-                if missing:
-                    err_console.print(
-                        f"  [red]Required-control failure: {item['path']} "
-                        f"missing {', '.join(missing)}[/red]"
-                    )
-                if regressions:
-                    err_console.print(
-                        f"  [red]Regression failure: {item['path']} "
-                        f"lost {', '.join(regressions)}[/red]"
-                    )
+        for item in policy_failures:
+            details = item["policy"]
+            missing = details.get("missing_required_controls") or []
+            regressions = details.get("regressed_controls") or []
+            if missing:
+                err_console.print(
+                    f"  [red]Required-control failure: {item['path']} "
+                    f"missing {', '.join(missing)}[/red]"
+                )
+            if regressions:
+                err_console.print(
+                    f"  [red]Regression failure: {item['path']} "
+                    f"lost {', '.join(regressions)}[/red]"
+                )
     elif not as_json:
         gated = sorted(
             {

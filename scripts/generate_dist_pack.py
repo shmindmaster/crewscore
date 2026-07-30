@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Generate channel drafts from repo truth (no interviews, no manual copy shop).
 
-Writes under docs/dist-pack/ by default. Safe to regenerate; no network posts.
+Writes under _production/launch/dist-pack/ by default (gitignored — channel
+drafts are working material, not published docs). Safe to regenerate; no
+network posts.
 """
 
 from __future__ import annotations
@@ -96,7 +98,7 @@ def main() -> int:
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=ROOT / "docs" / "dist-pack",
+        default=ROOT / "_production" / "launch" / "dist-pack",
         help="Directory for generated drafts",
     )
     args = parser.parse_args()
