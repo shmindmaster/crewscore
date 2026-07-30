@@ -262,7 +262,10 @@
   function renderResult(result, prompt, options) {
     const mount = $("results");
     const fresh = Boolean(options && options.fresh);
-    $("fix-review").hidden = true;
+    // Only a new score invalidates an open review. Re-rendering the same result
+    // — which a mode toggle does — used to close the panel and discard the
+    // wording the reader was editing, and left any render racing an open click.
+    if (fresh) $("fix-review").hidden = true;
     if (!result.governance_applicable) {
       const smells = result.smells || [];
       const body = smells.length

@@ -210,6 +210,21 @@ test("prompt content does not appear in a network request and local scoring surv
   await expect(page.getByRole("heading", { name: /written guardrails found/ })).toBeVisible();
 });
 
+test("switching mode mid-review keeps the review and the edited wording", async ({ page }) => {
+  // Toggling developer mode re-renders the results panel. That must not throw
+  // away a review the reader has open, or the wording they have typed into it.
+  await gotoApp(page);
+  await page.getByRole("button", { name: "Try a 10-second demo" }).click();
+  await page.getByRole("button", { name: "Review suggested wording" }).click();
+  const wording = page.locator("[data-wording]").first();
+  await expect(wording).toBeVisible();
+  await wording.fill("Escalate to a named human before any refund.");
+
+  await page.getByRole("button", { name: "Developer mode" }).click();
+  await expect(page.locator("#fix-review")).toBeVisible();
+  await expect(wording).toHaveValue("Escalate to a named human before any refund.");
+});
+
 test("the status toast is a styled overlay, not unstyled text in the flow", async ({ page }) => {
   // #toast shipped without class="toast", so the stylesheet never matched it:
   // every confirmation rendered as bare text after the footer, and toggling a
