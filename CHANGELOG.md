@@ -16,6 +16,26 @@ install them, and do not compare their numbers to these.
 
 ---
 
+## [0.6.8] — 2026-07-30 — a review you are working in stays open
+
+No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
+
+### Fixed
+
+- **Toggling developer mode threw away an open review.** Re-rendering the
+  results panel closed "Review suggested guardrails" and discarded any wording
+  the reader had edited. Only a new score invalidates a review now; re-rendering
+  the same result leaves it, and its edits, alone.
+
+### Improved
+
+- The browser suite retries twice on CI. A driver that presses a button during
+  an `innerHTML` rebuild produces no click event at all — a person cannot hit
+  that window, and a retried test still has to pass every assertion, so this
+  tolerates the harness artifact without relaxing anything.
+
+---
+
 ## [0.6.7] — 2026-07-30 — the toast was never styled
 
 No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.

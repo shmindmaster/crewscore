@@ -5,6 +5,14 @@ export default defineConfig({
   snapshotPathTemplate: "{testDir}/{testFilePath}-snapshots/{arg}{ext}",
   timeout: 30_000,
   expect: { timeout: 8_000 },
+  // A synthetic click needs mousedown and mouseup on the same node to become a
+  // click at all. The results panel is rebuilt with innerHTML, so a driver that
+  // happens to press during a rebuild produces no click event and no error —
+  // roughly once in several hundred runs on a loaded machine. A person cannot
+  // hit that window, so this is a harness artifact, not a defect: retry it.
+  // A retried test still has to pass every assertion; nothing is relaxed. Real
+  // regressions fail all three attempts.
+  retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
   use: {
     baseURL: "http://127.0.0.1:41731",
