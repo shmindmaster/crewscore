@@ -1,13 +1,17 @@
-CrewScore (0.6.1) is an offline, deterministic checker for AI agent system
-prompts and coding-agent config (AGENTS.md smells).
+CrewScore is offline CI for **missing written guardrails** in AI agent system
+prompts (and configuration smells for AGENTS.md).
 
 What it is:
-- 23 public written controls across 8 dimensions
-- `crewscore scan .` + GitHub Action with control policies / SARIF
-- Browser checker at https://crewscore.ai (prompt text stays local)
+- 23 public written controls; output is **control coverage N/23**, not a quality rank
+- Hero gap + one-control CI: `crewscore scan . --require human_gate.approval_required`
+- Finds `SYSTEM_PROMPT = """..."""` in .py/.ts/.js as well as prompt files
+- GitHub Action + SARIF; browser checker at https://crewscore.ai
 
 What it is not:
-- CrewScore checks whether written guardrails are present in prompt text. It is not a red team, runtime enforcer, or safety certification.
+- Not a red team, runtime enforcer, or safety certification — text presence only
+
+Shock number (reproducible corpus): production-agent median coverage **14/100**;
+GPT-Store median **0**. Card: docs/dist-pack/corpus-card.svg
 
 Install:
 ```

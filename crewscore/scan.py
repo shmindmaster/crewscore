@@ -246,3 +246,76 @@ def score_paths(
             item["ruleset"] = ruleset
         results.append(item)
     return results
+
+
+def discover_inline_prompt_sources(root: Path) -> list[Any]:
+    """Discover system-prompt string literals embedded in source files.
+
+    Thin re-export of ``crewscore.extract_inline.discover_inline_prompts`` so
+    scan remains the single discovery entry for callers that already import
+    from here. Returns ``list[InlinePrompt]``.
+    """
+    from crewscore.extract_inline import discover_inline_prompts
+
+    return discover_inline_prompts(root)
+
+
+def score_inline_prompts(
+    inlines: list[Any], *, profile: str | None = None
+) -> list[dict[str, Any]]:
+    """Score extracted inline prompts; same row shape as ``score_paths``.
+
+    - ``path`` is the display path (e.g. ``src/agent.py:SYSTEM_PROMPT``)
+    - ``source`` is ``{file}:{name}:L{line}``
+    - profile defaults to ``system_prompt`` (inline source is never coding-agent
+      config by filename classification) unless the caller forces one
+    """
+    from crewscore.extract_inline import InlinePrompt
+
+    results: list[dict[str, Any]] = []
+    repo_roots: dict[Path, Any] = {}
+    for inline in inlines:
+        if not isinstance(inline, InlinePrompt):
+            raise TypeError(
+                f"score_inline_prompts expects InlinePrompt, got {type(inline)!r}"
+            )
+        text = inline.text
+        dimensions = structural_analysis.analyze(text)
+        parent = Path(inline.path).parent
+        if parent not in repo_roots:
+            repo_roots[parent] = find_repo_root(inline.path)
+        source = f"{inline.path}:{inline.name}:L{inline.line}"
+        result = build_result(
+            dimensions,
+            mode="structural",
+            prompt_text=text,
+            source=source,
+            smells=detect_smells(text, path=inline.path, repo_root=repo_roots[parent]),
+            # Inline literals live in app source, not AGENTS.md-class config.
+            # Force system_prompt unless the caller overrides via profile=.
+            profile=profile or "system_prompt",
+        )
+        item: dict[str, Any] = {
+            "path": inline.display_path,
+            "tier": result.tier,
+            "smells": result.smells,
+            "profile": result.profile,
+            "governance_applicable": result.governance_applicable,
+            "source": result.source,
+            "warnings": result.warnings,
+        }
+        if result.governance_applicable:
+            item["overall"] = result.overall
+            item["dimensions"] = result.dimensions
+        ruleset = getattr(result, "ruleset", None)
+        if ruleset is None:
+            try:
+                from crewscore import scoring as scoring_mod
+
+                ruleset = getattr(scoring_mod, "RULESET_ID", None)
+            except Exception:
+                ruleset = None
+        if ruleset is not None:
+            item["ruleset"] = ruleset
+        results.append(item)
+    return results
