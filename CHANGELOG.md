@@ -16,6 +16,33 @@ install them, and do not compare their numbers to these.
 
 ---
 
+## [0.6.6] — 2026-07-30 — clicks that land, motion you asked for
+
+No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
+
+### Fixed
+
+- **Buttons in the results panel could silently do nothing.** The panel is
+  rebuilt with `innerHTML` on every score and every mode change, and its
+  handlers were rebound per render — leaving a window where the button on
+  screen was new and the listener still pointed at the node just discarded.
+  Clicking "Review suggested wording" in that window opened nothing, with no
+  error anywhere. All results-panel actions are now delegated to the container,
+  which survives every rebuild.
+- **Scripted scrolling ignored `prefers-reduced-motion`.** The stylesheet has
+  honoured the preference since launch, but an explicit `behavior: "smooth"` in
+  script overrides the stylesheet, so five call sites animated anyway for
+  readers who had asked them not to. They now read the preference directly.
+
+### Improved
+
+- The browser suite runs with reduced motion and survives a 6× parallel repeat
+  (366 executions, four engines, zero failures). Animated scrolling was letting
+  a click dispatch at a coordinate its target had already left, which is what
+  three separate "flaky" tests had actually been reporting.
+
+---
+
 ## [0.6.5] — 2026-07-30 — the hero image is a claim too
 
 No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
