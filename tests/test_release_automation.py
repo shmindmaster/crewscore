@@ -25,6 +25,42 @@ def test_cut_release_dry_run_matches_package_version():
     assert "dry_run=1" in out
 
 
+def test_competitor_matrix_offline_writes_docs():
+    subprocess.run(
+        [sys.executable, str(ROOT / "scripts" / "generate_competitor_matrix.py")],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    matrix = json.loads(
+        (ROOT / "docs" / "competitors" / "agentlinter-matrix.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert matrix["method"].startswith("public-docs")
+    assert matrix["crewscore"]["live_adversarial"] is False
+    assert matrix["crewscore"]["certification_claim"] is False
+    md = (ROOT / "docs" / "competitors" / "agentlinter.md").read_text(encoding="utf-8")
+    assert "CrewScore" in md and "AgentLinter" in md
+
+
+def test_product_signals_offline_replaces_interview_pmf():
+    subprocess.run(
+        [sys.executable, str(ROOT / "scripts" / "collect_product_signals.py")],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    payload = json.loads(
+        (ROOT / "docs" / "signals" / "latest.json").read_text(encoding="utf-8")
+    )
+    assert payload["automation_policy"]["pmf_interviews"] == "canceled"
+    assert payload["package_version"]
+    assert "interview" not in payload["method"].lower() or "replaces" in payload["method"]
+
+
 def test_generate_dist_pack_writes_anti_promise_drafts(tmp_path: Path):
     out = tmp_path / "pack"
     subprocess.run(
