@@ -94,8 +94,11 @@ def test_test_threshold_fails():
         main, ["test", "--prompt", BARE, "--json", "--threshold", "50"]
     )
     assert result.exit_code == 2
-    payload = json.loads(result.output)
+    # stdout stays pure JSON; the failure reason goes to stderr so a CI log
+    # explains the exit code even in --json mode.
+    payload = json.loads(result.stdout)
     assert payload["overall"] < 50
+    assert "Threshold failure" in result.stderr
 
 
 def test_test_threshold_human_mode_no_crash():
@@ -610,7 +613,7 @@ def test_test_max_smells_gates_system_prompts_too(tmp_path: Path):
         main,
         ["test", "--prompt-file", str(prompt_file), "--json", "--max-smells", "0"],
     )
-    payload = json.loads(result.output)
+    payload = json.loads(result.stdout)
     assert payload["governance_applicable"] is True
     assert any(s["smell_id"] == "smell.context_bloat" for s in payload["smells"])
     assert result.exit_code == 2
@@ -630,7 +633,7 @@ def test_test_max_smells_gates_coding_agent_config(tmp_path: Path):
     failing = runner.invoke(
         main, ["test", "--prompt-file", str(config), "--json", "--max-smells", "0"]
     )
-    payload = json.loads(failing.output)
+    payload = json.loads(failing.stdout)
     assert payload["governance_applicable"] is False
     assert any(s["smell_id"] == "smell.context_bloat" for s in payload["smells"])
     assert failing.exit_code == 2

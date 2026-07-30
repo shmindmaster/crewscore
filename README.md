@@ -103,18 +103,31 @@ crewscore rules --concepts                # the 23 controls, and the rules behin
 
 ## CI
 
+Start report-only — it never fails a build:
+
 ```yaml
 - uses: shmindmaster/crewscore@v2
   with:
     scan-path: "."
-    # Report-only by default. Protect controls explicitly instead of treating
-    # the coverage average as a safety bar:
+```
+
+When you know which controls your workflow actually needs, name them — the
+build then fails only when a named control is missing, never on the coverage
+average:
+
+```yaml
+- uses: shmindmaster/crewscore@v2
+  with:
+    scan-path: "."
     required-controls: "human_gate.approval_required,safe_stop.stop_condition"
     sarif: "crewscore.sarif"
 ```
 
-Posts a sticky PR comment with the open rule findings. Guard downstream steps
-on the `scored` output, not on `score` — an empty score casts to `0`.
+Posts a sticky PR comment with the open rule findings (give the job
+`permissions: pull-requests: write`; without it the action logs a warning and
+moves on). Failed gates surface as `::error` annotations naming the control.
+Guard downstream steps on the `scored` output, not on `score` — an empty
+score casts to `0`.
 
 **[Action inputs, outputs, and the CLI variant →](docs/github-action.md)**
 
