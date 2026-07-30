@@ -106,7 +106,7 @@
   </div>
   <div class="mobile-action"><button class="button" id="mobile-check" type="button">Find missing guardrails</button></div>
   <dialog id="find-instructions-dialog" aria-labelledby="find-dialog-title"><div class="dialog-head"><h2 id="find-dialog-title">Where to find AI instructions</h2><button class="button-ghost" id="close-find" type="button">Close</button></div><div id="find-dialog-body"><p><strong>ChatGPT:</strong> Settings → Personalization → Custom Instructions. Copy the custom instructions text.</p><p><strong>Claude:</strong> open a Project → Project instructions (or Claude.ai custom instructions). Copy the instruction text.</p><p><strong>Cursor:</strong> open <code>AGENTS.md</code>, <code>.cursorrules</code>, or project rules in the repo root. Coding-agent files are scored for config smells, not a governance grade.</p><p><strong>Teams or apps:</strong> look for a system prompt, assistant setup, or AI instructions field. Copy only text you are allowed to inspect.</p></div></dialog>
-  <div id="toast" role="status" aria-live="polite" hidden></div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
   <script src="score-engine.js"></script><script src="assets/demo-fixture.js"></script><script src="analytics.js"></script><script src="assets/site.js"></script>
 </body>
 </html>

@@ -210,11 +210,29 @@ test("prompt content does not appear in a network request and local scoring surv
   await expect(page.getByRole("heading", { name: /written guardrails found/ })).toBeVisible();
 });
 
+test("the status toast is a styled overlay, not unstyled text in the flow", async ({ page }) => {
+  // #toast shipped without class="toast", so the stylesheet never matched it:
+  // every confirmation rendered as bare text after the footer, and toggling a
+  // block element at the end of <body> reflowed the page under the reader's
+  // pointer. Assert the properties that make it an overlay.
+  await gotoApp(page);
+  await page.getByRole("button", { name: "Developer mode" }).click();
+
+  const toast = page.locator("#toast");
+  await expect(toast).toBeVisible();
+  // Fixed takes it out of the flow, so showing it cannot reflow the page.
+  await expect(toast).toHaveCSS("position", "fixed");
+  await expect(toast).toHaveCSS("pointer-events", "none");
+  await expect(toast).toHaveText("Developer details are shown");
+});
+
 test("developer mode exposes technical detail without rendering a web tier", async ({ page }) => {
   await gotoApp(page);
   await page.getByRole("button", { name: "Developer mode" }).click();
   await page.getByRole("button", { name: "Try a 10-second demo" }).click();
-  await page.locator("#results summary").getByText("Developer details", { exact: true }).click();
+  const disclosure = page.locator("#results summary").getByText("Developer details", { exact: true });
+  await disclosure.click();
+  await expect(page.locator("#results details.technical")).toHaveAttribute("open", "");
   await expect(page.getByText("Technical coverage:")).toBeVisible();
   await expect(page.locator("#results")).not.toContainText("STRUCTURAL:");
 });
