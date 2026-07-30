@@ -549,16 +549,21 @@ def test_fix_forced_warning_names_the_output_file_not_the_source(tmp_path: Path)
         env={"COLUMNS": "300"},
     )
     assert result.exit_code == 0, result.output
-    lower = " ".join(result.output.split()).lower()
+    # Rich may soft-wrap long Windows temp paths mid-token even with COLUMNS set;
+    # compare on whitespace-stripped text so the assertion targets content, not
+    # terminal layout.
+    compact = "".join(result.output.split()).lower().replace("\\", "/")
+    out_compact = str(out_file).lower().replace("\\", "/")
+    config_compact = str(config).lower().replace("\\", "/")
     # The whole phrase: `--output` never touches the source file, so naming it
     # as the write target is the same wrong sentence --plan used to print.
-    assert f"writing governance templates to {out_file}".lower() in lower
+    assert f"writinggovernancetemplatesto{out_compact}" in compact
     # ...and the classification clause must name the file that actually
     # classifies as config. `out.md` does not; the source AGENTS.md does.
     # "writing ... to out.md, which classifies as coding-agent config" tells
     # the reader the wrong file is the problem.
-    assert f"{config} classifies as coding-agent config".lower() in lower
-    assert f"{out_file}, which classifies".lower() not in lower
+    assert f"{config_compact}classifiesascoding-agentconfig" in compact
+    assert f"{out_compact},whichclassifies" not in compact
     assert config.read_text(encoding="utf-8") == original
     assert "HIPAA" in out_file.read_text(encoding="utf-8")
 
@@ -784,6 +789,13 @@ def test_version():
     from crewscore import __version__
 
     assert __version__ in result.output
+
+
+def test_python_m_crewscore_entry_exists():
+    """`python -m crewscore` is a supported alternate entry (not only the script)."""
+    import crewscore.__main__ as module
+
+    assert callable(module.main)
 
 
 def test_version_is_0_5_1():

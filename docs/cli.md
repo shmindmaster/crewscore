@@ -162,13 +162,18 @@ or pass `--profile system_prompt` to force it. Forced runs report
 
 ---
 
-## `export-eval` — starter stubs for live eval tools
+## `export-eval` — live-eval handoff from structural gaps
 
-Does **not** run live evals.
+Does **not** run Promptfoo or garak. Scores the prompt offline, then writes
+starter artifacts biased toward **missing written controls**.
 
 ```bash
 crewscore export-eval --prompt-file ./agents/system-prompt.md -o ./crewscore-eval
-# -> promptfooconfig.yaml + README-EVAL.md (Promptfoo + garak notes)
+# -> promptfooconfig.yaml
+# -> README-EVAL.md          (garak probe suggestions)
+# -> crewscore-eval-manifest.json  (prompt-free control IDs + scores)
+
+crewscore export-eval --prompt-file ./prompt.md -o ./out --provider openai:gpt-4o
 ```
 
 See [next-steps-eval.md](next-steps-eval.md).
@@ -177,11 +182,14 @@ See [next-steps-eval.md](next-steps-eval.md).
 
 ## `assess-vendor` — procurement checklist (secondary)
 
-Self-attested only. Not an audit, and not the main product path.
+Self-attested only. Not an audit, not a vendor safety grade, and not the main
+product path. JSON includes `next_crewscore_checks` so gaps can drive **your**
+prompt/CI follow-up (`crewscore scan --require ...`), not a vendor score.
 
 ```bash
 crewscore assess-vendor --name "Acme AI" --answers "y,y,n,dk,y,y,n,y,n,y"
 crewscore assess-vendor --name "Acme AI" --answers "y,y,n,dk,y,y,n,y,n,y" --json
+crewscore assess-vendor --name "Acme AI" --answers "y,y,n,dk,y,y,n,y,n,y" --report vendor.html
 ```
 
 Answers are `y` / `n` / `dk` for each of 10 diligence questions.

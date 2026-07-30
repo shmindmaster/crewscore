@@ -1,0 +1,54 @@
+# Machine merge gate for maintainer-owned same-repo PRs.
+#
+# Human review is NOT required. Required status checks on `main` are the gate:
+#   test (3.11), test (3.12), test (3.13), browser tests, selftest
+#
+# When those pass, GitHub auto-merge (squash) lands the PR. This workflow only
+# *enables* auto-merge; it never bypasses CI.
+name: Auto-merge owner PRs
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review, labeled]
+  check_suite:
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: auto-merge-${{ github.event.pull_request.number || github.event.check_suite.head_sha }}
+  cancel-in-progress: true
+
+jobs:
+  enable-automerge:
+    # Only maintainer PRs from this repo (same trust boundary as pytest runners).
+    if: >
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.user.login == github.repository_owner &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      !contains(github.event.pull_request.labels.*.name, 'no-automerge')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enable squash auto-merge
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            try {
+              await github.graphql(
+                `mutation($id: ID!) {
+                  enablePullRequestAutoMerge(input: {
+                    pullRequestId: $id,
+                    mergeMethod: SQUASH
+                  }) { clientMutationId }
+                }`,
+                { id: pr.node_id }
+              );
+              core.info(`Auto-merge enabled for PR #${pr.number}`);
+            } catch (error) {
+              // Already enabled, or checks not yet registered — not fatal.
+              core.warning(String(error));
+            }

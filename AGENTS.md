@@ -91,8 +91,8 @@ crewscore/
   rules_catalog.py         # open rule catalog + per-dimension provenance
   summary.py                # PR/job markdown (transparent)
   vendor_scorecard.py       # assess-vendor command
-  export_eval.py             # Promptfoo/garak handoff stub writer (export-eval command)
-  metrics.py                  # privacy-safe local metrics schema (no prompt text, no network)
+  export_eval.py             # Promptfoo/garak handoff (gap-biased starters; does not run tools)
+  metrics.py                  # privacy-safe metrics schema (parity with analytics.js)
   web_export.py                # builds score-engine.js payload
   report.py                     # HTML report + SVG badge
   scorers/
@@ -100,17 +100,19 @@ crewscore/
     fix_patterns.py               # FIX_TEMPLATES per dimension
 scripts/
   export_web_engine.py             # regenerate score-engine.js after pattern changes
-  score_corpus.py                    # examples/corpus leaderboard
+  score_corpus.py                    # examples/corpus JSON demo
+  validate_corpus.py                 # reproducible 356-prompt validation harness
 examples/corpus/                      # synthetic bare->hardened demo fixtures
-  prompts/                              # system-prompt fixtures scored by governance dimensions
-  repo-config/AGENTS.md                  # config fixture scored by smells
 score-engine.js                          # generated — commit after pattern changes
-index.html                                 # builder-first site (uses score-engine.js)
+index.html                                 # browser checker (uses score-engine.js)
 action.yml                                  # composite GH Action (scan/test + sticky PR comment)
 docs/
-  validation.md                             # what the score does/does not measure — read before touching claims
-  next-steps-eval.md                          # Promptfoo / garak handoff (public user doc)
-  demo.svg, hero-demo.gif, hero-demo.mp4        # README hero assets
+  architecture.md                           # modules, data flow, lean target
+  scoring-and-controls.md                   # formula, controls, charter, governance
+  validation.md                             # what the score does/does not measure
+  cli.md, github-action.md, development.md  # user + contributor guides
+  next-steps-eval.md                          # Promptfoo / garak handoff
+  policies.md                                 # baselines, require, SARIF
 tests/
 ```
 

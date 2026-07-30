@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 from html import escape
 from pathlib import Path
+from typing import Any
 
 import click
 from rich.console import Console
@@ -20,6 +21,9 @@ err_console = Console(stderr=True)
 
 HOMEPAGE = "https://crewscore.ai"
 REPO = "https://github.com/shmindmaster/crewscore"
+
+# Bump when the JSON answer shape changes in a breaking way.
+VENDOR_SCHEMA_VERSION = "1.1"
 
 QUESTIONS = [
     ("Can you demo it with YOUR data, not their cherry-picked showcase?", "vapor_demo"),
@@ -33,6 +37,66 @@ QUESTIONS = [
     ("Can show 3+ customers in YOUR industry running in production (not pilots)?", "production_refs"),
     ("Documented incident/escalation process when the AI fails?", "incident"),
 ]
+
+# Map checklist keys to related CrewScore written-control themes.
+# These are follow-up suggestions for the buyer's own agent prompts / CI —
+# never a claim that the vendor implements those controls.
+QUESTION_CREWSCORE_THEMES: dict[str, dict[str, Any]] = {
+    "vapor_demo": {
+        "dimensions": [],
+        "controls": [],
+        "why": "Ask for a demo on your data; CrewScore cannot validate vendor demos.",
+    },
+    "benchmark": {
+        "dimensions": ["hallucination", "citation"],
+        "controls": ["hallucination.no_fabrication", "citation.require"],
+        "why": "Independent benchmarks are evidence; written hallucination/citation controls are a separate prompt hygiene check.",
+    },
+    "certification": {
+        "dimensions": ["compliance"],
+        "controls": ["compliance.named_regime"],
+        "why": "Certification is evidence of process; naming a regulation in a prompt is not certification.",
+    },
+    "audit": {
+        "dimensions": ["audit"],
+        "controls": ["audit.log_actions", "audit.tamper_evident"],
+        "why": "Request vendor audit-trail evidence; also check your own agent prompts for written audit language.",
+    },
+    "human_override": {
+        "dimensions": ["human_gate", "safe_stop"],
+        "controls": ["human_gate.approval_required", "safe_stop.stop_condition"],
+        "why": "Vendor override path is operational; your agent text should still state human gates and stop conditions.",
+    },
+    "portability": {
+        "dimensions": [],
+        "controls": [],
+        "why": "Data export is a contract/ops issue, not a CrewScore control.",
+    },
+    "pricing": {
+        "dimensions": ["cost"],
+        "controls": ["cost.budget_cap"],
+        "why": "Transparent pricing is commercial; written cost limits in agent prompts are a separate control.",
+    },
+    "security_audit": {
+        "dimensions": ["injection", "compliance"],
+        "controls": ["injection.override_resistance", "compliance.named_regime"],
+        "why": "Pen tests are runtime evidence; pair with injection and compliance wording checks on your side.",
+    },
+    "production_refs": {
+        "dimensions": [],
+        "controls": [],
+        "why": "Customer references are diligence evidence, not a written-control score.",
+    },
+    "incident": {
+        "dimensions": ["safe_stop", "human_gate", "audit"],
+        "controls": [
+            "safe_stop.stop_condition",
+            "human_gate.approval_required",
+            "audit.log_actions",
+        ],
+        "why": "Incident process is operational; written stop/escalation/audit language still belongs in agent prompts.",
+    },
+}
 
 # Critical diligence keys: NO or DK → explicit red-flag bullets
 CRITICAL_KEYS = frozenset(
@@ -92,6 +156,61 @@ def collect_red_flags(results: list[tuple[str, str, int, str]]) -> list[str]:
     return flags
 
 
+def _answer_records(
+    results: list[tuple[str, str, int, str]],
+) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    for q, label, pts, key in results:
+        theme = QUESTION_CREWSCORE_THEMES.get(key, {})
+        records.append(
+            {
+                "question": q,
+                "key": key,
+                "answer": label,
+                "points": pts,
+                "critical": key in CRITICAL_KEYS,
+                "crewscore_dimensions": list(theme.get("dimensions") or []),
+                "crewscore_controls": list(theme.get("controls") or []),
+            }
+        )
+    return records
+
+
+def next_crewscore_checks(results: list[tuple[str, str, int, str]]) -> list[dict[str, Any]]:
+    """Suggest CrewScore follow-ups for gaps (NO or critical DK), without grading the vendor."""
+    suggestions: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for question, _label, pts, key in results:
+        is_gap = pts == SCORE_NO or (key in CRITICAL_KEYS and pts == SCORE_DK)
+        if not is_gap:
+            continue
+        theme = QUESTION_CREWSCORE_THEMES.get(key) or {}
+        dims = list(theme.get("dimensions") or [])
+        controls = list(theme.get("controls") or [])
+        if not dims and not controls:
+            continue
+        dedupe = key
+        if dedupe in seen:
+            continue
+        seen.add(dedupe)
+        suggestions.append(
+            {
+                "from_question_key": key,
+                "from_question": _flag_label(question),
+                "dimensions": dims,
+                "controls": controls,
+                "why": theme.get("why", ""),
+                "suggested_cli": (
+                    "crewscore scan . --require "
+                    + ",".join(controls[:2] if controls else dims)
+                    if (controls or dims)
+                    else "crewscore scan ."
+                ),
+            }
+        )
+    return suggestions
+
+
 def build_vendor_result(name: str, answers_csv: str) -> dict:
     """Pure self-attested vendor checklist from comma-separated y/n/dk answers."""
     parts = [p.strip() for p in answers_csv.split(",")]
@@ -106,24 +225,46 @@ def build_vendor_result(name: str, answers_csv: str) -> dict:
     total = sum(pts for _, _, pts, _ in results)
     tier_name, _tier_color, tier_label = get_tier(total)
     red_flags = collect_red_flags(results)
+    answers = _answer_records(results)
+    followups = next_crewscore_checks(results)
 
     return {
+        "schema_version": VENDOR_SCHEMA_VERSION,
         "vendor": name,
         "score": total,
         "tier": tier_name,
         "tier_label": tier_label,
         "self_attested": True,
         "not_independent_audit": True,
-        "answers": [
-            {
-                "question": q,
-                "key": key,
-                "answer": label,
-                "points": pts,
-            }
-            for q, label, pts, key in results
-        ],
+        "not_vendor_safety_grade": True,
+        "answers": answers,
         "red_flags": red_flags,
+        "next_crewscore_checks": followups,
+        "question_count": len(QUESTIONS),
+    }
+
+
+def build_vendor_result_from_rows(
+    name: str, results: list[tuple[str, str, int, str]]
+) -> dict:
+    """Build the same payload from interactive (question, label, points, key) rows."""
+    if len(results) != len(QUESTIONS):
+        raise ValueError(f"Expected {len(QUESTIONS)} answers, got {len(results)}")
+    total = sum(pts for _, _, pts, _ in results)
+    tier_name, _tier_color, tier_label = get_tier(total)
+    return {
+        "schema_version": VENDOR_SCHEMA_VERSION,
+        "vendor": name,
+        "score": total,
+        "tier": tier_name,
+        "tier_label": tier_label,
+        "self_attested": True,
+        "not_independent_audit": True,
+        "not_vendor_safety_grade": True,
+        "answers": _answer_records(results),
+        "red_flags": collect_red_flags(results),
+        "next_crewscore_checks": next_crewscore_checks(results),
+        "question_count": len(QUESTIONS),
     }
 
 
@@ -135,11 +276,30 @@ def render_vendor_html(payload: dict) -> str:
     tier_label = escape(str(payload.get("tier_label", "")))
     red_flags = payload.get("red_flags") or []
     answers = payload.get("answers") or []
+    followups = payload.get("next_crewscore_checks") or []
 
     flag_items = "".join(f"<li>{escape(f)}</li>" for f in red_flags)
     flags_block = (
         f'<div class="flags"><strong>Red flags</strong><ul>{flag_items}</ul></div>'
         if red_flags
+        else ""
+    )
+
+    follow_items = []
+    for item in followups:
+        why = escape(str(item.get("why", "")))
+        cli = escape(str(item.get("suggested_cli", "")))
+        dims = ", ".join(escape(str(d)) for d in (item.get("dimensions") or []))
+        follow_items.append(
+            f"<li><strong>{escape(str(item.get('from_question', '')))}</strong>"
+            f" — related CrewScore dimensions: {dims or 'n/a'}. {why}"
+            f"<br><code>{cli}</code></li>"
+        )
+    follow_block = (
+        f'<div class="followups"><strong>Suggested CrewScore follow-ups '
+        f"(your prompts / CI, not a vendor grade)</strong>"
+        f"<ul>{''.join(follow_items)}</ul></div>"
+        if follow_items
         else ""
     )
 
@@ -166,6 +326,9 @@ table{{width:100%;border-collapse:collapse;font-size:0.85rem}}
 td,th{{border:1px solid #334155;padding:0.5rem;text-align:left}}
 .flags{{margin-top:1rem;color:#ef4444}}
 .flags ul{{margin:0.5rem 0 0 1.25rem}}
+.followups{{margin-top:1.25rem;color:#cbd5e1;font-size:0.9rem}}
+.followups ul{{margin:0.5rem 0 0 1.25rem}}
+.followups code{{font-size:0.8rem;color:#93c5fd}}
 .disclaimer{{margin-top:1.5rem;font-size:0.8rem;color:#64748b}}
 a{{color:#3b82f6}}
 </style>
@@ -176,6 +339,7 @@ a{{color:#3b82f6}}
 <div class="score">Checklist response total: {score}/100</div>
 <div class="tier">{tier} — {tier_label}</div>
 {flags_block}
+{follow_block}
 <table>
 <thead><tr><th>Question</th><th>Answer</th><th>Pts</th></tr></thead>
 <tbody>
@@ -308,32 +472,13 @@ def assess_vendor(name: str, answers: str | None, as_json: bool, report: str | N
             results.append((question, label, pts, key))
             console.print()
 
-        total = sum(pts for _, _, pts, _ in results)
-        tier_name, _tc, tier_label = get_tier(total)
-        red_flags = collect_red_flags(results)
-        payload = {
-            "vendor": name,
-            "score": total,
-            "tier": tier_name,
-            "tier_label": tier_label,
-            "self_attested": True,
-            "not_independent_audit": True,
-            "answers": [
-                {
-                    "question": q,
-                    "key": key,
-                    "answer": label,
-                    "points": pts,
-                }
-                for q, label, pts, key in results
-            ],
-            "red_flags": red_flags,
-        }
+        payload = build_vendor_result_from_rows(name, results)
 
     total = payload["score"]
     tier_name = payload["tier"]
     tier_label = payload["tier_label"]
     red_flags = payload["red_flags"]
+    followups = payload.get("next_crewscore_checks") or []
     _, tier_color, _ = get_tier(total)
 
     if report:
@@ -389,6 +534,21 @@ def assess_vendor(name: str, answers: str | None, as_json: bool, report: str | N
         )
         for flag in red_flags:
             console.print(f"  [red]•[/red] {flag}")
+
+    if followups:
+        console.print()
+        console.print(
+            "  [bold]Suggested CrewScore follow-ups[/bold] "
+            "[dim](your prompts/CI — not a vendor grade)[/dim]"
+        )
+        for item in followups:
+            dims = ", ".join(item.get("dimensions") or []) or "n/a"
+            console.print(
+                f"  [cyan]•[/cyan] {item.get('from_question', '')} "
+                f"[dim]-> dimensions: {dims}[/dim]"
+            )
+            if item.get("suggested_cli"):
+                console.print(f"    [dim]{item['suggested_cli']}[/dim]")
 
     console.print()
     console.print(
