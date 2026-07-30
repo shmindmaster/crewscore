@@ -2,7 +2,36 @@
 
 All notable changes to CrewScore are documented here.
 
+This project follows [Semantic Versioning](https://semver.org/). The `--json`
+payload shape, the CLI exit codes, and the GitHub Action's outputs are treated
+as the public contract; while the project is pre-1.0 a breaking change to any
+of them gets a minor bump and is listed under **Breaking**.
+
+`0.1.0` is the first supported release. Earlier builds were published during
+development and have been withdrawn from PyPI — they carried a script-injection
+exposure in `action.yml` and a scoring term that rewarded prompt length. Do not
+install them, and do not compare their numbers to these.
+
 ## [Unreleased]
+
+---
+
+## [0.6.4] — 2026-07-30 — honest labels, legible CI failures
+
+No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
+
+### Fixed
+
+- **The `pr-comment` default no longer 403s on the first PR.** `crewscore init`
+  now writes `pull-requests: write` into the generated workflow, and the sticky
+  comment step degrades a read-only token (every fork PR) to a `::warning` with
+  a fix hint instead of failing an otherwise green job.
+- **A red check now explains itself.** `action.yml` emits `::error` annotations
+  naming the missing or regressed control and the file it came from, and every
+  gate failure reason (threshold, smells, required controls, regressions) prints
+  to stderr — including `--json` runs, where stdout stays pure JSON.
+- `format_scan_markdown` renders a **Control policy** section: a failed gate
+  names the control in the sticky comment, a passing gate confirms it.
 
 ### Improved
 
@@ -29,16 +58,16 @@ All notable changes to CrewScore are documented here.
 - Vendor checklist moved from primary navigation to the footer; empty result
   panel gained a "Run a sample check" button; footer shows a build stamp
   (package version + ruleset) for deployment-parity checks.
+- README and `docs/github-action.md` split the report-only starter snippet from
+  the enforcing one, and document uploading SARIF to code scanning.
 
-This project follows [Semantic Versioning](https://semver.org/). The `--json`
-payload shape, the CLI exit codes, and the GitHub Action's outputs are treated
-as the public contract; while the project is pre-1.0 a breaking change to any
-of them gets a minor bump and is listed under **Breaking**.
+### Housekeeping
 
-`0.1.0` is the first supported release. Earlier builds were published during
-development and have been withdrawn from PyPI — they carried a script-injection
-exposure in `action.yml` and a scoring term that rewarded prompt length. Do not
-install them, and do not compare their numbers to these.
+- The stale hero demo (`docs/hero-demo.gif`, `.mp4`) recorded the abandoned
+  wizard UI and referenced `@v1`; the README now uses the current `docs/demo.svg`.
+- Internal working documents (launch drafts, competitor notes, product signals,
+  process inventories) moved out of the published tree, along with the local
+  dev-server profile in `.claude/`.
 
 ---
 
