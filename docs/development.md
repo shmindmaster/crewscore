@@ -106,9 +106,14 @@ Breaking any of them needs a minor version bump and CHANGELOG entry.
 After changing brand colors, control count, or published medians:
 
 ```bash
-py scripts/make_social_card.py
+# Prefer Imagine composite (mood art + exact stats)
+py scripts/compose_imagine_brand.py
+# Flat fallback without Imagine plates:
+# py scripts/make_social_card.py
 py scripts/generate_corpus_card.py
 ```
+
+Imagine source plates live under `assets/brand/imagine/` (generated via Grok Imagine).
 
 Do not commit local capture outputs under `_production/` (gitignored).
 
