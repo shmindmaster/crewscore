@@ -6,7 +6,7 @@
 
 # Corpus validation: does CrewScore coverage separate production prompts from general-purpose ones?
 
-Validation ruleset `crewscore-hygiene@0.5.0` · package `0.6.0` · generated `2026-07-29`.
+Validation ruleset `crewscore-hygiene@0.5.0` · package `0.6.1` · generated `2026-07-29`.
 Reproducible command: `py scripts/validate_corpus.py`. This supersedes the withdrawn 1,368-prompt study.
 
 ## Corpora
