@@ -10,15 +10,13 @@ name: Auto-merge owner PRs
 on:
   pull_request:
     types: [opened, reopened, synchronize, ready_for_review, labeled]
-  check_suite:
-    types: [completed]
 
 permissions:
   contents: write
   pull-requests: write
 
 concurrency:
-  group: auto-merge-${{ github.event.pull_request.number || github.event.check_suite.head_sha }}
+  group: auto-merge-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
@@ -37,18 +35,45 @@ jobs:
         with:
           script: |
             const pr = context.payload.pull_request;
-            try {
-              await github.graphql(
-                `mutation($id: ID!) {
-                  enablePullRequestAutoMerge(input: {
-                    pullRequestId: $id,
-                    mergeMethod: SQUASH
-                  }) { clientMutationId }
-                }`,
-                { id: pr.node_id }
-              );
-              core.info(`Auto-merge enabled for PR #${pr.number}`);
-            } catch (error) {
-              // Already enabled, or checks not yet registered — not fatal.
-              core.warning(String(error));
+            const state = await github.graphql(
+              `query($id: ID!) {
+                node(id: $id) {
+                  ... on PullRequest {
+                    autoMergeRequest { enabledAt }
+                  }
+                }
+              }`,
+              { id: pr.node_id }
+            );
+            if (state.node.autoMergeRequest) {
+              core.info(`Auto-merge is already enabled for PR #${pr.number}`);
+              return;
+            }
+
+            const maxAttempts = 6;
+            for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+              try {
+                await github.graphql(
+                  `mutation($id: ID!) {
+                    enablePullRequestAutoMerge(input: {
+                      pullRequestId: $id,
+                      mergeMethod: SQUASH
+                    }) { clientMutationId }
+                  }`,
+                  { id: pr.node_id }
+                );
+                core.info(`Auto-merge enabled for PR #${pr.number}`);
+                return;
+              } catch (error) {
+                const message = String(error);
+                const transientMergeState = /unstable status/i.test(message);
+                if (!transientMergeState || attempt === maxAttempts) {
+                  throw error;
+                }
+                core.warning(
+                  `GitHub has not stabilized PR #${pr.number} yet ` +
+                  `(attempt ${attempt}/${maxAttempts}); retrying in 5 seconds.`
+                );
+                await new Promise(resolve => setTimeout(resolve, 5000));
+              }
             }

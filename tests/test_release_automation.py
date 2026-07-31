@@ -11,6 +11,23 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def test_owner_automerge_retries_transient_merge_state_and_fails_closed():
+    workflow = (ROOT / ".github" / "workflows" / "auto-merge-owner-prs.yml").read_text(
+        encoding="utf-8"
+    )
+
+    # A check_suite event has no pull_request payload and was therefore a dead trigger.
+    assert "check_suite:" not in workflow
+    assert "github.event.check_suite.head_sha" not in workflow
+
+    # GitHub can briefly report a newly-ready PR as UNSTABLE before checks register.
+    # Retry that bounded race, but do not turn every GraphQL failure into a green run.
+    assert "const maxAttempts = 6" in workflow
+    assert "setTimeout(resolve, 5000)" in workflow
+    assert "throw error" in workflow
+    assert "Already enabled, or checks not yet registered" not in workflow
+
+
 def test_cut_release_dry_run_matches_package_version():
     result = subprocess.run(
         [sys.executable, str(ROOT / "scripts" / "cut_release.py")],
