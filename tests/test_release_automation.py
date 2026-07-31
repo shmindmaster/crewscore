@@ -11,6 +11,25 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def test_owner_automerge_retries_transient_merge_state_and_fails_closed():
+    workflow = (ROOT / ".github" / "workflows" / "auto-merge-owner-prs.yml").read_text(
+        encoding="utf-8"
+    )
+
+    # A check_suite event has no pull_request payload and was therefore a dead trigger.
+    assert "check_suite:" not in workflow
+    assert "github.event.check_suite.head_sha" not in workflow
+
+    result = subprocess.run(
+        ["node", "--test", str(ROOT / ".github" / "scripts" / "owner-automerge.test.js")],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
 def test_cut_release_dry_run_matches_package_version():
     result = subprocess.run(
         [sys.executable, str(ROOT / "scripts" / "cut_release.py")],
