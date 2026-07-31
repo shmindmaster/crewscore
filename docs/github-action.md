@@ -5,12 +5,14 @@ SARIF shape, see also [policies.md](policies.md).
 
 ## GitHub Action (recommended)
 
-CrewScore's own recurring validation runs on its private DigitalOcean runner
-labels `[self-hosted, Linux, X64, sh-runner, docker]`; only maintainer-owned,
-same-repository pull requests are allowed to reach that persistent host. The
-workflow below uses a GitHub-hosted runner because it is a copy-paste starting
-point for your own repository. Use your own isolated self-hosted labels only
-after applying the same trust boundary.
+CrewScore's own recurring validation runs on GitHub-hosted `ubuntu-latest`
+runners, exactly like the workflow below — so this is the configuration the
+project actually exercises, not an untested starting point.
+
+If you run CrewScore on a self-hosted runner instead, apply a trust boundary
+first. A self-hosted runner keeps state and credentials between jobs, so
+executing pull-request code from forks on one is a compromise waiting to happen;
+gate those jobs to maintainer-owned, same-repository pull requests.
 
 ### Step 1 — report-only (never fails a build)
 
