@@ -106,6 +106,8 @@ def test_launch_copy_describes_browser_analytics_without_claiming_nothing_leaves
     text = _drafts().lower()
     assert "nothing leaves your machine" not in text
     assert "entirely on your own machine" not in text
+    assert "biggest gap" not in text
+    assert "first gap to review" in text
     assert "prompt text is never" in text or "prompt never" in text
     assert "anonymous allowlisted usage events may be sent unless you opt out" in text
 

@@ -44,8 +44,8 @@ def test_validation_documentation_is_honest_about_the_optional_corpus_cache():
 
 def test_readme_scopes_the_production_median_to_production_prompts():
     text = (REPO / "README.md").read_text(encoding="utf-8").lower()
-    assert "83 production prompts" in text
-    assert "among the production subset, median coverage was 10" in text
+    assert "83 production-labeled prompts" in text
+    assert "among the production-labeled subset, median coverage was 10" in text
     # Unscoped whole-corpus median claim is banned.
     assert "the median states 10 of 100" not in text
 

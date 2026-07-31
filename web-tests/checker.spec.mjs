@@ -58,7 +58,7 @@ test("applying one selected control rescans the browser-local text", async ({ pa
   await page.getByRole("button", { name: "Try a 10-second demo" }).click();
   await expect(page.getByRole("heading", { name: /written guardrails found/ })).toBeVisible();
   await page.getByRole("button", { name: "Review suggested wording" }).click();
-  // This deterministic public fixture is the release-demo source. It starts
+  // This deterministic public fixture is the browser-demo source. It starts
   // with the human-approval control missing, then exercises the real selector,
   // diff, apply, and browser-local rescan flow.
   const suggestedControl = page.locator('[data-select="human_gate.approval_required"]');

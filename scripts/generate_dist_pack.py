@@ -35,6 +35,10 @@ def _readme_oneliner() -> str:
 def build_pack() -> dict:
     version = _version()
     one = _readme_oneliner()
+    attribution = (
+        "CrewScore is created and maintained by Sarosh Hussain. "
+        "Pendoah is the company operating context for the project."
+    )
     anti = (
         "CrewScore checks whether written guardrails are present in prompt text. "
         "It is not a red team, runtime enforcer, or safety certification."
@@ -49,7 +53,8 @@ prompts and coding-agent config (AGENTS.md smells).
 What it is:
 - 23 public written controls across 8 dimensions
 - `crewscore scan .` + GitHub Action with control policies / SARIF
-- Browser checker at https://crewscore.ai (prompt text stays local)
+- Browser checker at https://crewscore.ai (prompt text is not uploaded; anonymous
+  allowlisted usage events may be sent unless you opt out)
 
 What it is not:
 - {anti}
@@ -62,6 +67,8 @@ crewscore scan .
 
 Repo: https://github.com/shmindmaster/crewscore
 Validation: https://github.com/shmindmaster/crewscore/blob/main/docs/validation.md
+
+{attribution}
 """
     x_post = (
         f"CrewScore {version}: find the written safety controls your agent prompt "
@@ -78,6 +85,8 @@ prompts and coding-agent config.
 
 Try: https://crewscore.ai
 pip install crewscore
+
+{attribution}
 """
     return {
         "generated": date.today().isoformat(),
@@ -88,6 +97,7 @@ pip install crewscore
             "linkedin": {"text": linkedin},
         },
         "anti_promise": anti,
+        "attribution": attribution,
         "posts_automatically": False,
         "note": "Drafts only. Post via optional APIs or paste; no interview process.",
     }

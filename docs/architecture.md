@@ -94,7 +94,6 @@ docs/                # user + methodology docs
 action.yml           # composite GitHub Action
 index.html + assets/ # static browser product
 score-engine.js      # generated browser engine (commit after pattern changes)
-demo/ + scripts/demo/# optional release-demo media pipeline
 ```
 
 Local-only / generated paths (not product architecture): `dist/`,

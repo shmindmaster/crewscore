@@ -47,6 +47,9 @@ Report unacceptable behavior privately at
 handled confidentially. Responses may include a correction, warning, temporary
 or permanent ban, or another action appropriate to the circumstances.
 
+CrewScore is created and maintained by **Sarosh Hussain**. **Pendoah** is the
+company operating context for the project.
+
 ## Attribution
 
 This Code of Conduct is adapted from the [Contributor Covenant, version

@@ -185,12 +185,12 @@ def test_readme_headline_statistic_matches_the_generated_corpus_report():
     median = groups["production"]["describe"]["median"]
 
     readme = _read("README.md")
-    assert f"{total} real agent prompts" in readme, (
+    assert f"{total} publicly collected agent prompts" in readme, (
         f"README cites a corpus size the harness did not produce ({total})"
     )
     lowered = readme.lower()
-    assert f"{production_n} production prompts" in lowered, (
-        f"README does not scope the median to the production subset ({production_n})"
+    assert f"{production_n} production-labeled prompts" in lowered, (
+        f"README does not scope the median to the production-labeled subset ({production_n})"
     )
     assert f"median coverage was {median}" in lowered, (
         f"README cites a production median the harness did not produce ({median})"

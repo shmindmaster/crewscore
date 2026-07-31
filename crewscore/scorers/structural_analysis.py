@@ -228,7 +228,7 @@ HUMAN_GATE_PATTERNS: list[tuple[str, str]] = [
     ),
     # 0.5.0: the corpus harness measured this control firing on 2/356 real
     # prompts while a looser probe found 24/356. Inspection confirmed the
-    # misses were real: production prompts say "ask permission before
+    # misses were observed in the production-labeled corpus: prompts say "ask permission before
     # dangerous actions" and "get user approval", neither of which matches
     # human_gate.01 (which needs an actor + modal) or .05 (which needs
     # "require/mandate"). The negative lookbehinds keep "do not ask

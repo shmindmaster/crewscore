@@ -4,9 +4,9 @@
      withdrawn, so the report is generated and a test fails if this
      file does not match a fresh run. -->
 
-# Corpus validation: does CrewScore coverage separate production prompts from general-purpose ones?
+# Corpus validation: does CrewScore coverage separate production-labeled prompts from general-purpose ones?
 
-Validation ruleset `crewscore-hygiene@0.6.0` · package `0.6.8` · generated `2026-07-30`.
+Validation ruleset `crewscore-hygiene@0.6.0` · package `0.6.8` · generated `2026-07-31`.
 Reproducible command: `py scripts/validate_corpus.py`. This supersedes the withdrawn 1,368-prompt study.
 
 ## Corpora
@@ -15,19 +15,19 @@ Fetched at pinned commits, never vendored into this repository.
 
 | Corpus | Files scored | Source | Pinned commit |
 | --- | ---: | --- | --- |
-| Production agent system prompts | 83 | [x1xhlol/system-prompts-and-models-of-ai-tools](https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools) | `2054f580b120` |
+| Production-labeled agent system prompts | 83 | [x1xhlol/system-prompts-and-models-of-ai-tools](https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools) | `2054f580b120` |
 | General-purpose GPT-Store prompts | 273 | [linexjlin/GPTs](https://github.com/linexjlin/GPTs) | `3adfb7b38423` |
 
 Licensing:
 
-- **Production agent system prompts** — Collection is CC0 by its maintainer; the underlying vendor prompt text is not. Fetched at a pinned SHA, never redistributed here.
+- **Production-labeled agent system prompts** — Collection is CC0 by its maintainer; the underlying vendor prompt text is not. Fetched at a pinned SHA, never redistributed here.
 - **General-purpose GPT-Store prompts** — Collection is MIT by its maintainer; the underlying author text is not. Fetched at a pinned SHA, never redistributed here.
 
 ## Score distribution
 
 | Corpus | n | Median | IQR | Mean | Scored 0 | Max |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Production agent system prompts | 83 | 10 | 3–15 | 9.46 | 20/83 (24.1%) | 34 |
+| Production-labeled agent system prompts | 83 | 10 | 3–15 | 9.46 | 20/83 (24.1%) | 34 |
 | General-purpose GPT-Store prompts | 273 | 0 | 0–4 | 1.61 | 193/273 (70.7%) | 16 |
 
 ## Discrimination
@@ -86,7 +86,7 @@ Every rate carries its denominator. A percentage without one is how
 
 ## Controls that never fired
 
-**5 of 23 controls matched nothing in 356 real prompts.**
+**5 of 23 controls matched nothing in 356 publicly collected prompts.**
 
 - `hallucination.grounding` — Ground answers in provided sources
 - `audit.log_actions` — Log actions and decisions
@@ -126,7 +126,7 @@ here. A different corpus would move these numbers.
 
 ## What this does not show
 
-- Coverage is not quality. A separation here means production prompts
+- Coverage is not quality. A separation here means production-labeled prompts
   **write more controls down**, not that they are better written or
   that the agents obey them.
 - Both corpora are leaked/aggregated collections of unknown

@@ -81,7 +81,7 @@ class Corpus:
 CORPORA = (
     Corpus(
         key="production",
-        label="Production agent system prompts",
+        label="Production-labeled agent system prompts",
         url="https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools",
         sha="2054f580b1203da061e8e3df3c6449de2ad7c322",
         globs=("**/*.txt",),
@@ -531,7 +531,7 @@ def render(payload: dict) -> str:
         "     withdrawn, so the report is generated and a test fails if this",
         "     file does not match a fresh run. -->",
         "",
-        "# Corpus validation: does CrewScore coverage separate production "
+        "# Corpus validation: does CrewScore coverage separate production-labeled "
         "prompts from general-purpose ones?",
         "",
         f"Validation ruleset `{payload['ruleset']}` · package `{__version__}` · generated `{date.today().isoformat()}`.",
@@ -626,7 +626,7 @@ def render(payload: dict) -> str:
         total = sum(gr["files"] for gr in g.values())
         lines += [
             f"**{len(dead)} of {len(payload['controls'])} controls matched nothing "
-            f"in {total} real prompts.**",
+            f"in {total} publicly collected prompts.**",
             "",
         ]
         for row in dead:
@@ -684,7 +684,7 @@ def render(payload: dict) -> str:
         "",
         "## What this does not show",
         "",
-        "- Coverage is not quality. A separation here means production prompts",
+        "- Coverage is not quality. A separation here means production-labeled prompts",
         "  **write more controls down**, not that they are better written or",
         "  that the agents obey them.",
         "- Both corpora are leaked/aggregated collections of unknown",
