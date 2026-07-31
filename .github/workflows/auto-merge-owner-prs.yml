@@ -3,8 +3,9 @@
 # Human review is NOT required. Required status checks on `main` are the gate:
 #   test (3.11), test (3.12), test (3.13), browser tests, selftest
 #
-# When those pass, GitHub auto-merge (squash) lands the PR. This workflow only
-# *enables* auto-merge; it never bypasses CI.
+# The workflow enables squash auto-merge while checks are pending. If GitHub
+# reports the PR already clean, it squash-merges at the exact expected head.
+# Both paths remain subject to the required checks and branch ruleset.
 name: Auto-merge owner PRs
 
 on:
@@ -33,7 +34,7 @@ jobs:
       - name: Check out auto-merge controller
         uses: actions/checkout@v7
 
-      - name: Enable squash auto-merge
+      - name: Enable or complete protected squash merge
         uses: actions/github-script@v9
         with:
           script: |
