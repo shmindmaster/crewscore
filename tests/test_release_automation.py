@@ -20,12 +20,14 @@ def test_owner_automerge_retries_transient_merge_state_and_fails_closed():
     assert "check_suite:" not in workflow
     assert "github.event.check_suite.head_sha" not in workflow
 
-    # GitHub can briefly report a newly-ready PR as UNSTABLE before checks register.
-    # Retry that bounded race, but do not turn every GraphQL failure into a green run.
-    assert "const maxAttempts = 6" in workflow
-    assert "setTimeout(resolve, 5000)" in workflow
-    assert "throw error" in workflow
-    assert "Already enabled, or checks not yet registered" not in workflow
+    result = subprocess.run(
+        ["node", "--test", str(ROOT / ".github" / "scripts" / "owner-automerge.test.js")],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 def test_cut_release_dry_run_matches_package_version():
