@@ -5,12 +5,12 @@ on:
 
 jobs:
   copilot-setup-steps:
-    runs-on: [self-hosted, Linux, X64, copilot, sh-runner-crewscore]
+    runs-on: ubuntu-latest
     timeout-minutes: 59
 
     steps:
       - name: Verify runner environment
         shell: bash
         run: |
-          echo "Using self-hosted Copilot runner: $(hostname)"
-          echo "Runner labels: copilot, sh-runner-crewscore"
+          echo "Using GitHub-hosted runner: $(hostname)"
+          echo "Runner image: ${ImageOS:-unknown}"

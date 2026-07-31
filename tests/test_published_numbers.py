@@ -195,3 +195,25 @@ def test_readme_headline_statistic_matches_the_generated_corpus_report():
     assert f"median coverage was {median}" in lowered, (
         f"README cites a production median the harness did not produce ({median})"
     )
+
+
+def test_validation_snapshot_names_the_shipped_version():
+    """docs/validation.md stamps the package version its numbers came from.
+
+    It said 0.6.2 while the shipped package was 0.6.8 and the generated
+    corpus report - docs/validation-corpus.md, written by the harness - said
+    0.6.8 too. Nothing compared them, so the one hand-maintained stamp drifted
+    six patch releases behind the evidence it introduces. That document is the
+    first thing a skeptical reader opens, which is exactly where a wrong
+    version number costs the most.
+    """
+    from crewscore import __version__
+
+    doc = _read("docs/validation.md")
+    stamped = re.findall(r"package `([0-9]+\.[0-9]+\.[0-9]+)`", doc)
+    assert stamped, "docs/validation.md no longer stamps a package version"
+    stale = {v for v in stamped if v != __version__}
+    assert not stale, (
+        f"docs/validation.md stamps package {sorted(stale)}; the package is "
+        f"{__version__}. Regenerate the corpus report or update the snapshot."
+    )
