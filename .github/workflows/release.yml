@@ -35,16 +35,17 @@ permissions:
 jobs:
   verify:
     name: Test, build, and verify artifacts
-    # Ordinary Linux release verification can use the existing DigitalOcean
-    # runner. Keep Windows and macOS on their native hosted runners: those
-    # checks exercise platform-specific behavior the Linux host cannot cover.
+    # All three platforms use GitHub-hosted runners. Windows and macOS are
+    # required because they exercise platform-specific behavior Linux cannot
+    # cover; Linux moved off the self-hosted DigitalOcean host when that
+    # droplet was retired.
     runs-on: ${{ fromJSON(matrix.runner) }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: Linux
-            runner: '["self-hosted", "Linux", "X64", "sh-runner-crewscore", "docker"]'
+            runner: '"ubuntu-latest"'
           - os: Windows
             runner: '"windows-latest"'
           - os: macOS

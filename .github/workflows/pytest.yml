@@ -5,20 +5,20 @@ on:
     branches: [main]
   pull_request:
 
+# Everything runs on ephemeral GitHub-hosted runners. This repository is
+# public, so hosted minutes are free and unmetered, and an ephemeral machine
+# can safely execute fork and bot PRs. That removes the maintainer-only guard
+# these jobs used to need to keep untrusted code off a persistent host, and
+# with it the duplicated "(hosted, untrusted PRs)" jobs that existed solely to
+# give outside contributors reduced coverage. Every PR now gets the same full
+# matrix.
+
 jobs:
   test:
-    # Routine validation stays on the existing DigitalOcean runner fleet.
-    # Never execute untrusted PR code (forks, bots, or collaborators) on a
-    # persistent self-hosted machine. Maintainer-owned PRs are the only PRs
-    # permitted onto this runner.
-    if: github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == github.repository_owner)
-    runs-on: [self-hosted, Linux, X64, sh-runner-crewscore, docker]
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
-      # One runner is allocated to CrewScore, so run the supported Python
-      # versions deliberately rather than queuing concurrent jobs on it.
       fail-fast: false
-      max-parallel: 1
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
     steps:
@@ -36,52 +36,6 @@ jobs:
 
   browser:
     name: browser tests
-    if: github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == github.repository_owner)
-    runs-on: [self-hosted, Linux, X64, sh-runner-crewscore, docker]
-    timeout-minutes: 45
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-      - name: Install browser test dependencies
-        run: npm ci --include=dev
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium firefox webkit
-      - name: Run browser tests
-        # The shared DigitalOcean host has one runner. Serialize Playwright so
-        # Firefox/WebKit do not contend for its browser resources; all browser
-        # projects still run on every non-deploying validation pass.
-        run: npm run test:web -- --workers=1
-
-  # External and bot PRs never touch the persistent self-hosted runner (see
-  # the guard above), but they must not go unvalidated either: they run on
-  # ephemeral GitHub-hosted machines instead.
-  test-hosted:
-    name: test (hosted, untrusted PRs)
-    if: github.event_name == 'pull_request' && (github.event.pull_request.head.repo.full_name != github.repository || github.event.pull_request.user.login != github.repository_owner)
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.11", "3.13"]
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: ${{ matrix.python-version }}
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-      - name: Install
-        run: pip install -e ".[dev]"
-      - name: Test
-        run: pytest -q
-
-  browser-hosted:
-    name: browser tests (hosted, untrusted PRs)
-    if: github.event_name == 'pull_request' && (github.event.pull_request.head.repo.full_name != github.repository || github.event.pull_request.user.login != github.repository_owner)
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -102,4 +56,3 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
-
