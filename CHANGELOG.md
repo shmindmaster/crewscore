@@ -16,6 +16,30 @@ install them, and do not compare their numbers to these.
 
 ---
 
+## [0.6.9] — 2026-07-31 — say what the corpus actually proves
+
+No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
+
+### Fixed
+
+- **The public corpus was labeled more strongly than its provenance allows.**
+  CrewScore now says "production-labeled agent system prompts" everywhere,
+  rather than implying that independent production use was verified.
+- **Owner auto-merge could report success without enabling or completing the
+  merge.** The controller now retries GitHub's transient merge state, merges an
+  already-clean PR only at its exact expected head, and fails closed on every
+  other error. Six executable state-machine tests cover the race paths.
+
+### Improved
+
+- The package and public site now lead with the browser-local instruction
+  preflight for people shipping AI assistants, while keeping CI as an optional
+  recurring gate.
+- Package metadata names the maintainer explicitly, and stale release-demo
+  automation that no longer represented the product has been removed.
+
+---
+
 ## [0.6.8] — 2026-07-30 — a review you are working in stays open
 
 No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
