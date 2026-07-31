@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "crewscore"
-version = "0.6.8"
+version = "0.6.9"
 description = "Find the guardrails your AI agent prompt forgot: which of eight failure modes - prompt injection, hallucination, runaway cost, missing human approval and more - the text never guards against. Offline, deterministic, explainable per-rule findings, with a CI gate."
 readme = "README.md"
 license = "MIT"
