@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Sarosh Hussain">
   <meta name="description" content="Find written guardrails missing from AI assistant instructions with 23 public, browser-local controls.">
   <link rel="canonical" href="https://crewscore.ai/">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -22,7 +23,7 @@
   <meta name="twitter:image" content="https://crewscore.ai/docs/social-card.png">
   <title>CrewScore — find missing written guardrails</title>
   <link rel="stylesheet" href="assets/site.css">
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"CrewScore","applicationCategory":"DeveloperApplication","operatingSystem":"Web, Python 3.11+","description":"A browser-local and offline CLI checker for written AI-agent guardrail controls.","url":"https://crewscore.ai/","codeRepository":"https://github.com/shmindmaster/crewscore","license":"https://spdx.org/licenses/MIT.html","isAccessibleForFree":true}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"CrewScore","applicationCategory":"BusinessApplication","operatingSystem":"Web, Python 3.11+","description":"A browser-local checklist for written AI-assistant guardrail controls, with an optional offline CLI for recurring checks.","url":"https://crewscore.ai/","codeRepository":"https://github.com/shmindmaster/crewscore","license":"https://spdx.org/licenses/MIT.html","isAccessibleForFree":true,"creator":{"@type":"Person","name":"Sarosh Hussain"},"maintainer":{"@type":"Person","name":"Sarosh Hussain"},"publisher":{"@type":"Organization","name":"Pendoah"}}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Does CrewScore upload my prompt?","acceptedAnswer":{"@type":"Answer","text":"No. Scoring happens locally in your browser and prompt text never leaves the page."}},{"@type":"Question","name":"Does a high result prove an AI agent is safe?","acceptedAnswer":{"@type":"Answer","text":"No. CrewScore checks whether published guardrails are written down, not whether an agent follows them at runtime."}},{"@type":"Question","name":"Can I use CrewScore in CI?","acceptedAnswer":{"@type":"Answer","text":"Yes. The open-source CLI and GitHub Action can report controls, protect a prompt-free baseline, require specific controls, and emit SARIF."}}]}</script>
 </head>
 <body data-mode="simple">
@@ -47,7 +48,7 @@
       </section>
 
       <aside class="shock-strip" id="shock-strip" aria-label="Measured corpus finding">
-        <p class="shock-stat"><strong>10/100</strong> median coverage among <strong>83 production</strong> agent prompts</p>
+        <p class="shock-stat"><strong>10/100</strong> median coverage among <strong>83 production-labeled</strong> agent prompts</p>
         <p class="shock-note">356 prompts scored offline · not a quality ranking · <a href="docs/validation-corpus.md">method &amp; harness</a></p>
       </aside>
 
@@ -102,7 +103,7 @@
       <section class="faq" id="faq" aria-labelledby="faq-heading"><h2 id="faq-heading">Questions, answered plainly</h2><details><summary>Does CrewScore upload my instructions?</summary><p>No. Scoring happens locally; prompt text never leaves this browser.</p></details><details><summary>Does a high result prove an agent is safe?</summary><p>No. It means public text patterns for written controls were detected. Runtime enforcement and testing remain separate.</p></details><details><summary>Can I make this a recurring check?</summary><p>Yes. Use the open-source CLI or GitHub Action to require particular controls, protect a prompt-free baseline, and emit SARIF.</p></details></section>
     </main>
 
-    <footer class="footer"><p><strong>Scoring happens locally. Your prompt text never leaves your browser.</strong> Anonymous allowlisted usage events exclude prompt text; <a href="privacy.html">read privacy details</a>.</p><p>Use <label style="display:inline;font:inherit"><input id="analytics-opt-out" type="checkbox"> disable anonymous usage events on this device</label>.</p><p><code>pip install crewscore</code> · <code>uses: shmindmaster/crewscore@v2</code> · <a href="security.html">Security</a> · <a href="vendor-checklist/">Vendor checklist</a> · <a href="https://github.com/shmindmaster/crewscore">GitHub</a> · <span class="quiet" id="build-stamp"></span></p></footer>
+    <footer class="footer"><p><strong>Scoring happens locally. Your prompt text never leaves your browser.</strong> Anonymous allowlisted usage events exclude prompt text; <a href="privacy.html">read privacy details</a>.</p><p>Created and maintained by <strong>Sarosh Hussain</strong>. Pendoah is the company operating context for CrewScore; technical claims are documented in the repository and cited validation material.</p><p>Use <label style="display:inline;font:inherit"><input id="analytics-opt-out" type="checkbox"> disable anonymous usage events on this device</label>.</p><p><code>pip install crewscore</code> · <code>uses: shmindmaster/crewscore@v2</code> · <a href="security.html">Security</a> · <a href="vendor-checklist/">Vendor checklist</a> · <a href="https://github.com/shmindmaster/crewscore">GitHub</a> · <span class="quiet" id="build-stamp"></span></p></footer>
   </div>
   <div class="mobile-action"><button class="button" id="mobile-check" type="button">Find missing guardrails</button></div>
   <dialog id="find-instructions-dialog" aria-labelledby="find-dialog-title"><div class="dialog-head"><h2 id="find-dialog-title">Where to find AI instructions</h2><button class="button-ghost" id="close-find" type="button">Close</button></div><div id="find-dialog-body"><p><strong>ChatGPT:</strong> Settings → Personalization → Custom Instructions. Copy the custom instructions text.</p><p><strong>Claude:</strong> open a Project → Project instructions (or Claude.ai custom instructions). Copy the instruction text.</p><p><strong>Cursor:</strong> open <code>AGENTS.md</code>, <code>.cursorrules</code>, or project rules in the repo root. Coding-agent files are scored for config smells, not a governance grade.</p><p><strong>Teams or apps:</strong> look for a system prompt, assistant setup, or AI instructions field. Copy only text you are allowed to inspect.</p></div></dialog>

@@ -1,6 +1,6 @@
 name: CrewScore
 description: Find the guardrails your AI agent prompt forgot - injection, hallucination, cost, human approval. Offline, no API key.
-author: shmindmaster
+author: Sarosh Hussain
 branding:
   # GitHub Marketplace closed list (no custom logo). "check-circle" matches
   # written-control coverage better than a generic shield.

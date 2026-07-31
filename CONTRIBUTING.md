@@ -3,6 +3,10 @@
 Thanks for helping improve an offline guardrail-coverage checker for AI agent
 prompts and coding-agent config.
 
+CrewScore is created and maintained by **Sarosh Hussain**. **Pendoah** is the
+company operating context for the project; technical claims should be checked
+against the code, tests, and cited validation material.
+
 Before proposing a change to the rules or the scoring formula, read
 [`docs/validation.md`](docs/validation.md). It records the withdrawn
 1,368-prompt study and the reproducible replacement corpus of 356 public

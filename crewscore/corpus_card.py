@@ -27,7 +27,7 @@ def parse_validation_corpus_stats(md_text: str) -> dict:
     # Prefer the denser table over the Corpora "Files scored" table by matching
     # the Median column position (second numeric cell after the name).
     prod = re.search(
-        r"\|\s*Production agent system prompts\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|",
+        r"\|\s*Production-labeled agent system prompts\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|",
         md_text,
     )
     gpt = re.search(
@@ -36,7 +36,7 @@ def parse_validation_corpus_stats(md_text: str) -> dict:
     )
     if not prod or not gpt:
         raise ValueError(
-            "could not find Production / GPT-Store score-distribution rows "
+            "could not find production-labeled / GPT-Store score-distribution rows "
             "in validation corpus markdown"
         )
 
@@ -65,9 +65,9 @@ def render_corpus_card_svg(
 ) -> str:
     """Render a self-contained SVG card from corpus stats. Stdlib only."""
     title = "CrewScore"
-    subtitle = "Coverage on real agent prompts"
+    subtitle = "Coverage on publicly collected agent prompts"
     honesty = _HONESTY
-    prod_label = "Production agents"
+    prod_label = "Production-labeled prompts"
     gpt_label = "GPT-Store prompts"
     delta_label = f"Cliff's delta = {cliffs_delta:g}"
     n_line = f"n={production_n} vs n={gpt_store_n}"
@@ -95,7 +95,7 @@ def render_corpus_card_svg(
     return f'''\
 <svg xmlns="http://www.w3.org/2000/svg" width="{_WIDTH}" height="{_HEIGHT}" \
 viewBox="0 0 {_WIDTH} {_HEIGHT}" role="img" aria-labelledby="title desc">
-  <title id="title">{e_title}: production median {e_prod_med}, GPT-Store median {e_gpt_med}</title>
+  <title id="title">{e_title}: production-labeled median {e_prod_med}, GPT-Store median {e_gpt_med}</title>
   <desc id="desc">{e_honesty}. {e_prod_label} n={e_prod_n} median {e_prod_med}/100; \
 {e_gpt_label} n={e_gpt_n} median {e_gpt_med}/100. {e_delta}.</desc>
   <defs>
@@ -120,7 +120,7 @@ viewBox="0 0 {_WIDTH} {_HEIGHT}" role="img" aria-labelledby="title desc">
   <text class="t muted" x="56" y="108" font-size="15">{e_subtitle}</text>
   <text class="t dim" x="56" y="132" font-size="13">{e_honesty}</text>
 
-  <!-- Production column -->
+  <!-- Production-labeled column -->
   <text class="t muted" x="56" y="180" font-size="14">{e_prod_label}</text>
   <text class="t mint" x="56" y="250" font-size="64" font-weight="700">{e_prod_med}</text>
   <text class="t dim" x="56" y="278" font-size="14">/100 median  ·  n={e_prod_n}</text>

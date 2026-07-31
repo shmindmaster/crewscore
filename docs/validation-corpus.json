@@ -281,7 +281,7 @@
         "**/*.txt"
       ],
       "key": "production",
-      "label": "Production agent system prompts",
+      "label": "Production-labeled agent system prompts",
       "license_note": "Collection is CC0 by its maintainer; the underlying vendor prompt text is not. Fetched at a pinned SHA, never redistributed here.",
       "sha": "2054f580b1203da061e8e3df3c6449de2ad7c322",
       "url": "https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools"

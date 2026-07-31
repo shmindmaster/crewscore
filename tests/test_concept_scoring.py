@@ -151,7 +151,7 @@ def test_real_injection_defenses_are_detected(text):
     assert analyze(text)["injection"] > 0, text
 
 
-# Phrasings found in real production prompts (x1xhlol/system-prompts corpus,
+# Phrasings found in production-labeled prompts (x1xhlol/system-prompts corpus,
 # via scripts/validate_corpus.py) that the shipped rules missed. The corpus
 # harness flagged both controls as firing 2/356 while a looser probe found
 # 24/356 and 13/356; inspecting the matches confirmed these are real

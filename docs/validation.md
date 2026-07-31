@@ -98,7 +98,7 @@ is below and in `crewscore rules`.
 ## What we withdrew, and why
 
 An earlier draft of this document reported a discrimination study: 283
-production prompts against 1,085 GPT-Store prompts, with a length-matched
+production-labeled prompts against 1,085 GPT-Store prompts, with a length-matched
 Cliff's delta, an AUC comparison against character count, and a table of
 per-dimension recall.
 
@@ -150,8 +150,9 @@ statistic so they cannot contradict each other, and no 40-character run of
 input text may appear in the output. The zero-floor confound is measured and
 reported alongside a non-zero-only sensitivity run rather than asserted away.
 
-**Result:** across 83 production agent prompts and 273 general-purpose
-GPT-Store prompts, Cliff's delta = 0.614 (95% CI [0.491, 0.729], *p* = 0.0001,
+**Result:** across 83 publicly collected production-labeled agent prompts and
+273 publicly collected general-purpose GPT-Store prompts, Cliff's delta = 0.614
+(95% CI [0.491, 0.729], *p* = 0.0001,
 two-sided permutation test) under ruleset `crewscore-hygiene@0.6.0`. Coverage
 separates the two corpora. Production median is **10/100** (tighter Cost /
 Audit / Compliance patterns removed measured false positives that had inflated
@@ -161,7 +162,7 @@ caveats are all in [the generated report](validation-corpus.md).
 Note what this does and does not change. This is *additional* evidence for a
 conclusion the formula already establishes deterministically. The headline —
 coverage, not quality — never depended on it, and a separation here means
-production prompts **write more controls down**, not that they are better.
+production-labeled prompts **write more controls down**, not that they are better.
 
 ---
 

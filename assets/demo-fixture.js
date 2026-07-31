@@ -1,12 +1,12 @@
 /*
  * Public, fictional input used by the browser's Try demo button and the
- * reproducible release-demo capture.  It is intentionally incomplete so the
+ * reproducible browser demo. It is intentionally incomplete so the
  * checker can demonstrate a real select, review, apply, and rescan journey.
  * This fixture is never user content and is not sent anywhere.
  *
  * Canonical launch demo: it scores 8 of 23 written controls, and the first
  * gap to review is human approval — the same 8/23 example the README, demo
- * scripts, and launch copy use. Keep those surfaces in sync if it changes.
+ * asset, executable tests, and launch copy use. Keep those surfaces in sync if it changes.
  */
 window.CrewScoreDemoFixture = Object.freeze({
   id: "fictional-clinic-support-v2",

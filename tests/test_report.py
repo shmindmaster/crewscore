@@ -120,7 +120,7 @@ def test_share_text_does_not_claim_production_readiness():
     """share_text is the one string users post in public.
 
     docs/validation.md retracts the production-readiness claim: at equal
-    length the score does not separate production prompts from amateur ones.
+    length the score does not separate production-labeled prompts from amateur ones.
     Shipping the retracted wording on the most-quoted surface in the product
     is how the old claim outlives the correction.
     """

@@ -5,7 +5,8 @@ running the shipped scorer, not typed by hand.
 This exists because it was not true. `demo.svg` claimed a bare assistant prompt
 reaches 14/23 after `crewscore fix` when the tool actually produces 13/23, and
 it kept the retired "Biggest gap" label after the 0.6.4 rename. Both survived
-review because nothing executed the picture.
+review because nothing executed the picture. The published hero now uses the
+canonical fictional 8-to-9 browser-demo fixture instead.
 """
 
 from __future__ import annotations
@@ -21,8 +22,9 @@ import pytest
 REPO = Path(__file__).resolve().parents[1]
 DEMO_SVG = REPO / "docs" / "demo.svg"
 
-# The prompt the "BEFORE" panel quotes verbatim.
-BARE_PROMPT = "You are a helpful assistant."
+# The public fixture is JavaScript, but its prompt is a plain template literal.
+FIXTURE_JS = REPO / "assets" / "demo-fixture.js"
+FIXTURE_PROMPT_RE = re.compile(r"\n  prompt: `(?P<prompt>.*?)`,\n", re.DOTALL)
 
 COVERAGE_RE = re.compile(r"CONTROL COVERAGE:\s+(\d+)/(\d+) written")
 FIRST_GAP_RE = re.compile(r"FIRST GAP TO REVIEW:\s+(.+)")
@@ -58,17 +60,22 @@ def _svg_panel_number(svg: str, anchor_x: str) -> int:
 
 @pytest.fixture(scope="module")
 def measured(tmp_path_factory) -> dict[str, object]:
-    """Score the demo prompt before and after `crewscore fix`, for real."""
+    """Score the public demo fixture before and after its selected wording."""
     work = tmp_path_factory.mktemp("demo")
     before = work / "before.md"
-    before.write_text(BARE_PROMPT, encoding="utf-8")
+    fixture = FIXTURE_PROMPT_RE.search(FIXTURE_JS.read_text(encoding="utf-8"))
+    assert fixture, "could not read the public demo fixture prompt"
+    before.write_text(fixture.group("prompt"), encoding="utf-8")
     after = work / "after.md"
 
     before_matched, total = _coverage(before)
     gap = FIRST_GAP_RE.search(_cli("test", "--prompt-file", str(before)))
-    assert gap, "scorer did not name a first gap for the bare prompt"
+    assert gap, "scorer did not name a first gap for the demo fixture"
 
-    _cli("fix", "--prompt-file", str(before), "--output", str(after))
+    after.write_text(
+        f"{before.read_text(encoding='utf-8')}\nA human must approve.",
+        encoding="utf-8",
+    )
     after_matched, after_total = _coverage(after)
     assert total == after_total, "control total changed between runs"
 
@@ -86,10 +93,10 @@ def test_demo_svg_before_number_is_reproducible(measured):
 
 
 def test_demo_svg_after_number_is_reproducible(measured):
-    """The number that drifted. 14 was never a value the scorer produced."""
+    """The published hero must match the selected fixture wording."""
     svg = DEMO_SVG.read_text(encoding="utf-8")
     assert _svg_panel_number(svg, "516") == measured["after"], (
-        "docs/demo.svg overstates what `crewscore fix` actually achieves"
+        "docs/demo.svg does not match the selected fixture wording"
     )
 
 

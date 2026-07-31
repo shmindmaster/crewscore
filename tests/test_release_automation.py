@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -78,7 +79,11 @@ def test_generate_dist_pack_writes_anti_promise_drafts(tmp_path: Path):
     manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["posts_automatically"] is False
     blob = (out / "show-hn-first-comment.md").read_text(encoding="utf-8").lower()
+    normalized = re.sub(r"\s+", " ", blob)
     assert "not a red team" in blob or "not" in blob
     assert "agent-guard" not in blob
     assert "certification" in blob
+    assert "prompt text is not uploaded" in normalized
+    assert "anonymous allowlisted usage events may be sent unless you opt out" in normalized
+    assert "nothing you paste leaves" not in normalized
     assert (out / "checksums.txt").is_file()

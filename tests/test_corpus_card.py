@@ -56,7 +56,7 @@ def test_parse_validation_corpus_stats_from_real_file():
 
     # Assert against the committed file content (parse row medians / n from tables).
     prod_row = re.search(
-        r"\|\s*Production agent system prompts\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|",
+        r"\|\s*Production-labeled agent system prompts\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|",
         md_text,
     )
     gpt_row = re.search(

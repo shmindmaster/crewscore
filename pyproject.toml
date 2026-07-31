@@ -13,6 +13,9 @@ requires-python = ">=3.11"
 authors = [
     { name = "Sarosh Hussain", email = "sarosh@pendoah.ai" },
 ]
+maintainers = [
+    { name = "Sarosh Hussain", email = "sarosh@pendoah.ai" },
+]
 keywords = [
     "ai-agents",
     "crewscore",
