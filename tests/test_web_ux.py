@@ -115,7 +115,7 @@ def test_privacy_contract_has_no_remote_font_and_offers_opt_out():
         "create a PostHog person profile"
     ) in privacy
     assert "bounded counts of controls found, configuration smells, or dimensions to fix" in privacy
-    assert "source, profile, ruleset, product-path, or share-kind classifications" in privacy
+    assert "source, profile, mode, ruleset, product-path, or action/share-kind classifications" in privacy
 
 
 def test_feedback_path_is_public_and_measurable():
