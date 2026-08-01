@@ -156,10 +156,22 @@ def test_generated_browser_engine_uses_repository_lf_endings() -> None:
 
 def test_generated_release_artifacts_force_lf_on_windows_checkout() -> None:
     """Git checkout must preserve the byte-pinned artifacts before tests run."""
+    paths = ("score-engine.js", "docs/demo.svg")
+    result = subprocess.run(
+        ["git", "check-attr", "text", "eol", "--", *paths],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
     attributes = {
-        line.strip()
-        for line in (ROOT / ".gitattributes").read_text(encoding="utf-8").splitlines()
-        if line.strip() and not line.lstrip().startswith("#")
+        (path, attribute): value
+        for path, attribute, value in (
+            line.split(": ", 2) for line in result.stdout.splitlines()
+        )
     }
-    assert "score-engine.js text eol=lf" in attributes
-    assert "docs/demo.svg text eol=lf" in attributes
+
+    for path in paths:
+        assert attributes[(path, "text")] == "set"
+        assert attributes[(path, "eol")] == "lf"
+        assert b"\r\n" not in (ROOT / path).read_bytes()
