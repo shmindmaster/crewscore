@@ -179,6 +179,8 @@ def _raise(event: str, issue: str) -> None:
 
 
 def _validate_int(value: Any, *, minimum: int | None = None, maximum: int | None = None) -> int:
+    if isinstance(value, bool):
+        raise ValueError("integer required")
     if not isinstance(value, int):
         raise ValueError("integer required")
     if minimum is not None and value < minimum:
@@ -296,7 +298,17 @@ def append_event(
     max_events: int = 200,
 ) -> dict[str, Any]:
     """Append a privacy-checked event and keep store size bounded."""
-    props = dict(props or {})
+    if props is None:
+        props = {}
+    if not isinstance(props, dict):
+        _raise(event, "properties must be an object")
+
+    lowered = {str(key): value for key, value in props.items()}
+    for key in FORBIDDEN_PROP_KEYS:
+        if key in lowered:
+            _raise(event, f"forbidden prompt-content key {key!r}")
+
+    out_props = _validate_event(event, lowered)
     validate_event(event, props)
 
     out: dict[str, Any] = dict(store or {})
@@ -305,7 +317,7 @@ def append_event(
         {
             "e": event,
             "t": int(time.time() * 1000),
-            "p": props,
+            "p": out_props,
         }
     )
     if max_events > 0 and len(events) > max_events:

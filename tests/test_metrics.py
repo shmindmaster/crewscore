@@ -62,6 +62,66 @@ def test_append_event_caps_at_max_events():
     assert store["events"][-1]["p"]["controls_found"] == 8
 
 
+def test_append_event_stores_canonicalized_properties():
+    store = append_event(
+        {},
+        "cs_score",
+        {
+            "source": " paste ",
+            "profile": " system_prompt ",
+            "ruleset": "crewscore-hygiene@0.6.0",
+            "overall_bucket": 10,
+            "controls_found": 8,
+            "product_path": " other ",
+        },
+    )
+    event = store["events"][0]
+    assert event["p"]["source"] == "paste"
+    assert event["p"]["profile"] == "system_prompt"
+    assert event["p"]["product_path"] == "other"
+
+
+@pytest.mark.parametrize(
+    ("event", "props"),
+    [
+        (
+            "cs_score",
+            {"source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0", "overall_bucket": True, "controls_found": 8},
+        ),
+        (
+            "cs_score",
+            {"source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0", "overall_bucket": 10, "controls_found": True},
+        ),
+        (
+            "cs_score",
+            {"source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0", "overall_bucket": 10, "controls_found": 8, "smell_count": True},
+        ),
+        (
+            "cs_score",
+            {"source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0", "overall_bucket": 10, "controls_found": 8, "delta_bucket": True},
+        ),
+        (
+            "cs_fix_review",
+            {"dims_to_fix_count": True},
+        ),
+        (
+            "cs_fix_apply",
+            {"controls_found": True},
+        ),
+    ],
+)
+def test_validate_props_rejects_bool_for_integer_fields(event, props):
+    with pytest.raises(ValueError, match="integer"):
+        validate_props(event, props)
+
+
+def test_append_event_rejects_bool_in_integer_fields_without_writing():
+    store = append_event({}, "cs_score", {"source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0", "overall_bucket": 10, "controls_found": 8})
+    with pytest.raises(ValueError, match="integer"):
+        append_event(store, "cs_score", {"source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0", "overall_bucket": True, "controls_found": 8})
+    assert store["events"][-1]["p"]["controls_found"] == 8
+
+
 def test_validate_props_rejects_forbidden_prompt_keys():
     with pytest.raises(ValueError):
         validate_props("cs_check_completed", {"prompt": "secret", "source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0"})
