@@ -83,4 +83,4 @@
 ## Commit traceability
 - Fix review scope: `e22d670..bf91a45`
 - Implementation/fix commit: `bf91a45`
-- This bookkeeping follow-up commit is report/progress cleanup only.
+- Cleanup/test/report follow-up commit: `de40abc` (removes duplicate validation, extends append-path regression coverage, and corrects evidence).

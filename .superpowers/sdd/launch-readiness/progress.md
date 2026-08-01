@@ -8,4 +8,4 @@ Task 1: fix round 1/5 (all 5 findings addressed; commits f0dfea4, e08ad10, cf1dc
 Task 1: complete (530 passed, 1 skipped; canonical source tracked; local dist pack regenerated and checksum-verified).
 Task 2: complete (55 focus tests passed, chromium web checks passed, 77/3 skipped web checks passed, full pytest 534 passed, 1 skipped; docs/demo asset and launch dist-pack regenerated; task-2 report added).
 Task 2: fix review complete (validated via 41/0 focused metrics+claims tests, then 63/0 focused demo+metrics+claims+ux tests, then 542 passed + 1 skipped full suite).
-Task 2: re-review closeout: fix range reviewed as `e22d670..bf91a45`; implementation/fix commit `bf91a45`; current follow-up commit is bookkeeping/reporting cleanup only.
+Task 2: re-review closeout: fix range reviewed as `e22d670..bf91a45`; implementation/fix commit `bf91a45`; follow-up `de40abc` removes duplicate validation, extends append-path tests, and corrects report/progress evidence.
