@@ -12,6 +12,7 @@ Status: DONE
 - Hosted 320-pixel visibility-buffer remediation: `f73500e29a40d391e3817962cddf4448bc003050`
 - Comprehension-review remediation: the commit containing this report
 - Truthful Pause-state remediation: the follow-up commit containing this report update
+- WebKit test-portability remediation: the follow-up commit containing this report update
 
 ## Outcome
 
@@ -30,6 +31,8 @@ The next exact-head run `30707457455`, job `91388925271`, proved the 390-pixel f
 The comprehension-review remediation renders the engine-selected approval wording exactly once: the prompt panel continues to show the canonical synthetic fixture while the adjacent addition element shows the single inserted line, and the engine still recomputes against the composed `afterPrompt`. The first result now names the exact engine finding that the wording resolves, while the completed result labels and names the engine-derived next remaining gap instead of reusing a dimension-level title that could imply the original gap persisted. Play and Replay activate the existing polite status region and announce that final next gap; autoplay, programmatic playback, and passive pause paths remain silent. The exact-finding label is confined to the native hero so the existing full-checker, share-card, and snapshot contracts remain unchanged.
 
 The truthful Pause-state remediation derives the Pause button's disabled state from the same `heroCanAdvance` predicate that governs actual playback. Pause is therefore unavailable whenever playback is not requested, after finite completion, under reduced motion, while the demo is passively suspended, and in the existing unavailable-fixture state. The click handler snapshots whether playback was active before stopping it and announces “Demo paused” only for that real transition. Keyboard regression coverage proves the disabled completed-state control is skipped in tab order without replacing the final completion announcement, while an enabled mid-play Pause remains keyboard-operable and announces the matching visible paused state. Play and Replay retain their prior behavior.
+
+The WebKit test-portability remediation leaves product code unchanged and removes an engine-specific assumption about which control receives focus after reverse-tab navigation from Replay. The completed-state regression now asserts the actual contract directly: Pause is disabled, rejects programmatic focus, ignores its native `click()`, and cannot alter the final announcement or visible Complete status; Play and Replay remain enabled. The separate keyboard regression explicitly activates Play with Enter, active Pause with Enter, and Replay with Space across all four browser engines.
 
 ## Changed paths
 
@@ -81,6 +84,15 @@ The comprehension-review commit changes `index.html`, `assets/site.js`, both lis
   - Truthful Pause-state full gates: 584 passed, 1 skipped in Python; 127 passed, 21 expected project skips in the clean browser rerun. An unrelated Firefox details-toggle race failed once, passed its isolated retry 1/1, and the subsequent full four-project run passed without retries or failures.
 - Pinned-Linux Chromium focused gate using `mcr.microsoft.com/playwright:v1.62.0-noble`
   - 8 passed with retries disabled: Replay/Play completion, active-only Pause, runtime reduced motion, autoplay silence, programmatic analytics silence, keyboard controls, and strict responsive visibility/overflow. Image digest remains `sha256:baed2032d533817f3dbe6425de795788430ba345e819a1201337009ba17c9d07`.
+- `npx playwright test web-tests/checker.spec.mjs --project=webkit --grep "explicit replay gates polite announcements" --retries=0 --repeat-each=5 --reporter=line`
+  - WebKit-portability gate: 5 passed locally and 5 passed in the pinned Playwright 1.62.0 Linux image, both with retries disabled.
+- `npx playwright test web-tests/checker.spec.mjs --grep "explicit replay gates polite announcements|play pause and replay controls are keyboard operable|Pause is operable only" --retries=0 --reporter=line`
+  - Cross-engine portability and active-Pause gate: 12 passed across Chromium, Firefox, WebKit, and mobile Chromium.
+- `python.exe -m pytest -q tests/test_web_ux.py`
+  - Proportionate Python gate after the test-only portability change: 17 passed.
+- Full browser gates after the test-only portability change
+  - With retries disabled: all 126 non-skipped tests outside an unrelated WebKit copy-telemetry interaction race passed; the isolated copy test passed 1/1 with one worker.
+  - Under the exact hosted `CI=1` retry configuration: 126 passed, 21 expected project skips, and the same unrelated copy-telemetry interaction passed on retry; process exit was successful. No native-hero test retried or failed.
 - `npx playwright test web-tests/checker.spec.mjs --grep "native hero animation" --retries=0 --reporter=line`
   - Proportionate post-review hero gate: 33 passed, 3 expected project skips.
 - `npx playwright test web-tests/checker.spec.mjs --project=chromium --grep "native product remains|mobile subpages retain|missing canonical demo fixture" --reporter=line`

@@ -553,10 +553,18 @@ test.describe("native hero animation", () => {
     await expect(announcement).toContainText("Next remaining gap: Log actions and decisions.");
     const completedMessage = await announcement.textContent();
     const pause = page.getByRole("button", { name: "Pause", exact: true });
+    const play = page.getByRole("button", { name: "Play", exact: true });
+    const replay = page.getByRole("button", { name: "Replay", exact: true });
     await expect(pause).toBeDisabled();
-    await page.getByRole("button", { name: "Replay", exact: true }).focus();
-    await page.keyboard.press("Shift+Tab");
-    await expect(page.getByRole("button", { name: "Play", exact: true })).toBeFocused();
+    await expect(play).toBeEnabled();
+    await expect(replay).toBeEnabled();
+    expect(await page.evaluate(() => {
+      const control = document.querySelector("#hero-demo-pause");
+      control.focus();
+      const rejectedFocus = document.activeElement !== control;
+      control.click();
+      return rejectedFocus;
+    })).toBe(true);
     await expect(announcement).toHaveText(completedMessage);
     await expect(page.locator("#hero-demo-status")).toHaveText("Complete. Replay to run it again.");
   });
@@ -732,8 +740,17 @@ test.describe("native hero animation", () => {
 
   test("play pause and replay controls are keyboard operable", async ({ page }) => {
     await gotoApp(page);
-    await page.evaluate(() => window.__crewscoreHero.replay());
+    await page.evaluate(() => {
+      window.__crewscoreHero.replay();
+      window.__crewscoreHero.pause();
+    });
+    const play = page.getByRole("button", { name: "Play", exact: true });
     const pause = page.getByRole("button", { name: "Pause", exact: true });
+    await play.focus();
+    await play.press("Enter");
+    await expect(play).toBeFocused();
+    await expect(pause).toBeEnabled();
+    await expect(page.locator("#hero-demo-status")).toHaveText("Playing once.");
     await pause.focus();
     await pause.press("Enter");
     await expect(pause).toBeDisabled();
