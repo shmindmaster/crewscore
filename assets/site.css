@@ -349,12 +349,15 @@ body[data-mode="simple"] .developer-only { display: none !important; }
   .mobile-action .button { width: 100%; }
 }
 @media (max-width: 340px) {
-  .home-page .site-header { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .home-page .site-header { flex-direction: column; align-items: flex-start; gap: 6px; padding: 8px 0; }
   .home-page .site-nav { width: 100%; margin-left: 0; justify-content: flex-start; }
   .home-page .site-nav .nav-optional { display: none; }
   .home-page .brand { gap: 7px; }
   .home-page .brand-mark { width: 30px; height: 30px; flex-basis: 30px; }
   .home-page .mode-toggle { padding-inline: 10px; }
-  .home-page .hero h1 { font-size: 1.95rem; }
+  .home-page .hero { gap: 10px; padding-top: 14px; }
+  .home-page .hero h1 { margin: 8px 0 10px; font-size: 1.85rem; line-height: 1.02; }
+  .home-page .hero .trust-chips { margin-top: 8px; }
+  .home-page .hero .always-visible { margin-top: 8px; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; animation: none !important; } }

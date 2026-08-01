@@ -58,11 +58,13 @@ def test_native_hero_layout_and_mobile_navigation_are_homepage_scoped():
     assert ".home-page .hero" in css
     assert ".home-page .site-nav a:nth-child(-n+6)" in css
     assert ".home-page .site-nav .nav-optional" in css
-    assert ".home-page .site-header { flex-direction: column; align-items: flex-start; gap: 6px; }" in css
+    assert ".home-page .site-header { flex-direction: column; align-items: flex-start; gap: 6px; padding: 8px 0; }" in css
     assert "grid-template-columns: minmax(0, 1fr)" in css
     assert ".always-visible { display: none; }" not in css
     assert ".home-page .hero .always-visible" in css
     assert "font-size: clamp(2.05rem, 9vw, 2.5rem)" in css
+    assert ".home-page .hero { gap: 10px; padding-top: 14px; }" in css
+    assert "font-size: 1.85rem; line-height: 1.02" in css
     assert ".hero {\n  max-width: 780px;" in css
 
 
