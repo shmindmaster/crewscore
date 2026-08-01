@@ -29,6 +29,22 @@ def test_controls_first_workspace_replaces_the_wizard_and_score_tier():
     assert "STRUCTURAL: CRITICAL GAPS" not in html
 
 
+def test_native_hero_uses_the_generated_engine_instead_of_a_second_score_contract():
+    html = _html()
+    script = (ROOT / "assets" / "site.js").read_text(encoding="utf-8")
+    assert 'id="hero-demo"' in html
+    assert 'id="hero-demo-play"' in html
+    assert 'id="hero-demo-pause"' in html
+    assert 'id="hero-demo-replay"' in html
+    assert "E.analyzeArtifact(DEMO, E.defaultProfile)" in script
+    assert "E.ENGINE.control_fix_templates[heroDemo.beforeGap?.concept]" in script
+    assert "heroGapFromResult(heroDemo.before)" in script
+    assert "8 of 23" not in html
+    assert "9 of 23" not in html
+    assert "8 of 23" not in script
+    assert "9 of 23" not in script
+
+
 def test_primary_input_supports_paste_upload_and_public_github():
     html = _html()
     assert 'id="agent-prompt"' in html

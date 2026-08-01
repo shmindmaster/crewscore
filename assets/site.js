@@ -190,6 +190,149 @@
 
   function updateInputStatus(message) { $("input-status").textContent = message || ""; }
 
+  const HERO_STEP_DELAY = 1700;
+  const heroDemo = {
+    step: 0,
+    wantsPlayback: false,
+    inViewport: true,
+    timer: null,
+    reducedMotion: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true,
+    before: null,
+    after: null,
+    beforeGap: null,
+    afterGap: null,
+    wording: "",
+    afterPrompt: "",
+  };
+
+  function heroCoverage(result) {
+    const findings = result?.findings || [];
+    return {
+      found: findings.filter((finding) => finding.status === "matched").length,
+      total: findings.length,
+    };
+  }
+
+  function clearHeroTimer() {
+    if (heroDemo.timer !== null) window.clearTimeout(heroDemo.timer);
+    heroDemo.timer = null;
+  }
+
+  function heroCanAdvance() {
+    return heroDemo.wantsPlayback && !heroDemo.reducedMotion && heroDemo.inViewport && document.visibilityState === "visible" && heroDemo.step < 3;
+  }
+
+  function renderHeroDemo() {
+    const beforeCoverage = heroCoverage(heroDemo.before);
+    const afterCoverage = heroCoverage(heroDemo.after);
+    const stage = $("hero-demo");
+    if (!stage) return;
+
+    const scored = heroDemo.step >= 1;
+    const wordingAdded = heroDemo.step >= 2;
+    const rescored = heroDemo.step >= 3;
+    const visibleResult = rescored ? heroDemo.after : (scored ? heroDemo.before : null);
+    const visibleCoverage = visibleResult ? heroCoverage(visibleResult) : null;
+    const visibleGap = rescored ? heroDemo.afterGap : heroDemo.beforeGap;
+
+    stage.dataset.step = String(heroDemo.step);
+    stage.dataset.complete = String(rescored);
+    $("hero-demo-prompt").textContent = wordingAdded ? heroDemo.afterPrompt : DEMO;
+    $("hero-demo-addition").hidden = !wordingAdded;
+    $("hero-demo-wording").textContent = heroDemo.wording;
+    $("hero-demo-found").textContent = visibleCoverage ? String(visibleCoverage.found) : "—";
+    $("hero-demo-total").textContent = visibleCoverage ? String(visibleCoverage.total) : "—";
+    $("hero-demo-gap").textContent = visibleResult && visibleGap ? visibleGap.title : "Waiting for local check";
+    $("hero-demo-before").textContent = scored ? `${beforeCoverage.found} of ${beforeCoverage.total}` : "pending";
+    $("hero-demo-after").textContent = rescored ? `${afterCoverage.found} of ${afterCoverage.total}` : "pending";
+
+    const stepLabels = ["Ready", "Gap found", "Wording added", "Rechecked"];
+    const resultLabels = ["Checking locally", "Written controls found", "Selected wording", "Written controls found"];
+    $("hero-demo-step").textContent = stepLabels[heroDemo.step];
+    $("hero-demo-result-label").textContent = resultLabels[heroDemo.step];
+    $("hero-demo-summary").textContent = `This synthetic example moves from ${beforeCoverage.found} of ${beforeCoverage.total} to ${afterCoverage.found} of ${afterCoverage.total} written controls after adding the engine's selected wording. Coverage is not runtime proof.`;
+
+    const status = $("hero-demo-status");
+    if (heroDemo.reducedMotion) status.textContent = "Reduced motion: complete before and after shown.";
+    else if (rescored) status.textContent = "Complete. Replay to run it again.";
+    else if (!heroDemo.wantsPlayback) status.textContent = "Paused.";
+    else if (!heroDemo.inViewport || document.visibilityState !== "visible") status.textContent = "Paused while this demo is not visible.";
+    else status.textContent = "Playing once.";
+  }
+
+  function scheduleHeroAdvance(delay) {
+    clearHeroTimer();
+    renderHeroDemo();
+    if (!heroCanAdvance()) return;
+    heroDemo.timer = window.setTimeout(() => {
+      heroDemo.timer = null;
+      heroDemo.step += 1;
+      if (heroDemo.step >= 3) heroDemo.wantsPlayback = false;
+      renderHeroDemo();
+      scheduleHeroAdvance(HERO_STEP_DELAY);
+    }, delay == null ? HERO_STEP_DELAY : delay);
+  }
+
+  function playHeroDemo(options) {
+    if (heroDemo.reducedMotion) {
+      heroDemo.step = 3;
+      heroDemo.wantsPlayback = false;
+      renderHeroDemo();
+      return;
+    }
+    if (heroDemo.step >= 3 || options?.restart) heroDemo.step = 0;
+    heroDemo.wantsPlayback = true;
+    scheduleHeroAdvance(options?.immediate ? 0 : HERO_STEP_DELAY);
+  }
+
+  function pauseHeroDemo() {
+    heroDemo.wantsPlayback = false;
+    clearHeroTimer();
+    renderHeroDemo();
+  }
+
+  function initializeHeroDemo() {
+    const stage = $("hero-demo");
+    if (!stage || !window.CrewScoreDemoFixture?.prompt) return;
+    heroDemo.before = E.analyzeArtifact(DEMO, E.defaultProfile);
+    heroDemo.beforeGap = heroGapFromResult(heroDemo.before);
+    heroDemo.wording = E.ENGINE.control_fix_templates[heroDemo.beforeGap?.concept] || "";
+    heroDemo.afterPrompt = `${DEMO}\n${heroDemo.wording}`;
+    heroDemo.after = E.analyzeArtifact(heroDemo.afterPrompt, E.defaultProfile);
+    heroDemo.afterGap = heroGapFromResult(heroDemo.after);
+
+    $("hero-demo-play").addEventListener("click", () => playHeroDemo());
+    $("hero-demo-pause").addEventListener("click", pauseHeroDemo);
+    $("hero-demo-replay").addEventListener("click", () => playHeroDemo({ restart: true }));
+    document.addEventListener("visibilitychange", () => scheduleHeroAdvance());
+    if ("IntersectionObserver" in window) {
+      const observer = new IntersectionObserver((entries) => {
+        heroDemo.inViewport = entries.some((entry) => entry.isIntersecting);
+        scheduleHeroAdvance();
+      }, { threshold: 0.12 });
+      observer.observe(stage);
+    }
+
+    if (heroDemo.reducedMotion) {
+      heroDemo.step = 3;
+      renderHeroDemo();
+    } else {
+      heroDemo.wantsPlayback = true;
+      scheduleHeroAdvance(900);
+    }
+    window.__crewscoreHero = Object.freeze({
+      replay: () => playHeroDemo({ restart: true }),
+      pause: pauseHeroDemo,
+      advance: () => {
+        clearHeroTimer();
+        if (heroDemo.step < 3) heroDemo.step += 1;
+        if (heroDemo.step >= 3) heroDemo.wantsPlayback = false;
+        renderHeroDemo();
+      },
+      snapshot: () => ({ step: heroDemo.step, playing: heroDemo.wantsPlayback, inViewport: heroDemo.inViewport }),
+    });
+  }
+
   function decodeUtf8(bytes) {
     try {
       return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
@@ -758,6 +901,7 @@
   setMethod(readStorage(METHOD_KEY) || "paste", false);
   bindEvents();
   bindResultActions();
+  initializeHeroDemo();
   $("placeholder-demo")?.addEventListener("click", () => $("try-demo").click());
   const stamp = $("build-stamp");
   if (stamp) stamp.textContent = `v${E.ENGINE?.version || ""} · ${E.ruleset || ""}`.trim();
