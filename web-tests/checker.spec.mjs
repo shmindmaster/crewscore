@@ -292,6 +292,42 @@ test("sanitized result links and SVG cards exclude the original instructions", a
   expect(badgeSvg).not.toContain("SENTINEL_PROMPT_CONTENT_NEVER_SHARE");
 });
 
+test("non-compact SVG cards show the missing-control count while badges retain their compact subtitle", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "chromium", "One deterministic SVG card assertion is sufficient.");
+  await gotoApp(page);
+  await page.getByRole("button", { name: "Try a 10-second demo" }).click();
+
+  const [socialCard, badgeCard] = await page.evaluate(() => [
+    window.__crewscoreUX.svgCard("linkedin"),
+    window.__crewscoreUX.svgCard("badge"),
+  ]);
+  expect(socialCard).toContain(">15 may be missing ·");
+  expect(badgeCard).toContain(">Written-control coverage, not runtime proof<");
+  expect(badgeCard).not.toContain("may be missing");
+});
+
+test("compact badge keeps its gap and coverage caveat inside the 180px viewBox", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "chromium", "One browser SVG geometry assertion is sufficient.");
+  await gotoApp(page);
+  await page.getByRole("button", { name: "Try a 10-second demo" }).click();
+  const badgeCard = await page.evaluate(() => window.__crewscoreUX.svgCard("badge"));
+  await page.goto(`data:image/svg+xml;base64,${Buffer.from(badgeCard).toString("base64")}`);
+
+  const contentBoxes = await page.evaluate(() => [...document.querySelectorAll("text, tspan")]
+    .map((node) => {
+      const { x, y, width, height } = node.getBBox();
+      return { text: (node.textContent || "").trim(), box: { x, y, width, height } };
+    })
+    .filter(({ text }) => text.includes("First gap to review") || text.includes("Written-control coverage")));
+
+  expect(contentBoxes.map(({ text }) => text).join(" ")).toContain("First gap to review");
+  expect(contentBoxes.map(({ text }) => text).join(" ")).toContain("Written-control coverage, not runtime proof");
+  for (const { text, box } of contentBoxes) {
+    expect(box.y, `${text} starts within the badge`).toBeGreaterThanOrEqual(0);
+    expect(box.y + box.height, `${text} ends within the 180px badge`).toBeLessThanOrEqual(180);
+  }
+});
+
 test("successful copy actions emit bounded share-method telemetry", async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "clipboard", {
@@ -354,6 +390,35 @@ test("coding-agent config example renders smells, not a governance grade", async
   await page.getByRole("button", { name: /coding-agent config example/ }).click();
   await expect(page.getByRole("heading", { name: "Configuration smells, not a governance score" })).toBeVisible();
   await expect(page.locator("#results")).not.toContainText("of 23");
+});
+
+test("governance telemetry emits check-completed before score and skips score for config", async ({ page }) => {
+  await gotoApp(page);
+  await page.evaluate(() => {
+    window.__capturedEvents = [];
+    window.CrewScoreAnalytics = {
+      capture: (event, properties) => window.__capturedEvents.push({ event, properties }),
+    };
+  });
+
+  await page.locator("#agent-prompt").fill("Do not fabricate facts. Stop when evidence is missing.");
+  await page.locator("#check-instructions").click();
+  await expect(page.getByRole("heading", { name: /written guardrails found/ })).toBeVisible();
+  const systemEvents = await page.evaluate(() => window.__capturedEvents.map((entry) => entry.event));
+  expect(systemEvents.indexOf("cs_check_completed")).toBeGreaterThan(-1);
+  expect(systemEvents.indexOf("cs_score")).toBeGreaterThan(-1);
+  expect(systemEvents.indexOf("cs_check_completed")).toBeLessThan(systemEvents.indexOf("cs_score"));
+
+  await page.evaluate(() => {
+    window.__capturedEvents = [];
+  });
+  await page.getByRole("button", { name: /coding-agent config example/ }).click();
+  await page.locator("#agent-prompt").fill("AGENTS.md placeholder for checks.");
+  await page.locator("#check-instructions").click();
+  await expect(page.getByRole("heading", { name: /Configuration smells, not a governance/ })).toBeVisible();
+  const configEvents = await page.evaluate(() => window.__capturedEvents.map((entry) => entry.event));
+  expect(configEvents).toContain("cs_check_completed");
+  expect(configEvents).not.toContain("cs_score");
 });
 
 test("mobile control stays reachable and the main surface has no axe violations", async ({ page }, testInfo) => {

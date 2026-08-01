@@ -109,6 +109,61 @@ def test_analytics_never_breaks_scoring():
     assert "window.CrewScoreAnalytics?." in SITE_JS.read_text(encoding="utf-8")
 
 
+def test_last_capture_error_is_a_readable_live_status():
+    """Track the last capture transport error through the exported getter."""
+    if not shutil.which("node"):
+        pytest.skip("node not installed; skipping analytics runtime test")
+
+    script = f"""
+const fs = require("fs");
+const vm = require("vm");
+const source = fs.readFileSync({json.dumps(str(ANALYTICS))}, "utf8");
+const local = new Map([["crewscore_analytics_opt_out_v1", "0"]]);
+const session = new Map();
+const storage = {{
+  getItem: (key) => local.get(key) || null,
+  setItem: (_key, value) => local.set(_key, String(value)),
+}};
+const sessionStorage = {{
+  getItem: (key) => session.get(key) || null,
+  setItem: (key, value) => session.set(key, String(value)),
+}};
+const context = {{
+  window: {{}},
+  localStorage: storage,
+  sessionStorage,
+  location: {{ hostname: "crewscore.ai" }},
+  crypto: {{ randomUUID: () => "test-session" }},
+  fetch: () => Promise.reject(new Error("transport down")),
+}};
+vm.createContext(context);
+vm.runInContext(source, context);
+  const analytics = context.window.CrewScoreAnalytics;
+(async () => {{
+  await analytics.capture("cs_site_view", {{ source: "search" }});
+  const firstError = analytics.lastCaptureError && analytics.lastCaptureError.message;
+  await analytics.capture("cs_score", {{ source: "not-a-source", profile: "system_prompt", ruleset: "crewscore-hygiene@0.6.0", overall_bucket: 10, controls_found: 8, prompt: "SENTINEL_PROMPT" }});
+  const afterInvalid = analytics.lastCaptureError && analytics.lastCaptureError.message;
+  const hasGetter = !!(Object.getOwnPropertyDescriptor(context.window.CrewScoreAnalytics, "lastCaptureError") || {{}}).get;
+  process.stdout.write(JSON.stringify({{
+    first_error: firstError,
+    after_invalid: afterInvalid,
+    descriptor: hasGetter,
+  }}));
+}})();
+"""
+    proc = subprocess.run(
+        ["node", "-e", script],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    result = json.loads(proc.stdout)
+    assert result["descriptor"] is True
+    assert result["first_error"] == "transport down"
+    assert result["after_invalid"] == "transport down"
+
+
 def test_analytics_has_a_persistent_opt_out_that_stops_capture():
     """The privacy toggle must change behavior, not merely hide a preference."""
     js = _analytics()
@@ -147,10 +202,10 @@ const context = {{
 vm.createContext(context);
 vm.runInContext(source, context);
 const analytics = context.window.CrewScoreAnalytics;
-analytics.capture("cs_check_completed", {{ prompt: "SENTINEL_PROMPT", source: "paste" }});
+analytics.capture("cs_check_completed", {{ prompt: "SENTINEL_PROMPT", source: "paste", profile: "system_prompt", ruleset: "crewscore-hygiene@0.6.0" }});
 const whileOptedOut = calls.length;
 analytics.setOptOut(false);
-analytics.capture("cs_check_completed", {{ prompt: "SENTINEL_PROMPT", source: "paste" }});
+analytics.capture("cs_check_completed", {{ source: "paste", profile: "system_prompt", ruleset: "crewscore-hygiene@0.6.0" }});
 const afterEnabled = calls.length;
 const body = calls.length ? JSON.parse(calls[0][1].body) : null;
 analytics.setOptOut(true);
@@ -168,7 +223,165 @@ process.stdout.write(JSON.stringify({{ whileOptedOut, afterEnabled, body, finalC
     assert result["afterEnabled"] == 1
     assert result["finalCalls"] == 1
     assert result["body"]["properties"]["source"] == "paste"
+    assert result["body"]["properties"]["profile"] == "system_prompt"
     assert "SENTINEL_PROMPT" not in json.dumps(result["body"])
+
+
+def test_runtime_capture_rejects_arbitrary_string_properties_and_unknown_events():
+    """Every string-bearing property stays allowlisted and bounded."""
+    if not shutil.which("node"):
+        pytest.skip("node not installed; skipping analytics runtime test")
+
+    script = f"""
+const fs = require("fs");
+const vm = require("vm");
+const source = fs.readFileSync({json.dumps(str(ANALYTICS))}, "utf8");
+const calls = [];
+const local = new Map([["crewscore_analytics_opt_out_v1", "0"]]);
+const session = new Map();
+const sessionStorage = {{
+  getItem: (key) => session.get(key) || null,
+  setItem: (key, value) => session.set(key, String(value)),
+}};
+const context = {{
+  window: {{}},
+  localStorage: {{
+    getItem: () => null,
+    setItem: () => undefined,
+  }},
+  sessionStorage,
+  location: {{ hostname: "crewscore.ai" }},
+  crypto: {{ randomUUID: () => "test-session" }},
+  fetch: (...args) => {{ calls.push(args); return Promise.resolve(); }},
+}};
+vm.createContext(context);
+vm.runInContext(source, context);
+const analytics = context.window.CrewScoreAnalytics;
+analytics.capture("cs_score", {{
+  source: "https://evil.example.com",
+  profile: "system_prompt",
+  ruleset: "crewscore-hygiene@0.6.0",
+  overall_bucket: 10,
+  controls_found: 8,
+  prompt: "SENTINEL_PROMPT"
+}});
+analytics.capture("cs_score", {{
+  source: "paste",
+  profile: "system_prompt",
+  ruleset: "crewscore-hygiene@0.6.0",
+  overall_bucket: 10,
+  controls_found: 8,
+  path: "chatgpt"
+}});
+analytics.capture("cs_share", {{ kind: "telegram" }});
+analytics.capture("cs_site_view", {{ source: "search" }});
+analytics.capture("cs_missing_event", {{ source: "paste" }});
+process.stdout.write(JSON.stringify({{ calls: calls.length, body: calls.length ? JSON.parse(calls[0][1].body) : null }}));
+"""
+    proc = subprocess.run(
+        ["node", "-e", script],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    result = json.loads(proc.stdout)
+    assert result["calls"] == 1
+    assert result["body"]["event"] == "cs_site_view"
+    assert result["body"]["properties"]["source"] == "search"
+    assert "SENTINEL_PROMPT" not in json.dumps(result["body"])
+
+
+def test_browser_capture_labels_human_qa_without_weakening_nonproduction_suppression():
+    """QA traffic uses an explicit URL flag; non-production hosts still do not send."""
+    if not shutil.which("node"):
+        pytest.skip("node not installed; skipping analytics runtime test")
+
+    script = f"""
+const fs = require("fs");
+const vm = require("vm");
+const source = fs.readFileSync({json.dumps(str(ANALYTICS))}, "utf8");
+function run(location) {{
+  const calls = [];
+  const storage = {{ getItem: () => null, setItem: () => undefined }};
+  const context = {{
+    window: {{}},
+    document: {{ referrer: "" }},
+    localStorage: storage,
+    sessionStorage: storage,
+    location,
+    URL,
+    URLSearchParams,
+    crypto: {{ randomUUID: () => "test-session" }},
+    fetch: (...args) => {{ calls.push(args); return Promise.resolve(); }},
+  }};
+  vm.createContext(context);
+  vm.runInContext(source, context);
+  context.window.CrewScoreAnalytics.capture("cs_rules_expand", {{}});
+  return calls.map((call) => JSON.parse(call[1].body));
+}}
+const production = run({{ hostname: "crewscore.ai", search: "" }});
+const qa = run({{ hostname: "crewscore.ai", search: "?crewscore_test_traffic=true" }});
+const suppressed = run({{ hostname: "localhost", search: "?crewscore_test_traffic=true" }});
+process.stdout.write(JSON.stringify({{ production, qa, suppressed }}));
+"""
+    proc = subprocess.run(
+        ["node", "-e", script],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    result = json.loads(proc.stdout)
+    assert [body["properties"]["traffic_class"] for body in result["production"]] == [
+        "production",
+        "production",
+    ]
+    assert [body["properties"]["traffic_class"] for body in result["qa"]] == [
+        "synthetic_qa",
+        "synthetic_qa",
+    ]
+    assert result["suppressed"] == []
+
+
+def test_share_url_excludes_test_traffic_without_reclassifying_the_originating_session():
+    """QA links must not make recipients synthetic, but QA page capture remains labeled."""
+    if not shutil.which("node"):
+        pytest.skip("node not installed; skipping analytics runtime test")
+
+    script = f"""
+const fs = require("fs");
+const vm = require("vm");
+const source = fs.readFileSync({json.dumps(str(ANALYTICS))}, "utf8");
+const calls = [];
+const storage = {{ getItem: () => null, setItem: () => undefined }};
+const location = {{
+  hostname: "crewscore.ai",
+  search: "?utm_source=qa&crewscore_test_traffic=true&keep=1",
+  href: "https://crewscore.ai/?utm_source=qa&crewscore_test_traffic=true&keep=1#cs-result=sentinel",
+}};
+const context = {{
+  window: {{}}, document: {{ referrer: "" }}, localStorage: storage, sessionStorage: storage,
+  location, URL, URLSearchParams, crypto: {{ randomUUID: () => "test-session" }},
+  fetch: (...args) => {{ calls.push(args); return Promise.resolve(); }},
+}};
+vm.createContext(context);
+vm.runInContext(source, context);
+const analytics = context.window.CrewScoreAnalytics;
+const shareUrl = analytics.shareUrl();
+analytics.capture("cs_rules_expand", {{}});
+process.stdout.write(JSON.stringify({{
+  shareUrl,
+  trafficClasses: calls.map((call) => JSON.parse(call[1].body).properties.traffic_class),
+}}));
+"""
+    proc = subprocess.run(
+        ["node", "-e", script],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    result = json.loads(proc.stdout)
+    assert result["shareUrl"] == "https://crewscore.ai/?utm_source=qa&keep=1#cs-result=sentinel"
+    assert result["trafficClasses"] == ["synthetic_qa", "synthetic_qa"]
 
 
 def test_opt_out_still_blocks_capture_when_storage_is_unavailable():
@@ -211,7 +424,7 @@ process.stdout.write(JSON.stringify({{ before, after: calls.length, optedOut: an
         check=True,
     )
     result = json.loads(proc.stdout)
-    assert result == {"before": 1, "after": 1, "optedOut": True}
+    assert result == {"before": 0, "after": 0, "optedOut": True}
 
 
 @pytest.mark.parametrize(
@@ -269,3 +482,37 @@ process.stdout.write(JSON.stringify(body));
         assert referrer not in serialized
     assert "private" not in serialized
     assert "secret" not in serialized
+
+
+def test_score_tracking_emits_check_completed_before_score_for_system_prompts():
+    script = SITE_JS.read_text(encoding="utf-8")
+    lines = script.splitlines()
+    check_idx = next(
+        index for index, line in enumerate(lines) if 'track("cs_check_completed"' in line
+    )
+    score_idx = next(
+        index for index, line in enumerate(lines) if 'track("cs_score"' in line
+    )
+    guard_idx = next(
+        index
+        for index, line in enumerate(lines)
+        if "if (result.governance_applicable)" in line
+    )
+
+    assert check_idx < score_idx, "check-completed must emit before score"
+    assert check_idx < guard_idx < score_idx, "check-completed should fire before the governed score branch"
+
+
+def test_no_score_events_for_config_results_are_gate_enforced():
+    script = SITE_JS.read_text(encoding="utf-8")
+    pattern = r"function score\(source\) \{([\s\S]*?)\n  \}\n\n  function heroGapFromResult"
+    match = re.search(pattern, script)
+    assert match, "could not isolate score function"
+    score_fn = match.group(1)
+    assert "if (result.governance_applicable)" in score_fn
+    assert 'track("cs_check_completed"' in score_fn
+    assert 'track("cs_score"' in score_fn
+    check_idx = score_fn.find('track("cs_check_completed"')
+    score_idx = score_fn.find('track("cs_score"')
+    guard_idx = score_fn.find("if (result.governance_applicable)")
+    assert 0 <= check_idx < guard_idx < score_idx

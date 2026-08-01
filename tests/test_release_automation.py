@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import re
 import subprocess
 import sys
@@ -83,7 +84,7 @@ def test_product_signals_offline_replaces_interview_pmf():
 
 def test_generate_dist_pack_writes_anti_promise_drafts(tmp_path: Path):
     out = tmp_path / "pack"
-    subprocess.run(
+    result = subprocess.run(
         [
             sys.executable,
             str(ROOT / "scripts" / "generate_dist_pack.py"),
@@ -96,13 +97,52 @@ def test_generate_dist_pack_writes_anti_promise_drafts(tmp_path: Path):
         text=True,
     )
     manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
+    assert result.returncode == 0
     assert manifest["posts_automatically"] is False
+    for filename in [
+        "show-hn-title.txt",
+        "show-hn-first-comment.md",
+        "x-post.txt",
+        "linkedin-post.md",
+        "community-post.md",
+        "answer-bank.md",
+        "manifest.json",
+        "checksums.txt",
+    ]:
+        assert (out / filename).is_file(), f"{filename} missing"
+    for stale in ("0.6.2", "0.6.3", "0.6.8"):
+        assert stale not in result.stdout, f"script echoed stale release value {stale}"
+
     blob = (out / "show-hn-first-comment.md").read_text(encoding="utf-8").lower()
     normalized = re.sub(r"\s+", " ", blob)
-    assert "not a red team" in blob or "not" in blob
+    assert "red team" not in normalized
     assert "agent-guard" not in blob
-    assert "certification" in blob
     assert "prompt text is not uploaded" in normalized
     assert "anonymous allowlisted usage events may be sent unless you opt out" in normalized
-    assert "nothing you paste leaves" not in normalized
     assert (out / "checksums.txt").is_file()
+
+    # Deterministic checksum contract: manifest and generated artifacts are covered
+    # (checksums.txt is excluded) and all digests are SHA-256 hex strings.
+    checksums = (out / "checksums.txt").read_text(encoding="utf-8")
+    rows = [line for line in checksums.splitlines() if line.strip()]
+    assert rows
+    expected_checksum_names = {
+        "show-hn-title.txt",
+        "show-hn-first-comment.md",
+        "x-post.txt",
+        "linkedin-post.md",
+        "community-post.md",
+        "answer-bank.md",
+        "manifest.json",
+    }
+    parsed = {}
+    for row in rows:
+        assert "  " in row, f"invalid checksum row {row!r}"
+        digest, name = row.split("  ", 1)
+        assert re.fullmatch(r"[0-9a-f]{64}", digest), f"invalid checksum {row}"
+        parsed[name] = digest
+    assert set(parsed.keys()) == expected_checksum_names
+    assert "checksums.txt" not in parsed
+    for name, digest in parsed.items():
+        assert hashlib.sha256((out / name).read_bytes()).hexdigest() == digest
+    assert manifest["checksum_excludes"] == ["checksums.txt"]

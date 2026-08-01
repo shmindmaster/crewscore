@@ -1,0 +1,40 @@
+{
+  "anti_promise": "CrewScore measures the written-guardrail coverage of a prompt, not runtime behavior. It is not a red team, not an enforcement engine, and not a safety/compliance certification.",
+  "channels": {
+    "show_hn": {
+      "title": "Show HN: CrewScore — coverage check for AI agent prompts ({package_version})",
+      "first_comment": "CrewScore ({package_version}) is an offline, deterministic checker for AI agent system prompts and coding-agent config (AGENTS.md smells).\n\nWhat it is:\n- {concept_count} public written controls across {dimension_count} dimensions\n- `crewscore scan .` + GitHub Action with control policies / SARIF\n- Browser checker at https://crewscore.ai (prompt text is not uploaded; anonymous allowlisted usage events may be sent unless you opt out)\n\nWhat it is not:\n- Not a runtime safety certification\n- A compliance audit result\n- A benchmark of model ability\n\nWhat it currently reports (for the committed evidence snapshot):\n- {total_prompts} publicly collected prompts\n- {production_n} production-labeled prompts, median coverage {production_median}/100\n- Cliff's delta = {cliffs_delta} with p = {p_value}\n\nRepo and methodology:\n- https://github.com/shmindmaster/crewscore\n- Validation corpus: {validation_report_url}\n\n{created_by} {operating_context}\n"
+    },
+    "x": {
+      "text": "CrewScore {package_version} checks structural control coverage in prompt text across {dimension_count} dimensions and {concept_count} controls. It is text-derived only and does not claim runtime behavior or safety certification."
+    },
+    "linkedin": {
+      "text": "{oneliner}\n\nCrewScore {package_version} checks whether key controls are written down in agent prompts (coding-agent configs emit configuration-smell findings only). It is not a certification, not runtime enforcement, and not a claim that prompts are safe in execution.\n\nInstall: pip install crewscore · Run: crewscore scan .\n{created_by} {operating_context}"
+    },
+    "community_post": {
+      "text": "CrewScore ({package_version}) makes written-control coverage explicit so teams can ship more reviewable prompt systems.\n\nIt scores what is present in text: {concept_count} published controls in {dimension_count} dimensions.\n\nIt does not certify safety, compliance, or model behavior.\n\nWhy this exists:\n- Coverage gives the missing controls a predictable name.\n- Missing checks are actionable.\n- Quality, runtime behavior, and legal compliance still require runtime and process controls.\n\n{created_by} {operating_context}\n\nSources: {validation_markdown}\n"
+    }
+  },
+  "answer_bank": [
+    {
+      "question": "What does CrewScore measure?",
+      "answer": "CrewScore measures whether the prompt text states controls across {dimension_count} dimensions and {concept_count} published controls. The score is structural text coverage, not runtime behavior."
+    },
+    {
+      "question": "How does it stay honest?",
+      "answer": "It uses deterministic regex over local text and writes every number from current rules and corpus evidence in one repository-trusted path."
+    },
+    {
+      "question": "Does CrewScore certify compliance or safety?",
+      "answer": "No. It does not certify compliance, does not provide a runtime safety guarantee, or replace legal review. It only reports what your prompt text says."
+    },
+    {
+      "question": "What is the current version claim?",
+      "answer": "The shipped target is CrewScore {package_version} and ruleset {ruleset}."
+    },
+    {
+      "question": "What evidence is public in each release?",
+      "answer": "The generator derives claims from committed artifacts: validation corpus stats in docs/validation-corpus.json ({total_prompts} prompts total, {production_n} production) and control catalog in the package rule release."
+    }
+  ]
+}
