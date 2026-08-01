@@ -1,62 +1,56 @@
 # Task 1 Report: Launch-Readiness Canonical Launch Copy + Deterministic Dist Pack
 
 ## Status
-- Completed required Task 1 implementation scope in tracked files.
-- Full test suite is passing.
-- Deterministic private dist-pack generated locally under ignored convention; no publish/post actions performed.
+- Scope complete: Task-1 fix-round 1 contract updates applied in this isolated worktree.
+- Final verification: `530 passed, 1 skipped`.
+- Canonical launch source is now tracked and used from `docs/launch-copy.json`.
+- Checksums contract now excludes `checksums.txt` from its own digest list and is explicitly encoded in `manifest.json`.
 
-## Scout findings
-### Scout A (launch/version/regulatory claims)
-- No actionable launch-readiness artifact retained hardcoded stale release claims for `0.6.2`, `0.6.3`, or `0.6.8`.
-- Any remaining historical release-note references are in historical/test fixture context, not used as current truth in launch copy outputs.
-- Regulatory/compliance-style claims were treated as mutable language and removed from canonical copy; factual claims now come from in-repo artifacts (`pyproject.toml`, scorer constants, validation corpus).
+## Initial findings carried into this fix
+- Independent review flagged one ignored launch source under `docs/launch/launch-copy.json` (clean checkout gap).
+- Independent review flagged checksums-self-inclusion and non-canonical checksum validation.
+- Independent review flagged unsafe-copy wording and insufficient source-tracking proof in tests.
 
-### Scout B (generator + launch conventions)
-- Canonical source identified as `docs/launch/launch-copy.json`; generator and tests now consume this single source.
-- Existing launch convention already used ignored folder `_production/launch/dist-pack`; generator updated to keep this path and emit channel artifacts plus manifest/checksums.
-- Existing coverage and artifact contracts now validated by tests, including deterministic manifest/checksum behavior.
-
-## Files changed
+## Implementation and fixes
+- Canonical source moved from ignored `docs/launch/launch-copy.json` to tracked `docs/launch-copy.json`.
 - `scripts/generate_dist_pack.py`
-- `docs/launch/launch-copy.json`
+  - source path updated to `docs/launch-copy.json`.
+  - checksum contract changed to hash only:
+    - generated channel artifacts
+    - `manifest.json`
+  - `checksums.txt` is excluded from its own digest list.
+  - `manifest.json` now includes:
+    - `checksum_includes: [ ... ]`
+    - `checksum_excludes: ["checksums.txt"]`
 - `tests/test_launch_copy.py`
+  - added git-track contract test for `docs/launch-copy.json`
+  - added explicit checksum filename and digest verification from final bytes for both temp builds
+  - enforced checksum exclusion of `checksums.txt`
+  - strengthened unsupported-claim checks to block “safer prompts” framing and keep explicit safety-compliance negations from being flagged
 - `tests/test_release_automation.py`
+  - added strict checksum-file parsing and recomputation checks
+  - added exclusion assertion for `checksums.txt`
 - `docs/automation.md`
-- `.superpowers/sdd/launch-readiness/task-1-report.md` (this file)
+  - updated generated distribution source note to `docs/launch-copy.json`.
+- Regenerated launch outputs locally under:
+  - `C:\wt\crewscore\launch-measurement-v069\_production\launch\dist-pack`
+- Removed ignored temp dirs:
+  - `C:\wt\crewscore\launch-measurement-v069\_production\tmp-launch-a`
+  - `C:\wt\crewscore\launch-measurement-v069\_production\tmp-launch-b`
 
-## Decisions
-- Enforced repository-truth derivation for version/control/coverage/data references in launch-copy generation.
-- Added required launch channels/files: Show HN title+comment, X post, LinkedIn post, reusable community post, answer bank.
-- Added deterministic `manifest.json` and `checksums.txt` contract from generated artifacts.
-- Added/expanded tests to fail on stale versions/numbers, unsupported claim language, missing artifacts, and non-deterministic outputs.
-- Kept generated dist-pack untracked under `_production/launch/dist-pack` and did not post externally.
+## Commit chain
+- `f0dfea4` — Fix launch source tracking and checksums contract
 
-## Exact commands/results
-- `.venv\Scripts\python.exe -m pytest -q`
-  - Result: `529 passed, 1 skipped`
-- `.venv\Scripts\python.exe -m pytest`
-  - Result: `529 passed, 1 skipped`
-- `.venv\Scripts\python.exe scripts/generate_dist_pack.py`
-  - Result: generated `_production/launch/dist-pack` with manifest and checksums
-  - Example output: `version=0.6.9` and `manifest=checksums=44db...`
-
-## Generated local artifacts
-- `_production/launch/dist-pack/`
-  - `show-hn-title.txt`
-  - `show-hn-first-comment.md`
-  - `x-post.txt`
-  - `linkedin-post.md`
-  - `community-post.md`
-  - `answer-bank.md`
-  - `manifest.json`
-  - `checksums.txt`
-
-## Self-review
-- Current claims now bind to measurable repository data and avoid stale hardcoded release statements.
-- Generator logic, tests, and docs were updated together to keep launch output and verification aligned.
-- No production or external systems were modified.
+## Actual verification
+- Focused launch tests:
+  - `.venv\Scripts\python.exe -m pytest tests/test_launch_copy.py tests/test_release_automation.py`
+  - Result: `9 passed`
+- Full tests:
+  - `.venv\Scripts\python.exe -m pytest`
+  - Result: `530 passed, 1 skipped`
+- Generation:
+  - `.venv\Scripts\python.exe scripts\generate_dist_pack.py`
 
 ## Remaining concerns
-- Any future change to claim language or corpus semantics must continue to update `docs/launch/launch-copy.json` and tests in the same change set.
-- Full runtime or external certification implications remain out of scope; score values are structural text coverage only (per `docs/validation.md`).
-- Commit SHA: `3c7ecb3`
+- `_production` remains intentionally gitignored; generated artifacts are not committed by this task.
+- `CHANGELOG.md` and historical version/changelog context remain unchanged (0.6.9 preserved).
