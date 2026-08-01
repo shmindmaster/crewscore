@@ -309,8 +309,6 @@ def append_event(
             _raise(event, f"forbidden prompt-content key {key!r}")
 
     out_props = _validate_event(event, lowered)
-    validate_event(event, props)
-
     out: dict[str, Any] = dict(store or {})
     events = list(out.get("events") or [])
     events.append(

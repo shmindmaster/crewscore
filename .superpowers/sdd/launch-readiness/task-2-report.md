@@ -81,5 +81,6 @@
 - `_production\launch\dist-pack` remains gitignored by convention and is not committed.
 
 ## Commit traceability
-- Commit: `58aafb7`
-- Diff baseline reference: `cf1dcba`
+- Fix review scope: `e22d670..bf91a45`
+- Implementation/fix commit: `bf91a45`
+- This bookkeeping follow-up commit is report/progress cleanup only.

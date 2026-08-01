@@ -115,11 +115,32 @@ def test_validate_props_rejects_bool_for_integer_fields(event, props):
         validate_props(event, props)
 
 
-def test_append_event_rejects_bool_in_integer_fields_without_writing():
-    store = append_event({}, "cs_score", {"source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0", "overall_bucket": 10, "controls_found": 8})
+@pytest.mark.parametrize(
+    ("event", "seed", "bad"),
+    [
+        (
+            "cs_score",
+            {"source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0", "overall_bucket": 10, "controls_found": 8},
+            {"source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0", "overall_bucket": True, "controls_found": 8},
+        ),
+        (
+            "cs_fix_review",
+            {"dims_to_fix_count": 3},
+            {"dims_to_fix_count": True},
+        ),
+        (
+            "cs_fix_apply",
+            {"controls_found": 2},
+            {"controls_found": True},
+        ),
+    ],
+)
+def test_append_event_rejects_bool_in_integer_fields_without_writing(event, seed, bad):
+    store = append_event({}, event, seed)
+    original = list(store["events"])
     with pytest.raises(ValueError, match="integer"):
-        append_event(store, "cs_score", {"source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0", "overall_bucket": True, "controls_found": 8})
-    assert store["events"][-1]["p"]["controls_found"] == 8
+        append_event(store, event, bad)
+    assert store["events"] == original
 
 
 def test_validate_props_rejects_forbidden_prompt_keys():
