@@ -147,10 +147,10 @@ const context = {{
 vm.createContext(context);
 vm.runInContext(source, context);
 const analytics = context.window.CrewScoreAnalytics;
-analytics.capture("cs_check_completed", {{ prompt: "SENTINEL_PROMPT", source: "paste" }});
+analytics.capture("cs_check_completed", {{ prompt: "SENTINEL_PROMPT", source: "paste", profile: "system_prompt", ruleset: "crewscore-hygiene@0.6.0" }});
 const whileOptedOut = calls.length;
 analytics.setOptOut(false);
-analytics.capture("cs_check_completed", {{ prompt: "SENTINEL_PROMPT", source: "paste" }});
+analytics.capture("cs_check_completed", {{ source: "paste", profile: "system_prompt", ruleset: "crewscore-hygiene@0.6.0" }});
 const afterEnabled = calls.length;
 const body = calls.length ? JSON.parse(calls[0][1].body) : null;
 analytics.setOptOut(true);
@@ -168,6 +168,71 @@ process.stdout.write(JSON.stringify({{ whileOptedOut, afterEnabled, body, finalC
     assert result["afterEnabled"] == 1
     assert result["finalCalls"] == 1
     assert result["body"]["properties"]["source"] == "paste"
+    assert result["body"]["properties"]["profile"] == "system_prompt"
+    assert "SENTINEL_PROMPT" not in json.dumps(result["body"])
+
+
+def test_runtime_capture_rejects_arbitrary_string_properties_and_unknown_events():
+    """Every string-bearing property stays allowlisted and bounded."""
+    if not shutil.which("node"):
+        pytest.skip("node not installed; skipping analytics runtime test")
+
+    script = f"""
+const fs = require("fs");
+const vm = require("vm");
+const source = fs.readFileSync({json.dumps(str(ANALYTICS))}, "utf8");
+const calls = [];
+const local = new Map([["crewscore_analytics_opt_out_v1", "0"]]);
+const session = new Map();
+const sessionStorage = {{
+  getItem: (key) => session.get(key) || null,
+  setItem: (key, value) => session.set(key, String(value)),
+}};
+const context = {{
+  window: {{}},
+  localStorage: {{
+    getItem: () => null,
+    setItem: () => undefined,
+  }},
+  sessionStorage,
+  location: {{ hostname: "crewscore.ai" }},
+  crypto: {{ randomUUID: () => "test-session" }},
+  fetch: (...args) => {{ calls.push(args); return Promise.resolve(); }},
+}};
+vm.createContext(context);
+vm.runInContext(source, context);
+const analytics = context.window.CrewScoreAnalytics;
+analytics.capture("cs_score", {{
+  source: "https://evil.example.com",
+  profile: "system_prompt",
+  ruleset: "crewscore-hygiene@0.6.0",
+  overall_bucket: 10,
+  controls_found: 8,
+  prompt: "SENTINEL_PROMPT"
+}});
+analytics.capture("cs_score", {{
+  source: "paste",
+  profile: "system_prompt",
+  ruleset: "crewscore-hygiene@0.6.0",
+  overall_bucket: 10,
+  controls_found: 8,
+  path: "chatgpt"
+}});
+analytics.capture("cs_share", {{ kind: "telegram" }});
+analytics.capture("cs_site_view", {{ source: "search" }});
+analytics.capture("cs_missing_event", {{ source: "paste" }});
+process.stdout.write(JSON.stringify({{ calls: calls.length, body: calls.length ? JSON.parse(calls[0][1].body) : null }}));
+"""
+    proc = subprocess.run(
+        ["node", "-e", script],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    result = json.loads(proc.stdout)
+    assert result["calls"] == 1
+    assert result["body"]["event"] == "cs_site_view"
+    assert result["body"]["properties"]["source"] == "search"
     assert "SENTINEL_PROMPT" not in json.dumps(result["body"])
 
 
@@ -211,7 +276,7 @@ process.stdout.write(JSON.stringify({{ before, after: calls.length, optedOut: an
         check=True,
     )
     result = json.loads(proc.stdout)
-    assert result == {"before": 1, "after": 1, "optedOut": True}
+    assert result == {"before": 0, "after": 0, "optedOut": True}
 
 
 @pytest.mark.parametrize(

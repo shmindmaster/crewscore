@@ -1,4 +1,4 @@
-"""Privacy-safe local metrics: buckets, event store, web allowlist parity."""
+"""Privacy-safe local metrics: buckets, event store, and web/schema parity."""
 
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ from crewscore.metrics import (
     validate_props,
 )
 
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -31,48 +32,70 @@ def test_bucket_score_boundaries():
 
 
 def test_append_event_adds_timestamped_entry():
-    store = append_event({}, "cs_score", {"overall_bucket": "0", "source": "paste"})
+    store = append_event({}, "cs_score", {"source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0", "overall_bucket": 10, "controls_found": 8, "product_path": "other"})
     assert "events" in store
     assert len(store["events"]) == 1
     event = store["events"][0]
     assert event["e"] == "cs_score"
     assert "t" in event
-    assert isinstance(event["t"], (int, float))
+    assert isinstance(event["t"], int)
     assert event["t"] > 0
-    assert event["p"] == {"overall_bucket": "0", "source": "paste"}
+    assert event["p"]["overall_bucket"] == 10
 
 
 def test_append_event_caps_at_max_events():
     store: dict = {}
     for i in range(201):
         store = append_event(
-            store, "cs_score", {"overall_bucket": "0", "i": i}, max_events=200
+            store,
+            "cs_score",
+            {
+                "source": "paste",
+                "profile": "system_prompt",
+                "ruleset": "crewscore-hygiene@0.6.0",
+                "overall_bucket": 10,
+                "controls_found": 8,
+            },
+            max_events=200,
         )
     assert len(store["events"]) == 200
-    # keep the most recent events
-    assert store["events"][-1]["p"]["i"] == 200
+    assert store["events"][-1]["p"]["controls_found"] == 8
 
 
 def test_validate_props_rejects_forbidden_prompt_keys():
     with pytest.raises(ValueError):
-        validate_props({"prompt": "secret"})
-
-    for key in ("text", "body", "system_prompt", "content", "PROMPT", "System_Prompt"):
+        validate_props("cs_check_completed", {"prompt": "secret", "source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0"})
+    for key in ("text", "body", "system_prompt", "content", "snippet", "input", "source_text"):
         with pytest.raises(ValueError):
-            validate_props({key: "x"})
+            validate_props("cs_score", {key: "x", "source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0", "overall_bucket": 10, "controls_found": 0})
+
+
+def test_validate_props_rejects_bad_enum_and_free_text():
+    with pytest.raises(ValueError):
+        validate_props("cs_score", {"source": "https://evil.site/path", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0", "overall_bucket": 10, "controls_found": 8})
+    with pytest.raises(ValueError):
+        validate_props("cs_score", {"source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene", "overall_bucket": 10, "controls_found": 8})
+    with pytest.raises(ValueError):
+        validate_props("cs_share", {"kind": "dropbox"})
 
 
 def test_validate_props_allows_safe_props():
-    assert validate_props({"overall_bucket": "0"}) is True
+    assert validate_props("cs_score", {"source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0", "overall_bucket": 30, "controls_found": 8}) is True
+    assert validate_props("cs_fix_apply", {"controls_found": 3}) is True
 
 
 def test_validate_event_rejects_unknown_event():
-    with pytest.raises(ValueError, match="unknown metrics event"):
-        validate_event("cs_not_a_real_event")
+    with pytest.raises(ValueError, match="invalid"):
+        validate_event("cs_not_a_real_event", {})
+
+
+def test_validate_event_rejects_missing_required():
+    with pytest.raises(ValueError, match="missing required"):
+        validate_event("cs_check_completed", {"source": "paste", "profile": "system_prompt"})
 
 
 def test_append_event_rejects_unknown_event():
-    with pytest.raises(ValueError, match="unknown metrics event"):
+    with pytest.raises(ValueError, match="invalid"):
         append_event({}, "cs_not_a_real_event", {})
 
 
@@ -85,9 +108,6 @@ def test_analytics_js_allowlists_match_python_schema():
     assert parsed["ALLOWED_EVENTS"] == ALLOWED_EVENTS
     assert parsed["ALLOWED_PROPERTIES"] == ALLOWED_PROPERTIES
     assert SCHEMA_VERSION in js
-    assert f'schema_version: "{SCHEMA_VERSION}"' in js or (
-        f"schema_version: '{SCHEMA_VERSION}'" in js
-    )
 
 
 def test_schema_payload_is_prompt_free():

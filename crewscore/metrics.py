@@ -1,9 +1,4 @@
-"""Privacy-safe metrics schema (no network from Python, never store prompt text).
-
-Authoritative lists for event names and property keys used by the static site
-(`analytics.js`) and any future CLI counters. Keep this module and
-`analytics.js` in lockstep — `tests/test_metrics.py` enforces parity.
-"""
+"""Privacy-safe metrics schema (no network from Python, never store prompt text)."""
 
 from __future__ import annotations
 
@@ -11,39 +6,140 @@ import re
 import time
 from typing import Any
 
-# Bump when allowlists change; analytics.js must carry the same string.
-SCHEMA_VERSION = "2026-07-30"
+# Bump when the schema changes; analytics.js must carry the same value.
+SCHEMA_VERSION = "2026-07-31"
 
-# Keys that must never appear in metrics payloads (case-insensitive).
-FORBIDDEN_PROP_KEYS = frozenset(
+# Maximum allowed control counts per control map for this branch.
+CONTROL_MAX = 23
+
+BUCKETS = (0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)
+SCORE_BUCKETS = ("0", "1-49", "50-69", "70-89", "90-100")
+RULESET_RE = re.compile(r"^crewscore-hygiene@\d+\.\d+\.\d+$")
+
+SOURCE_ENUM = frozenset(
     {
-        "prompt",
-        "text",
-        "body",
-        "system_prompt",
-        "content",
+        "direct",
+        "internal",
+        "github",
+        "search",
+        "social",
+        "referral",
+        "paste",
+        "file_upload",
+        "github_import",
+        "example",
+        "demo",
+        "profile_change",
+        "mobile",
+        "fix_apply",
     }
 )
+
+PROFILE_ENUM = frozenset({"system_prompt", "coding_agent_config"})
+MODE_ENUM = frozenset({"simple", "developer"})
+PRODUCT_PATH_ENUM = frozenset({"chatgpt", "claude", "cursor", "other"})
+PATH_ENUM = frozenset({"chatgpt", "claude", "cursor", "other", "feedback"})
+KIND_ENUM = frozenset(
+    {
+        "copy_result",
+        "copy_share_text",
+        "copy_team",
+        "native",
+        "x",
+        "linkedin",
+        "facebook",
+        "reddit",
+        "svg_linkedin",
+        "svg_x",
+        "svg_facebook",
+        "svg_reddit",
+        "svg_square",
+        "svg_badge",
+        "png_linkedin",
+        "png_x",
+        "png_facebook",
+        "png_square",
+        "png_badge",
+    }
+)
+
+
+def _bucket_schema() -> dict[str, Any]:
+    return {
+        "type": "integer",
+        "enum": set(BUCKETS),
+        "min": min(BUCKETS),
+        "max": max(BUCKETS),
+    }
+
+
+EVENT_SCHEMAS: dict[str, dict[str, Any]] = {
+    "cs_site_view": {
+        "required": ("source",),
+        "properties": {
+            "source": {"type": "string", "enum": SOURCE_ENUM},
+        },
+    },
+    "cs_rules_expand": {"required": (), "properties": {}},
+    "cs_fix_plan": {"required": (), "properties": {}},
+    "cs_fix_cancel": {"required": (), "properties": {}},
+    "cs_export": {"required": (), "properties": {}},
+    "cs_score": {
+        "required": ("source", "profile", "ruleset", "overall_bucket", "controls_found"),
+        "properties": {
+            "source": {"type": "string", "enum": SOURCE_ENUM},
+            "profile": {"type": "string", "enum": PROFILE_ENUM},
+            "ruleset": {"type": "string", "pattern": RULESET_RE, "max_length": 40},
+            "overall_bucket": _bucket_schema(),
+            "controls_found": {"type": "integer", "min": 0, "max": CONTROL_MAX},
+            "product_path": {"type": "string", "enum": PRODUCT_PATH_ENUM, "max_length": 24},
+            "smell_count": {"type": "integer", "min": 0, "max": CONTROL_MAX},
+            "delta_bucket": _bucket_schema(),
+        },
+    },
+    "cs_vendor_open": {
+        "required": ("kind",),
+        "properties": {"kind": {"type": "string", "enum": {"summary"}}},
+    },
+    "cs_demo_started": {"required": (), "properties": {}},
+    "cs_check_completed": {
+        "required": ("source", "profile", "ruleset"),
+        "properties": {
+            "source": {"type": "string", "enum": SOURCE_ENUM},
+            "profile": {"type": "string", "enum": PROFILE_ENUM},
+            "ruleset": {"type": "string", "pattern": RULESET_RE, "max_length": 40},
+        },
+    },
+    "cs_fix_review": {
+        "required": ("dims_to_fix_count",),
+        "properties": {"dims_to_fix_count": {"type": "integer", "min": 0, "max": CONTROL_MAX}},
+    },
+    "cs_mode_change": {
+        "required": ("mode",),
+        "properties": {"mode": {"type": "string", "enum": MODE_ENUM, "max_length": 12}},
+    },
+    "cs_share": {
+        "required": ("kind",),
+        "properties": {"kind": {"type": "string", "enum": KIND_ENUM, "max_length": 40}},
+    },
+    "cs_product_path": {
+        "required": ("path",),
+        "properties": {"path": {"type": "string", "enum": PATH_ENUM}},
+    },
+    "cs_fix_apply": {
+        "required": ("controls_found",),
+        "properties": {"controls_found": {"type": "integer", "min": 0, "max": CONTROL_MAX}},
+    },
+}
+
+
+EVENT_REQUIRED_PROPERTIES = {event: spec.get("required", ()) for event, spec in EVENT_SCHEMAS.items()}
+EVENT_OPTIONAL_PROPERTIES = {
+    "cs_score": ("product_path", "smell_count", "delta_bucket"),
+}
 
 # Must match analytics.js ALLOWED_EVENTS.
-ALLOWED_EVENTS = frozenset(
-    {
-        "cs_site_view",
-        "cs_rules_expand",
-        "cs_fix_plan",
-        "cs_fix_cancel",
-        "cs_fix_apply",
-        "cs_export",
-        "cs_score",
-        "cs_vendor_open",
-        "cs_demo_started",
-        "cs_check_completed",
-        "cs_fix_review",
-        "cs_mode_change",
-        "cs_share",
-        "cs_product_path",
-    }
-)
+ALLOWED_EVENTS = frozenset(EVENT_SCHEMAS)
 
 # Must match analytics.js ALLOWED_PROPERTIES.
 ALLOWED_PROPERTIES = frozenset(
@@ -51,19 +147,108 @@ ALLOWED_PROPERTIES = frozenset(
         "source",
         "profile",
         "overall_bucket",
-        "smell_count",
         "ruleset",
         "dims_to_fix_count",
         "delta_bucket",
         "kind",
-        "controls_found",
         "mode",
         "path",
         "product_path",
+        "controls_found",
+        "smell_count",
     }
 )
 
-SCORE_BUCKETS = ("0", "1-49", "50-69", "70-89", "90-100")
+# Keys that must never appear in payloads.
+FORBIDDEN_PROP_KEYS = frozenset(
+    {
+        "prompt",
+        "text",
+        "body",
+        "system_prompt",
+        "content",
+        "snippet",
+        "input",
+        "source_text",
+    }
+)
+
+
+def _raise(event: str, issue: str) -> None:
+    raise ValueError(f"analytics event {event!r} invalid: {issue}")
+
+
+def _validate_int(value: Any, *, minimum: int | None = None, maximum: int | None = None) -> int:
+    if not isinstance(value, int):
+        raise ValueError("integer required")
+    if minimum is not None and value < minimum:
+        raise ValueError("integer below minimum")
+    if maximum is not None and value > maximum:
+        raise ValueError("integer above maximum")
+    return value
+
+
+def _validate_string(
+    value: Any,
+    *,
+    enum: frozenset[str] | None = None,
+    max_length: int = 80,
+    pattern: re.Pattern[str] | None = None,
+) -> str:
+    if not isinstance(value, str):
+        raise ValueError("string required")
+    text = value.strip()
+    if not text:
+        raise ValueError("empty string")
+    if len(text) > max_length:
+        raise ValueError("string too long")
+    if enum is not None and len(enum) and text not in enum:
+        raise ValueError("unrecognized enum")
+    if pattern is not None and not pattern.match(text):
+        raise ValueError("pattern mismatch")
+    return text
+
+
+def _validate_event(event: str, props: dict[str, Any]) -> dict[str, Any]:
+    schema = EVENT_SCHEMAS.get(event)
+    if schema is None:
+        _raise(event, "event not allowlisted")
+
+    required = tuple(schema.get("required", ()))
+    properties = schema.get("properties", {})
+
+    for key in required:
+        if key not in props:
+            _raise(event, f"missing required property {key!r}")
+
+    for key in props:
+        if key not in properties:
+            if event == "cs_score" and key in EVENT_OPTIONAL_PROPERTIES.get(event, ()):
+                continue
+            _raise(event, f"unexpected property {key!r}")
+
+    out: dict[str, Any] = {}
+    for key, spec in properties.items():
+        if key not in props:
+            continue
+        value = props[key]
+        if spec["type"] == "string":
+            enum = spec.get("enum")
+            out[key] = _validate_string(
+                value,
+                enum=frozenset(enum) if enum else None,
+                max_length=spec.get("max_length", 80),
+                pattern=spec.get("pattern"),
+            )
+        elif spec["type"] == "integer":
+            value = _validate_int(value, minimum=spec.get("min"), maximum=spec.get("max"))
+            enum = spec.get("enum")
+            if enum is not None and value not in enum:
+                _raise(event, f"{key} must be one of {sorted(enum)}")
+            out[key] = value
+        else:
+            _raise(event, f"unsupported schema type {spec['type']!r}")
+    return out
 
 
 def bucket_score(n: int | float) -> str:
@@ -80,34 +265,27 @@ def bucket_score(n: int | float) -> str:
     return "90-100"
 
 
-def validate_props(props: dict[str, Any] | None) -> bool:
-    """Reject payloads that could carry prompt or free-text body content.
+def validate_props(event: str, props: dict[str, Any] | None = None) -> bool:
+    """Validate per-event property schema for strict privacy-safe telemetry."""
+    if event not in ALLOWED_EVENTS:
+        _raise(event, "event not allowlisted")
+    if props is None:
+        props = {}
+    if not isinstance(props, dict):
+        _raise(event, "properties must be an object")
 
-    Raises ValueError when a forbidden key is present (case-insensitive).
-    Returns True when props are safe.
-    """
-    if not props:
-        return True
-    for key in props:
-        if str(key).lower() in FORBIDDEN_PROP_KEYS:
-            raise ValueError(
-                f"metrics props must not include prompt text key: {key!r}"
-            )
+    lowered = {str(key): value for key, value in props.items()}
+    for key in FORBIDDEN_PROP_KEYS:
+        if key in lowered:
+            _raise(event, f"forbidden prompt-content key {key!r}")
+
+    _validate_event(event, lowered)
     return True
 
 
 def validate_event(event: str, props: dict[str, Any] | None = None) -> bool:
-    """Validate event name against the public allowlist and props for safety.
-
-    Raises ValueError on unknown event or forbidden prop keys.
-    Does not require props to be a subset of ALLOWED_PROPERTIES so local
-    stores can carry extra non-content keys (e.g. test indices); the web
-    client strips unknown keys before network send.
-    """
-    if event not in ALLOWED_EVENTS:
-        raise ValueError(f"unknown metrics event: {event!r}")
-    validate_props(props)
-    return True
+    """Validate event name against allowlist and event-specific property schema."""
+    return validate_props(event, props)
 
 
 def append_event(
@@ -117,11 +295,7 @@ def append_event(
     *,
     max_events: int = 200,
 ) -> dict[str, Any]:
-    """Append a privacy-checked event; cap store size to max_events (newest kept).
-
-    Store shape matches web localStorage:
-      {"events": [{"e": name, "t": epoch_ms, "p": props}, ...]}
-    """
+    """Append a privacy-checked event and keep store size bounded."""
     props = dict(props or {})
     validate_event(event, props)
 
@@ -144,7 +318,7 @@ _JS_SET_RE = re.compile(
     r"const\s+(ALLOWED_EVENTS|ALLOWED_PROPERTIES)\s*=\s*new\s+Set\(\[(.*?)\]\)",
     re.DOTALL,
 )
-_JS_STRING_RE = re.compile(r'"([^"\\]+)"')
+_JS_STRING_RE = re.compile(r'"([^"\\\\]+)"')
 
 
 def parse_analytics_allowlists(js_source: str) -> dict[str, frozenset[str]]:
@@ -164,7 +338,13 @@ def schema_payload() -> dict[str, Any]:
         "allowed_events": sorted(ALLOWED_EVENTS),
         "allowed_properties": sorted(ALLOWED_PROPERTIES),
         "forbidden_prop_keys": sorted(FORBIDDEN_PROP_KEYS),
-        "score_buckets": list(SCORE_BUCKETS),
-        "network": "web client only; Python core never sends metrics",
+        "score_buckets": list(BUCKETS),
+        "event_schemas": {
+            event: {
+                "required": list(EVENT_REQUIRED_PROPERTIES[event]),
+                "properties": sorted(EVENT_SCHEMAS[event]["properties"]),
+            }
+            for event in sorted(EVENT_SCHEMAS)
+        },
         "prompt_text": "never stored in event props",
     }

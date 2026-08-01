@@ -213,7 +213,9 @@
     renderResult(result, prompt, { fresh: true });
     const resultsEl = $("results");
     scrollTo(resultsEl, "nearest");
-    track("cs_score", { source: source || "paste", profile, ruleset: result.ruleset, overall_bucket: result.overall == null ? null : Math.floor(result.overall / 10) * 10, controls_found: result.findings ? result.findings.filter((f) => f.status === "matched").length : 0, product_path: state.productPath || null });
+    const overall = typeof result.overall === "number" ? Math.max(0, Math.min(100, Math.floor(result.overall / 10) * 10)) : 0;
+    const controlsFound = result.findings ? result.findings.filter((f) => f.status === "matched").length : 0;
+    track("cs_score", { source: source || "paste", profile, ruleset: result.ruleset, overall_bucket: overall, controls_found: controlsFound, product_path: state.productPath || "other" });
     track("cs_check_completed", { source: source || "paste", profile, ruleset: result.ruleset });
   }
 

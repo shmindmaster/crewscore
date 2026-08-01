@@ -33,7 +33,7 @@
   <text class="t" x="72" y="280" font-size="64" font-weight="800">8<span class="muted" font-size="32"> / 23</span></text>
   <text class="t muted" x="72" y="318" font-size="16">written controls found</text>
   <rect x="72" y="340" width="360" height="12" rx="6" fill="#202B24"/>
-  <text class="t warn" x="72" y="390" font-size="15" font-weight="700">First gap to review: A human must approve</text>
+  <text class="t warn" x="72" y="390" font-size="15" font-weight="700">First gap to review: human_gate.approval_required — A human must approve</text>
   <text class="t muted" x="72" y="416" font-size="13">Fifteen controls may be missing. Low coverage is actionable.</text>
 
   <!-- after panel -->
