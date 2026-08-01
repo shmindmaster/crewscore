@@ -215,8 +215,10 @@
     scrollTo(resultsEl, "nearest");
     const overall = typeof result.overall === "number" ? Math.max(0, Math.min(100, Math.floor(result.overall / 10) * 10)) : 0;
     const controlsFound = result.findings ? result.findings.filter((f) => f.status === "matched").length : 0;
-    track("cs_score", { source: source || "paste", profile, ruleset: result.ruleset, overall_bucket: overall, controls_found: controlsFound, product_path: state.productPath || "other" });
-    track("cs_check_completed", { source: source || "paste", profile, ruleset: result.ruleset });
+    if (result.governance_applicable) {
+      track("cs_check_completed", { source: source || "paste", profile, ruleset: result.ruleset });
+      track("cs_score", { source: source || "paste", profile, ruleset: result.ruleset, overall_bucket: overall, controls_found: controlsFound, product_path: state.productPath || "other" });
+    }
   }
 
   function heroGapFromResult(result) {
@@ -433,20 +435,31 @@
   }
 
   async function copyText(value, success, shareKind) {
+    let emittedShareEvent = false;
+    const emitShareEvent = () => {
+      if (!shareKind || emittedShareEvent) return;
+      emittedShareEvent = true;
+      track("cs_share", { kind: shareKind });
+    };
+
     try {
       if (navigator.clipboard?.writeText) {
         await writeClipboardWithFallbackTimeout(value);
         toast(success);
-        if (shareKind) track("cs_share", { kind: shareKind });
+        emitShareEvent();
         return true;
       }
-    } catch (_) { /* fall back to a temporary text area */ }
+    } catch (_) {
+      // Clipboard API can fail under some browser-security edge cases.
+      // Capture telemetry on the copy attempt so copy buttons remain auditable.
+      emitShareEvent();
+    }
     try {
       const helper = document.createElement("textarea");
       helper.value = value; helper.setAttribute("readonly", ""); helper.style.position = "fixed"; helper.style.opacity = "0";
       document.body.appendChild(helper); helper.select(); const copied = document.execCommand("copy"); helper.remove();
       toast(copied ? success : "Copy is unavailable - select the text manually");
-      if (copied && shareKind) track("cs_share", { kind: shareKind });
+      if (copied) emitShareEvent();
       return copied;
     } catch (_) { toast("Copy is unavailable - select the text manually"); return false; }
   }
@@ -477,6 +490,28 @@
       : "All published controls were detected in the text.";
     return `${found.length} of ${total} written controls found. ${missing.length} may be missing. ${gapLine} CrewScore · written-control coverage, not runtime proof.`;
   }
+  function splitLines(text, maxChars) {
+    const words = String(text || "").split(/\s+/).filter(Boolean);
+    const lines = [];
+    let current = "";
+    words.forEach((word) => {
+      if (!current) {
+        current = word;
+        return;
+      }
+      if ((current + " " + word).length <= maxChars) {
+        current += " " + word;
+        return;
+      }
+      lines.push(current);
+      current = word;
+    });
+    if (current) lines.push(current);
+    return lines;
+  }
+  function renderTextLines(x, y, fill, size, weight, lines, lineHeight) {
+    return lines.map((line, index) => `<tspan x=\"${x}\" y=\"${y + index * lineHeight}\" fill=\"${fill}\" font-size=\"${size}\" font-weight=\"${weight}\">${escapeHtml(line)}</tspan>`).join("");
+  }
   async function nativeShare() {
     const url = shareUrl();
     try { await navigator.share({ title: "CrewScore result", text: shareText(), url }); track("cs_share", { kind: "native" }); }
@@ -500,15 +535,22 @@
     const { found, missing } = controlsForResult(result);
     const total = allControls().length;
     const hero = heroGapFromResult(result);
-    const gapLine = hero ? `First gap to review: ${hero.title}` : "No missing published controls detected";
     const compact = kind === "badge";
+    const gapLine = hero ? `First gap to review: ${hero.title}` : "No missing published controls detected";
+    const gapLines = splitLines(gapLine, compact ? 40 : 58);
     const headline = compact
       ? `CrewScore: ${found.length}/${total} controls found`
       : `${found.length} of ${total} written controls`;
     const subtitle = compact
       ? "Written-control coverage, not runtime proof"
       : `${missing.length} may be missing · ${gapLine}`;
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(headline)}"><rect width="100%" height="100%" fill="#102319"/><rect x="${compact ? 20 : 70}" y="${compact ? 20 : 70}" width="${width - (compact ? 40 : 140)}" height="${height - (compact ? 40 : 140)}" rx="${compact ? 18 : 28}" fill="#173629" stroke="#6fdaa6"/><text x="${compact ? 54 : 120}" y="${compact ? 72 : 150}" fill="#b6f3cf" font-family="system-ui, sans-serif" font-size="${compact ? 26 : 34}" font-weight="700">CrewScore</text><text x="${compact ? 54 : 120}" y="${compact ? 122 : 290}" fill="#ffffff" font-family="system-ui, sans-serif" font-size="${compact ? 32 : 64}" font-weight="800">${escapeHtml(headline)}</text><text x="${compact ? 54 : 120}" y="${compact ? 158 : 370}" fill="#d5e7dc" font-family="system-ui, sans-serif" font-size="${compact ? 19 : 28}">${escapeHtml(subtitle)}</text>${compact ? "" : `<text x="120" y="${height - 120}" fill="#b6c9bd" font-family="system-ui, sans-serif" font-size="25">Scanned locally · written-control coverage, not runtime proof</text>`}</svg>`;
+    const gapTextX = compact ? 54 : 120;
+    const gapTextY = compact ? 158 : 370;
+    const gapTextLineHeight = compact ? 22 : 38;
+    const gapLineRendered = compact
+      ? renderTextLines(gapTextX, gapTextY, "#d5e7dc", 19, "700", gapLines, gapTextLineHeight)
+      : renderTextLines(gapTextX, gapTextY, "#d5e7dc", 28, "700", gapLines, gapTextLineHeight);
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(headline)}"><rect width="100%" height="100%" fill="#102319"/><rect x="${compact ? 20 : 70}" y="${compact ? 20 : 70}" width="${width - (compact ? 40 : 140)}" height="${height - (compact ? 40 : 140)}" rx="${compact ? 18 : 28}" fill="#173629" stroke="#6fdaa6"/><text x="${compact ? 54 : 120}" y="${compact ? 72 : 150}" fill="#b6f3cf" font-family="system-ui, sans-serif" font-size="${compact ? 26 : 34}" font-weight="700">CrewScore</text><text x="${compact ? 54 : 120}" y="${compact ? 122 : 290}" fill="#ffffff" font-family="system-ui, sans-serif" font-size="${compact ? 32 : 64}" font-weight="800">${escapeHtml(headline)}</text><text x="${gapTextX}" y="${gapTextY}" fill="#d5e7dc" font-family="system-ui, sans-serif">${gapLineRendered}</text><text x="${compact ? 54 : 120}" y="${compact ? 200 : 420}" fill="#d5e7dc" font-family="system-ui, sans-serif" font-size="${compact ? 18 : 26}" font-weight="500">${escapeHtml(compact ? subtitle : "")}</text>${compact ? "" : `<text x="120" y="${height - 120}" fill="#b6c9bd" font-family="system-ui, sans-serif" font-size="25">Scanned locally · written-control coverage, not runtime proof</text>`}</svg>`;
   }
   function triggerDownload(blob, filename) {
     const link = document.createElement("a");

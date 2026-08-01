@@ -7,10 +7,13 @@ import json
 import re
 import subprocess
 import sys
+import shutil
+from contextlib import contextmanager
 from pathlib import Path
+import pytest
 
 from crewscore import __version__
-from crewscore.scoring import RULESET_ID
+from crewscore.scoring import DIMENSION_KEYS, RULESET_ID
 from crewscore.scorers.structural_analysis import CONCEPT_COUNT
 
 REPO = Path(__file__).resolve().parents[1]
@@ -42,13 +45,155 @@ EXPECTED_CHECKSUM_NAMES = frozenset(
 
 
 def _generate_pack(path: Path) -> None:
-    subprocess.run(
-        [sys.executable, str(GENERATOR), "--output-dir", str(path)],
+    result = _generate_pack_raw(path)
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def _generate_pack_raw(path: Path, *, extra_args: list[str] | None = None) -> subprocess.CompletedProcess[str]:
+    args = [sys.executable, str(GENERATOR), "--output-dir", str(path)]
+    if extra_args:
+        args.extend(extra_args)
+    return subprocess.run(
+        args,
         cwd=REPO,
-        check=True,
+        check=False,
         capture_output=True,
         text=True,
     )
+
+
+@contextmanager
+def _temporary_corpus(mutator) -> None:
+    backup = DATA.with_suffix(".json.bak-launch-copy")
+    if DATA.exists():
+        shutil.copy2(DATA, backup)
+    try:
+        mutator()
+        yield
+    finally:
+        if backup.exists():
+            shutil.move(str(backup), DATA)
+
+
+def _corpus_payload() -> dict:
+    return json.loads(DATA.read_text(encoding="utf-8"))
+
+
+def _write_payload(payload: dict) -> None:
+    DATA.write_text(json.dumps(payload), encoding="utf-8")
+
+
+def _mutate_corpus_to_invalid_json() -> None:
+    DATA.write_text("{", encoding="utf-8")
+
+
+def _mutate_corpus_to_missing():
+    DATA.write_text("{}", encoding="utf-8")
+
+
+def _mutate_corpus_to_zero_evidence() -> None:
+    payload = _corpus_payload()
+    payload["groups"]["production"]["files"] = 0
+    payload["groups"]["production"]["describe"]["median"] = 0
+    _write_payload(payload)
+
+
+def _mutate_corpus_to_unparseable():
+    DATA.write_text("{\"groups\":", encoding="utf-8")
+
+
+def _render_x_post() -> str:
+    source = json.loads(SOURCE.read_text(encoding="utf-8"))
+    readme = (REPO / "README.md").read_text(encoding="utf-8")
+    readme_line = next(
+        (line.lstrip("# ").strip() for line in readme.splitlines() if line.startswith("### ")),
+        "Coverage-first structural checklist for AI agent prompts.",
+    )
+    corpus = _corpus()
+    facts = {
+        "package_version": __version__,
+        "ruleset": RULESET_ID,
+        "dimension_count": len(DIMENSION_KEYS),
+        "concept_count": CONCEPT_COUNT,
+        "production_n": int(corpus["groups"]["production"]["files"]),
+        "production_median": int(corpus["groups"]["production"]["describe"]["median"]),
+        "gpt_store_n": int(corpus["groups"]["gpt_store"]["files"]),
+        "gpt_store_median": int(corpus["groups"]["gpt_store"]["describe"]["median"]),
+        "total_prompts": int(corpus["groups"]["production"]["files"] + corpus["groups"]["gpt_store"]["files"]),
+        "cliffs_delta": float(corpus["analysis"]["delta"]),
+        "p_value": float(corpus["analysis"]["p_value"]),
+        "validation_report_url": "https://github.com/shmindmaster/crewscore/blob/main/docs/validation-corpus.md",
+        "validation_markdown": "https://github.com/shmindmaster/crewscore/blob/main/docs/validation.md",
+        "created_by": "CrewScore is created and maintained by Sarosh Hussain.",
+        "operating_context": "Pendoah is the company operating context for this project.",
+        "oneliner": readme_line,
+    }
+    x_text = source["channels"]["x"]["text"].format(**facts)
+    return x_text if x_text.endswith("\n") else f"{x_text}\n"
+
+
+def _snapshot_dir(path: Path) -> dict[str, str]:
+    return {name: _sha256_file(path / name) for name in path.iterdir() if name.is_file()}
+
+
+def test_generate_dist_pack_refuses_workspace_root_output():
+    result = _generate_pack_raw(REPO)
+    assert result.returncode != 0
+    output = result.stdout + result.stderr
+    assert "refusing to write launch pack into workspace scope" in output
+
+
+def test_generate_dist_pack_refuses_non_directory_output(tmp_path: Path):
+    output = tmp_path / "file-output.txt"
+    output.write_text("not-a-directory", encoding="utf-8")
+    result = _generate_pack_raw(output)
+    assert result.returncode != 0
+    assert "output directory is not a directory" in (result.stdout + result.stderr)
+
+
+def test_generate_dist_pack_preserves_unrelated_files(tmp_path: Path):
+    out = tmp_path / "dist-pack"
+    _generate_pack(out)
+
+    unchanged = out / "sentinel.txt"
+    unchanged.write_text("must remain", encoding="utf-8")
+    sentinel_hash = _sha256_file(unchanged)
+    artifacts = {name: _sha256_file(out / name) for name in REQUIRED_ARTIFACTS}
+    _generate_pack(out)
+
+    assert _sha256_file(unchanged) == sentinel_hash
+    for name, expected_hash in artifacts.items():
+        assert _sha256_file(out / name) == expected_hash
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        _mutate_corpus_to_invalid_json,
+        _mutate_corpus_to_missing,
+        _mutate_corpus_to_zero_evidence,
+        _mutate_corpus_to_unparseable,
+    ],
+)
+def test_generate_dist_pack_fails_closed_on_bad_corpus(tmp_path: Path, mutation):
+    out = tmp_path / "dist-pack"
+    _generate_pack(out)
+    baseline = _snapshot_dir(out)
+    with _temporary_corpus(mutation):
+        result = _generate_pack_raw(out)
+    assert result.returncode != 0
+    post = _snapshot_dir(out)
+    assert post == baseline
+
+
+def test_generate_dist_pack_x_channel_respects_post_limit(tmp_path: Path):
+    x_text = _render_x_post()
+    assert len(x_text) <= 280
+    out = tmp_path / "dist-pack"
+    _generate_pack(out)
+    generated = (out / "x-post.txt").read_text(encoding="utf-8")
+    assert generated == x_text
+    assert len(generated) <= 280
 
 
 def _corpus() -> dict:
@@ -128,6 +273,8 @@ def test_launch_copy_source_is_locked_and_template_driven():
     assert "{cliffs_delta}" in source["channels"]["show_hn"]["first_comment"]
     assert "{p_value}" in source["channels"]["show_hn"]["first_comment"]
     assert source["channels"]["show_hn"]["first_comment"].count("{dimension_count}") == 1
+    assert "smell scoring" not in source["channels"]["linkedin"]["text"]
+    assert "configuration-smell findings" in source["channels"]["linkedin"]["text"]
 
 
 def test_launch_copy_generated_pack_matches_repository_facts(tmp_path: Path):

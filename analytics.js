@@ -19,6 +19,7 @@
     "copy_share_text",
     "copy_team",
     "native",
+    "copy_badge",
     "x",
     "linkedin",
     "facebook",
@@ -37,7 +38,7 @@
   ];
   const PATHS = ["chatgpt", "claude", "cursor", "other", "feedback"];
 
-const EVENT_SCHEMAS = {
+    const EVENT_SCHEMAS = {
     cs_site_view: {
       required: ["source"],
       properties: {
@@ -84,7 +85,7 @@ const EVENT_SCHEMAS = {
     },
     cs_share: {
       required: ["kind"],
-      properties: { kind: { type: "string", enum: KINDS, max_length: 24 } },
+      properties: { kind: { type: "string", enum: KINDS, max_length: 40 } },
     },
     cs_product_path: {
       required: ["path"],
@@ -96,7 +97,7 @@ const EVENT_SCHEMAS = {
     },
 };
 
-const ALLOWED_EVENTS = new Set([
+  const ALLOWED_EVENTS = new Set([
   "cs_site_view",
   "cs_rules_expand",
   "cs_fix_plan",
@@ -113,7 +114,7 @@ const ALLOWED_EVENTS = new Set([
   "cs_fix_apply",
 ]);
 
-const ALLOWED_PROPERTIES = new Set([
+  const ALLOWED_PROPERTIES = new Set([
   "source",
   "profile",
   "overall_bucket",
@@ -127,6 +128,20 @@ const ALLOWED_PROPERTIES = new Set([
   "controls_found",
   "smell_count",
 ]);
+  const FORBIDDEN_PROPERTIES = [
+    "prompt",
+    "text",
+    "body",
+    "system_prompt",
+    "content",
+    "snippet",
+    "input",
+    "source_text",
+  ];
+
+  const EVENT_OPTIONAL_PROPERTIES = {
+    cs_score: ["product_path", "smell_count", "delta_bucket"],
+  };
 
   let sessionOptOut = false;
   let lastCaptureError = null;
@@ -215,6 +230,38 @@ const ALLOWED_PROPERTIES = new Set([
     return output;
   }
 
+  function serializeSchema() {
+    const events = {};
+    for (const [event, schema] of Object.entries(EVENT_SCHEMAS)) {
+      events[event] = {
+        required: (schema.required || []).slice(),
+        properties: {},
+      };
+      Object.keys(schema.properties || {}).forEach((name) => {
+        const spec = schema.properties[name];
+        const next = Object.assign({}, spec);
+        if (next.pattern instanceof RegExp) next.pattern = next.pattern.source;
+        if (Array.isArray(next.enum)) {
+          next.enum = next.enum.slice().sort(function (left, right) {
+            if (typeof left === "number" && typeof right === "number") return left - right;
+            return String(left).localeCompare(String(right), undefined, { numeric: true, sensitivity: "base" });
+          });
+        }
+        events[event].properties[name] = next;
+      });
+    }
+    return {
+      schema_version: SCHEMA_VERSION,
+      allowed_events: Array.from(ALLOWED_EVENTS).sort(),
+      allowed_properties: Array.from(ALLOWED_PROPERTIES).sort(),
+      forbidden_prop_keys: FORBIDDEN_PROPERTIES.slice(),
+      score_buckets: BUCKETS.slice(),
+      optional_properties: EVENT_OPTIONAL_PROPERTIES,
+      prompt_text: "never stored in event props",
+      event_schemas: events,
+    };
+  }
+
   function classifyReferrer(referrer) {
     if (!referrer) return "direct";
     try {
@@ -266,7 +313,10 @@ const ALLOWED_PROPERTIES = new Set([
     isOptedOut,
     setOptOut,
     safeProperties,
-    lastCaptureError,
+    get lastCaptureError() {
+      return lastCaptureError;
+    },
+    schemaPayload: serializeSchema,
     schemaVersion: SCHEMA_VERSION,
   });
 

@@ -1,7 +1,5 @@
 # Launch Measurement Runbook (Task 2)
 
-Scope: `C:\wt\crewscore\launch-measurement-v069`
-
 This runbook is for launch telemetry only. It does not claim product-market fit, activation, or retention outcomes.
 
 ## 1) Funnel map and event contract
@@ -53,7 +51,7 @@ We measure the flow from landing to share/feedback using bounded event names and
 ### Step: share / feedback
 - Event: `cs_share`
 - Required property: `kind`
-- Allowed values: `copy_result`, `copy_share_text`, `copy_team`, `native`, `x`, `linkedin`, `facebook`, `reddit`, `svg_linkedin`, `svg_x`, `svg_facebook`, `svg_reddit`, `svg_square`, `svg_badge`, `png_linkedin`, `png_x`, `png_facebook`, `png_square`, `png_badge`
+- Allowed values: `copy_result`, `copy_share_text`, `copy_team`, `copy_badge`, `native`, `x`, `linkedin`, `facebook`, `reddit`, `svg_linkedin`, `svg_x`, `svg_facebook`, `svg_reddit`, `svg_square`, `svg_badge`, `png_linkedin`, `png_x`, `png_facebook`, `png_square`, `png_badge`
 - Purpose: capture share intent.
 - Denominator: sessions with at least one scored result.
 
@@ -99,5 +97,5 @@ Before publishing or changing copy:
 
 - This telemetry is usage telemetry.
 - `cs_score` and `cs_fix_apply` are usage outcomes, not activation.
-- Multi-session repeat usage is adoption signal.
+- Session-level repeated checks are the most precise behavioral signal available from first-party telemetry.
 - PMF, retention, and willingness-to-pay are separate studies and are not inferred from these events.

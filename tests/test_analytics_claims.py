@@ -109,6 +109,61 @@ def test_analytics_never_breaks_scoring():
     assert "window.CrewScoreAnalytics?." in SITE_JS.read_text(encoding="utf-8")
 
 
+def test_last_capture_error_is_a_readable_live_status():
+    """Track the last capture transport error through the exported getter."""
+    if not shutil.which("node"):
+        pytest.skip("node not installed; skipping analytics runtime test")
+
+    script = f"""
+const fs = require("fs");
+const vm = require("vm");
+const source = fs.readFileSync({json.dumps(str(ANALYTICS))}, "utf8");
+const local = new Map([["crewscore_analytics_opt_out_v1", "0"]]);
+const session = new Map();
+const storage = {{
+  getItem: (key) => local.get(key) || null,
+  setItem: (_key, value) => local.set(_key, String(value)),
+}};
+const sessionStorage = {{
+  getItem: (key) => session.get(key) || null,
+  setItem: (key, value) => session.set(key, String(value)),
+}};
+const context = {{
+  window: {{}},
+  localStorage: storage,
+  sessionStorage,
+  location: {{ hostname: "crewscore.ai" }},
+  crypto: {{ randomUUID: () => "test-session" }},
+  fetch: () => Promise.reject(new Error("transport down")),
+}};
+vm.createContext(context);
+vm.runInContext(source, context);
+  const analytics = context.window.CrewScoreAnalytics;
+(async () => {{
+  await analytics.capture("cs_site_view", {{ source: "search" }});
+  const firstError = analytics.lastCaptureError && analytics.lastCaptureError.message;
+  await analytics.capture("cs_score", {{ source: "not-a-source", profile: "system_prompt", ruleset: "crewscore-hygiene@0.6.0", overall_bucket: 10, controls_found: 8, prompt: "SENTINEL_PROMPT" }});
+  const afterInvalid = analytics.lastCaptureError && analytics.lastCaptureError.message;
+  const hasGetter = !!(Object.getOwnPropertyDescriptor(context.window.CrewScoreAnalytics, "lastCaptureError") || {{}}).get;
+  process.stdout.write(JSON.stringify({{
+    first_error: firstError,
+    after_invalid: afterInvalid,
+    descriptor: hasGetter,
+  }}));
+}})();
+"""
+    proc = subprocess.run(
+        ["node", "-e", script],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    result = json.loads(proc.stdout)
+    assert result["descriptor"] is True
+    assert result["first_error"] == "transport down"
+    assert result["after_invalid"] == "transport down"
+
+
 def test_analytics_has_a_persistent_opt_out_that_stops_capture():
     """The privacy toggle must change behavior, not merely hide a preference."""
     js = _analytics()
@@ -334,3 +389,33 @@ process.stdout.write(JSON.stringify(body));
         assert referrer not in serialized
     assert "private" not in serialized
     assert "secret" not in serialized
+
+
+def test_score_tracking_emits_check_completed_before_score_for_system_prompts():
+    script = SITE_JS.read_text(encoding="utf-8")
+    lines = script.splitlines()
+    check_idx = next(
+        index for index, line in enumerate(lines) if 'track("cs_check_completed"' in line
+    )
+    score_idx = next(
+        index for index, line in enumerate(lines) if 'track("cs_score"' in line
+    )
+    guard_idx = next(
+        index
+        for index, line in enumerate(lines)
+        if "if (result.governance_applicable)" in line
+    )
+
+    assert check_idx < score_idx, "check-completed must emit before score"
+    assert guard_idx <= check_idx < score_idx, "score path gate should surround tracking calls"
+
+
+def test_no_score_events_for_config_results_are_gate_enforced():
+    script = SITE_JS.read_text(encoding="utf-8")
+    pattern = r"function score\(source\) \{([\s\S]*?)\n  \}\n\n  function heroGapFromResult"
+    match = re.search(pattern, script)
+    assert match, "could not isolate score function"
+    score_fn = match.group(1)
+    assert "if (result.governance_applicable)" in score_fn
+    assert 'track("cs_check_completed"' in score_fn
+    assert 'track("cs_score"' in score_fn

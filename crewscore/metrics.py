@@ -45,6 +45,7 @@ KIND_ENUM = frozenset(
         "copy_share_text",
         "copy_team",
         "native",
+        "copy_badge",
         "x",
         "linkedin",
         "facebook",
@@ -77,7 +78,7 @@ EVENT_SCHEMAS: dict[str, dict[str, Any]] = {
     "cs_site_view": {
         "required": ("source",),
         "properties": {
-            "source": {"type": "string", "enum": SOURCE_ENUM},
+            "source": {"type": "string", "enum": SOURCE_ENUM, "max_length": 24},
         },
     },
     "cs_rules_expand": {"required": (), "properties": {}},
@@ -87,8 +88,8 @@ EVENT_SCHEMAS: dict[str, dict[str, Any]] = {
     "cs_score": {
         "required": ("source", "profile", "ruleset", "overall_bucket", "controls_found"),
         "properties": {
-            "source": {"type": "string", "enum": SOURCE_ENUM},
-            "profile": {"type": "string", "enum": PROFILE_ENUM},
+            "source": {"type": "string", "enum": SOURCE_ENUM, "max_length": 24},
+            "profile": {"type": "string", "enum": PROFILE_ENUM, "max_length": 24},
             "ruleset": {"type": "string", "pattern": RULESET_RE, "max_length": 40},
             "overall_bucket": _bucket_schema(),
             "controls_found": {"type": "integer", "min": 0, "max": CONTROL_MAX},
@@ -99,14 +100,14 @@ EVENT_SCHEMAS: dict[str, dict[str, Any]] = {
     },
     "cs_vendor_open": {
         "required": ("kind",),
-        "properties": {"kind": {"type": "string", "enum": {"summary"}}},
+        "properties": {"kind": {"type": "string", "enum": {"summary"}, "max_length": 20}},
     },
     "cs_demo_started": {"required": (), "properties": {}},
     "cs_check_completed": {
         "required": ("source", "profile", "ruleset"),
         "properties": {
-            "source": {"type": "string", "enum": SOURCE_ENUM},
-            "profile": {"type": "string", "enum": PROFILE_ENUM},
+            "source": {"type": "string", "enum": SOURCE_ENUM, "max_length": 24},
+            "profile": {"type": "string", "enum": PROFILE_ENUM, "max_length": 24},
             "ruleset": {"type": "string", "pattern": RULESET_RE, "max_length": 40},
         },
     },
@@ -124,7 +125,7 @@ EVENT_SCHEMAS: dict[str, dict[str, Any]] = {
     },
     "cs_product_path": {
         "required": ("path",),
-        "properties": {"path": {"type": "string", "enum": PATH_ENUM}},
+        "properties": {"path": {"type": "string", "enum": PATH_ENUM, "max_length": 24}},
     },
     "cs_fix_apply": {
         "required": ("controls_found",),
@@ -253,6 +254,16 @@ def _validate_event(event: str, props: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
+def _normalize_schema_spec(spec: dict[str, Any]) -> dict[str, Any]:
+    out = dict(spec)
+    if isinstance(out.get("pattern"), re.Pattern):
+        out["pattern"] = out["pattern"].pattern
+    enum = out.get("enum")
+    if enum is not None:
+        out["enum"] = sorted(enum)
+    return out
+
+
 def bucket_score(n: int | float) -> str:
     """Map an overall score to a privacy-safe bucket string."""
     score = int(n) if n is not None else 0
@@ -267,8 +278,24 @@ def bucket_score(n: int | float) -> str:
     return "90-100"
 
 
-def validate_props(event: str, props: dict[str, Any] | None = None) -> bool:
-    """Validate per-event property schema for strict privacy-safe telemetry."""
+def validate_props(
+    event: str | dict[str, Any], props: dict[str, Any] | None = None
+) -> bool:
+    """Validate per-event property schema for strict privacy-safe telemetry.
+
+    Supports both current and legacy call styles:
+    - validate_props(event: str, properties: dict | None)
+    - validate_props({\"event\": ..., \"properties\": ...})
+    """
+    if not isinstance(event, str):
+        if not isinstance(event, dict) or props is not None:
+            _raise(event.__class__.__name__, "event payload must be (event, props)")
+        payload = event
+        props = payload.get("properties", {})
+        event = payload.get("event")
+        if not isinstance(event, str):
+            _raise("<missing event>", "event payload must include an event name")
+
     if event not in ALLOWED_EVENTS:
         _raise(event, "event not allowlisted")
     if props is None:
@@ -349,12 +376,18 @@ def schema_payload() -> dict[str, Any]:
         "allowed_properties": sorted(ALLOWED_PROPERTIES),
         "forbidden_prop_keys": sorted(FORBIDDEN_PROP_KEYS),
         "score_buckets": list(BUCKETS),
+        "prompt_text": "never stored in event props",
         "event_schemas": {
             event: {
                 "required": list(EVENT_REQUIRED_PROPERTIES[event]),
-                "properties": sorted(EVENT_SCHEMAS[event]["properties"]),
+                "properties": {
+                    name: _normalize_schema_spec(dict(props))
+                    for name, props in EVENT_SCHEMAS[event]["properties"].items()
+                },
             }
             for event in sorted(EVENT_SCHEMAS)
         },
-        "prompt_text": "never stored in event props",
+        "optional_properties": {
+            event: list(properties) for event, properties in EVENT_OPTIONAL_PROPERTIES.items()
+        },
     }

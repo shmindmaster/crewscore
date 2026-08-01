@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import json
+import shutil
+import subprocess
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -175,6 +179,20 @@ def test_validate_event_rejects_missing_required():
         validate_event("cs_check_completed", {"source": "paste", "profile": "system_prompt"})
 
 
+def test_validate_props_accepts_legacy_payload_object():
+    payload = {
+        "event": "cs_score",
+        "properties": {
+            "source": "paste",
+            "profile": "system_prompt",
+            "ruleset": "crewscore-hygiene@0.6.0",
+            "overall_bucket": 30,
+            "controls_found": 8,
+        },
+    }
+    assert validate_props(payload) is True
+
+
 def test_append_event_rejects_unknown_event():
     with pytest.raises(ValueError, match="invalid"):
         append_event({}, "cs_not_a_real_event", {})
@@ -189,6 +207,59 @@ def test_analytics_js_allowlists_match_python_schema():
     assert parsed["ALLOWED_EVENTS"] == ALLOWED_EVENTS
     assert parsed["ALLOWED_PROPERTIES"] == ALLOWED_PROPERTIES
     assert SCHEMA_VERSION in js
+
+
+def _analytics_schema_payload_from_js() -> dict[str, Any]:
+    if not shutil.which("node"):
+        pytest.skip("node not installed; skipping deep JS schema parity")
+    script = f"""
+const fs = require("fs");
+const vm = require("vm");
+const source = fs.readFileSync({json.dumps(str(ROOT / "analytics.js"))}, "utf8");
+const context = {{ window: {{}} }};
+vm.createContext(context);
+vm.runInContext(source, context);
+process.stdout.write(JSON.stringify(context.window.CrewScoreAnalytics.schemaPayload()));
+"""
+    proc = subprocess.run(
+        ["node", "-e", script],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return json.loads(proc.stdout)
+
+
+def test_analytics_js_schema_payload_matches_python_contract():
+    payload_python = schema_payload()
+    payload_js = _analytics_schema_payload_from_js()
+
+    assert payload_js["schema_version"] == payload_python["schema_version"] == SCHEMA_VERSION
+    assert sorted(payload_js["allowed_events"]) == sorted(payload_python["allowed_events"])
+    assert sorted(payload_js["allowed_properties"]) == sorted(payload_python["allowed_properties"])
+    assert set(payload_js["forbidden_prop_keys"]) == set(payload_python["forbidden_prop_keys"])
+    assert payload_js["prompt_text"] == payload_python["prompt_text"]
+    assert payload_js["score_buckets"] == payload_python["score_buckets"]
+    assert payload_js["optional_properties"] == payload_python["optional_properties"]
+
+    py_events = payload_python["event_schemas"]
+    js_events = payload_js["event_schemas"]
+    assert set(js_events) == set(py_events)
+
+    for event in sorted(py_events):
+        js_schema = js_events[event]
+        py_schema = py_events[event]
+        assert js_schema["required"] == py_schema["required"]
+        assert set(js_schema["properties"]) == set(py_schema["properties"])
+        for name in py_schema["properties"]:
+            js_prop = js_schema["properties"][name]
+            py_prop = py_schema["properties"][name]
+            assert js_prop["type"] == py_prop["type"]
+            assert js_prop.get("min") == py_prop.get("min")
+            assert js_prop.get("max") == py_prop.get("max")
+            assert js_prop.get("max_length") == py_prop.get("max_length")
+            assert js_prop.get("enum") == py_prop.get("enum")
+            assert js_prop.get("pattern") == py_prop.get("pattern")
 
 
 def test_schema_payload_is_prompt_free():

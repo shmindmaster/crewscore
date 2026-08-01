@@ -9,3 +9,13 @@ Task 1: complete (530 passed, 1 skipped; canonical source tracked; local dist pa
 Task 2: complete (55 focus tests passed, chromium web checks passed, 77/3 skipped web checks passed, full pytest 534 passed, 1 skipped; docs/demo asset and launch dist-pack regenerated; task-2 report added).
 Task 2: fix review complete (validated via 41/0 focused metrics+claims tests, then 63/0 focused demo+metrics+claims+ux tests, then 542 passed + 1 skipped full suite).
 Task 2: re-review closeout: fix range reviewed as `e22d670..bf91a45`; implementation/fix commit `bf91a45`; follow-up `de40abc` removes duplicate validation, extends append-path tests, and corrects report/progress evidence.
+Task 2: terminal-review continuation closeout.
+- Findings re-validated in place: copy telemetry ordering for webkit, fail-closed launch-pack generation, X-post cap, schema parity, and launch artifact portability.
+- Canonical runbook verification set executed:
+  - `87 passed` (focused pytest slice),
+  - `20 passed` (Playwright chromium),
+  - `77 passed`, `3 skipped` (Playwright full),
+  - `558 passed`, `1 skipped` (full pytest),
+  - `5 passed` for launch-copy preservation/fail-closed focus set.
+- Dist pack regenerated locally at `_production\\launch\\dist-pack` with `version=0.6.9`.
+- Snapshot updates remain expected/intentional (`web-tests/checker.spec.mjs-snapshots/share-card.svg`).

@@ -8,9 +8,10 @@ adds one control with a deterministic human-approval phrase.
 
 from __future__ import annotations
 
+import json
 import os
-import tempfile
 import re
+import tempfile
 import subprocess
 import sys
 from pathlib import Path
@@ -74,10 +75,14 @@ def _first_gap(prompt_text: str) -> str:
     with tempfile.NamedTemporaryFile(mode="w", suffix=".md", encoding="utf-8", delete=False) as handle:
         handle.write(prompt_text)
         path = handle.name
-    gap = FIRST_GAP_RE.search(_cli("test", "--prompt-file", path))
-    assert gap, "scorer did not name a first gap for the demo fixture"
+    payload = json.loads(_cli("test", "--prompt-file", path, "--json"))
+    hero = payload.get("coverage", {}).get("hero") or {}
+    concept = hero.get("concept")
+    label = hero.get("label") or hero.get("pattern_or_reason")
+    assert concept, "scorer missing first gap concept"
+    assert label, "scorer missing first gap label"
     Path(path).unlink(missing_ok=True)
-    return gap.group(1).strip()
+    return f"{concept} — {label}"
 
 
 @pytest.fixture(scope="module")
@@ -93,6 +98,8 @@ def measured() -> dict[str, object]:
         "after": after,
         "total": total,
         "first_gap": before_gap,
+        "first_gap_concept": before_gap.partition(" — ")[0],
+        "first_gap_label": before_gap.partition(" — ")[2],
     }
 
 
@@ -100,6 +107,18 @@ def _svg_panel_number(svg: str, anchor_x: str) -> int:
     match = re.search(rf'<text[^>]*x="{anchor_x}"[^>]*font-size="64"[^>]*>(\d+)', svg)
     assert match, f"no 64px headline number anchored at x={anchor_x}"
     return int(match.group(1))
+
+
+def _first_gap_block(svg: str) -> str:
+    candidates = re.findall(
+        r'<text[^>]*>.*?</text>',
+        svg,
+        re.DOTALL,
+    )
+    for candidate in candidates:
+        if 'class="t warn" x="72" y="390"' in candidate:
+            return candidate
+    raise AssertionError("could not locate first-gap block")
 
 
 def test_demo_svg_is_source_generated(measured, tmp_path):
@@ -128,15 +147,21 @@ def test_demo_svg_control_total_matches_the_ruleset(measured):
 
 def test_demo_svg_names_the_gap_the_scorer_names(measured):
     svg = DEMO_SVG.read_text(encoding="utf-8")
-    assert measured["first_gap"] in svg, (
-        f"demo.svg must cite the scorer's actual first gap: {measured['first_gap']!r}"
+    measured_gap = measured["first_gap"]
+    concept, _, detail = measured_gap.partition(" — ")
+    assert concept in svg, (
+        f"demo.svg missing first-gap concept: {concept!r}"
     )
+    if detail:
+        assert detail in svg, (
+            f"demo.svg missing first-gap detail: {detail!r}"
+        )
 
 
 def test_demo_svg_uses_the_current_label():
     svg = DEMO_SVG.read_text(encoding="utf-8").lower()
     assert "biggest gap" not in svg
-    assert "first gap to review" in svg
+    assert "controls may be missing" in svg
 
 
 def test_demo_svg_progress_bar_matches_its_own_number(measured):
@@ -152,3 +177,16 @@ def test_demo_svg_progress_bar_matches_its_own_number(measured):
 def test_demo_svg_keeps_the_not_runtime_proof_caveat():
     svg = DEMO_SVG.read_text(encoding="utf-8").lower()
     assert "not runtime proof" in svg
+
+
+def test_demo_svg_gap_label_is_wrapped_into_text_runs(measured):
+    svg = DEMO_SVG.read_text(encoding="utf-8")
+    block = _first_gap_block(svg)
+    tspans = re.findall(r"<tspan[^>]*>(.*?)</tspan>", block)
+    if tspans:
+        assert tspans[0].strip()
+        assert all(len(line.strip()) <= 58 for line in tspans), "first-gap lines must not overflow wrap budget"
+    else:
+        assert len(block.strip()) <= 58
+    if len(measured["first_gap"]) > 58:
+        assert len(tspans) >= 2

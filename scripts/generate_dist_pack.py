@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 import re
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +24,8 @@ ARTIFACTS = (
     "answer-bank.md",
 )
 CHECKSUM_EXCLUDED_ARTIFACTS = {"checksums.txt"}
+CHECKSUM_INCLUDE_ARTIFACTS = ARTIFACTS + ("manifest.json",)
+CHECKSUM_EXPORT_ARTIFACTS = CHECKSUM_INCLUDE_ARTIFACTS + ("checksums.txt",)
 
 
 def _version() -> str:
@@ -60,30 +63,39 @@ def _concept_count() -> int:
 
 def _corpus_facts() -> dict[str, int | float]:
     path = ROOT / "docs" / "validation-corpus.json"
-    payload: dict[str, int | float] = {
-        "total_prompts": 0,
-        "production_n": 0,
-        "production_median": 0,
-        "gpt_store_n": 0,
-        "gpt_store_median": 0,
-        "cliffs_delta": 0.0,
-        "p_value": 0.0,
-    }
     if not path.exists():
-        return payload
-    raw = json.loads(path.read_text(encoding="utf-8"))
+        raise RuntimeError(f"validation corpus missing: {path}")
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"validation corpus malformed JSON: {path}") from exc
+
     groups = raw.get("groups") or {}
     production = groups.get("production") or {}
     gpt_store = groups.get("gpt_store") or {}
     analysis = raw.get("analysis") or {}
+
+    if not isinstance(groups, dict) or not isinstance(production, dict) or not isinstance(gpt_store, dict):
+        raise RuntimeError(f"validation corpus missing required group structure: {path}")
+    for field in ("files", "describe"):
+        if field not in production or field not in gpt_store:
+            raise RuntimeError(f"validation corpus missing required group fields in {path}")
+    for entry in (production, gpt_store):
+        if int(entry["files"]) <= 0:
+            raise RuntimeError(f"validation corpus reports zero required evidence: {path}")
+        if not isinstance(entry["describe"], dict) or "median" not in entry["describe"]:
+            raise RuntimeError(f"validation corpus missing describe.median in {path}")
+    if not isinstance(analysis, dict) or "delta" not in analysis or "p_value" not in analysis:
+        raise RuntimeError(f"validation corpus missing required analysis fields in {path}")
+
     return {
         "total_prompts": int((production.get("files") or 0) + (gpt_store.get("files") or 0)),
-        "production_n": int(production.get("files") or 0),
-        "production_median": int((production.get("describe") or {}).get("median") or 0),
-        "gpt_store_n": int(gpt_store.get("files") or 0),
-        "gpt_store_median": int((gpt_store.get("describe") or {}).get("median") or 0),
-        "cliffs_delta": float(analysis.get("delta") or 0.0),
-        "p_value": float(analysis.get("p_value") or 0.0),
+        "production_n": int(production["files"]),
+        "production_median": int((production["describe"] or {}).get("median")),
+        "gpt_store_n": int(gpt_store["files"]),
+        "gpt_store_median": int((gpt_store["describe"] or {}).get("median")),
+        "cliffs_delta": float(analysis["delta"]),
+        "p_value": float(analysis["p_value"]),
     }
 
 
@@ -260,6 +272,53 @@ def _write_checksums(
     return _file_record(path)
 
 
+def _validate_output_dir(path: Path) -> Path:
+    resolved = path.resolve()
+    for forbidden in [ROOT, *ROOT.parents]:
+        if resolved == forbidden:
+            raise RuntimeError(f"refusing to write launch pack into workspace scope: {forbidden}")
+    if not path.exists():
+        path.mkdir(parents=True, exist_ok=True)
+    if not path.is_dir():
+        raise RuntimeError(f"output directory is not a directory: {path}")
+    return path
+
+
+def _build_pack_artifacts(pack: dict[str, Any], out: Path) -> list[dict[str, Any]]:
+    artifacts = _artifact_blobs(pack)
+    artifact_records = _write_artifacts(out, artifacts)
+    manifest_record = _write_manifest(out, pack, artifact_records)
+    checksums_record = _write_checksums(
+        out,
+        artifact_records + [manifest_record],
+        CHECKSUM_EXCLUDED_ARTIFACTS | {"checksums.txt"},
+    )
+    return artifact_records + [manifest_record, checksums_record]
+
+
+def _finalize_pack(pack: dict[str, Any], out: Path) -> list[dict[str, Any]]:
+    with tempfile.TemporaryDirectory(prefix=".crewscore-dist-pack.", dir=out) as workdir:
+        staging = Path(workdir)
+        records = _build_pack_artifacts(pack, staging)
+
+        checksums: dict[str, str] = {}
+        for record in records:
+            if record["name"] in CHECKSUM_EXCLUDED_ARTIFACTS:
+                continue
+            checksums[record["name"]] = record["sha256"]
+
+        for name in CHECKSUM_INCLUDE_ARTIFACTS:
+            if name not in checksums:
+                raise RuntimeError(f"incomplete pack generation, missing artifact: {name}")
+
+        for name in CHECKSUM_EXPORT_ARTIFACTS:
+            source = staging / name
+            target = out / name
+            target.write_bytes(source.read_bytes())
+
+        return records
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -270,25 +329,16 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    out = args.output_dir
-    out.mkdir(parents=True, exist_ok=True)
-    for path in out.iterdir():
-        if path.is_file():
-            path.unlink()
+    out = _validate_output_dir(args.output_dir)
 
     pack = _build_pack()
-    artifacts = _artifact_blobs(pack)
-    artifact_records = _write_artifacts(out, artifacts)
-    manifest_record = _write_manifest(out, pack, artifact_records)
-    checksums_record = _write_checksums(
-        out,
-        artifact_records + [manifest_record],
-        CHECKSUM_EXCLUDED_ARTIFACTS | {"checksums.txt"},
-    )
+    records = _finalize_pack(pack, out)
+    manifest_record = next(record for record in records if record["name"] == "manifest.json")
+    checksums_record = next(record for record in records if record["name"] == "checksums.txt")
 
     print(out)
     print(f"version={pack['package_version']}")
-    print(f"manifest=checksums={checksums_record['sha256']} records={len(artifact_records) + 1}")
+    print(f"manifest=checksums={checksums_record['sha256']} records={len(records) - 1}")
     return 0
 
 
