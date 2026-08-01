@@ -339,6 +339,31 @@ def test_analytics_js_schema_payload_matches_python_contract():
             assert js_prop.get("pattern") == py_prop.get("pattern")
 
 
+def test_legacy_schema_payload_keeps_published_properties_while_capture_adds_traffic_class():
+    legacy = schema_payload()
+    capture = capture_schema_payload()
+
+    assert legacy["schema_version"] == "2026-07-30"
+    assert set(legacy["allowed_properties"]) == {
+        "source",
+        "profile",
+        "overall_bucket",
+        "ruleset",
+        "dims_to_fix_count",
+        "delta_bucket",
+        "kind",
+        "mode",
+        "path",
+        "product_path",
+        "controls_found",
+        "smell_count",
+    }
+    assert "traffic_class" not in legacy["allowed_properties"]
+
+    assert capture["schema_version"] == "2026-07-31"
+    assert "traffic_class" in capture["allowed_properties"]
+
+
 def test_schema_payload_is_prompt_free():
     payload = schema_payload()
     assert payload["schema_version"] == SCHEMA_VERSION

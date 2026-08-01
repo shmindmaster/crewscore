@@ -172,6 +172,25 @@ ALLOWED_PROPERTIES = frozenset(
     }
 )
 
+# Exact property allowlist published under SCHEMA_VERSION. Browser capture
+# evolves independently through ALLOWED_PROPERTIES / CAPTURE_SCHEMA_VERSION.
+_LEGACY_ALLOWED_PROPERTIES = frozenset(
+    {
+        "source",
+        "profile",
+        "overall_bucket",
+        "ruleset",
+        "dims_to_fix_count",
+        "delta_bucket",
+        "kind",
+        "mode",
+        "path",
+        "product_path",
+        "controls_found",
+        "smell_count",
+    }
+)
+
 # Keys that must never appear in payloads.
 FORBIDDEN_PROP_KEYS = frozenset(
     {
@@ -386,7 +405,7 @@ def schema_payload() -> dict[str, Any]:
     return {
         "schema_version": SCHEMA_VERSION,
         "allowed_events": sorted(ALLOWED_EVENTS),
-        "allowed_properties": sorted(ALLOWED_PROPERTIES),
+        "allowed_properties": sorted(_LEGACY_ALLOWED_PROPERTIES),
         "forbidden_prop_keys": sorted(FORBIDDEN_PROP_KEYS),
         "score_buckets": list(SCORE_BUCKETS),
         "network": "web client only; Python core never sends metrics",
