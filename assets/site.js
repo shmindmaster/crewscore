@@ -295,6 +295,8 @@
     else if (!heroDemo.wantsPlayback) status.textContent = "Paused.";
     else if (!heroDemo.inViewport || document.visibilityState !== "visible") status.textContent = "Paused while this demo is not visible.";
     else status.textContent = "Playing once.";
+    const pauseControl = $("hero-demo-pause");
+    if (pauseControl) pauseControl.disabled = !heroCanAdvance();
     announceHeroStep(beforeCoverage, afterCoverage);
   }
 
@@ -339,10 +341,11 @@
   }
 
   function pauseHeroDemo(options) {
+    const wasActivelyPlaying = heroCanAdvance();
     heroDemo.wantsPlayback = false;
     clearHeroTimer();
     renderHeroDemo();
-    if (options?.announce) announceHeroPause();
+    if (options?.announce && wasActivelyPlaying) announceHeroPause();
   }
 
   function handleHeroMotionChange(event) {

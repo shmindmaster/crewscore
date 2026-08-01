@@ -53,6 +53,9 @@ def test_native_hero_uses_the_generated_engine_instead_of_a_second_score_contrac
     assert 'rescored ? "Next remaining gap" : "First gap"' in script
     assert "Next remaining gap: ${nextGap}" in script
     assert 'pauseHeroDemo({ announce: true })' in script
+    assert 'pauseControl.disabled = !heroCanAdvance()' in script
+    assert 'const wasActivelyPlaying = heroCanAdvance()' in script
+    assert 'options?.announce && wasActivelyPlaying' in script
 
 
 def test_native_hero_layout_and_mobile_navigation_are_homepage_scoped():

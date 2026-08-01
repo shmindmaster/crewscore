@@ -551,6 +551,14 @@ test.describe("native hero animation", () => {
     await page.evaluate(() => window.__crewscoreHero.advance());
     await expect(announcement).toContainText("9 of 23 written controls. Demo complete.");
     await expect(announcement).toContainText("Next remaining gap: Log actions and decisions.");
+    const completedMessage = await announcement.textContent();
+    const pause = page.getByRole("button", { name: "Pause", exact: true });
+    await expect(pause).toBeDisabled();
+    await page.getByRole("button", { name: "Replay", exact: true }).focus();
+    await page.keyboard.press("Shift+Tab");
+    await expect(page.getByRole("button", { name: "Play", exact: true })).toBeFocused();
+    await expect(announcement).toHaveText(completedMessage);
+    await expect(page.locator("#hero-demo-status")).toHaveText("Complete. Replay to run it again.");
   });
 
   test("explicit play activation announces through the next remaining gap", async ({ page }) => {
@@ -577,25 +585,33 @@ test.describe("native hero animation", () => {
     await expect(announcement).toContainText("Next remaining gap: Log actions and decisions.");
   });
 
-  test("only an explicitly activated pause announces the paused state", async ({ page }) => {
+  test("Pause is operable only during active playback and announces a real pause", async ({ page }) => {
     await gotoApp(page);
     const announcement = page.locator("#hero-demo-announcement");
+    const pause = page.getByRole("button", { name: "Pause", exact: true });
     await page.evaluate(() => {
       window.__crewscoreHero.replay();
       window.__crewscoreHero.pause();
     });
+    await expect(pause).toBeDisabled();
     await expect(announcement).toHaveAttribute("aria-live", "off");
     await expect(announcement).not.toHaveAttribute("role", "status");
     await expect(announcement).toBeEmpty();
 
     await page.getByRole("button", { name: "Play", exact: true }).click();
+    await expect(pause).toBeEnabled();
     await expect(announcement).toContainText("Demo started");
     const activatedMessage = await announcement.textContent();
     await page.evaluate(() => window.__crewscoreHero.pause());
+    await expect(pause).toBeDisabled();
     await expect(announcement).toHaveText(activatedMessage);
 
-    await page.getByRole("button", { name: "Pause", exact: true }).click();
+    await page.getByRole("button", { name: "Play", exact: true }).click();
+    await expect(pause).toBeEnabled();
+    await pause.click();
+    await expect(pause).toBeDisabled();
     await expect(announcement).toHaveText("Demo paused.");
+    await expect(page.locator("#hero-demo-status")).toHaveText("Paused.");
   });
 
   test("runtime reduced-motion change cancels autoplay and shows the complete static state", async ({ page }) => {
@@ -608,6 +624,7 @@ test.describe("native hero animation", () => {
     await expect(page.locator("#hero-demo-before")).toHaveText("8 of 23");
     await expect(page.locator("#hero-demo-after")).toHaveText("9 of 23");
     await expect(page.locator("#hero-demo-status")).toContainText("Reduced motion");
+    await expect(page.getByRole("button", { name: "Pause", exact: true })).toBeDisabled();
     const reduced = await page.evaluate(() => window.__crewscoreHero.snapshot());
     expect(reduced).toMatchObject({ step: 3, playing: false, reducedMotion: true });
     await page.waitForTimeout(1900);
@@ -654,6 +671,7 @@ test.describe("native hero animation", () => {
     await expect(announcement).toHaveAttribute("aria-live", "off");
     await expect(announcement).not.toHaveAttribute("role", "status");
     await expect(announcement).toBeEmpty();
+    await expect(page.getByRole("button", { name: "Pause", exact: true })).toBeDisabled();
 
     // analytics.js invokes its normal site-view through a private closure, not
     // the exported API. The pre-navigation proxy therefore isolates every
@@ -718,7 +736,7 @@ test.describe("native hero animation", () => {
     const pause = page.getByRole("button", { name: "Pause", exact: true });
     await pause.focus();
     await pause.press("Enter");
-    await expect(pause).toBeFocused();
+    await expect(pause).toBeDisabled();
     await expect(page.locator("#hero-demo-status")).toHaveText("Paused.");
     const replay = page.getByRole("button", { name: "Replay", exact: true });
     await replay.focus();
