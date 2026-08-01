@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
-"""Generate channel drafts from tracked launch-copy source and repository truth.
-
-Writes under _production/launch/dist-pack/ by default (gitignored — channel
- drafts are working material, not published docs). Safe to regenerate; no
-network posts.
-"""
+"""Generate channel drafts from tracked launch-copy source and repository truth."""
 
 from __future__ import annotations
 
@@ -16,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "docs" / "launch" / "launch-copy.json"
+SOURCE = ROOT / "docs" / "launch-copy.json"
 DEFAULT_OUTPUT_DIR = ROOT / "_production" / "launch" / "dist-pack"
 REQUIRED_CHANNELS = ("show_hn", "x", "linkedin", "community_post")
 ARTIFACTS = (
@@ -27,6 +22,7 @@ ARTIFACTS = (
     "community-post.md",
     "answer-bank.md",
 )
+CHECKSUM_EXCLUDED_ARTIFACTS = {"checksums.txt"}
 
 
 def _version() -> str:
@@ -238,6 +234,8 @@ def _write_manifest(
         "corpus": pack["corpus"],
         "artifacts": artifact_records,
         "manifest_checksum_algorithm": "sha256",
+        "checksum_includes": [row["name"] for row in artifact_records] + ["manifest.json"],
+        "checksum_excludes": sorted(CHECKSUM_EXCLUDED_ARTIFACTS),
         "generated_by": "scripts/generate_dist_pack.py",
         "note": pack["note"],
     }
@@ -247,8 +245,16 @@ def _write_manifest(
     return record
 
 
-def _write_checksums(out: Path, records: list[dict[str, Any]]) -> dict[str, Any]:
-    lines = [f"{row['sha256']}  {row['name']}" for row in sorted(records, key=lambda row: row["name"])]
+def _write_checksums(
+    out: Path,
+    records: list[dict[str, Any]],
+    excluded_names: set[str],
+) -> dict[str, Any]:
+    included = sorted(
+        (row for row in records if row["name"] not in excluded_names),
+        key=lambda row: row["name"],
+    )
+    lines = [f"{row['sha256']}  {row['name']}" for row in included]
     path = out / "checksums.txt"
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return _file_record(path)
@@ -274,12 +280,15 @@ def main() -> int:
     artifacts = _artifact_blobs(pack)
     artifact_records = _write_artifacts(out, artifacts)
     manifest_record = _write_manifest(out, pack, artifact_records)
-    checksums_record = _write_checksums(out, artifact_records + [manifest_record])
-    checksums_record = _write_checksums(out, artifact_records + [manifest_record, checksums_record])
+    checksums_record = _write_checksums(
+        out,
+        artifact_records + [manifest_record],
+        CHECKSUM_EXCLUDED_ARTIFACTS | {"checksums.txt"},
+    )
 
     print(out)
     print(f"version={pack['package_version']}")
-    print(f"manifest=checksums={checksums_record['sha256']} records={len(artifact_records) + 2}")
+    print(f"manifest=checksums={checksums_record['sha256']} records={len(artifact_records) + 1}")
     return 0
 
 

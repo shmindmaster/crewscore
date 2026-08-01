@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import subprocess
@@ -13,9 +14,10 @@ from crewscore.scoring import RULESET_ID
 from crewscore.scorers.structural_analysis import CONCEPT_COUNT
 
 REPO = Path(__file__).resolve().parents[1]
-SOURCE = REPO / "docs" / "launch" / "launch-copy.json"
+SOURCE = REPO / "docs" / "launch-copy.json"
 DATA = REPO / "docs" / "validation-corpus.json"
 GENERATOR = REPO / "scripts" / "generate_dist_pack.py"
+GIT_TRACKED_SOURCE = "docs/launch-copy.json"
 REQUIRED_ARTIFACTS = (
     "show-hn-title.txt",
     "show-hn-first-comment.md",
@@ -25,6 +27,17 @@ REQUIRED_ARTIFACTS = (
     "answer-bank.md",
     "manifest.json",
     "checksums.txt",
+)
+EXPECTED_CHECKSUM_NAMES = frozenset(
+    {
+        "show-hn-title.txt",
+        "show-hn-first-comment.md",
+        "x-post.txt",
+        "linkedin-post.md",
+        "community-post.md",
+        "answer-bank.md",
+        "manifest.json",
+    }
 )
 
 
@@ -42,26 +55,62 @@ def _corpus() -> dict:
     return json.loads(DATA.read_text(encoding="utf-8"))
 
 
-def _assert_no_unsupported_claims(text: str) -> None:
-    lowered = text.lower()
-    assert "quality score" not in lowered, "launch claim used unsupported quality-score framing"
-    assert "certified" not in lowered, "launch claim used certification framing"
-    assert "not a certification" in lowered, "explicit anti-claim must remain present"
-    assert "runtime proof" not in lowered, "launch claim used runtime-proof framing"
-    assert "does not provide a runtime safety guarantee" in lowered, "explicit anti-claim must remain present for guarantee framing"
-    assert "guarantee" not in lowered.replace("does not provide a runtime safety guarantee", ""), "launch claim used guarantee framing"
-    assert "safety certification" not in lowered.replace("not a runtime safety certification", ""), "launch claim used safety certification"
-    assert "safety score" not in lowered
+def _sha256_file(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _artifact_names_in_checksums(lines: str) -> set[str]:
-    names = set()
+def _parse_checksums(lines: str) -> dict[str, str]:
+    rows: dict[str, str] = {}
     for raw in lines.splitlines():
         if not raw.strip():
             continue
-        _, name = raw.split("  ", 1)
-        names.add(name)
-    return names
+        assert "  " in raw, f"invalid checksum line {raw!r}"
+        digest, name = raw.split("  ", 1)
+        assert re.fullmatch(r"[0-9a-f]{64}", digest), f"invalid checksum {raw!r}"
+        rows[name] = digest
+    return rows
+
+
+def _assert_no_unsupported_claims(text: str) -> None:
+    lowered = text.lower()
+    assert "quality score" not in lowered, "launch claim used unsupported quality-score framing"
+    assert "safety score" not in lowered, "launch claim used unsupported safety-score framing"
+    assert "certified" not in lowered, "launch claim used certification framing"
+    assert "runtime proof" not in lowered, "launch claim used runtime-proof framing"
+
+    assert "ship safer prompts" not in lowered, "launch claim used unsupported safety implication"
+    assert "helps teams ship safer prompts" not in lowered, "launch claim used unsupported safety implication"
+    if "runtime safety guarantee" in lowered:
+        assert (
+            "does not provide a runtime safety guarantee" in lowered
+        ), "negate runtime safety-guarantee claim explicitly"
+
+
+def _assert_checksums_match_artifacts(out: Path, checksums: dict[str, str]) -> None:
+    assert set(checksums.keys()) == EXPECTED_CHECKSUM_NAMES
+    assert "checksums.txt" not in checksums
+    for name, digest in checksums.items():
+        assert _sha256_file(out / name) == digest
+
+
+def test_launch_copy_source_is_tracked():
+    result = subprocess.run(
+        ["git", "ls-files", "--error-unmatch", GIT_TRACKED_SOURCE],
+        cwd=REPO,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, f"{GIT_TRACKED_SOURCE} must be tracked"
+
+    legacy_result = subprocess.run(
+        ["git", "ls-files", "--error-unmatch", "docs/launch/launch-copy.json"],
+        cwd=REPO,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert legacy_result.returncode != 0, "legacy ignored launch source path must not be canonical tracked source"
 
 
 def test_launch_copy_source_is_locked_and_template_driven():
@@ -92,6 +141,16 @@ def test_launch_copy_generated_pack_matches_repository_facts(tmp_path: Path):
     assert manifest["ruleset"] == RULESET_ID
     assert manifest["control_count"] == CONCEPT_COUNT
     assert manifest["posts_automatically"] is False
+    assert manifest["checksum_excludes"] == ["checksums.txt"]
+    assert manifest["checksum_includes"] == [
+        "show-hn-title.txt",
+        "show-hn-first-comment.md",
+        "x-post.txt",
+        "linkedin-post.md",
+        "community-post.md",
+        "answer-bank.md",
+        "manifest.json",
+    ]
 
     corpus = _corpus()
     assert manifest["corpus"]["production_n"] == corpus["groups"]["production"]["files"]
@@ -115,8 +174,18 @@ def test_launch_copy_generated_pack_matches_repository_facts(tmp_path: Path):
         assert stale not in artifacts_text, f"stale version surfaced: {stale}"
 
     checksums = (out / "checksums.txt").read_text(encoding="utf-8")
-    manifest_names = _artifact_names_in_checksums(checksums)
-    assert manifest_names == set(artifact["name"] for artifact in manifest["artifacts"]) | {"manifest.json", "checksums.txt"}
+    checksums_by_name = _parse_checksums(checksums)
+    _assert_checksums_match_artifacts(out, checksums_by_name)
+
+    manifest_names = {artifact["name"] for artifact in manifest["artifacts"]}
+    assert set(manifest_names) == {
+        "show-hn-title.txt",
+        "show-hn-first-comment.md",
+        "x-post.txt",
+        "linkedin-post.md",
+        "community-post.md",
+        "answer-bank.md",
+    }
 
 
 def test_launch_copy_generates_stable_checksums(tmp_path: Path):
@@ -126,15 +195,20 @@ def test_launch_copy_generates_stable_checksums(tmp_path: Path):
     _generate_pack(b)
 
     assert _corpus() is not None
-    manifest_a = (a / "manifest.json").read_text(encoding="utf-8")
-    manifest_b = (b / "manifest.json").read_text(encoding="utf-8")
-    checksums_a = (a / "checksums.txt").read_text(encoding="utf-8")
-    checksums_b = (b / "checksums.txt").read_text(encoding="utf-8")
+    manifest_a = (a / "manifest.json").read_bytes()
+    manifest_b = (b / "manifest.json").read_bytes()
+    checksums_a = (a / "checksums.txt").read_bytes()
+    checksums_b = (b / "checksums.txt").read_bytes()
     assert checksums_a == checksums_b
     assert manifest_a == manifest_b
 
-    for line in checksums_a.splitlines():
-        if not line.strip():
+    checksums_a_map = _parse_checksums(checksums_a.decode("utf-8"))
+    checksums_b_map = _parse_checksums(checksums_b.decode("utf-8"))
+    assert checksums_a_map == checksums_b_map
+    assert set(checksums_a_map.keys()) == EXPECTED_CHECKSUM_NAMES
+    for name in EXPECTED_CHECKSUM_NAMES:
+        assert (a / name).read_bytes() == (b / name).read_bytes()
+    for name in set(REQUIRED_ARTIFACTS):
+        if name == "checksums.txt":
             continue
-        digest = line.split("  ", 1)[0]
-        assert re.fullmatch(r"[0-9a-f]{64}", digest), f"invalid digest line {line!r}"
+        assert _sha256_file(a / name) == checksums_a_map[name]

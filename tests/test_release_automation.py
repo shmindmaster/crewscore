@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import re
 import subprocess
 import sys
@@ -120,13 +121,28 @@ def test_generate_dist_pack_writes_anti_promise_drafts(tmp_path: Path):
     assert "anonymous allowlisted usage events may be sent unless you opt out" in normalized
     assert (out / "checksums.txt").is_file()
 
-    # Deterministic checksum contract: manifest and checksums filenames are included
-    # and all digests are SHA-256 hex strings.
+    # Deterministic checksum contract: manifest and generated artifacts are covered
+    # (checksums.txt is excluded) and all digests are SHA-256 hex strings.
     checksums = (out / "checksums.txt").read_text(encoding="utf-8")
     rows = [line for line in checksums.splitlines() if line.strip()]
     assert rows
-    manifest_names = {row["name"] for row in manifest["artifacts"]}
+    expected_checksum_names = {
+        "show-hn-title.txt",
+        "show-hn-first-comment.md",
+        "x-post.txt",
+        "linkedin-post.md",
+        "community-post.md",
+        "answer-bank.md",
+        "manifest.json",
+    }
+    parsed = {}
     for row in rows:
+        assert "  " in row, f"invalid checksum row {row!r}"
         digest, name = row.split("  ", 1)
         assert re.fullmatch(r"[0-9a-f]{64}", digest), f"invalid checksum {row}"
-        assert name in manifest_names or name in {"manifest.json", "checksums.txt"}
+        parsed[name] = digest
+    assert set(parsed.keys()) == expected_checksum_names
+    assert "checksums.txt" not in parsed
+    for name, digest in parsed.items():
+        assert hashlib.sha256((out / name).read_bytes()).hexdigest() == digest
+    assert manifest["checksum_excludes"] == ["checksums.txt"]
