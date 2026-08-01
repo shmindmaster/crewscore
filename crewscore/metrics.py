@@ -292,15 +292,15 @@ def bucket_score(n: int | float) -> str:
     return "90-100"
 
 
-def validate_props(raw_props: dict[str, Any] | None) -> bool:
+def validate_props(props: dict[str, Any] | None) -> bool:
     """Validate legacy payload content.
 
     This keeps the 0.6.9 contract: one positional payload argument and
     forbid-only checks for free-text keys.
     """
-    if not raw_props:
+    if not props:
         return True
-    for key in raw_props:
+    for key in props:
         if str(key).lower() in FORBIDDEN_PROP_KEYS:
             raise ValueError(f"metrics props must not include prompt text key: {key!r}")
     return True

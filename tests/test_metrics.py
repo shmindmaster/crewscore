@@ -244,6 +244,10 @@ def test_validate_props_accepts_raw_legacy_payload():
     assert validate_props(payload) is True
 
 
+def test_validate_props_preserves_published_069_keyword_parameter():
+    assert validate_props(props={"source": "paste"}) is True
+
+
 def test_append_event_rejects_unknown_event():
     with pytest.raises(ValueError, match="unknown metrics event"):
         append_event({}, "cs_not_a_real_event", {})

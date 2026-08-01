@@ -19,8 +19,8 @@
 
 ## Final verification evidence
 
-- `.venv\Scripts\python.exe -m pytest -q tests\test_demo_asset.py tests\test_metrics.py tests\test_launch_copy.py` -> `53 passed`.
-- `.venv\Scripts\python.exe -m pytest` -> `567 passed, 1 skipped`.
+- `.venv\Scripts\python.exe -m pytest -q tests\test_demo_asset.py tests\test_metrics.py tests\test_launch_copy.py` -> `54 passed`.
+- `.venv\Scripts\python.exe -m pytest` -> `568 passed, 1 skipped`.
 - `npm run test:web -- --project=chromium` -> `21 passed`.
 - `npm run test:web` -> `81 passed, 3 skipped` across Chromium, Firefox, WebKit, and mobile Chromium.
 - `.venv\Scripts\python.exe scripts\generate_dist_pack.py` -> version `0.6.9`, checksum-file SHA-256 `29bdc527ee30ec4ca25f06a9540b4bc8133ea68f9803d83ae88350002ce22deb`.
