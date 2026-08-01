@@ -37,6 +37,7 @@
     "png_badge",
   ];
   const PATHS = ["chatgpt", "claude", "cursor", "other", "feedback"];
+  const TRAFFIC_CLASSES = ["production", "synthetic_qa"];
 
     const EVENT_SCHEMAS = {
     cs_site_view: {
@@ -127,6 +128,7 @@
   "product_path",
   "controls_found",
   "smell_count",
+  "traffic_class",
 ]);
   const FORBIDDEN_PROPERTIES = [
     "prompt",
@@ -139,9 +141,18 @@
     "source_text",
   ];
 
-  const EVENT_OPTIONAL_PROPERTIES = {
-    cs_score: ["product_path", "smell_count", "delta_bucket"],
-  };
+  const EVENT_OPTIONAL_PROPERTIES = {};
+  Object.keys(EVENT_SCHEMAS).forEach((event) => {
+    const schema = EVENT_SCHEMAS[event];
+    schema.properties.traffic_class = {
+      type: "string",
+      enum: TRAFFIC_CLASSES,
+      max_length: 16,
+    };
+    EVENT_OPTIONAL_PROPERTIES[event] = Object.keys(schema.properties).filter(
+      (name) => !schema.required.includes(name)
+    );
+  });
 
   let sessionOptOut = false;
   let lastCaptureError = null;
@@ -285,6 +296,7 @@
 
     const safe = safeProperties(event, properties);
     if (!safe) return;
+    safe.traffic_class = isHumanQaTraffic() ? "synthetic_qa" : "production";
 
     const body = JSON.stringify({
       api_key: PROJECT_TOKEN,
@@ -306,6 +318,14 @@
     }).catch(function (error) {
       lastCaptureError = error;
     });
+  }
+
+  function isHumanQaTraffic() {
+    try {
+      return new URLSearchParams(location.search || "").get("crewscore_test_traffic") === "true";
+    } catch (_error) {
+      return false;
+    }
   }
 
   window.CrewScoreAnalytics = Object.freeze({

@@ -6,6 +6,11 @@ This runbook is for launch telemetry only. It does not claim product-market fit,
 
 We measure the flow from landing to share/feedback using bounded event names and bounded values.
 
+Every event can also carry optional `traffic_class`: `production` (the browser
+default) or `synthetic_qa`. The production browser assigns `synthetic_qa` only
+when the URL contains `crewscore_test_traffic=true`; that flag does not enable
+capture from a non-production hostname.
+
 ### Step: visit
 - Event: `cs_site_view`
 - Required property: `source`
@@ -72,6 +77,8 @@ We measure the flow from landing to share/feedback using bounded event names and
 - Prompt text and free-form prompt content are not allowed in analytics payloads.
 - All sendable string properties are bounded enumerations and max length checks.
 - Numeric properties are bounded.
+- `traffic_class` is a bounded, optional classification for production versus
+  explicitly flagged human QA traffic; it is not derived from prompt content.
 - Opt-out (`crewscore_analytics_opt_out_v1`) and offline states never block scoring.
 - Unknown, missing, or extra properties are rejected before any network body is built.
 

@@ -64,6 +64,12 @@ KIND_ENUM = frozenset(
         "png_badge",
     }
 )
+TRAFFIC_CLASS_ENUM = frozenset({"production", "synthetic_qa"})
+TRAFFIC_CLASS_SCHEMA = {
+    "type": "string",
+    "enum": TRAFFIC_CLASS_ENUM,
+    "max_length": 16,
+}
 
 
 def _bucket_schema() -> dict[str, Any]:
@@ -134,10 +140,14 @@ EVENT_SCHEMAS: dict[str, dict[str, Any]] = {
     },
 }
 
+# Capture classification is optional for callers and bounded for every event.
+for _event_schema in EVENT_SCHEMAS.values():
+    _event_schema["properties"]["traffic_class"] = dict(TRAFFIC_CLASS_SCHEMA)
 
 EVENT_REQUIRED_PROPERTIES = {event: spec.get("required", ()) for event, spec in EVENT_SCHEMAS.items()}
 EVENT_OPTIONAL_PROPERTIES = {
-    "cs_score": ("product_path", "smell_count", "delta_bucket"),
+    event: tuple(name for name in spec["properties"] if name not in spec.get("required", ()))
+    for event, spec in EVENT_SCHEMAS.items()
 }
 
 # Must match analytics.js ALLOWED_EVENTS.
@@ -158,6 +168,7 @@ ALLOWED_PROPERTIES = frozenset(
         "product_path",
         "controls_found",
         "smell_count",
+        "traffic_class",
     }
 )
 

@@ -226,6 +226,28 @@ def test_validate_event_rejects_missing_required():
         validate_capture_event("cs_check_completed", {"source": "paste", "profile": "system_prompt"})
 
 
+@pytest.mark.parametrize("traffic_class", ("production", "synthetic_qa"))
+def test_capture_contract_accepts_optional_bounded_traffic_class(traffic_class):
+    assert validate_capture_event(
+        "cs_rules_expand", {"traffic_class": traffic_class}
+    ) is True
+
+
+def test_capture_contract_rejects_unrecognized_traffic_class():
+    with pytest.raises(ValueError, match="unrecognized enum"):
+        validate_capture_event("cs_rules_expand", {"traffic_class": "staging"})
+
+
+def test_capture_contract_exposes_optional_traffic_class_for_every_event():
+    payload = capture_schema_payload()
+    for event in payload["event_schemas"].values():
+        assert event["properties"]["traffic_class"] == {
+            "type": "string",
+            "enum": ["production", "synthetic_qa"],
+            "max_length": 16,
+        }
+
+
 def test_validate_event_preserves_published_069_sparse_safe_contract():
     assert validate_event("cs_score", {"source": "paste"}) is True
     assert validate_event("cs_score", {"overall_bucket": True, "local_note": "kept locally"}) is True

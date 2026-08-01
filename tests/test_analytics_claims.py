@@ -291,6 +291,57 @@ process.stdout.write(JSON.stringify({{ calls: calls.length, body: calls.length ?
     assert "SENTINEL_PROMPT" not in json.dumps(result["body"])
 
 
+def test_browser_capture_labels_human_qa_without_weakening_nonproduction_suppression():
+    """QA traffic uses an explicit URL flag; non-production hosts still do not send."""
+    if not shutil.which("node"):
+        pytest.skip("node not installed; skipping analytics runtime test")
+
+    script = f"""
+const fs = require("fs");
+const vm = require("vm");
+const source = fs.readFileSync({json.dumps(str(ANALYTICS))}, "utf8");
+function run(location) {{
+  const calls = [];
+  const storage = {{ getItem: () => null, setItem: () => undefined }};
+  const context = {{
+    window: {{}},
+    document: {{ referrer: "" }},
+    localStorage: storage,
+    sessionStorage: storage,
+    location,
+    URL,
+    URLSearchParams,
+    crypto: {{ randomUUID: () => "test-session" }},
+    fetch: (...args) => {{ calls.push(args); return Promise.resolve(); }},
+  }};
+  vm.createContext(context);
+  vm.runInContext(source, context);
+  context.window.CrewScoreAnalytics.capture("cs_rules_expand", {{}});
+  return calls.map((call) => JSON.parse(call[1].body));
+}}
+const production = run({{ hostname: "crewscore.ai", search: "" }});
+const qa = run({{ hostname: "crewscore.ai", search: "?crewscore_test_traffic=true" }});
+const suppressed = run({{ hostname: "localhost", search: "?crewscore_test_traffic=true" }});
+process.stdout.write(JSON.stringify({{ production, qa, suppressed }}));
+"""
+    proc = subprocess.run(
+        ["node", "-e", script],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    result = json.loads(proc.stdout)
+    assert [body["properties"]["traffic_class"] for body in result["production"]] == [
+        "production",
+        "production",
+    ]
+    assert [body["properties"]["traffic_class"] for body in result["qa"]] == [
+        "synthetic_qa",
+        "synthetic_qa",
+    ]
+    assert result["suppressed"] == []
+
+
 def test_opt_out_still_blocks_capture_when_storage_is_unavailable():
     """Privacy mode cannot depend on localStorage being writable."""
     if not shutil.which("node"):
