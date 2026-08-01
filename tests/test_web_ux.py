@@ -110,7 +110,10 @@ def test_privacy_contract_has_no_remote_font_and_offers_opt_out():
     assert 'id="analytics-opt-out"' in html
     assert 'href="privacy.html"' in html
     assert 'href="security.html"' in html
-    assert "Every request disables PostHog GeoIP enrichment" in privacy
+    assert (
+        "Every allowlisted request disables PostHog GeoIP enrichment and does not "
+        "create a PostHog person profile"
+    ) in privacy
 
 
 def test_feedback_path_is_public_and_measurable():

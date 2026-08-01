@@ -21,8 +21,8 @@ SOURCE = REPO / "docs" / "launch-copy.json"
 DATA = REPO / "docs" / "validation-corpus.json"
 GENERATOR = REPO / "scripts" / "generate_dist_pack.py"
 GIT_TRACKED_SOURCE = "docs/launch-copy.json"
-EXPECTED_CHECKSUM_FILE_SHA256 = "41879db003684958617d053604f10502d646bc2a43b0938cf2f7acb2332d5363"
-EXPECTED_MANIFEST_SHA256 = "19e27941723dc94eb8411022801de6d0af2c442fdd61d267614d6e06b929c03c"
+EXPECTED_CHECKSUM_FILE_SHA256 = "7a6a016e91b9e37edac913bd3e95e88a63922e22dc2ae6c5f8ad29b1b68f57e8"
+EXPECTED_MANIFEST_SHA256 = "7f43d41451fb96dc4a37c67cd457a0e2caed74b5943a819f41b11e821682eb32"
 REQUIRED_ARTIFACTS = (
     "show-hn-title.txt",
     "show-hn-first-comment.md",
@@ -302,6 +302,10 @@ def test_launch_copy_source_is_locked_and_template_driven():
     assert "{cliffs_delta}" in source["channels"]["show_hn"]["first_comment"]
     assert "{p_value}" in source["channels"]["show_hn"]["first_comment"]
     assert source["channels"]["show_hn"]["first_comment"].count("{dimension_count}") == 1
+    assert (
+        "allowlisted requests disable PostHog GeoIP enrichment and do not create "
+        "PostHog person profiles"
+    ) in source["channels"]["show_hn"]["first_comment"]
     assert "smell scoring" not in source["channels"]["linkedin"]["text"]
     assert "configuration-smell findings" in source["channels"]["linkedin"]["text"]
 

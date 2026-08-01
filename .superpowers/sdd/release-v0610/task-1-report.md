@@ -9,6 +9,8 @@ Status: DONE — local candidate only; no push, tag, publication, deployment, or
 - Release-candidate commit: the commit containing this report
 - Independent-review P2 remediation: the follow-up commit containing this
   report update
+- Hosted privacy-copy remediation: the follow-up commit containing this report
+  update
 
 ## Outcome
 
@@ -48,9 +50,9 @@ pack is retained at `_production/launch/dist-pack` for release evidence.
 - Ruleset: `crewscore-hygiene@0.6.0`
 - Corpus: 356 prompts
 - Posts automatically: `false`
-- `checksums.txt` SHA-256: `41879db003684958617d053604f10502d646bc2a43b0938cf2f7acb2332d5363`
-- `manifest.json` SHA-256: `19e27941723dc94eb8411022801de6d0af2c442fdd61d267614d6e06b929c03c`
-- Launch-copy source SHA-256: `4aad92cf0feec794ce3913a42def69422901c2f343041f8e88307b1444ff6b34`
+- `checksums.txt` SHA-256: `7a6a016e91b9e37edac913bd3e95e88a63922e22dc2ae6c5f8ad29b1b68f57e8`
+- `manifest.json` SHA-256: `7f43d41451fb96dc4a37c67cd457a0e2caed74b5943a819f41b11e821682eb32`
+- Launch-copy source SHA-256: `079466aea3cdf559636b8b4e52c14873e6008352635a350d8e8f3d9c5cd5d37f`
 
 All seven checksum rows were recomputed from disk and matched.
 
@@ -85,8 +87,21 @@ All seven checksum rows were recomputed from disk and matched.
   skip.
 - Independent-review browser privacy/analytics gate with retries disabled: 12
   passed across Chromium, Firefox, WebKit, and mobile Chromium.
-- The review remediation changes only the runtime regression and this report;
+- The P2 runtime-test remediation changes only the runtime regression and this report;
   package artifacts, launch copy, and distribution checksums are unaffected.
+- Hosted privacy-copy TDD: the privacy-page and canonical-launch-copy
+  regressions both failed before the copy change and passed afterward.
+- The privacy page now says every allowlisted request disables PostHog GeoIP
+  enrichment and does not create a PostHog person profile. The canonical Show
+  HN draft says the same in plural form. Neither statement claims an
+  account-wide or server configuration.
+- Hosted-copy focused release/privacy/analytics gate: 104 passed.
+- Hosted-copy full Python gate: 586 passed, 1 environment-dependent skip.
+- Hosted-copy browser privacy/offline and mobile-subpage gate with retries
+  disabled: 5 passed, 3 expected project skips.
+- Regenerated-pack verification: all 7 checksum rows matched the retained
+  files; only the canonical Show HN draft and its derived manifest/hash
+  surfaces changed.
 
 ## Release-time gates not performed
 
