@@ -342,6 +342,48 @@ process.stdout.write(JSON.stringify({{ production, qa, suppressed }}));
     assert result["suppressed"] == []
 
 
+def test_share_url_excludes_test_traffic_without_reclassifying_the_originating_session():
+    """QA links must not make recipients synthetic, but QA page capture remains labeled."""
+    if not shutil.which("node"):
+        pytest.skip("node not installed; skipping analytics runtime test")
+
+    script = f"""
+const fs = require("fs");
+const vm = require("vm");
+const source = fs.readFileSync({json.dumps(str(ANALYTICS))}, "utf8");
+const calls = [];
+const storage = {{ getItem: () => null, setItem: () => undefined }};
+const location = {{
+  hostname: "crewscore.ai",
+  search: "?utm_source=qa&crewscore_test_traffic=true&keep=1",
+  href: "https://crewscore.ai/?utm_source=qa&crewscore_test_traffic=true&keep=1#cs-result=sentinel",
+}};
+const context = {{
+  window: {{}}, document: {{ referrer: "" }}, localStorage: storage, sessionStorage: storage,
+  location, URL, URLSearchParams, crypto: {{ randomUUID: () => "test-session" }},
+  fetch: (...args) => {{ calls.push(args); return Promise.resolve(); }},
+}};
+vm.createContext(context);
+vm.runInContext(source, context);
+const analytics = context.window.CrewScoreAnalytics;
+const shareUrl = analytics.shareUrl();
+analytics.capture("cs_rules_expand", {{}});
+process.stdout.write(JSON.stringify({{
+  shareUrl,
+  trafficClasses: calls.map((call) => JSON.parse(call[1].body).properties.traffic_class),
+}}));
+"""
+    proc = subprocess.run(
+        ["node", "-e", script],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    result = json.loads(proc.stdout)
+    assert result["shareUrl"] == "https://crewscore.ai/?utm_source=qa&keep=1#cs-result=sentinel"
+    assert result["trafficClasses"] == ["synthetic_qa", "synthetic_qa"]
+
+
 def test_opt_out_still_blocks_capture_when_storage_is_unavailable():
     """Privacy mode cannot depend on localStorage being writable."""
     if not shutil.which("node"):

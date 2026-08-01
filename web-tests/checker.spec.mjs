@@ -306,6 +306,28 @@ test("non-compact SVG cards show the missing-control count while badges retain t
   expect(badgeCard).not.toContain("may be missing");
 });
 
+test("compact badge keeps its gap and coverage caveat inside the 180px viewBox", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "chromium", "One browser SVG geometry assertion is sufficient.");
+  await gotoApp(page);
+  await page.getByRole("button", { name: "Try a 10-second demo" }).click();
+  const badgeCard = await page.evaluate(() => window.__crewscoreUX.svgCard("badge"));
+  await page.goto(`data:image/svg+xml;base64,${Buffer.from(badgeCard).toString("base64")}`);
+
+  const contentBoxes = await page.evaluate(() => [...document.querySelectorAll("text, tspan")]
+    .map((node) => {
+      const { x, y, width, height } = node.getBBox();
+      return { text: (node.textContent || "").trim(), box: { x, y, width, height } };
+    })
+    .filter(({ text }) => text.includes("First gap to review") || text.includes("Written-control coverage")));
+
+  expect(contentBoxes.map(({ text }) => text).join(" ")).toContain("First gap to review");
+  expect(contentBoxes.map(({ text }) => text).join(" ")).toContain("Written-control coverage, not runtime proof");
+  for (const { text, box } of contentBoxes) {
+    expect(box.y, `${text} starts within the badge`).toBeGreaterThanOrEqual(0);
+    expect(box.y + box.height, `${text} ends within the 180px badge`).toBeLessThanOrEqual(180);
+  }
+});
+
 test("successful copy actions emit bounded share-method telemetry", async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "clipboard", {

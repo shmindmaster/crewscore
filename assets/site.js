@@ -479,7 +479,12 @@
     const binary = atob(padded); const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
     return JSON.parse(new TextDecoder().decode(bytes));
   }
-  function shareUrl(result) { return `${location.href.split("#")[0]}#cs-result=${base64Url(sharePayload(result || state.last.result))}`; }
+  function shareUrl(result) {
+    const pageUrl = window.CrewScoreAnalytics && typeof window.CrewScoreAnalytics.shareUrl === "function"
+      ? window.CrewScoreAnalytics.shareUrl()
+      : location.href;
+    return `${pageUrl.split("#")[0]}#cs-result=${base64Url(sharePayload(result || state.last.result))}`;
+  }
   function shareText() {
     const result = state.last.result;
     const { found, missing } = controlsForResult(result);
@@ -537,7 +542,7 @@
     const hero = heroGapFromResult(result);
     const compact = kind === "badge";
     const gapLine = hero ? `First gap to review: ${hero.title}` : "No missing published controls detected";
-    const gapLines = splitLines(gapLine, compact ? 40 : 58);
+    const gapLines = splitLines(gapLine, compact ? 52 : 58);
     const headline = compact
       ? `CrewScore: ${found.length}/${total} controls found`
       : `${found.length} of ${total} written controls`;
@@ -545,12 +550,12 @@
       ? "Written-control coverage, not runtime proof"
       : `${missing.length} may be missing · ${gapLine}`;
     const gapTextX = compact ? 54 : 120;
-    const gapTextY = compact ? 158 : 370;
-    const gapTextLineHeight = compact ? 22 : 38;
+    const gapTextY = compact ? 108 : 370;
+    const gapTextLineHeight = compact ? 16 : 38;
     const gapLineRendered = compact
-      ? renderTextLines(gapTextX, gapTextY, "#d5e7dc", 19, "700", gapLines, gapTextLineHeight)
+      ? renderTextLines(gapTextX, gapTextY, "#d5e7dc", 14, "700", gapLines, gapTextLineHeight)
       : renderTextLines(gapTextX, gapTextY, "#d5e7dc", 28, "700", gapLines, gapTextLineHeight);
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(headline)}"><rect width="100%" height="100%" fill="#102319"/><rect x="${compact ? 20 : 70}" y="${compact ? 20 : 70}" width="${width - (compact ? 40 : 140)}" height="${height - (compact ? 40 : 140)}" rx="${compact ? 18 : 28}" fill="#173629" stroke="#6fdaa6"/><text x="${compact ? 54 : 120}" y="${compact ? 72 : 150}" fill="#b6f3cf" font-family="system-ui, sans-serif" font-size="${compact ? 26 : 34}" font-weight="700">CrewScore</text><text x="${compact ? 54 : 120}" y="${compact ? 122 : 290}" fill="#ffffff" font-family="system-ui, sans-serif" font-size="${compact ? 32 : 64}" font-weight="800">${escapeHtml(headline)}</text><text x="${gapTextX}" y="${gapTextY}" fill="#d5e7dc" font-family="system-ui, sans-serif">${gapLineRendered}</text><text x="${compact ? 54 : 120}" y="${compact ? 200 : 420}" fill="#d5e7dc" font-family="system-ui, sans-serif" font-size="${compact ? 18 : 26}" font-weight="500">${escapeHtml(subtitle)}</text>${compact ? "" : `<text x="120" y="${height - 120}" fill="#b6c9bd" font-family="system-ui, sans-serif" font-size="25">Scanned locally · written-control coverage, not runtime proof</text>`}</svg>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(headline)}"><rect width="100%" height="100%" fill="#102319"/><rect x="${compact ? 20 : 70}" y="${compact ? 20 : 70}" width="${width - (compact ? 40 : 140)}" height="${height - (compact ? 40 : 140)}" rx="${compact ? 18 : 28}" fill="#173629" stroke="#6fdaa6"/><text x="${compact ? 54 : 120}" y="${compact ? 43 : 150}" fill="#b6f3cf" font-family="system-ui, sans-serif" font-size="${compact ? 20 : 34}" font-weight="700">CrewScore</text><text x="${compact ? 54 : 120}" y="${compact ? 76 : 290}" fill="#ffffff" font-family="system-ui, sans-serif" font-size="${compact ? 25 : 64}" font-weight="800">${escapeHtml(headline)}</text><text x="${gapTextX}" y="${gapTextY}" fill="#d5e7dc" font-family="system-ui, sans-serif">${gapLineRendered}</text><text x="${compact ? 54 : 120}" y="${compact ? 154 : 420}" fill="#d5e7dc" font-family="system-ui, sans-serif" font-size="${compact ? 14 : 26}" font-weight="500">${escapeHtml(subtitle)}</text>${compact ? "" : `<text x="120" y="${height - 120}" fill="#b6c9bd" font-family="system-ui, sans-serif" font-size="25">Scanned locally · written-control coverage, not runtime proof</text>`}</svg>`;
   }
   function triggerDownload(blob, filename) {
     const link = document.createElement("a");

@@ -328,11 +328,26 @@
     }
   }
 
+  function shareUrl() {
+    try {
+      const url = new URL(location.href);
+      url.searchParams.delete("crewscore_test_traffic");
+      return url.toString();
+    } catch (_error) {
+      const raw = String(location.href || "");
+      const [withoutHash, hash = ""] = raw.split("#", 2);
+      const [path, query = ""] = withoutHash.split("?", 2);
+      const kept = query.split("&").filter((part) => part.split("=", 1)[0] !== "crewscore_test_traffic");
+      return `${path}${kept.length ? `?${kept.join("&")}` : ""}${hash ? `#${hash}` : ""}`;
+    }
+  }
+
   window.CrewScoreAnalytics = Object.freeze({
     capture,
     isOptedOut,
     setOptOut,
     safeProperties,
+    shareUrl,
     get lastCaptureError() {
       return lastCaptureError;
     },

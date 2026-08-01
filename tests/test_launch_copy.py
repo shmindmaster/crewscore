@@ -391,6 +391,29 @@ def test_launch_copy_preserves_unrelated_symlink_without_dereferencing(tmp_path:
     assert link.resolve() == external.resolve()
 
 
+@pytest.mark.parametrize("artifact_name", ["show-hn-title.txt", "manifest.json", "checksums.txt"])
+def test_generate_dist_pack_replaces_generated_symlink_without_writing_its_target(
+    tmp_path: Path,
+    artifact_name: str,
+):
+    """A preserved generated-artifact link must never redirect a pack write outside it."""
+    out = tmp_path / "dist-pack"
+    out.mkdir()
+    external = tmp_path / "outside.txt"
+    external.write_text("must-not-change", encoding="utf-8")
+    generated_link = out / artifact_name
+    try:
+        generated_link.symlink_to(external)
+    except OSError as exc:
+        pytest.skip(f"symlink creation unavailable: {exc}")
+
+    _generate_pack(out)
+
+    assert external.read_text(encoding="utf-8") == "must-not-change"
+    assert not generated_link.is_symlink()
+    assert generated_link.read_text(encoding="utf-8") != "must-not-change"
+
+
 @pytest.mark.parametrize("fail_point", [1, 2, 3])
 def test_generate_dist_pack_failures_rollback_candidate_to_preserve_prior_pack(tmp_path: Path, fail_point: int):
     out = tmp_path / "dist-pack"
@@ -406,5 +429,17 @@ def test_generate_dist_pack_failures_rollback_candidate_to_preserve_prior_pack(t
 
     assert before == _snapshot_dir(out)
     assert _sha256_file(sentinel) == sentinel_before
+    assert not list(out.parent.glob(f"{out.name}.backup.*"))
+    assert not list(out.parent.glob(f"{out.name}.candidate.*"))
+
+
+def test_generate_dist_pack_first_promotion_failure_leaves_no_output(tmp_path: Path):
+    """A failed first generation cannot leave a partially promoted consumable pack."""
+    out = tmp_path / "dist-pack"
+
+    result = _generate_pack_raw(out, extra_args=["--fail-promotion=3"])
+
+    assert result.returncode != 0
+    assert not out.exists()
     assert not list(out.parent.glob(f"{out.name}.backup.*"))
     assert not list(out.parent.glob(f"{out.name}.candidate.*"))

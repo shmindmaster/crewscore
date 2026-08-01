@@ -253,11 +253,19 @@ def _file_record(path: Path) -> dict[str, Any]:
     }
 
 
+def _prepare_generated_artifact(path: Path) -> None:
+    """Remove a preserved link before writing a generated artifact into the pack."""
+    if path.is_symlink():
+        path.unlink()
+
+
 def _write_artifacts(out: Path, artifacts: dict[str, str]) -> list[dict[str, Any]]:
     for name in ARTIFACTS:
         text = artifacts[name]
         payload = text + "\n" if not text.endswith("\n") else text
-        (out / name).write_bytes(payload.replace("\r\n", "\n").encode("utf-8"))
+        path = out / name
+        _prepare_generated_artifact(path)
+        path.write_bytes(payload.replace("\r\n", "\n").encode("utf-8"))
 
     return [_file_record(out / name) for name in ARTIFACTS]
 
@@ -283,6 +291,7 @@ def _write_manifest(
         "note": pack["note"],
     }
     manifest_path = out / "manifest.json"
+    _prepare_generated_artifact(manifest_path)
     manifest_path.write_bytes((json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode("utf-8"))
     record = _file_record(manifest_path)
     return record
@@ -299,6 +308,7 @@ def _write_checksums(
     )
     lines = [f"{row['sha256']}  {row['name']}" for row in included]
     path = out / "checksums.txt"
+    _prepare_generated_artifact(path)
     path.write_bytes(("\n".join(lines) + "\n").encode("utf-8"))
     return _file_record(path)
 
@@ -339,6 +349,7 @@ def _finalize_pack(
     candidate = _next_sibling_path(out, "candidate")
     backup: Path | None = None
     backup_created = False
+    candidate_promoted = False
     try:
         _copy_sibling_output(out, candidate)
         records = _build_pack_artifacts(pack, candidate)
@@ -364,6 +375,7 @@ def _finalize_pack(
                 raise RuntimeError("injected failure after backup")
 
         candidate.rename(out)
+        candidate_promoted = True
         if fail_promotion == 3:
             raise RuntimeError("injected failure after promotion")
 
@@ -371,9 +383,9 @@ def _finalize_pack(
             _safe_remove(backup)
         return records
     except Exception:
+        if candidate_promoted and out.exists():
+            _safe_remove(out)
         if backup_created:
-            if out.exists():
-                _safe_remove(out)
             if backup is not None and backup.exists():
                 backup.rename(out)
         raise
