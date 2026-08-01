@@ -39,3 +39,16 @@ No change was made to these unrelated import/telemetry tests under Task 4 scope.
 ## Commit
 
 - `6278d07 fix(web): restore share-card subtitles`
+
+## Fix round 1 — real Node module-resolution regression
+
+Independent review correctly found that the original probe regression used
+`sys.executable` (Python), whose unsupported `-e` option fails without testing
+Node module resolution. The regression now invokes the real `node` executable
+from pytest's isolated temporary directory, where `playwright` is not
+resolvable, and asserts the capability probe returns `False`. A regression to
+mere Node-presence detection would return `True` and fail this test.
+
+- RED: `py -m pytest tests/test_demo_asset.py::test_playwright_module_probe_rejects_node_without_playwright_in_its_resolution_context -q` — failed with `TypeError` because the probe could not receive the isolated Node resolution context.
+- GREEN: `py -m pytest tests/test_demo_asset.py::test_playwright_module_probe_rejects_node_without_playwright_in_its_resolution_context tests/test_demo_asset.py::test_demo_svg_gap_panel_layout_stays_within_panels -q` — 2 passed (1.50s).
+- Full Python: `py -m pytest -q` — 574 passed, 1 skipped (20.80s).

@@ -196,16 +196,19 @@ def test_demo_svg_gap_label_is_wrapped_into_text_runs(measured):
         assert len(tspans) >= 2
 
 
-def test_playwright_module_probe_rejects_an_executable_without_playwright():
-    """A runnable executable alone must not enable the browser-layout check."""
-    assert _playwright_module_available(sys.executable) is False
+def test_playwright_module_probe_rejects_node_without_playwright_in_its_resolution_context(tmp_path):
+    """Node alone must not enable browser-layout assertions without the module."""
+    node_path = shutil.which("node")
+    if not node_path:
+        pytest.skip("node not installed; cannot exercise Node module resolution")
+    assert _playwright_module_available(node_path, cwd=tmp_path) is False
 
 
-def _playwright_module_available(node_path: str) -> bool:
-    """Whether this Node executable can load the Playwright module here."""
+def _playwright_module_available(node_path: str, *, cwd: Path = REPO) -> bool:
+    """Whether this Node executable can load the Playwright module from cwd."""
     proc = subprocess.run(
         [node_path, "-e", 'require.resolve("playwright")'],
-        cwd=str(REPO),
+        cwd=str(cwd),
         capture_output=True,
         text=True,
     )
