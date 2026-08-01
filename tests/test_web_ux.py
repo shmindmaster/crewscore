@@ -62,6 +62,7 @@ def test_native_hero_layout_and_mobile_navigation_are_homepage_scoped():
     assert "grid-template-columns: minmax(0, 1fr)" in css
     assert ".always-visible { display: none; }" not in css
     assert ".home-page .hero .always-visible" in css
+    assert "font-size: clamp(2.05rem, 9vw, 2.5rem)" in css
     assert ".hero {\n  max-width: 780px;" in css
 
 

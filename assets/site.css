@@ -330,7 +330,7 @@ body[data-mode="simple"] .developer-only { display: none !important; }
   .url-row { grid-template-columns: 1fr; }
   .profile-picker { grid-template-columns: 1fr; }
   .home-page .hero { gap: 14px; padding: 20px 0 28px; }
-  .home-page .hero h1 { font-size: clamp(2.05rem, 11vw, 3rem); }
+  .home-page .hero h1 { font-size: clamp(2.05rem, 9vw, 2.5rem); }
   .hero-copy { font-size: 1rem; }
   .trust-chips { margin-top: 12px; gap: 6px; }
   .chip { min-height: 28px; padding: 2px 9px; font-size: .78rem; }
