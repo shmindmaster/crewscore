@@ -676,16 +676,43 @@ test("the native product remains materially visible in the first viewport withou
     await gotoApp(page);
     const geometry = await page.locator("#hero-demo").evaluate((node) => {
       const rect = node.getBoundingClientRect();
+      const viewportRight = document.documentElement.clientWidth;
+      const offenders = [...document.querySelectorAll("body *")]
+        .map((element) => {
+          const elementRect = element.getBoundingClientRect();
+          return {
+            element: `${element.tagName.toLowerCase()}${element.id ? `#${element.id}` : ""}${[...element.classList].map((name) => `.${name}`).join("")}`,
+            left: Math.round(elementRect.left * 10) / 10,
+            right: Math.round(elementRect.right * 10) / 10,
+            excess: Math.round(Math.max(0, elementRect.right - viewportRight, -elementRect.left) * 10) / 10,
+          };
+        })
+        .filter((item) => item.excess > 1)
+        .sort((a, b) => b.excess - a.excess)
+        .slice(0, 8);
       return {
         top: rect.top,
         visible: Math.max(0, Math.min(innerHeight, rect.bottom) - Math.max(0, rect.top)),
         overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        offenders,
       };
     });
     expect(geometry.top, `${viewport.width}px demo starts in first viewport`).toBeLessThan(viewport.height);
     const minimumVisible = viewport.width === 320 ? 120 : 200;
     expect(geometry.visible, `${viewport.width}px shows a meaningful product slice`).toBeGreaterThanOrEqual(minimumVisible);
-    expect(geometry.overflow, `${viewport.width}px has no horizontal overflow`).toBeLessThanOrEqual(1);
+    expect(geometry.overflow, `${viewport.width}px has no horizontal overflow; offenders=${JSON.stringify(geometry.offenders)}`).toBeLessThanOrEqual(1);
+    if (viewport.width === 320) {
+      const header = await page.locator(".site-header").evaluate((node) => {
+        const bounds = node.getBoundingClientRect();
+        const brand = node.querySelector(".brand").getBoundingClientRect();
+        const mode = node.querySelector("#mode-toggle").getBoundingClientRect();
+        return {
+          flexDirection: getComputedStyle(node).flexDirection,
+          contained: brand.left >= bounds.left && brand.right <= bounds.right && mode.left >= bounds.left && mode.right <= bounds.right,
+        };
+      });
+      expect(header).toEqual({ flexDirection: "column", contained: true });
+    }
   }
 });
 
