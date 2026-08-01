@@ -159,6 +159,26 @@ def test_generate_dist_pack_refuses_non_directory_output(tmp_path: Path):
     assert "output directory is not a directory" in (result.stdout + result.stderr)
 
 
+def test_generate_dist_pack_refuses_broken_symlink_output_ancestor(tmp_path: Path):
+    missing_target = tmp_path / "missing-target"
+    broken_ancestor = tmp_path / "broken-output-link"
+    try:
+        broken_ancestor.symlink_to(missing_target, target_is_directory=True)
+    except OSError as exc:
+        pytest.skip(f"symlink creation unavailable: {exc}")
+
+    assert broken_ancestor.is_symlink()
+    assert not broken_ancestor.exists()
+
+    result = _generate_pack_raw(broken_ancestor / "dist-pack")
+
+    assert result.returncode != 0
+    assert "refusing to write launch pack through symlink ancestor" in (
+        result.stdout + result.stderr
+    )
+    assert not missing_target.exists()
+
+
 def test_generate_dist_pack_preserves_unrelated_files(tmp_path: Path):
     out = tmp_path / "dist-pack"
     _generate_pack(out)

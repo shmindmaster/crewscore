@@ -315,7 +315,7 @@ def _write_checksums(
 
 def _validate_output_dir(path: Path) -> Path:
     for ancestor in [path] + list(path.parents):
-        if ancestor.exists() and ancestor.is_symlink():
+        if ancestor.is_symlink():
             raise RuntimeError(f"refusing to write launch pack through symlink ancestor: {ancestor}")
     resolved = path.resolve()
     for forbidden in [ROOT, *ROOT.parents]:
