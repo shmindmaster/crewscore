@@ -8,6 +8,7 @@ Status: DONE
 - Current-review remediation: `ca19f79c334ad56f8ea41d4eef45529762f2c8c4`
 - Linux narrow-layout remediation: `3d821ac6361bdce31638d90b8071fcdf2709e11a`
 - Mobile boundary and Pause announcement remediation: `54c2b14a51b717eabead9f24e49147ff4406a42f`
+- Hosted 390-pixel product-visibility remediation: `dc48bcc85cab9cdf7b8bd53ee3b676ce50eb40f0`
 
 ## Outcome
 
@@ -18,6 +19,8 @@ The current-review remediation confines the two-column hero and compact mobile n
 Exact-head PR run `30705689764`, job `91384271094`, exposed a 320-pixel Linux font-metric edge: the document client width was 320 while a homepage descendant expanded the scroll width to 332. The trace proves that the served CSS SHA-1 was `616182696bb8807acd27d0fdc81e328d5f8abe1e`, exactly matching the reviewed source, but the old test retained only aggregate page width and therefore cannot identify the historical leaf element retroactively. The remediation removes the two intrinsic-width pressure points instead of clipping overflow: single-column grids now use a zero minimum track and zero-minimum children, while the homepage header intentionally stacks below 340 pixels. The strict assertion remains and now records every out-of-viewport offender with its selector and bounds if the condition recurs.
 
 The final exact-review remediation keeps the compact “Written-control coverage, not runtime proof” boundary visible beside the mobile hero CTAs at 320 and 390 pixels. An explicit Pause activation now announces “Demo paused” through the gated polite status region; autoplay, programmatic Pause, offscreen Pause, and document-hidden Pause remain silent. The generic scored-with-no-gap branch now truthfully reports that no written-control gap was detected instead of reverting to a waiting message; the fixed 8-to-9 fixture continues to have a named gap in both result states.
+
+Hosted exact-head run `30707014234`, job `91387763640`, then exposed a deterministic 390x844 Chromium visibility failure: the native product slice was 147.0625 pixels against the unchanged strict 200-pixel requirement, although horizontal overflow remained absent. The hosted screenshot showed that Linux font metrics rendered the 11vw/3rem mobile headline across four large lines and pushed the product stage down to approximately 697 pixels. The remediation changes only the homepage mobile headline scale to `clamp(2.05rem, 9vw, 2.5rem)`. The coverage-not-runtime-proof boundary, both CTAs, trust chips, and the strict product-visibility threshold remain intact. At 390x844 the product now begins at 607.296875 pixels, leaving 236.703125 visible pixels and a 36.703125-pixel margin above the required threshold.
 
 ## Changed paths
 
@@ -32,7 +35,7 @@ The product commit changes exactly five paths:
 ## Automated verification
 
 - `py -m pytest -q`
-  - Current head: 584 passed, 1 skipped.
+  - Hosted-visibility remediation head: 584 passed, 1 skipped.
 - `npm run test:web -- --reporter=line`
   - Initial product implementation: 105 passed, 15 expected skips.
   - After adding the independent-review regression: 109 passed, 15 expected skips.
@@ -41,6 +44,7 @@ The product commit changes exactly five paths:
   - Linux narrow-layout head, local: 121 passed, 21 expected project skips, 2 unrelated copy-telemetry retries; both passed on retry.
   - Linux narrow-layout head, Playwright 1.62.0 Linux container: 123 passed, 21 expected project skips, zero retries or failures.
   - Mobile-boundary/Pause head, local: 127 passed, 21 expected project skips, zero retries or failures.
+  - Hosted-visibility remediation head, local: 127 passed, 21 expected project skips, zero retries or failures.
   - Projects: Chromium, Firefox, WebKit, and mobile Chromium.
 - `npx playwright test web-tests/checker.spec.mjs --grep "initial autoplay emits" --reporter=line`
   - 4 passed, one in each browser project.
@@ -63,6 +67,9 @@ The product commit changes exactly five paths:
 - `npx playwright test web-tests/checker.spec.mjs --grep "explicitly activated pause|initial autoplay emits|pauses offscreen|native product remains" --retries=0 --reporter=line`
   - Mobile-boundary/Pause focused gate: 10 passed, 6 expected project skips across all four projects.
   - Matching pinned Linux Chromium subset: 4 passed with retries disabled.
+- `npx playwright test web-tests/checker.spec.mjs --project=chromium --grep "native product remains" --retries=0 --repeat-each=3 --reporter=line`
+  - Hosted-visibility remediation gate: 3 consecutive passes on Windows and 3 consecutive passes in `mcr.microsoft.com/playwright:v1.62.0-noble`, with retries disabled.
+  - The existing strict assertions remain unchanged: at least 200 visible pixels at 390x844, at least 120 visible pixels at 320x844, no horizontal overflow, a visible safety boundary at both widths, exact boundary copy, and contained 320-pixel header controls.
 - `npx playwright test web-tests/checker.spec.mjs:64 --project=firefox --reporter=line`
   - Isolated rerun of the unrelated full-suite interaction retry: 1 passed.
 - `npx playwright test web-tests/checker.spec.mjs --project=webkit --grep "developer mode exposes technical detail" --retries=0 --reporter=line`
@@ -88,12 +95,15 @@ The pinned Playwright CLI was run against the repository static server.
 - Narrow Linux-overflow remediation review, 320x844: `C:\Users\SaroshHussain\.codex\visualizations\2026\08\01\019fbd09-3372-79a0-ae94-51d3a75ab3bd\crewscore-home-320-linux-overflow-fix.png`
 - Mobile boundary visible, 320x844: `C:\Users\SaroshHussain\.codex\visualizations\2026\08\01\019fbd09-3372-79a0-ae94-51d3a75ab3bd\crewscore-home-320-boundary-visible.png`
 - Mobile boundary visible, 390x844: `C:\Users\SaroshHussain\.codex\visualizations\2026\08\01\019fbd09-3372-79a0-ae94-51d3a75ab3bd\crewscore-home-390-boundary-visible.png`
+- Hosted product-visibility remediation, 390x844: `C:\Users\SaroshHussain\.codex\visualizations\2026\08\01\019fbd09-3372-79a0-ae94-51d3a75ab3bd\crewscore-home-390-product-visibility-fix.png`
 
 The product stage was visible in the first viewport at all four homepage sizes. The 320-pixel capture preserves CrewScore identity, Developer mode, the headline, both CTAs, trust chips, and a substantial product slice without horizontal overflow. The 320-pixel privacy capture preserves both navigation links and a normal vertical reading order. Replay and Pause were exercised interactively at the engine-derived 8/23 first-gap state. Browser console inspection returned zero errors and zero warnings. Request inspection during autoplay returned no non-static requests; only the page's static assets were observed.
 
 The post-CI 320-pixel capture confirms the intentional stacked header preserves CrewScore identity and the Developer-mode control while both hero CTAs and a larger product slice remain above the fold.
 
 The final 320- and 390-pixel captures confirm the coverage-not-runtime-proof limitation remains legible directly below the trust chips without horizontal overflow or loss of product visibility.
+
+The hosted product-visibility remediation capture confirms the narrower 390-pixel headline now occupies three lines while preserving the safety boundary, both CTAs, trust chips, and 236.703125 pixels of the native product stage in the first viewport.
 
 ## Scope boundaries
 
