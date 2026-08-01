@@ -334,7 +334,7 @@ body[data-mode="simple"] .developer-only { display: none !important; }
   .hero-copy { font-size: 1rem; }
   .trust-chips { margin-top: 12px; gap: 6px; }
   .chip { min-height: 28px; padding: 2px 9px; font-size: .78rem; }
-  .always-visible { display: none; }
+  .home-page .hero .always-visible { margin-top: 10px; font-size: .8rem; line-height: 1.35; }
   .home-page .hero .hero-demo-screen { grid-template-columns: minmax(0, 1fr) minmax(132px, .72fr); min-height: 230px; }
   .home-page .hero .hero-demo-prompt { padding: 14px; }
   .home-page .hero .hero-demo-prompt pre { min-height: 130px; max-height: 130px; font-size: .62rem; line-height: 1.4; }

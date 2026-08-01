@@ -512,6 +512,27 @@ test.describe("native hero animation", () => {
     await expect(announcement).toContainText("Demo started. Synthetic instructions are ready for a local check.");
   });
 
+  test("only an explicitly activated pause announces the paused state", async ({ page }) => {
+    await gotoApp(page);
+    const announcement = page.locator("#hero-demo-announcement");
+    await page.evaluate(() => {
+      window.__crewscoreHero.replay();
+      window.__crewscoreHero.pause();
+    });
+    await expect(announcement).toHaveAttribute("aria-live", "off");
+    await expect(announcement).not.toHaveAttribute("role", "status");
+    await expect(announcement).toBeEmpty();
+
+    await page.getByRole("button", { name: "Play", exact: true }).click();
+    await expect(announcement).toContainText("Demo started");
+    const activatedMessage = await announcement.textContent();
+    await page.evaluate(() => window.__crewscoreHero.pause());
+    await expect(announcement).toHaveText(activatedMessage);
+
+    await page.getByRole("button", { name: "Pause", exact: true }).click();
+    await expect(announcement).toHaveText("Demo paused.");
+  });
+
   test("runtime reduced-motion change cancels autoplay and shows the complete static state", async ({ page }) => {
     await gotoApp(page);
     await page.evaluate(() => window.__crewscoreHero.replay());
@@ -603,6 +624,8 @@ test.describe("native hero animation", () => {
     await page.evaluate(() => window.__crewscoreHero.replay());
     await page.locator("#checker-workspace").scrollIntoViewIfNeeded();
     await expect.poll(() => page.evaluate(() => window.__crewscoreHero.snapshot().inViewport)).toBe(false);
+    await expect(page.locator("#hero-demo-announcement")).toHaveAttribute("aria-live", "off");
+    await expect(page.locator("#hero-demo-announcement")).toBeEmpty();
     const offscreenStep = await page.evaluate(() => window.__crewscoreHero.snapshot().step);
     await page.waitForTimeout(1900);
     expect(await page.evaluate(() => window.__crewscoreHero.snapshot().step)).toBe(offscreenStep);
@@ -701,6 +724,11 @@ test("the native product remains materially visible in the first viewport withou
     const minimumVisible = viewport.width === 320 ? 120 : 200;
     expect(geometry.visible, `${viewport.width}px shows a meaningful product slice`).toBeGreaterThanOrEqual(minimumVisible);
     expect(geometry.overflow, `${viewport.width}px has no horizontal overflow; offenders=${JSON.stringify(geometry.offenders)}`).toBeLessThanOrEqual(1);
+    if (viewport.width === 390 || viewport.width === 320) {
+      const boundary = page.locator(".always-visible");
+      await expect(boundary).toBeVisible();
+      await expect(boundary).toContainText("Written-control coverage, not runtime proof.");
+    }
     if (viewport.width === 320) {
       const header = await page.locator(".site-header").evaluate((node) => {
         const bounds = node.getBoundingClientRect();

@@ -46,6 +46,8 @@ def test_native_hero_uses_the_generated_engine_instead_of_a_second_score_contrac
     assert "8 of 23" not in script
     assert "9 of 23" not in script
     assert "heroMotionQuery.addEventListener(\"change\", handleHeroMotionChange)" in script
+    assert 'visibleGap?.title || "No written-control gap detected"' in script
+    assert 'pauseHeroDemo({ announce: true })' in script
 
 
 def test_native_hero_layout_and_mobile_navigation_are_homepage_scoped():
@@ -58,6 +60,8 @@ def test_native_hero_layout_and_mobile_navigation_are_homepage_scoped():
     assert ".home-page .site-nav .nav-optional" in css
     assert ".home-page .site-header { flex-direction: column; align-items: flex-start; gap: 6px; }" in css
     assert "grid-template-columns: minmax(0, 1fr)" in css
+    assert ".always-visible { display: none; }" not in css
+    assert ".home-page .hero .always-visible" in css
     assert ".hero {\n  max-width: 780px;" in css
 
 

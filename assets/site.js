@@ -273,7 +273,9 @@
     $("hero-demo-wording").textContent = heroDemo.wording;
     $("hero-demo-found").textContent = visibleCoverage ? String(visibleCoverage.found) : "—";
     $("hero-demo-total").textContent = visibleCoverage ? String(visibleCoverage.total) : "—";
-    $("hero-demo-gap").textContent = visibleResult && visibleGap ? visibleGap.title : "Waiting for local check";
+    $("hero-demo-gap").textContent = !visibleResult
+      ? "Waiting for local check"
+      : (visibleGap?.title || "No written-control gap detected");
     $("hero-demo-before").textContent = scored ? `${beforeCoverage.found} of ${beforeCoverage.total}` : "pending";
     $("hero-demo-after").textContent = rescored ? `${afterCoverage.found} of ${afterCoverage.total}` : "pending";
 
@@ -318,10 +320,25 @@
     scheduleHeroAdvance(options?.immediate ? 0 : HERO_STEP_DELAY);
   }
 
-  function pauseHeroDemo() {
+  function announceHeroPause() {
+    const announcement = $("hero-demo-announcement");
+    if (!announcement) return;
+    heroDemo.announcementsActive = true;
+    heroDemo.lastAnnouncedStep = heroDemo.step;
+    announcement.setAttribute("role", "status");
+    announcement.setAttribute("aria-live", "polite");
+    const pausedStep = heroDemo.step;
+    announcement.textContent = "";
+    window.queueMicrotask(() => {
+      if (!heroDemo.wantsPlayback && heroDemo.step === pausedStep) announcement.textContent = "Demo paused.";
+    });
+  }
+
+  function pauseHeroDemo(options) {
     heroDemo.wantsPlayback = false;
     clearHeroTimer();
     renderHeroDemo();
+    if (options?.announce) announceHeroPause();
   }
 
   function handleHeroMotionChange(event) {
@@ -371,7 +388,7 @@
     heroDemo.afterGap = heroGapFromResult(heroDemo.after);
 
     $("hero-demo-play").addEventListener("click", () => playHeroDemo({ announce: true }));
-    $("hero-demo-pause").addEventListener("click", pauseHeroDemo);
+    $("hero-demo-pause").addEventListener("click", () => pauseHeroDemo({ announce: true }));
     $("hero-demo-replay").addEventListener("click", () => playHeroDemo({ restart: true, announce: true }));
     document.addEventListener("visibilitychange", () => scheduleHeroAdvance());
     if (typeof heroMotionQuery?.addEventListener === "function") heroMotionQuery.addEventListener("change", handleHeroMotionChange);
