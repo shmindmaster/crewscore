@@ -29,6 +29,62 @@ def test_controls_first_workspace_replaces_the_wizard_and_score_tier():
     assert "STRUCTURAL: CRITICAL GAPS" not in html
 
 
+def test_native_hero_uses_the_generated_engine_instead_of_a_second_score_contract():
+    html = _html()
+    script = (ROOT / "assets" / "site.js").read_text(encoding="utf-8")
+    assert 'id="hero-demo"' in html
+    assert 'id="hero-demo-play"' in html
+    assert 'id="hero-demo-pause"' in html
+    assert 'id="hero-demo-replay"' in html
+    assert '<pre id="hero-demo-prompt"></pre>' in html
+    assert 'id="hero-demo-gap-label">First gap</span>' in html
+    assert 'id="hero-demo-announcement" aria-live="off" aria-atomic="true"' in html
+    assert "E.analyzeArtifact(DEMO, E.defaultProfile)" in script
+    assert "heroGapFromResult(heroDemo.before, { useFindingReason: true })" in script
+    assert "heroGapFromResult(heroDemo.after, { useFindingReason: true })" in script
+    assert "E.ENGINE.control_fix_templates[heroDemo.beforeGap?.concept]" in script
+    assert "8 of 23" not in html
+    assert "9 of 23" not in html
+    assert "8 of 23" not in script
+    assert "9 of 23" not in script
+    assert "heroMotionQuery.addEventListener(\"change\", handleHeroMotionChange)" in script
+    assert 'visibleGap?.title || "No written-control gap detected"' in script
+    assert '$("hero-demo-prompt").textContent = DEMO' in script
+    assert 'rescored ? "Next remaining gap" : "First gap"' in script
+    assert "Next remaining gap: ${nextGap}" in script
+    assert 'pauseHeroDemo({ announce: true })' in script
+    assert 'pauseControl.disabled = !heroCanAdvance()' in script
+    assert 'const wasActivelyPlaying = heroCanAdvance()' in script
+    assert 'options?.announce && wasActivelyPlaying' in script
+
+
+def test_native_hero_layout_and_mobile_navigation_are_homepage_scoped():
+    html = _html()
+    css = (ROOT / "assets" / "site.css").read_text(encoding="utf-8")
+    assert '<body class="home-page" data-mode="simple">' in html
+    assert '<section class="hero" id="product"' in html
+    assert ".home-page .hero" in css
+    assert ".home-page .site-nav a:nth-child(-n+6)" in css
+    assert ".home-page .site-nav .nav-optional" in css
+    assert ".home-page .site-header { flex-direction: column; align-items: flex-start; gap: 6px; padding: 8px 0; }" in css
+    assert "grid-template-columns: minmax(0, 1fr)" in css
+    assert ".always-visible { display: none; }" not in css
+    assert ".home-page .hero .always-visible" in css
+    assert "font-size: clamp(2.05rem, 9vw, 2.5rem)" in css
+    assert ".home-page .hero { gap: 10px; padding-top: 14px; }" in css
+    assert "font-size: 1.85rem; line-height: 1.02" in css
+    assert ".hero {\n  max-width: 780px;" in css
+
+
+def test_native_hero_requires_the_canonical_fixture_and_fails_closed():
+    script = (ROOT / "assets" / "site.js").read_text(encoding="utf-8")
+    assert 'const DEMO = window.CrewScoreDemoFixture?.prompt || "";' in script
+    assert "You are a helpful support assistant. Answer customer questions clearly and politely." not in script
+    assert "renderHeroUnavailable" in script
+    assert 'stage.dataset.unavailable = "true"' in script
+    assert "The full checker remains available below." in script
+
+
 def test_primary_input_supports_paste_upload_and_public_github():
     html = _html()
     assert 'id="agent-prompt"' in html

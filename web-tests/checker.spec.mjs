@@ -427,3 +427,494 @@ test("mobile control stays reachable and the main surface has no axe violations"
   const report = await new AxeBuilder({ page }).include("main").analyze();
   expect(report.violations).toEqual([]);
 });
+
+test("reduced motion shows an engine-derived complete before and after hero", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await gotoApp(page);
+  const expected = await page.evaluate(() => {
+    const E = window.CrewScoreEngine;
+    const fixture = window.CrewScoreDemoFixture.prompt;
+    const before = E.analyzeArtifact(fixture, E.defaultProfile);
+    const gap = before.findings.find((finding) => finding.concept === "human_gate.approval_required");
+    const wording = E.ENGINE.control_fix_templates[gap.concept];
+    const after = E.analyzeArtifact(`${fixture}\n${wording}`, E.defaultProfile);
+    const count = (result) => result.findings.filter((finding) => finding.status === "matched").length;
+    return { before: count(before), after: count(after), total: before.findings.length, wording };
+  });
+  expect(expected).toEqual({ before: 8, after: 9, total: 23, wording: "A human must approve." });
+  await expect(page.locator("#hero-demo")).toHaveAttribute("data-complete", "true");
+  await expect(page.locator("#hero-demo-before")).toHaveText(`${expected.before} of ${expected.total}`);
+  await expect(page.locator("#hero-demo-after")).toHaveText(`${expected.after} of ${expected.total}`);
+  await expect(page.locator("#hero-demo-found")).toHaveText(String(expected.after));
+  await expect(page.locator("#hero-demo-wording")).toHaveText(expected.wording);
+  await expect(page.locator("#hero-demo-status")).toContainText("Reduced motion");
+});
+
+test.describe("native hero animation", () => {
+  test.use({ reducedMotion: "no-preference" });
+  test.beforeEach(async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+  });
+
+  test("runs the real 8-to-9 sequence, names the first gap, and stops", async ({ page }) => {
+    await gotoApp(page);
+    const expected = await page.evaluate(() => {
+      const E = window.CrewScoreEngine;
+      const fixture = window.CrewScoreDemoFixture.prompt;
+      const topGap = (result) => {
+        const missing = result.findings.filter((finding) => finding.status === "missing");
+        const orderedDimensions = E.dimensions.slice().sort(
+          (left, right) => (result.scores[left.key] || 0) - (result.scores[right.key] || 0),
+        );
+        for (const dimension of orderedDimensions) {
+          const finding = missing.find((candidate) => candidate.dimension === dimension.key);
+          if (finding) return finding;
+        }
+        return null;
+      };
+      const before = E.analyzeArtifact(fixture, E.defaultProfile);
+      const resolved = topGap(before);
+      const wording = E.ENGINE.control_fix_templates[resolved.concept];
+      const afterPrompt = `${fixture}\n${wording}`;
+      const after = E.analyzeArtifact(afterPrompt, E.defaultProfile);
+      const next = topGap(after);
+      const count = (result) => result.findings.filter((finding) => finding.status === "matched").length;
+      return {
+        before: count(before),
+        after: count(after),
+        total: before.findings.length,
+        fixture,
+        wording,
+        resolved: resolved.pattern_or_reason,
+        next: next.pattern_or_reason,
+        resolvedConcept: resolved.concept,
+        nextConcept: next.concept,
+        resolvedStatus: resolved.status,
+        nextStatus: next.status,
+      };
+    });
+    expect(expected).toEqual({
+      before: 8,
+      after: 9,
+      total: 23,
+      fixture: expect.any(String),
+      wording: "A human must approve.",
+      resolved: "A human must approve",
+      next: "Log actions and decisions",
+      resolvedConcept: "human_gate.approval_required",
+      nextConcept: "audit.log_actions",
+      resolvedStatus: "missing",
+      nextStatus: "missing",
+    });
+    await page.evaluate(() => window.__crewscoreHero.pause());
+    await page.evaluate(() => window.__crewscoreHero.advance());
+    await expect(page.locator("#hero-demo-found")).toHaveText(String(expected.before));
+    await expect(page.locator("#hero-demo-total")).toHaveText(String(expected.total));
+    await expect(page.locator("#hero-demo-gap-label")).toHaveText("First gap");
+    await expect(page.locator("#hero-demo-gap")).toHaveText(expected.resolved);
+    await page.evaluate(() => window.__crewscoreHero.advance());
+    await expect(page.locator("#hero-demo-addition")).toBeVisible();
+    await expect(page.locator("#hero-demo-wording")).toHaveText(expected.wording);
+    await expect(page.locator("#hero-demo-prompt")).toHaveText(expected.fixture);
+    await expect(page.locator("#hero-demo")).toContainText(expected.wording);
+    expect((await page.locator("#hero-demo").innerText()).split(expected.wording).length - 1).toBe(1);
+    await page.evaluate(() => window.__crewscoreHero.advance());
+    await expect(page.locator("#hero-demo-found")).toHaveText(String(expected.after));
+    await expect(page.locator("#hero-demo-gap-label")).toHaveText("Next remaining gap");
+    await expect(page.locator("#hero-demo-gap")).toHaveText(expected.next);
+    await expect(page.locator("#hero-demo-prompt")).toHaveText(expected.fixture);
+    expect((await page.locator("#hero-demo").innerText()).split(expected.wording).length - 1).toBe(1);
+    expect(expected.next).not.toBe(expected.resolved);
+    await expect(page.locator("#hero-demo")).toHaveAttribute("data-complete", "true");
+    const final = await page.evaluate(() => window.__crewscoreHero.snapshot());
+    await page.waitForTimeout(1900);
+    expect(await page.evaluate(() => window.__crewscoreHero.snapshot())).toEqual(final);
+  });
+
+  test("explicit replay gates polite announcements for each meaningful result", async ({ page }) => {
+    await gotoApp(page);
+    await page.evaluate(() => window.__crewscoreHero.pause());
+    const announcement = page.locator("#hero-demo-announcement");
+    await expect(announcement).toHaveAttribute("aria-live", "off");
+    await expect(announcement).not.toHaveAttribute("role", "status");
+    await expect(announcement).toBeEmpty();
+
+    await page.getByRole("button", { name: "Replay", exact: true }).click();
+    await expect(announcement).toHaveAttribute("aria-live", "polite");
+    await expect(announcement).toHaveAttribute("role", "status");
+    await expect(announcement).toContainText("Demo started");
+    await page.evaluate(() => window.__crewscoreHero.advance());
+    await expect(announcement).toContainText("8 of 23 written controls");
+    await expect(announcement).toContainText("A human must approve");
+    await page.evaluate(() => window.__crewscoreHero.advance());
+    await expect(announcement).toContainText("Selected wording added: A human must approve.");
+    await page.evaluate(() => window.__crewscoreHero.advance());
+    await expect(announcement).toContainText("9 of 23 written controls. Demo complete.");
+    await expect(announcement).toContainText("Next remaining gap: Log actions and decisions.");
+    const completedMessage = await announcement.textContent();
+    const pause = page.getByRole("button", { name: "Pause", exact: true });
+    const play = page.getByRole("button", { name: "Play", exact: true });
+    const replay = page.getByRole("button", { name: "Replay", exact: true });
+    await expect(pause).toBeDisabled();
+    await expect(play).toBeEnabled();
+    await expect(replay).toBeEnabled();
+    expect(await page.evaluate(() => {
+      const control = document.querySelector("#hero-demo-pause");
+      control.focus();
+      const rejectedFocus = document.activeElement !== control;
+      control.click();
+      return rejectedFocus;
+    })).toBe(true);
+    await expect(announcement).toHaveText(completedMessage);
+    await expect(page.locator("#hero-demo-status")).toHaveText("Complete. Replay to run it again.");
+  });
+
+  test("explicit play activation announces through the next remaining gap", async ({ page }) => {
+    await gotoApp(page);
+    await page.evaluate(() => {
+      window.__crewscoreHero.replay();
+      window.__crewscoreHero.pause();
+    });
+    const announcement = page.locator("#hero-demo-announcement");
+    await expect(announcement).toHaveAttribute("aria-live", "off");
+    await expect(announcement).not.toHaveAttribute("role", "status");
+    await expect(announcement).toBeEmpty();
+
+    await page.getByRole("button", { name: "Play", exact: true }).click();
+    await expect(announcement).toHaveAttribute("aria-live", "polite");
+    await expect(announcement).toHaveAttribute("role", "status");
+    await expect(announcement).toContainText("Demo started. Synthetic instructions are ready for a local check.");
+    await page.evaluate(() => window.__crewscoreHero.advance());
+    await expect(announcement).toContainText("First gap: A human must approve.");
+    await page.evaluate(() => window.__crewscoreHero.advance());
+    await expect(announcement).toContainText("Selected wording added: A human must approve.");
+    await page.evaluate(() => window.__crewscoreHero.advance());
+    await expect(announcement).toContainText("9 of 23 written controls. Demo complete.");
+    await expect(announcement).toContainText("Next remaining gap: Log actions and decisions.");
+  });
+
+  test("Pause is operable only during active playback and announces a real pause", async ({ page }) => {
+    await gotoApp(page);
+    const announcement = page.locator("#hero-demo-announcement");
+    const pause = page.getByRole("button", { name: "Pause", exact: true });
+    await page.evaluate(() => {
+      window.__crewscoreHero.replay();
+      window.__crewscoreHero.pause();
+    });
+    await expect(pause).toBeDisabled();
+    await expect(announcement).toHaveAttribute("aria-live", "off");
+    await expect(announcement).not.toHaveAttribute("role", "status");
+    await expect(announcement).toBeEmpty();
+
+    await page.getByRole("button", { name: "Play", exact: true }).click();
+    await expect(pause).toBeEnabled();
+    await expect(announcement).toContainText("Demo started");
+    const activatedMessage = await announcement.textContent();
+    await page.evaluate(() => window.__crewscoreHero.pause());
+    await expect(pause).toBeDisabled();
+    await expect(announcement).toHaveText(activatedMessage);
+
+    await page.getByRole("button", { name: "Play", exact: true }).click();
+    await expect(pause).toBeEnabled();
+    await pause.click();
+    await expect(pause).toBeDisabled();
+    await expect(announcement).toHaveText("Demo paused.");
+    await expect(page.locator("#hero-demo-status")).toHaveText("Paused.");
+  });
+
+  test("runtime reduced-motion change cancels autoplay and shows the complete static state", async ({ page }) => {
+    await gotoApp(page);
+    await page.evaluate(() => window.__crewscoreHero.replay());
+    await expect.poll(() => page.evaluate(() => window.__crewscoreHero.snapshot().playing)).toBe(true);
+
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await expect(page.locator("#hero-demo")).toHaveAttribute("data-complete", "true");
+    await expect(page.locator("#hero-demo-before")).toHaveText("8 of 23");
+    await expect(page.locator("#hero-demo-after")).toHaveText("9 of 23");
+    await expect(page.locator("#hero-demo-status")).toContainText("Reduced motion");
+    await expect(page.getByRole("button", { name: "Pause", exact: true })).toBeDisabled();
+    const reduced = await page.evaluate(() => window.__crewscoreHero.snapshot());
+    expect(reduced).toMatchObject({ step: 3, playing: false, reducedMotion: true });
+    await page.waitForTimeout(1900);
+    expect(await page.evaluate(() => window.__crewscoreHero.snapshot())).toEqual(reduced);
+
+  });
+
+  test("initial autoplay emits no analytics or non-static requests", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.addInitScript(() => {
+      const captured = [];
+      Object.defineProperty(window, "__preNavCapturedEvents", { value: captured });
+      let analytics;
+      Object.defineProperty(window, "CrewScoreAnalytics", {
+        configurable: true,
+        get: () => analytics,
+        set: (value) => {
+          if (!value || typeof value.capture !== "function") {
+            analytics = value;
+            return;
+          }
+          analytics = new Proxy(value, {
+            get(target, property, receiver) {
+              if (property !== "capture") return Reflect.get(target, property, receiver);
+              return (event, properties) => {
+                captured.push({ event, properties });
+                return Reflect.apply(target.capture, target, [event, properties]);
+              };
+            },
+          });
+        },
+      });
+    });
+    const requests = [];
+    page.on("request", (request) => requests.push({
+      method: request.method(),
+      type: request.resourceType(),
+      url: request.url(),
+    }));
+
+    await gotoApp(page);
+    await expect(page.locator("#hero-demo")).toHaveAttribute("data-complete", "true", { timeout: 8000 });
+    const announcement = page.locator("#hero-demo-announcement");
+    await expect(announcement).toHaveAttribute("aria-live", "off");
+    await expect(announcement).not.toHaveAttribute("role", "status");
+    await expect(announcement).toBeEmpty();
+    await expect(page.getByRole("button", { name: "Pause", exact: true })).toBeDisabled();
+
+    // analytics.js invokes its normal site-view through a private closure, not
+    // the exported API. The pre-navigation proxy therefore isolates every
+    // exported capture that site.js could make while autoplay initializes and
+    // progresses through all four steps: there must be none.
+    expect(await page.evaluate(() => window.__preNavCapturedEvents)).toEqual([]);
+    const nonStatic = requests.filter((request) => {
+      const url = new URL(request.url);
+      return request.method !== "GET" || url.hostname !== "127.0.0.1";
+    });
+    expect(nonStatic).toEqual([]);
+  });
+
+  test("hero playback emits no analytics while the existing explicit demo event remains compatible", async ({ page }) => {
+    await gotoApp(page);
+    await page.evaluate(() => {
+      window.__capturedEvents = [];
+      window.CrewScoreAnalytics = { capture: (event, properties) => window.__capturedEvents.push({ event, properties }) };
+      window.__crewscoreHero.pause();
+      window.__crewscoreHero.replay();
+      window.__crewscoreHero.advance();
+      window.__crewscoreHero.advance();
+      window.__crewscoreHero.advance();
+    });
+    expect(await page.evaluate(() => window.__capturedEvents)).toEqual([]);
+    await page.getByRole("button", { name: "Try a 10-second demo" }).click();
+    expect(await page.evaluate(() => window.__capturedEvents.map((item) => item.event))).toContain("cs_demo_started");
+  });
+
+  test("pauses offscreen and while the document is hidden, then resumes without losing state", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "chromium", "One real-timer visibility check is sufficient.");
+    await gotoApp(page);
+    await page.evaluate(() => window.__crewscoreHero.replay());
+    await page.locator("#checker-workspace").scrollIntoViewIfNeeded();
+    await expect.poll(() => page.evaluate(() => window.__crewscoreHero.snapshot().inViewport)).toBe(false);
+    await expect(page.locator("#hero-demo-announcement")).toHaveAttribute("aria-live", "off");
+    await expect(page.locator("#hero-demo-announcement")).toBeEmpty();
+    const offscreenStep = await page.evaluate(() => window.__crewscoreHero.snapshot().step);
+    await page.waitForTimeout(1900);
+    expect(await page.evaluate(() => window.__crewscoreHero.snapshot().step)).toBe(offscreenStep);
+
+    await page.locator("#hero-demo").scrollIntoViewIfNeeded();
+    await expect.poll(() => page.evaluate(() => window.__crewscoreHero.snapshot().inViewport)).toBe(true);
+    await expect.poll(() => page.evaluate(() => window.__crewscoreHero.snapshot().step), { timeout: 3000 }).toBeGreaterThan(offscreenStep);
+    const visibleStep = await page.evaluate(() => window.__crewscoreHero.snapshot().step);
+    await page.evaluate(() => {
+      Object.defineProperty(document, "visibilityState", { configurable: true, value: "hidden" });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await page.waitForTimeout(1900);
+    expect(await page.evaluate(() => window.__crewscoreHero.snapshot().step)).toBe(visibleStep);
+    await page.evaluate(() => {
+      Object.defineProperty(document, "visibilityState", { configurable: true, value: "visible" });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await expect.poll(() => page.evaluate(() => window.__crewscoreHero.snapshot().step), { timeout: 3000 }).toBeGreaterThan(visibleStep);
+  });
+
+  test("play pause and replay controls are keyboard operable", async ({ page }) => {
+    await gotoApp(page);
+    await page.evaluate(() => {
+      window.__crewscoreHero.replay();
+      window.__crewscoreHero.pause();
+    });
+    const play = page.getByRole("button", { name: "Play", exact: true });
+    const pause = page.getByRole("button", { name: "Pause", exact: true });
+    await play.focus();
+    await play.press("Enter");
+    await expect(play).toBeFocused();
+    await expect(pause).toBeEnabled();
+    await expect(page.locator("#hero-demo-status")).toHaveText("Playing once.");
+    await pause.focus();
+    await pause.press("Enter");
+    await expect(pause).toBeDisabled();
+    await expect(page.locator("#hero-demo-status")).toHaveText("Paused.");
+    const replay = page.getByRole("button", { name: "Replay", exact: true });
+    await replay.focus();
+    await replay.press("Space");
+    await expect(replay).toBeFocused();
+    await expect(page.locator("#hero-demo-status")).toHaveText("Playing once.");
+    await expect(page.locator("#hero-demo-announcement")).toHaveAttribute("aria-live", "polite");
+    await expect(page.locator("#hero-demo-announcement")).toContainText("Demo started");
+  });
+
+  test("fixture text stays out of requests URLs storage and generated cards, including offline replay", async ({ page, context }) => {
+    const traffic = [];
+    page.on("request", (request) => traffic.push(`${request.url()}\n${request.postData() || ""}`));
+    await gotoApp(page);
+    await context.setOffline(true);
+    await page.evaluate(() => {
+      window.__crewscoreHero.pause();
+      window.__crewscoreHero.advance();
+      window.__crewscoreHero.advance();
+      window.__crewscoreHero.advance();
+    });
+    await expect(page.locator("#hero-demo-found")).toHaveText("9");
+    expect(traffic.join("\n")).not.toContain("Northstar Clinic");
+    expect(page.url()).not.toContain("Northstar");
+    const storage = await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage }));
+    expect(storage).not.toContain("Northstar Clinic");
+    await context.setOffline(false);
+    await page.getByRole("button", { name: "Try a 10-second demo" }).click();
+    const card = await page.evaluate(() => window.__crewscoreUX.svgCard("linkedin"));
+    expect(card).not.toContain("Northstar Clinic");
+  });
+});
+
+test("the native product remains materially visible in the first viewport without horizontal overflow", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "chromium", "One browser can verify deterministic responsive geometry.");
+  for (const viewport of [
+    { width: 1440, height: 900 },
+    { width: 768, height: 1024 },
+    { width: 390, height: 844 },
+    { width: 320, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await gotoApp(page);
+    const geometry = await page.locator("#hero-demo").evaluate((node) => {
+      const rect = node.getBoundingClientRect();
+      const viewportRight = document.documentElement.clientWidth;
+      const offenders = [...document.querySelectorAll("body *")]
+        .map((element) => {
+          const elementRect = element.getBoundingClientRect();
+          return {
+            element: `${element.tagName.toLowerCase()}${element.id ? `#${element.id}` : ""}${[...element.classList].map((name) => `.${name}`).join("")}`,
+            left: Math.round(elementRect.left * 10) / 10,
+            right: Math.round(elementRect.right * 10) / 10,
+            excess: Math.round(Math.max(0, elementRect.right - viewportRight, -elementRect.left) * 10) / 10,
+          };
+        })
+        .filter((item) => item.excess > 1)
+        .sort((a, b) => b.excess - a.excess)
+        .slice(0, 8);
+      return {
+        top: rect.top,
+        visible: Math.max(0, Math.min(innerHeight, rect.bottom) - Math.max(0, rect.top)),
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        offenders,
+      };
+    });
+    expect(geometry.top, `${viewport.width}px demo starts in first viewport`).toBeLessThan(viewport.height);
+    const minimumVisible = viewport.width === 320 ? 120 : 200;
+    expect(geometry.visible, `${viewport.width}px shows a meaningful product slice`).toBeGreaterThanOrEqual(minimumVisible);
+    expect(geometry.overflow, `${viewport.width}px has no horizontal overflow; offenders=${JSON.stringify(geometry.offenders)}`).toBeLessThanOrEqual(1);
+    if (viewport.width === 390 || viewport.width === 320) {
+      const boundary = page.locator(".always-visible");
+      await expect(boundary).toBeVisible();
+      await expect(boundary).toContainText("Written-control coverage, not runtime proof.");
+    }
+    if (viewport.width === 320) {
+      const header = await page.locator(".site-header").evaluate((node) => {
+        const bounds = node.getBoundingClientRect();
+        const brand = node.querySelector(".brand").getBoundingClientRect();
+        const mode = node.querySelector("#mode-toggle").getBoundingClientRect();
+        return {
+          flexDirection: getComputedStyle(node).flexDirection,
+          contained: brand.left >= bounds.left && brand.right <= bounds.right && mode.left >= bounds.left && mode.right <= bounds.right,
+        };
+      });
+      expect(header).toEqual({ flexDirection: "column", contained: true });
+    }
+  }
+});
+
+test("mobile subpages retain navigation and normal vertical reading flow", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "chromium", "One browser can verify deterministic responsive geometry.");
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 320, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/privacy.html");
+    const navLinks = page.locator(".site-nav a");
+    await expect(navLinks).toHaveCount(2);
+    await expect(navLinks.nth(0)).toBeVisible();
+    await expect(navLinks.nth(1)).toBeVisible();
+    const geometry = await page.locator("main.hero").evaluate((node) => {
+      const copy = node.querySelector(".hero-copy").getBoundingClientRect();
+      const nextHeading = node.querySelector("h2").getBoundingClientRect();
+      return {
+        display: getComputedStyle(node).display,
+        vertical: nextHeading.top >= copy.bottom,
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      };
+    });
+    expect(geometry.display, `${viewport.width}px subpage is not a product grid`).not.toBe("grid");
+    expect(geometry.vertical, `${viewport.width}px subpage remains in reading order`).toBe(true);
+    expect(geometry.overflow, `${viewport.width}px subpage has no horizontal overflow`).toBeLessThanOrEqual(1);
+  }
+});
+
+test("a missing canonical demo fixture fails closed without disabling the full checker", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "chromium", "One browser can verify the deterministic missing-asset path.");
+  await page.addInitScript(() => {
+    const captured = [];
+    Object.defineProperty(window, "__missingFixtureCapturedEvents", { value: captured });
+    let analytics;
+    Object.defineProperty(window, "CrewScoreAnalytics", {
+      configurable: true,
+      get: () => analytics,
+      set: (value) => {
+        if (!value || typeof value.capture !== "function") {
+          analytics = value;
+          return;
+        }
+        analytics = new Proxy(value, {
+          get(target, property, receiver) {
+            if (property !== "capture") return Reflect.get(target, property, receiver);
+            return (event, properties) => {
+              captured.push({ event, properties });
+              return Reflect.apply(target.capture, target, [event, properties]);
+            };
+          },
+        });
+      },
+    });
+  });
+  await page.route("**/assets/demo-fixture.js", (route) => route.fulfill({ status: 200, contentType: "text/javascript", body: "" }));
+  const requests = [];
+  page.on("request", (request) => requests.push({ method: request.method(), url: request.url() }));
+
+  await gotoApp(page);
+  const stage = page.locator("#hero-demo");
+  await expect(stage).toHaveAttribute("data-unavailable", "true");
+  await expect(page.locator("#hero-demo-result-label")).toHaveText("Demo unavailable");
+  await expect(page.locator("#hero-demo-status")).toContainText("full checker remains available");
+  await expect(page.locator("#hero-demo-play")).toBeDisabled();
+  await expect(page.locator("#hero-demo-pause")).toBeDisabled();
+  await expect(page.locator("#hero-demo-replay")).toBeDisabled();
+  await expect(page.locator("#try-demo")).toBeDisabled();
+  await expect(page.locator("#placeholder-demo")).toBeDisabled();
+  expect(await page.evaluate(() => window.__missingFixtureCapturedEvents)).toEqual([]);
+  expect(requests.filter((request) => request.method !== "GET" || new URL(request.url).hostname !== "127.0.0.1")).toEqual([]);
+
+  await page.locator("#agent-prompt").fill("Require human approval before sensitive actions. Stop when evidence is missing.");
+  await page.locator("#check-instructions").click();
+  await expect(page.getByRole("heading", { name: /written guardrails found/ })).toBeVisible();
+});

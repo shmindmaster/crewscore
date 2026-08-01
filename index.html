@@ -26,26 +26,58 @@
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"CrewScore","applicationCategory":"BusinessApplication","operatingSystem":"Web, Python 3.11+","description":"A browser-local checklist for written AI-assistant guardrail controls, with an optional offline CLI for recurring checks.","url":"https://crewscore.ai/","codeRepository":"https://github.com/shmindmaster/crewscore","license":"https://spdx.org/licenses/MIT.html","isAccessibleForFree":true,"creator":{"@type":"Person","name":"Sarosh Hussain"},"maintainer":{"@type":"Person","name":"Sarosh Hussain"},"publisher":{"@type":"Organization","name":"Pendoah"}}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Does CrewScore upload my prompt?","acceptedAnswer":{"@type":"Answer","text":"No. Scoring happens locally in your browser and prompt text never leaves the page."}},{"@type":"Question","name":"Does a high result prove an AI agent is safe?","acceptedAnswer":{"@type":"Answer","text":"No. CrewScore checks whether published guardrails are written down, not whether an agent follows them at runtime."}},{"@type":"Question","name":"Can I use CrewScore in CI?","acceptedAnswer":{"@type":"Answer","text":"Yes. The open-source CLI and GitHub Action can report controls, protect a prompt-free baseline, require specific controls, and emit SARIF."}}]}</script>
 </head>
-<body data-mode="simple">
+<body class="home-page" data-mode="simple">
   <div class="site-shell">
     <header class="site-header">
       <a class="brand" href="./" aria-label="CrewScore home"><img class="brand-mark" src="assets/brand/logo-mark.svg" width="34" height="34" alt=""><span>CrewScore</span></a>
       <nav class="site-nav" aria-label="Primary navigation">
         <a href="#product">Product</a><a href="#examples">Examples</a><a href="#rules">Rules</a><a href="#ci">CI</a><a href="#methodology">Methodology</a>
         <a id="feedback-link" href="https://github.com/shmindmaster/crewscore/discussions">Give feedback</a>
-        <a href="https://github.com/shmindmaster/crewscore">GitHub</a>
+        <a class="nav-optional" href="https://github.com/shmindmaster/crewscore">GitHub</a>
         <button class="mode-toggle" id="mode-toggle" type="button" aria-pressed="false">Developer mode</button>
       </nav>
     </header>
 
     <main>
       <section class="hero" id="product" aria-labelledby="hero-title">
-        <p class="eyebrow">Browser-local guardrail checklist</p>
-        <h1 id="hero-title">Find the safety rules your AI agent prompt forgot.</h1>
-        <p class="hero-copy">Paste your AI instructions. CrewScore checks them against 23 public guardrail controls in your browser — no prompt upload, signup, API key, or model call.</p>
-        <div class="hero-actions"><button class="button" id="try-demo" type="button">Try a 10-second demo</button><button class="button-secondary" id="focus-checker" type="button">Check my instructions</button></div>
-        <div class="trust-chips" aria-label="Trust signals"><span class="chip">Runs locally</span><span class="chip">23 public controls</span><span class="chip">Open source</span><span class="chip">No API key</span></div>
-        <p class="always-visible"><strong>Written-control coverage, not runtime proof.</strong> It checks whether guardrails are written down — not whether an agent follows them.</p>
+        <div class="hero-message">
+          <p class="eyebrow">Browser-local guardrail checklist</p>
+          <h1 id="hero-title">Find the safety rules your AI agent prompt forgot.</h1>
+          <p class="hero-copy">Paste your AI instructions. CrewScore checks them against 23 public guardrail controls in your browser — no prompt upload, signup, API key, or model call.</p>
+          <div class="hero-actions"><button class="button" id="try-demo" type="button">Try a 10-second demo</button><button class="button-secondary" id="focus-checker" type="button">Check my instructions</button></div>
+          <div class="trust-chips" aria-label="Trust signals"><span class="chip">Runs locally</span><span class="chip">23 public controls</span><span class="chip">Open source</span><span class="chip">No API key</span></div>
+          <p class="always-visible"><strong>Written-control coverage, not runtime proof.</strong> It checks whether guardrails are written down — not whether an agent follows them.</p>
+        </div>
+
+        <article class="hero-demo" id="hero-demo" aria-labelledby="hero-demo-title" aria-describedby="hero-demo-summary">
+          <header class="hero-demo-header">
+            <div><span class="hero-demo-brand">CrewScore</span><span class="hero-demo-local">Local check</span></div>
+            <span class="hero-demo-rule">23 public controls</span>
+          </header>
+          <div class="hero-demo-screen">
+            <section class="hero-demo-prompt" aria-labelledby="hero-demo-title">
+              <div class="hero-demo-section-head"><h2 id="hero-demo-title">Synthetic instructions</h2><span id="hero-demo-step">Ready</span></div>
+              <pre id="hero-demo-prompt"></pre>
+              <p class="hero-demo-addition" id="hero-demo-addition" hidden><span aria-hidden="true">+</span> <code id="hero-demo-wording"></code></p>
+            </section>
+            <section class="hero-demo-result" aria-label="CrewScore result">
+              <p class="hero-demo-kicker" id="hero-demo-result-label">Checking locally</p>
+              <p class="hero-demo-score"><strong id="hero-demo-found">—</strong><span>of</span><strong id="hero-demo-total">—</strong></p>
+              <p class="hero-demo-gap"><span id="hero-demo-gap-label">First gap</span><strong id="hero-demo-gap">Waiting for local check</strong></p>
+            </section>
+          </div>
+          <div class="hero-demo-comparison" aria-label="Before and after written-control coverage">
+            <span>Before <strong id="hero-demo-before">—</strong></span><span aria-hidden="true">→</span><span>After <strong id="hero-demo-after">—</strong></span>
+          </div>
+          <div class="hero-demo-controls" role="group" aria-label="Product demo controls">
+            <button class="button-secondary" id="hero-demo-play" type="button">Play</button>
+            <button class="button-secondary" id="hero-demo-pause" type="button">Pause</button>
+            <button class="button-secondary" id="hero-demo-replay" type="button">Replay</button>
+            <span id="hero-demo-status">The demo runs once and stops.</span>
+            <span class="visually-hidden" id="hero-demo-announcement" aria-live="off" aria-atomic="true"></span>
+          </div>
+          <p class="hero-demo-summary" id="hero-demo-summary">A synthetic example is checked locally. CrewScore reports written-control coverage and the first control to review; it does not test runtime behavior.</p>
+        </article>
       </section>
 
       <aside class="shock-strip" id="shock-strip" aria-label="Measured corpus finding">
