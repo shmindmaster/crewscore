@@ -14,6 +14,7 @@ import re
 import tempfile
 import subprocess
 import sys
+import shutil
 from pathlib import Path
 
 import pytest
@@ -190,3 +191,75 @@ def test_demo_svg_gap_label_is_wrapped_into_text_runs(measured):
         assert len(block.strip()) <= 58
     if len(measured["first_gap"]) > 58:
         assert len(tspans) >= 2
+
+
+def _rendered_svg_text_nodes(svg_path: Path) -> list[dict[str, float]]:
+    if not shutil.which("node"):
+        pytest.skip("node not installed; skipping browser layout assertions")
+    proc = subprocess.run(
+        [
+            "node",
+            "-e",
+            """
+const fs = require("fs");
+const { chromium } = require("playwright");
+
+(async () => {
+  const svg = fs.readFileSync(process.argv[1], "utf8");
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  await page.setContent(`<html><body style=\"margin:0\">${svg}</body></html>`);
+  const violations = await page.evaluate(() => {
+    const svg = document.querySelector("svg");
+    if (!svg) return [];
+    const panels = [
+      { name: "before", x: 48, y: 140, width: 420, height: 300 },
+      { name: "after", x: 492, y: 140, width: 420, height: 300 },
+    ];
+    const violations = [];
+    const nodes = [...svg.querySelectorAll("text,tspan")];
+    for (const node of nodes) {
+      const box = node.getBBox();
+      if (box.width === 0 || box.height === 0) {
+        continue;
+      }
+      const cx = box.x + box.width / 2;
+      const cy = box.y + box.height / 2;
+      const panel = cy >= 140 && cy <= 440
+        ? (cx < 486 ? panels[0] : panels[1])
+        : null;
+      if (!panel) {
+        continue;
+      }
+      if (box.x < panel.x || box.x + box.width > panel.x + panel.width || box.y < panel.y || box.y + box.height > panel.y + panel.height) {
+        violations.push({
+          node: node.tagName,
+          x: box.x,
+          y: box.y,
+          width: box.width,
+          height: box.height,
+          panel: panel.name,
+        });
+      }
+    }
+    return violations;
+  });
+  await browser.close();
+  process.stdout.write(JSON.stringify(violations));
+})().catch((error) => {
+  process.stderr.write(String(error));
+  process.exit(1);
+});
+""",
+            str(svg_path),
+        ],
+        cwd=str(REPO),
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    return json.loads(proc.stdout)
+
+
+def test_demo_svg_gap_panel_layout_stays_within_panels():
+    assert _rendered_svg_text_nodes(DEMO_SVG) == []

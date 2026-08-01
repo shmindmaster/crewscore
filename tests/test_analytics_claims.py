@@ -407,7 +407,7 @@ def test_score_tracking_emits_check_completed_before_score_for_system_prompts():
     )
 
     assert check_idx < score_idx, "check-completed must emit before score"
-    assert guard_idx <= check_idx < score_idx, "score path gate should surround tracking calls"
+    assert check_idx < guard_idx < score_idx, "check-completed should fire before the governed score branch"
 
 
 def test_no_score_events_for_config_results_are_gate_enforced():
@@ -419,3 +419,7 @@ def test_no_score_events_for_config_results_are_gate_enforced():
     assert "if (result.governance_applicable)" in score_fn
     assert 'track("cs_check_completed"' in score_fn
     assert 'track("cs_score"' in score_fn
+    check_idx = score_fn.find('track("cs_check_completed"')
+    score_idx = score_fn.find('track("cs_score"')
+    guard_idx = score_fn.find("if (result.governance_applicable)")
+    assert 0 <= check_idx < guard_idx < score_idx

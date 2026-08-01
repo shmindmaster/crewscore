@@ -7,7 +7,7 @@ import argparse
 import hashlib
 import json
 import re
-import tempfile
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -26,6 +26,7 @@ ARTIFACTS = (
 CHECKSUM_EXCLUDED_ARTIFACTS = {"checksums.txt"}
 CHECKSUM_INCLUDE_ARTIFACTS = ARTIFACTS + ("manifest.json",)
 CHECKSUM_EXPORT_ARTIFACTS = CHECKSUM_INCLUDE_ARTIFACTS + ("checksums.txt",)
+SOURCE_MANIFEST_PATH = str(SOURCE.relative_to(ROOT)).replace("\\", "/")
 
 
 def _version() -> str:
@@ -107,13 +108,15 @@ def _readme_oneliner() -> str:
     return "Coverage-first structural checklist for AI agent prompts."
 
 
-def _load_source() -> dict[str, Any]:
+def _canonical_source_bytes() -> tuple[dict[str, Any], bytes]:
     if not SOURCE.exists():
         raise FileNotFoundError(f"launch-copy source not found: {SOURCE}")
-    payload: Any = json.loads(SOURCE.read_text(encoding="utf-8"))
+    text = SOURCE.read_text(encoding="utf-8")
+    source_bytes = text.replace("\r\n", "\n").encode("utf-8")
+    payload = json.loads(source_bytes.decode("utf-8"))
     if not isinstance(payload, dict):
         raise TypeError("launch-copy source must be a JSON object")
-    return payload
+    return payload, source_bytes
 
 
 def _render_template(text: str, facts: dict[str, Any]) -> str:
@@ -123,10 +126,36 @@ def _render_template(text: str, facts: dict[str, Any]) -> str:
         raise RuntimeError(f"launch-copy template key missing: {exc.args[0]}") from exc
 
 
-def _build_pack() -> dict[str, Any]:
+def _next_sibling_path(path: Path, marker: str) -> Path:
+    for index in range(1, 1000):
+        candidate = path.parent / f"{path.name}.{marker}.{index}"
+        if not candidate.exists():
+            return candidate
+    raise RuntimeError(f"could not allocate exclusive sibling path for {path.name} ({marker})")
+
+
+def _safe_remove(path: Path) -> None:
+    if not path.exists() and not path.is_symlink():
+        return
+    if path.is_symlink() or path.is_file():
+        path.unlink()
+        return
+    shutil.rmtree(path)
+
+
+def _copy_sibling_output(source: Path, sibling: Path) -> None:
+    if source.exists():
+        if not source.is_dir():
+            raise RuntimeError(f"output path is not a directory: {source}")
+        shutil.copytree(source, sibling)
+    else:
+        sibling.mkdir(parents=True, exist_ok=True)
+
+
+def _build_pack() -> tuple[dict[str, Any], bytes]:
     version = _version()
     corpus = _corpus_facts()
-    source = _load_source()
+    source, source_bytes = _canonical_source_bytes()
     dimension_count = _dimension_count()
     channels = source.get("channels", {})
 
@@ -190,14 +219,14 @@ def _build_pack() -> dict[str, Any]:
             for item in answer_bank
         ],
         "source": {
-            "path": str(SOURCE.relative_to(ROOT)),
-            "sha256": hashlib.sha256(SOURCE.read_bytes()).hexdigest(),
+            "path": SOURCE_MANIFEST_PATH,
+            "sha256": hashlib.sha256(source_bytes).hexdigest(),
         },
         "corpus": corpus,
         "posts_automatically": False,
         "anti_promise": source.get("anti_promise", ""),
         "note": "Drafts only. Post via optional APIs or paste; no interview process.",
-    }
+    }, source_bytes
 
 
 def _artifact_blobs(pack: dict[str, Any]) -> dict[str, str]:
@@ -273,14 +302,17 @@ def _write_checksums(
 
 
 def _validate_output_dir(path: Path) -> Path:
+    for ancestor in [path] + list(path.parents):
+        if ancestor.exists() and ancestor.is_symlink():
+            raise RuntimeError(f"refusing to write launch pack through symlink ancestor: {ancestor}")
     resolved = path.resolve()
     for forbidden in [ROOT, *ROOT.parents]:
         if resolved == forbidden:
             raise RuntimeError(f"refusing to write launch pack into workspace scope: {forbidden}")
-    if not path.exists():
-        path.mkdir(parents=True, exist_ok=True)
-    if not path.is_dir():
+    if path.exists() and not path.is_dir():
         raise RuntimeError(f"output directory is not a directory: {path}")
+    if not path.exists():
+        path.parent.mkdir(parents=True, exist_ok=True)
     return path
 
 
@@ -296,10 +328,18 @@ def _build_pack_artifacts(pack: dict[str, Any], out: Path) -> list[dict[str, Any
     return artifact_records + [manifest_record, checksums_record]
 
 
-def _finalize_pack(pack: dict[str, Any], out: Path) -> list[dict[str, Any]]:
-    with tempfile.TemporaryDirectory(prefix=".crewscore-dist-pack.", dir=out) as workdir:
-        staging = Path(workdir)
-        records = _build_pack_artifacts(pack, staging)
+def _finalize_pack(
+    pack: dict[str, Any],
+    out: Path,
+    *,
+    fail_promotion: int = 0,
+) -> list[dict[str, Any]]:
+    candidate = _next_sibling_path(out, "candidate")
+    backup: Path | None = None
+    backup_created = False
+    try:
+        _copy_sibling_output(out, candidate)
+        records = _build_pack_artifacts(pack, candidate)
 
         checksums: dict[str, str] = {}
         for record in records:
@@ -311,12 +351,33 @@ def _finalize_pack(pack: dict[str, Any], out: Path) -> list[dict[str, Any]]:
             if name not in checksums:
                 raise RuntimeError(f"incomplete pack generation, missing artifact: {name}")
 
-        for name in CHECKSUM_EXPORT_ARTIFACTS:
-            source = staging / name
-            target = out / name
-            target.write_bytes(source.read_bytes())
+        if fail_promotion == 1:
+            raise RuntimeError("injected failure before promotion")
 
+        if out.exists():
+            backup = _next_sibling_path(out, "backup")
+            out.rename(backup)
+            backup_created = True
+            if fail_promotion == 2:
+                raise RuntimeError("injected failure after backup")
+
+        candidate.rename(out)
+        if fail_promotion == 3:
+            raise RuntimeError("injected failure after promotion")
+
+        if backup is not None and backup.exists():
+            _safe_remove(backup)
         return records
+    except Exception:
+        if backup_created:
+            if out.exists():
+                _safe_remove(out)
+            if backup is not None and backup.exists():
+                backup.rename(out)
+        raise
+    finally:
+        if candidate.exists():
+            _safe_remove(candidate)
 
 
 def main() -> int:
@@ -327,18 +388,25 @@ def main() -> int:
         default=DEFAULT_OUTPUT_DIR,
         help="Directory for generated drafts",
     )
+    parser.add_argument(
+        "--fail-promotion",
+        type=int,
+        default=0,
+        help=argparse.SUPPRESS,
+    )
     args = parser.parse_args()
 
     out = _validate_output_dir(args.output_dir)
 
-    pack = _build_pack()
-    records = _finalize_pack(pack, out)
+    pack, source_bytes = _build_pack()
+    _ = source_bytes
+    records = _finalize_pack(pack, out, fail_promotion=args.fail_promotion)
     manifest_record = next(record for record in records if record["name"] == "manifest.json")
     checksums_record = next(record for record in records if record["name"] == "checksums.txt")
 
     print(out)
     print(f"version={pack['package_version']}")
-    print(f"manifest=checksums={checksums_record['sha256']} records={len(records) - 1}")
+    print(f"checksum_file=sha256={checksums_record['sha256']} records={len(records) - 1}")
     return 0
 
 

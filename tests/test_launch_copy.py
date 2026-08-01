@@ -31,6 +31,11 @@ REQUIRED_ARTIFACTS = (
     "manifest.json",
     "checksums.txt",
 )
+
+
+def _launch_copy_source_bytes() -> bytes:
+    text = SOURCE.read_text(encoding="utf-8")
+    return text.replace("\r\n", "\n").encode("utf-8")
 EXPECTED_CHECKSUM_NAMES = frozenset(
     {
         "show-hn-title.txt",
@@ -284,10 +289,13 @@ def test_launch_copy_generated_pack_matches_repository_facts(tmp_path: Path):
         assert (out / name).is_file(), f"missing artifact {name}"
 
     manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
+    source_bytes = _launch_copy_source_bytes()
     assert manifest["package_version"] == __version__
     assert manifest["ruleset"] == RULESET_ID
     assert manifest["control_count"] == CONCEPT_COUNT
     assert manifest["posts_automatically"] is False
+    assert manifest["source"]["path"] == GIT_TRACKED_SOURCE
+    assert manifest["source"]["sha256"] == hashlib.sha256(source_bytes).hexdigest()
     assert manifest["checksum_excludes"] == ["checksums.txt"]
     assert manifest["checksum_includes"] == [
         "show-hn-title.txt",
@@ -359,3 +367,22 @@ def test_launch_copy_generates_stable_checksums(tmp_path: Path):
         if name == "checksums.txt":
             continue
         assert _sha256_file(a / name) == checksums_a_map[name]
+
+
+@pytest.mark.parametrize("fail_point", [1, 2, 3])
+def test_generate_dist_pack_failures_rollback_candidate_to_preserve_prior_pack(tmp_path: Path, fail_point: int):
+    out = tmp_path / "dist-pack"
+    _generate_pack(out)
+
+    sentinel = out / "sentinel.txt"
+    sentinel.write_text("keep-me", encoding="utf-8")
+    sentinel_before = _sha256_file(sentinel)
+    before = _snapshot_dir(out)
+
+    result = _generate_pack_raw(out, extra_args=[f"--fail-promotion={fail_point}"])
+    assert result.returncode != 0
+
+    assert before == _snapshot_dir(out)
+    assert _sha256_file(sentinel) == sentinel_before
+    assert not list(out.parent.glob(f"{out.name}.backup.*"))
+    assert not list(out.parent.glob(f"{out.name}.candidate.*"))

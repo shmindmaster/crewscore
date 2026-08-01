@@ -45,19 +45,26 @@ def _analyze(prompt: str) -> tuple[int, int, str, str]:
     return matched, total, gap, gap_concept
 
 
+def _split_long_word(word: str, max_chars: int) -> list[str]:
+    if len(word) <= max_chars:
+        return [word]
+    return [word[start : start + max_chars] for start in range(0, len(word), max_chars)]
+
+
 def _wrap_lines(value: str, max_chars: int) -> list[str]:
     words = value.split()
     lines: list[str] = []
     current = ""
     for word in words:
-        if not current:
-            current = word
-            continue
-        if len(f"{current} {word}") <= max_chars:
-            current = f"{current} {word}"
-            continue
-        lines.append(current)
-        current = word
+        for chunk in _split_long_word(word, max_chars):
+            if not current:
+                current = chunk
+                continue
+            if len(f"{current} {chunk}") <= max_chars:
+                current = f"{current} {chunk}"
+                continue
+            lines.append(current)
+            current = chunk
     if current:
         lines.append(current)
     return lines

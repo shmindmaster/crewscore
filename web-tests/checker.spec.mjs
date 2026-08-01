@@ -356,6 +356,35 @@ test("coding-agent config example renders smells, not a governance grade", async
   await expect(page.locator("#results")).not.toContainText("of 23");
 });
 
+test("governance telemetry emits check-completed before score and skips score for config", async ({ page }) => {
+  await gotoApp(page);
+  await page.evaluate(() => {
+    window.__capturedEvents = [];
+    window.CrewScoreAnalytics = {
+      capture: (event, properties) => window.__capturedEvents.push({ event, properties }),
+    };
+  });
+
+  await page.locator("#agent-prompt").fill("Do not fabricate facts. Stop when evidence is missing.");
+  await page.locator("#check-instructions").click();
+  await expect(page.getByRole("heading", { name: /written guardrails found/ })).toBeVisible();
+  const systemEvents = await page.evaluate(() => window.__capturedEvents.map((entry) => entry.event));
+  expect(systemEvents.indexOf("cs_check_completed")).toBeGreaterThan(-1);
+  expect(systemEvents.indexOf("cs_score")).toBeGreaterThan(-1);
+  expect(systemEvents.indexOf("cs_check_completed")).toBeLessThan(systemEvents.indexOf("cs_score"));
+
+  await page.evaluate(() => {
+    window.__capturedEvents = [];
+  });
+  await page.getByRole("button", { name: /coding-agent config example/ }).click();
+  await page.locator("#agent-prompt").fill("AGENTS.md placeholder for checks.");
+  await page.locator("#check-instructions").click();
+  await expect(page.getByRole("heading", { name: /Configuration smells, not a governance/ })).toBeVisible();
+  const configEvents = await page.evaluate(() => window.__capturedEvents.map((entry) => entry.event));
+  expect(configEvents).toContain("cs_check_completed");
+  expect(configEvents).not.toContain("cs_score");
+});
+
 test("mobile control stays reachable and the main surface has no axe violations", async ({ page }, testInfo) => {
   await gotoApp(page);
   if (testInfo.project.name === "mobile-chromium") await expect(page.locator("#mobile-check")).toBeVisible();

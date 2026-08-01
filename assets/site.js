@@ -215,8 +215,8 @@
     scrollTo(resultsEl, "nearest");
     const overall = typeof result.overall === "number" ? Math.max(0, Math.min(100, Math.floor(result.overall / 10) * 10)) : 0;
     const controlsFound = result.findings ? result.findings.filter((f) => f.status === "matched").length : 0;
+    track("cs_check_completed", { source: source || "paste", profile, ruleset: result.ruleset });
     if (result.governance_applicable) {
-      track("cs_check_completed", { source: source || "paste", profile, ruleset: result.ruleset });
       track("cs_score", { source: source || "paste", profile, ruleset: result.ruleset, overall_bucket: overall, controls_found: controlsFound, product_path: state.productPath || "other" });
     }
   }

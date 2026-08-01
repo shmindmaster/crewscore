@@ -174,6 +174,13 @@ FORBIDDEN_PROP_KEYS = frozenset(
     }
 )
 
+# Regexes used to keep Python↔JS schema parity checks stable.
+_JS_SET_RE = re.compile(
+    r"const\s+(ALLOWED_EVENTS|ALLOWED_PROPERTIES)\s*=\s*new\s+Set\(\[(.*?)\]\)",
+    re.DOTALL,
+)
+_JS_STRING_RE = re.compile(r'"([^"\\]+)"')
+
 
 def _raise(event: str, issue: str) -> None:
     raise ValueError(f"analytics event {event!r} invalid: {issue}")
@@ -278,43 +285,48 @@ def bucket_score(n: int | float) -> str:
     return "90-100"
 
 
-def validate_props(
-    event: str | dict[str, Any], props: dict[str, Any] | None = None
-) -> bool:
-    """Validate per-event property schema for strict privacy-safe telemetry.
+def _validate_append_props(event: str, props: dict[str, Any]) -> dict[str, Any]:
+    if event not in ALLOWED_EVENTS:
+        _raise(event, "event not allowlisted")
+    lowered = {str(key).lower() for key in props}
+    for key in FORBIDDEN_PROP_KEYS:
+        if key in lowered:
+            _raise(event, f"forbidden prompt-content key {key!r}")
+    return dict(props)
 
-    Supports both current and legacy call styles:
-    - validate_props(event: str, properties: dict | None)
-    - validate_props({\"event\": ..., \"properties\": ...})
+
+def validate_props(raw_props: dict[str, Any] | None) -> bool:
+    """Validate legacy payload content.
+
+    This keeps the 0.6.9 contract: one positional payload argument and
+    forbid-only checks for free-text keys.
     """
-    if not isinstance(event, str):
-        if not isinstance(event, dict) or props is not None:
-            _raise(event.__class__.__name__, "event payload must be (event, props)")
-        payload = event
-        props = payload.get("properties", {})
-        event = payload.get("event")
-        if not isinstance(event, str):
-            _raise("<missing event>", "event payload must include an event name")
+    if raw_props is None:
+        return True
+    if not isinstance(raw_props, dict):
+        raise ValueError("properties must be an object")
+    lowered_keys = {str(key).lower() for key in raw_props}
+    for key in FORBIDDEN_PROP_KEYS:
+        if key in lowered_keys:
+            _raise("raw_props", f"forbidden prompt-content key {key!r}")
+    return True
 
+
+def validate_event(event: str, props: dict[str, Any] | None = None) -> bool:
+    """Validate event name against allowlist and strict property schema."""
     if event not in ALLOWED_EVENTS:
         _raise(event, "event not allowlisted")
     if props is None:
         props = {}
     if not isinstance(props, dict):
         _raise(event, "properties must be an object")
-
     lowered = {str(key): value for key, value in props.items()}
+    forbidden = {str(key).lower() for key in lowered}
     for key in FORBIDDEN_PROP_KEYS:
-        if key in lowered:
+        if key in forbidden:
             _raise(event, f"forbidden prompt-content key {key!r}")
-
     _validate_event(event, lowered)
     return True
-
-
-def validate_event(event: str, props: dict[str, Any] | None = None) -> bool:
-    """Validate event name against allowlist and event-specific property schema."""
-    return validate_props(event, props)
 
 
 def append_event(
@@ -330,12 +342,7 @@ def append_event(
     if not isinstance(props, dict):
         _raise(event, "properties must be an object")
 
-    lowered = {str(key): value for key, value in props.items()}
-    for key in FORBIDDEN_PROP_KEYS:
-        if key in lowered:
-            _raise(event, f"forbidden prompt-content key {key!r}")
-
-    out_props = _validate_event(event, lowered)
+    out_props = _validate_append_props(event, props)
     out: dict[str, Any] = dict(store or {})
     events = list(out.get("events") or [])
     events.append(
@@ -349,13 +356,6 @@ def append_event(
         events = events[-max_events:]
     out["events"] = events
     return out
-
-
-_JS_SET_RE = re.compile(
-    r"const\s+(ALLOWED_EVENTS|ALLOWED_PROPERTIES)\s*=\s*new\s+Set\(\[(.*?)\]\)",
-    re.DOTALL,
-)
-_JS_STRING_RE = re.compile(r'"([^"\\\\]+)"')
 
 
 def parse_analytics_allowlists(js_source: str) -> dict[str, frozenset[str]]:
