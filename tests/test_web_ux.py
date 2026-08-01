@@ -55,6 +55,14 @@ def test_privacy_contract_has_no_remote_font_and_offers_opt_out():
     assert 'href="security.html"' in html
 
 
+def test_feedback_path_is_public_and_measurable():
+    html = _html()
+    script = (ROOT / "assets" / "site.js").read_text(encoding="utf-8")
+    assert 'id="feedback-link"' in html
+    assert "https://github.com/shmindmaster/crewscore/discussions" in html
+    assert 'track("cs_product_path", { path: "feedback" })' in script
+
+
 def test_vendor_is_a_separate_secondary_page():
     html = _html()
     assert 'href="vendor-checklist/"' in html
