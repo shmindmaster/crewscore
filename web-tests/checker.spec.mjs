@@ -33,6 +33,14 @@ test("public security page exposes the private reporting route", async ({ page }
   await expect(page.getByText("CrewScore is not a security certification")).toBeVisible();
 });
 
+test("public feedback path opens the project discussion board", async ({ page }) => {
+  await gotoApp(page);
+  await expect(page.locator("#feedback-link")).toHaveAttribute(
+    "href",
+    "https://github.com/shmindmaster/crewscore/discussions",
+  );
+});
+
 test("demo produces controls-first results and an editable review", async ({ page }) => {
   await gotoApp(page);
   await page.getByRole("button", { name: "Try a 10-second demo" }).click();

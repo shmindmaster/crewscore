@@ -658,6 +658,7 @@
 
   function bindEvents() {
     $("mode-toggle").addEventListener("click", () => { state.autoDeveloper = false; setMode(state.mode === "simple" ? "developer" : "simple", true); track("cs_mode_change", { mode: state.mode }); });
+    $("feedback-link").addEventListener("click", () => track("cs_product_path", { path: "feedback" }));
     $("try-demo").addEventListener("click", () => {
       setProfile("system_prompt");
       setMethod("paste");
