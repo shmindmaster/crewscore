@@ -13,9 +13,13 @@ import pytest
 from crewscore.metrics import (
     ALLOWED_EVENTS,
     ALLOWED_PROPERTIES,
+    CAPTURE_FORBIDDEN_PROP_KEYS,
+    CAPTURE_SCHEMA_VERSION,
+    FORBIDDEN_PROP_KEYS,
     SCHEMA_VERSION,
     append_event,
     bucket_score,
+    capture_schema_payload,
     parse_analytics_allowlists,
     schema_payload,
     validate_capture_event,
@@ -142,7 +146,7 @@ def test_append_event_preserves_extra_properties_and_does_not_strip():
 def test_append_event_rejects_forbidden_property_without_writing():
     store = append_event({}, "cs_score", {"source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0", "overall_bucket": 10, "controls_found": 8})
     original = list(store["events"])
-    with pytest.raises(ValueError, match="forbidden prompt-content"):
+    with pytest.raises(ValueError, match="must not include prompt text"):
         append_event(store, "cs_score", {"source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0", "overall_bucket": 10, "controls_found": 8, "prompt": "x"})
     assert store["events"] == original
 
@@ -174,9 +178,28 @@ def test_validate_props_rejects_forbidden_prompt_keys():
         validate_props({"prompt": "secret", "source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0"})
     with pytest.raises(ValueError):
         validate_props({"PROMPT": "secret", "source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0"})
-    for key in ("text", "body", "system_prompt", "content", "snippet", "input", "source_text"):
+    for key in ("text", "body", "system_prompt", "content"):
         with pytest.raises(ValueError):
             validate_props({key: "x", "source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0", "overall_bucket": 10, "controls_found": 0})
+
+
+def test_capture_contract_rejects_expanded_content_keys_without_breaking_069_public_api():
+    for key in ("snippet", "input", "source_text"):
+        assert validate_props({key: "legacy-safe"}) is True
+        assert validate_event("cs_score", {key: "legacy-safe"}) is True
+        append_event({}, "cs_score", {key: "legacy-safe"})
+        with pytest.raises(ValueError, match="forbidden prompt-content"):
+            validate_capture_event(
+                "cs_score",
+                {
+                    "source": "paste",
+                    "profile": "system_prompt",
+                    "ruleset": "crewscore-hygiene@0.6.0",
+                    "overall_bucket": 10,
+                    "controls_found": 8,
+                    key: "blocked-before-network",
+                },
+            )
 
 
 def test_validate_props_rejects_bad_enum_and_free_text():
@@ -194,7 +217,7 @@ def test_validate_props_allows_safe_props():
 
 
 def test_validate_event_rejects_unknown_event():
-    with pytest.raises(ValueError, match="invalid"):
+    with pytest.raises(ValueError, match="unknown metrics event"):
         validate_event("cs_not_a_real_event", {})
 
 
@@ -206,7 +229,7 @@ def test_validate_event_rejects_missing_required():
 def test_validate_event_preserves_published_069_sparse_safe_contract():
     assert validate_event("cs_score", {"source": "paste"}) is True
     assert validate_event("cs_score", {"overall_bucket": True, "local_note": "kept locally"}) is True
-    with pytest.raises(ValueError, match="forbidden prompt-content"):
+    with pytest.raises(ValueError, match="must not include prompt text"):
         validate_event("cs_score", {"prompt": "must never be stored"})
 
 
@@ -222,7 +245,7 @@ def test_validate_props_accepts_raw_legacy_payload():
 
 
 def test_append_event_rejects_unknown_event():
-    with pytest.raises(ValueError, match="invalid"):
+    with pytest.raises(ValueError, match="unknown metrics event"):
         append_event({}, "cs_not_a_real_event", {})
 
 
@@ -234,7 +257,7 @@ def test_analytics_js_allowlists_match_python_schema():
     assert "ALLOWED_PROPERTIES" in parsed
     assert parsed["ALLOWED_EVENTS"] == ALLOWED_EVENTS
     assert parsed["ALLOWED_PROPERTIES"] == ALLOWED_PROPERTIES
-    assert SCHEMA_VERSION in js
+    assert CAPTURE_SCHEMA_VERSION in js
 
 
 def _analytics_schema_payload_from_js() -> dict[str, Any]:
@@ -259,15 +282,15 @@ process.stdout.write(JSON.stringify(context.window.CrewScoreAnalytics.schemaPayl
 
 
 def test_analytics_js_schema_payload_matches_python_contract():
-    payload_python = schema_payload()
+    payload_python = capture_schema_payload()
     payload_js = _analytics_schema_payload_from_js()
 
-    assert payload_js["schema_version"] == payload_python["schema_version"] == SCHEMA_VERSION
+    assert payload_js["schema_version"] == payload_python["schema_version"] == CAPTURE_SCHEMA_VERSION
     assert sorted(payload_js["allowed_events"]) == sorted(payload_python["allowed_events"])
     assert sorted(payload_js["allowed_properties"]) == sorted(payload_python["allowed_properties"])
     assert set(payload_js["forbidden_prop_keys"]) == set(payload_python["forbidden_prop_keys"])
     assert payload_js["prompt_text"] == payload_python["prompt_text"]
-    assert payload_js["score_buckets"] == payload_python["capture_score_buckets"]
+    assert payload_js["score_buckets"] == payload_python["score_buckets"]
     assert payload_js["optional_properties"] == payload_python["optional_properties"]
 
     py_events = payload_python["event_schemas"]
@@ -293,8 +316,11 @@ def test_analytics_js_schema_payload_matches_python_contract():
 def test_schema_payload_is_prompt_free():
     payload = schema_payload()
     assert payload["schema_version"] == SCHEMA_VERSION
+    assert SCHEMA_VERSION == "2026-07-30"
     assert "cs_score" in payload["allowed_events"]
     assert "prompt" in payload["forbidden_prop_keys"]
+    assert set(payload["forbidden_prop_keys"]) == set(FORBIDDEN_PROP_KEYS)
+    assert set(CAPTURE_FORBIDDEN_PROP_KEYS) == set(FORBIDDEN_PROP_KEYS) | {"snippet", "input", "source_text"}
     assert payload["score_buckets"] == ["0", "1-49", "50-69", "70-89", "90-100"]
     assert payload["network"] == "web client only; Python core never sends metrics"
     blob = str(payload).lower()

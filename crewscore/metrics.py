@@ -6,8 +6,9 @@ import re
 import time
 from typing import Any
 
-# Bump when the schema changes; analytics.js must carry the same value.
-SCHEMA_VERSION = "2026-07-31"
+# Exact public 0.6.9 contract. Browser capture has a separately versioned schema.
+SCHEMA_VERSION = "2026-07-30"
+CAPTURE_SCHEMA_VERSION = "2026-07-31"
 
 # Maximum allowed control counts per control map for this branch.
 CONTROL_MAX = 23
@@ -168,6 +169,12 @@ FORBIDDEN_PROP_KEYS = frozenset(
         "body",
         "system_prompt",
         "content",
+    }
+)
+
+CAPTURE_FORBIDDEN_PROP_KEYS = frozenset(
+    {
+        *FORBIDDEN_PROP_KEYS,
         "snippet",
         "input",
         "source_text",
@@ -285,30 +292,17 @@ def bucket_score(n: int | float) -> str:
     return "90-100"
 
 
-def _validate_append_props(event: str, props: dict[str, Any]) -> dict[str, Any]:
-    if event not in ALLOWED_EVENTS:
-        _raise(event, "event not allowlisted")
-    lowered = {str(key).lower() for key in props}
-    for key in FORBIDDEN_PROP_KEYS:
-        if key in lowered:
-            _raise(event, f"forbidden prompt-content key {key!r}")
-    return dict(props)
-
-
 def validate_props(raw_props: dict[str, Any] | None) -> bool:
     """Validate legacy payload content.
 
     This keeps the 0.6.9 contract: one positional payload argument and
     forbid-only checks for free-text keys.
     """
-    if raw_props is None:
+    if not raw_props:
         return True
-    if not isinstance(raw_props, dict):
-        raise ValueError("properties must be an object")
-    lowered_keys = {str(key).lower() for key in raw_props}
-    for key in FORBIDDEN_PROP_KEYS:
-        if key in lowered_keys:
-            _raise("raw_props", f"forbidden prompt-content key {key!r}")
+    for key in raw_props:
+        if str(key).lower() in FORBIDDEN_PROP_KEYS:
+            raise ValueError(f"metrics props must not include prompt text key: {key!r}")
     return True
 
 
@@ -319,7 +313,7 @@ def validate_event(event: str, props: dict[str, Any] | None = None) -> bool:
     Browser-bound callers use ``validate_capture_event`` for the strict schema.
     """
     if event not in ALLOWED_EVENTS:
-        _raise(event, "event not allowlisted")
+        raise ValueError(f"unknown metrics event: {event!r}")
     validate_props(props)
     return True
 
@@ -334,7 +328,7 @@ def validate_capture_event(event: str, props: dict[str, Any] | None = None) -> b
         _raise(event, "properties must be an object")
     lowered = {str(key): value for key, value in props.items()}
     forbidden = {str(key).lower() for key in lowered}
-    for key in FORBIDDEN_PROP_KEYS:
+    for key in CAPTURE_FORBIDDEN_PROP_KEYS:
         if key in forbidden:
             _raise(event, f"forbidden prompt-content key {key!r}")
     _validate_event(event, lowered)
@@ -348,20 +342,16 @@ def append_event(
     *,
     max_events: int = 200,
 ) -> dict[str, Any]:
-    """Append a privacy-checked event and keep store size bounded."""
-    if props is None:
-        props = {}
-    if not isinstance(props, dict):
-        _raise(event, "properties must be an object")
-
-    out_props = _validate_append_props(event, props)
+    """Append a privacy-checked event; preserve the published 0.6.9 behavior."""
+    props = dict(props or {})
+    validate_event(event, props)
     out: dict[str, Any] = dict(store or {})
     events = list(out.get("events") or [])
     events.append(
         {
             "e": event,
             "t": int(time.time() * 1000),
-            "p": out_props,
+            "p": props,
         }
     )
     if max_events > 0 and len(events) > max_events:
@@ -381,15 +371,26 @@ def parse_analytics_allowlists(js_source: str) -> dict[str, frozenset[str]]:
 
 
 def schema_payload() -> dict[str, Any]:
-    """Machine-readable metrics contract for docs and parity tests."""
+    """Return the exact machine-readable contract published in 0.6.9."""
     return {
         "schema_version": SCHEMA_VERSION,
         "allowed_events": sorted(ALLOWED_EVENTS),
         "allowed_properties": sorted(ALLOWED_PROPERTIES),
         "forbidden_prop_keys": sorted(FORBIDDEN_PROP_KEYS),
         "score_buckets": list(SCORE_BUCKETS),
-        "capture_score_buckets": list(BUCKETS),
         "network": "web client only; Python core never sends metrics",
+        "prompt_text": "never stored in event props",
+    }
+
+
+def capture_schema_payload() -> dict[str, Any]:
+    """Machine-readable strict browser-capture contract."""
+    return {
+        "schema_version": CAPTURE_SCHEMA_VERSION,
+        "allowed_events": sorted(ALLOWED_EVENTS),
+        "allowed_properties": sorted(ALLOWED_PROPERTIES),
+        "forbidden_prop_keys": sorted(CAPTURE_FORBIDDEN_PROP_KEYS),
+        "score_buckets": list(BUCKETS),
         "prompt_text": "never stored in event props",
         "event_schemas": {
             event: {
