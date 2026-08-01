@@ -1,0 +1,3 @@
+# Generated release artifacts are byte-pinned and must survive Windows checkout unchanged.
+score-engine.js text eol=lf
+docs/demo.svg text eol=lf
