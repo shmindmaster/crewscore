@@ -36,6 +36,10 @@ The product commit changes exactly five paths:
   - The autoplay test sets the approved 390x844 launch viewport before navigation; the geometry test requires at least 200 visible pixels, retaining a 20-pixel buffer above the 180-pixel launch requirement.
 - `npx playwright test web-tests/checker.spec.mjs --grep "explicit replay gates|runtime reduced-motion|initial autoplay emits|keyboard operable" --retries=0 --reporter=line`
   - Accessibility review gate: 16 passed across all four browser projects.
+- `npx playwright test web-tests/checker.spec.mjs --grep "explicit play activation|explicit replay gates" --retries=0 --reporter=line`
+  - Separate Play/Replay listener coverage: 8 passed across all four browser projects.
+- `npx playwright test web-tests/checker.spec.mjs --grep "native hero animation" --retries=0 --reporter=line`
+  - Proportionate post-review hero gate: 33 passed, 3 expected project skips.
 - `npx playwright test web-tests/checker.spec.mjs --project=webkit --grep "developer mode exposes technical detail" --retries=0 --reporter=line`
   - Isolated rerun of the unrelated full-suite retry: 1 passed.
 - `git diff --check`

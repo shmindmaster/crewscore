@@ -495,6 +495,23 @@ test.describe("native hero animation", () => {
     await expect(announcement).toContainText("9 of 23 written controls. Demo complete.");
   });
 
+  test("explicit play activation announces the current meaningful step", async ({ page }) => {
+    await gotoApp(page);
+    await page.evaluate(() => {
+      window.__crewscoreHero.replay();
+      window.__crewscoreHero.pause();
+    });
+    const announcement = page.locator("#hero-demo-announcement");
+    await expect(announcement).toHaveAttribute("aria-live", "off");
+    await expect(announcement).not.toHaveAttribute("role", "status");
+    await expect(announcement).toBeEmpty();
+
+    await page.getByRole("button", { name: "Play", exact: true }).click();
+    await expect(announcement).toHaveAttribute("aria-live", "polite");
+    await expect(announcement).toHaveAttribute("role", "status");
+    await expect(announcement).toContainText("Demo started. Synthetic instructions are ready for a local check.");
+  });
+
   test("runtime reduced-motion change cancels autoplay and shows the complete static state", async ({ page }) => {
     await gotoApp(page);
     await page.evaluate(() => window.__crewscoreHero.replay());
