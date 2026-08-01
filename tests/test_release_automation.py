@@ -152,3 +152,14 @@ def test_generated_browser_engine_uses_repository_lf_endings() -> None:
     """Windows regeneration must not create a whole-file CRLF release diff."""
     engine = (ROOT / "score-engine.js").read_bytes()
     assert b"\r\n" not in engine
+
+
+def test_generated_release_artifacts_force_lf_on_windows_checkout() -> None:
+    """Git checkout must preserve the byte-pinned artifacts before tests run."""
+    attributes = {
+        line.strip()
+        for line in (ROOT / ".gitattributes").read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    assert "score-engine.js text eol=lf" in attributes
+    assert "docs/demo.svg text eol=lf" in attributes

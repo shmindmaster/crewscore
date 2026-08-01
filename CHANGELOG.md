@@ -16,6 +16,19 @@ install them, and do not compare their numbers to these.
 
 ---
 
+## [0.6.11] — 2026-08-01 — preserve canonical release bytes on Windows
+
+No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
+
+### Fixed
+
+- Preserve canonical LF bytes for the generated browser engine and demo SVG on
+  Windows checkouts with repository-enforced Git attributes. The immutable
+  `v0.6.10` tag failed its Windows release gate before PyPI, GitHub Release, or
+  floating Action tags were published; `0.6.11` is the forward release.
+
+---
+
 ## [0.6.10] — 2026-08-01 — see the real checker before you scroll
 
 No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
