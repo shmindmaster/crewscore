@@ -474,6 +474,44 @@ test.describe("native hero animation", () => {
     expect(await page.evaluate(() => window.__crewscoreHero.snapshot())).toEqual(final);
   });
 
+  test("explicit replay gates polite announcements for each meaningful result", async ({ page }) => {
+    await gotoApp(page);
+    await page.evaluate(() => window.__crewscoreHero.pause());
+    const announcement = page.locator("#hero-demo-announcement");
+    await expect(announcement).toHaveAttribute("aria-live", "off");
+    await expect(announcement).not.toHaveAttribute("role", "status");
+    await expect(announcement).toBeEmpty();
+
+    await page.getByRole("button", { name: "Replay", exact: true }).click();
+    await expect(announcement).toHaveAttribute("aria-live", "polite");
+    await expect(announcement).toHaveAttribute("role", "status");
+    await expect(announcement).toContainText("Demo started");
+    await page.evaluate(() => window.__crewscoreHero.advance());
+    await expect(announcement).toContainText("8 of 23 written controls");
+    await expect(announcement).toContainText("Asks before sensitive actions");
+    await page.evaluate(() => window.__crewscoreHero.advance());
+    await expect(announcement).toContainText("Selected wording added: A human must approve.");
+    await page.evaluate(() => window.__crewscoreHero.advance());
+    await expect(announcement).toContainText("9 of 23 written controls. Demo complete.");
+  });
+
+  test("runtime reduced-motion change cancels autoplay and shows the complete static state", async ({ page }) => {
+    await gotoApp(page);
+    await page.evaluate(() => window.__crewscoreHero.replay());
+    await expect.poll(() => page.evaluate(() => window.__crewscoreHero.snapshot().playing)).toBe(true);
+
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await expect(page.locator("#hero-demo")).toHaveAttribute("data-complete", "true");
+    await expect(page.locator("#hero-demo-before")).toHaveText("8 of 23");
+    await expect(page.locator("#hero-demo-after")).toHaveText("9 of 23");
+    await expect(page.locator("#hero-demo-status")).toContainText("Reduced motion");
+    const reduced = await page.evaluate(() => window.__crewscoreHero.snapshot());
+    expect(reduced).toMatchObject({ step: 3, playing: false, reducedMotion: true });
+    await page.waitForTimeout(1900);
+    expect(await page.evaluate(() => window.__crewscoreHero.snapshot())).toEqual(reduced);
+
+  });
+
   test("initial autoplay emits no analytics or non-static requests", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.addInitScript(() => {
@@ -509,6 +547,10 @@ test.describe("native hero animation", () => {
 
     await gotoApp(page);
     await expect(page.locator("#hero-demo")).toHaveAttribute("data-complete", "true", { timeout: 8000 });
+    const announcement = page.locator("#hero-demo-announcement");
+    await expect(announcement).toHaveAttribute("aria-live", "off");
+    await expect(announcement).not.toHaveAttribute("role", "status");
+    await expect(announcement).toBeEmpty();
 
     // analytics.js invokes its normal site-view through a private closure, not
     // the exported API. The pre-navigation proxy therefore isolates every
@@ -578,6 +620,8 @@ test.describe("native hero animation", () => {
     await replay.press("Space");
     await expect(replay).toBeFocused();
     await expect(page.locator("#hero-demo-status")).toHaveText("Playing once.");
+    await expect(page.locator("#hero-demo-announcement")).toHaveAttribute("aria-live", "polite");
+    await expect(page.locator("#hero-demo-announcement")).toContainText("Demo started");
   });
 
   test("fixture text stays out of requests URLs storage and generated cards, including offline replay", async ({ page, context }) => {

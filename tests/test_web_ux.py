@@ -36,6 +36,8 @@ def test_native_hero_uses_the_generated_engine_instead_of_a_second_score_contrac
     assert 'id="hero-demo-play"' in html
     assert 'id="hero-demo-pause"' in html
     assert 'id="hero-demo-replay"' in html
+    assert '<pre id="hero-demo-prompt"></pre>' in html
+    assert 'id="hero-demo-announcement" aria-live="off" aria-atomic="true"' in html
     assert "E.analyzeArtifact(DEMO, E.defaultProfile)" in script
     assert "E.ENGINE.control_fix_templates[heroDemo.beforeGap?.concept]" in script
     assert "heroGapFromResult(heroDemo.before)" in script
@@ -43,6 +45,7 @@ def test_native_hero_uses_the_generated_engine_instead_of_a_second_score_contrac
     assert "9 of 23" not in html
     assert "8 of 23" not in script
     assert "9 of 23" not in script
+    assert "heroMotionQuery.addEventListener(\"change\", handleHeroMotionChange)" in script
 
 
 def test_primary_input_supports_paste_upload_and_public_github():

@@ -27,18 +27,25 @@ The product commit changes exactly five paths:
 - `npm run test:web -- --reporter=line`
   - Initial product implementation: 105 passed, 15 expected skips.
   - After adding the independent-review regression: 109 passed, 15 expected skips.
+  - After the accessibility review fixes: 116 passed, 15 expected skips, 1 unrelated WebKit details-toggle retry.
   - Projects: Chromium, Firefox, WebKit, and mobile Chromium.
 - `npx playwright test web-tests/checker.spec.mjs --grep "initial autoplay emits" --reporter=line`
   - 4 passed, one in each browser project.
 - `$env:CI='1'; npx playwright test web-tests/checker.spec.mjs --project=chromium --project=mobile-chromium --grep "initial autoplay emits|native product remains" --retries=0 --reporter=line`
   - Exact PR-CI remediation gate: 3 passed, 1 expected project skip.
   - The autoplay test sets the approved 390x844 launch viewport before navigation; the geometry test requires at least 200 visible pixels, retaining a 20-pixel buffer above the 180-pixel launch requirement.
+- `npx playwright test web-tests/checker.spec.mjs --grep "explicit replay gates|runtime reduced-motion|initial autoplay emits|keyboard operable" --retries=0 --reporter=line`
+  - Accessibility review gate: 16 passed across all four browser projects.
+- `npx playwright test web-tests/checker.spec.mjs --project=webkit --grep "developer mode exposes technical detail" --retries=0 --reporter=line`
+  - Isolated rerun of the unrelated full-suite retry: 1 passed.
 - `git diff --check`
   - Clean.
 - `git ls-files --eol index.html assets/site.css assets/site.js tests/test_web_ux.py web-tests/checker.spec.mjs`
   - All five changed paths reported `i/lf w/lf`.
 
 The browser regressions cover engine-derived 8-to-9 parity, first named gap, finite completion, reduced motion, Play/Pause/Replay keyboard operation, offscreen and document-hidden pause/resume, analytics silence from before page/script initialization through initial autoplay, existing explicit demo-event compatibility, privacy leakage boundaries, offline replay, accessibility, and first-viewport geometry without horizontal overflow.
+
+Accessibility review remediation removes the clipped read-only prompt from the tab order, keeps the stable summary semantic, gates a polite `role=status` announcement region behind explicit Play/Replay activation, verifies autoplay leaves that region inert, and retains the motion `MediaQueryList` so a runtime switch to reduced motion cancels timers and immediately renders the complete static before/after state.
 
 ## Interactive browser evidence
 

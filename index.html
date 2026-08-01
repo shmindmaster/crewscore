@@ -57,7 +57,7 @@
           <div class="hero-demo-screen">
             <section class="hero-demo-prompt" aria-labelledby="hero-demo-title">
               <div class="hero-demo-section-head"><h2 id="hero-demo-title">Synthetic instructions</h2><span id="hero-demo-step">Ready</span></div>
-              <pre id="hero-demo-prompt" tabindex="0"></pre>
+              <pre id="hero-demo-prompt"></pre>
               <p class="hero-demo-addition" id="hero-demo-addition" hidden><span aria-hidden="true">+</span> <code id="hero-demo-wording"></code></p>
             </section>
             <section class="hero-demo-result" aria-label="CrewScore result">
@@ -74,6 +74,7 @@
             <button class="button-secondary" id="hero-demo-pause" type="button">Pause</button>
             <button class="button-secondary" id="hero-demo-replay" type="button">Replay</button>
             <span id="hero-demo-status">The demo runs once and stops.</span>
+            <span class="visually-hidden" id="hero-demo-announcement" aria-live="off" aria-atomic="true"></span>
           </div>
           <p class="hero-demo-summary" id="hero-demo-summary">A synthetic example is checked locally. CrewScore reports written-control coverage and the first control to review; it does not test runtime behavior.</p>
         </article>

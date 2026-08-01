@@ -191,12 +191,15 @@
   function updateInputStatus(message) { $("input-status").textContent = message || ""; }
 
   const HERO_STEP_DELAY = 1700;
+  const heroMotionQuery = window.matchMedia?.("(prefers-reduced-motion: reduce)") || null;
   const heroDemo = {
     step: 0,
     wantsPlayback: false,
     inViewport: true,
     timer: null,
-    reducedMotion: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true,
+    reducedMotion: heroMotionQuery?.matches === true,
+    announcementsActive: false,
+    lastAnnouncedStep: null,
     before: null,
     after: null,
     beforeGap: null,
@@ -220,6 +223,34 @@
 
   function heroCanAdvance() {
     return heroDemo.wantsPlayback && !heroDemo.reducedMotion && heroDemo.inViewport && document.visibilityState === "visible" && heroDemo.step < 3;
+  }
+
+  function heroAnnouncement(step, beforeCoverage, afterCoverage) {
+    if (step === 0) return "Demo started. Synthetic instructions are ready for a local check.";
+    if (step === 1) return `Local check found ${beforeCoverage.found} of ${beforeCoverage.total} written controls. First gap: ${heroDemo.beforeGap?.title || "missing control"}.`;
+    if (step === 2) return `Selected wording added: ${heroDemo.wording}`;
+    return `Local recheck found ${afterCoverage.found} of ${afterCoverage.total} written controls. Demo complete.`;
+  }
+
+  function activateHeroAnnouncements() {
+    heroDemo.announcementsActive = true;
+    heroDemo.lastAnnouncedStep = null;
+    const announcement = $("hero-demo-announcement");
+    announcement?.setAttribute("role", "status");
+    announcement?.setAttribute("aria-live", "polite");
+  }
+
+  function announceHeroStep(beforeCoverage, afterCoverage) {
+    if (!heroDemo.announcementsActive || heroDemo.lastAnnouncedStep === heroDemo.step) return;
+    const announcement = $("hero-demo-announcement");
+    if (!announcement) return;
+    heroDemo.lastAnnouncedStep = heroDemo.step;
+    const step = heroDemo.step;
+    const message = heroAnnouncement(step, beforeCoverage, afterCoverage);
+    announcement.textContent = "";
+    window.queueMicrotask(() => {
+      if (heroDemo.announcementsActive && heroDemo.step === step) announcement.textContent = message;
+    });
   }
 
   function renderHeroDemo() {
@@ -258,6 +289,7 @@
     else if (!heroDemo.wantsPlayback) status.textContent = "Paused.";
     else if (!heroDemo.inViewport || document.visibilityState !== "visible") status.textContent = "Paused while this demo is not visible.";
     else status.textContent = "Playing once.";
+    announceHeroStep(beforeCoverage, afterCoverage);
   }
 
   function scheduleHeroAdvance(delay) {
@@ -274,6 +306,7 @@
   }
 
   function playHeroDemo(options) {
+    if (options?.announce) activateHeroAnnouncements();
     if (heroDemo.reducedMotion) {
       heroDemo.step = 3;
       heroDemo.wantsPlayback = false;
@@ -291,6 +324,14 @@
     renderHeroDemo();
   }
 
+  function handleHeroMotionChange(event) {
+    heroDemo.reducedMotion = event.matches === true;
+    clearHeroTimer();
+    heroDemo.wantsPlayback = false;
+    if (heroDemo.reducedMotion) heroDemo.step = 3;
+    renderHeroDemo();
+  }
+
   function initializeHeroDemo() {
     const stage = $("hero-demo");
     if (!stage || !window.CrewScoreDemoFixture?.prompt) return;
@@ -301,10 +342,12 @@
     heroDemo.after = E.analyzeArtifact(heroDemo.afterPrompt, E.defaultProfile);
     heroDemo.afterGap = heroGapFromResult(heroDemo.after);
 
-    $("hero-demo-play").addEventListener("click", () => playHeroDemo());
+    $("hero-demo-play").addEventListener("click", () => playHeroDemo({ announce: true }));
     $("hero-demo-pause").addEventListener("click", pauseHeroDemo);
-    $("hero-demo-replay").addEventListener("click", () => playHeroDemo({ restart: true }));
+    $("hero-demo-replay").addEventListener("click", () => playHeroDemo({ restart: true, announce: true }));
     document.addEventListener("visibilitychange", () => scheduleHeroAdvance());
+    if (typeof heroMotionQuery?.addEventListener === "function") heroMotionQuery.addEventListener("change", handleHeroMotionChange);
+    else if (typeof heroMotionQuery?.addListener === "function") heroMotionQuery.addListener(handleHeroMotionChange);
     if ("IntersectionObserver" in window) {
       const observer = new IntersectionObserver((entries) => {
         heroDemo.inViewport = entries.some((entry) => entry.isIntersecting);
@@ -329,7 +372,7 @@
         if (heroDemo.step >= 3) heroDemo.wantsPlayback = false;
         renderHeroDemo();
       },
-      snapshot: () => ({ step: heroDemo.step, playing: heroDemo.wantsPlayback, inViewport: heroDemo.inViewport }),
+      snapshot: () => ({ step: heroDemo.step, playing: heroDemo.wantsPlayback, inViewport: heroDemo.inViewport, reducedMotion: heroDemo.reducedMotion }),
     });
   }
 
