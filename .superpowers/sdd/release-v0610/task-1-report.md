@@ -95,6 +95,9 @@ All seven checksum rows were recomputed from disk and matched.
   enrichment and does not create a PostHog person profile. The canonical Show
   HN draft says the same in plural form. Neither statement claims an
   account-wide or server configuration.
+- The privacy page explicitly enumerates the bounded classifications, buckets,
+  and integer counts that may be sent by the documented event schema; prompt
+  text, URLs, person profiles, and free-form fields remain excluded.
 - Hosted-copy focused release/privacy/analytics gate: 104 passed.
 - Hosted-copy full Python gate: 586 passed, 1 environment-dependent skip.
 - Hosted-copy browser privacy/offline and mobile-subpage gate with retries

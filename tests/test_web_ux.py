@@ -114,6 +114,8 @@ def test_privacy_contract_has_no_remote_font_and_offers_opt_out():
         "Every allowlisted request disables PostHog GeoIP enrichment and does not "
         "create a PostHog person profile"
     ) in privacy
+    assert "bounded counts of controls found, configuration smells, or dimensions to fix" in privacy
+    assert "source, profile, ruleset, product-path, or share-kind classifications" in privacy
 
 
 def test_feedback_path_is_public_and_measurable():
