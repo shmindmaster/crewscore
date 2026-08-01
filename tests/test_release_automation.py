@@ -110,7 +110,7 @@ def test_generate_dist_pack_writes_anti_promise_drafts(tmp_path: Path):
         "checksums.txt",
     ]:
         assert (out / filename).is_file(), f"{filename} missing"
-    for stale in ("0.6.2", "0.6.3", "0.6.8"):
+    for stale in ("0.6.2", "0.6.3", "0.6.8", "0.6.9"):
         assert stale not in result.stdout, f"script echoed stale release value {stale}"
 
     blob = (out / "show-hn-first-comment.md").read_text(encoding="utf-8").lower()
@@ -146,3 +146,9 @@ def test_generate_dist_pack_writes_anti_promise_drafts(tmp_path: Path):
     for name, digest in parsed.items():
         assert hashlib.sha256((out / name).read_bytes()).hexdigest() == digest
     assert manifest["checksum_excludes"] == ["checksums.txt"]
+
+
+def test_generated_browser_engine_uses_repository_lf_endings() -> None:
+    """Windows regeneration must not create a whole-file CRLF release diff."""
+    engine = (ROOT / "score-engine.js").read_bytes()
+    assert b"\r\n" not in engine

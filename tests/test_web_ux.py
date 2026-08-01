@@ -104,11 +104,18 @@ def test_imports_validate_utf8_and_offer_a_recovery_path():
 
 def test_privacy_contract_has_no_remote_font_and_offers_opt_out():
     html = _html()
+    privacy = (ROOT / "privacy.html").read_text(encoding="utf-8")
     assert "fonts.googleapis.com" not in html
     assert "Your prompt text never leaves your browser" in html
     assert 'id="analytics-opt-out"' in html
     assert 'href="privacy.html"' in html
     assert 'href="security.html"' in html
+    assert (
+        "Every allowlisted request disables PostHog GeoIP enrichment and does not "
+        "create a PostHog person profile"
+    ) in privacy
+    assert "bounded counts of controls found, configuration smells, or dimensions to fix" in privacy
+    assert "source, profile, mode, ruleset, product-path, or action/share-kind classifications" in privacy
 
 
 def test_feedback_path_is_public_and_measurable():

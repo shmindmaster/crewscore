@@ -14,7 +14,8 @@ from crewscore.web_export import build_payload, render_js  # noqa: E402
 
 def main() -> int:
     out = ROOT / "score-engine.js"
-    out.write_text(render_js(build_payload()), encoding="utf-8")
+    # Keep the checked-in artifact byte-stable across Windows and Linux.
+    out.write_text(render_js(build_payload()), encoding="utf-8", newline="\n")
     print(f"Wrote {out} ({out.stat().st_size} bytes)")
     return 0
 

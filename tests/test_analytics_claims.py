@@ -291,6 +291,73 @@ process.stdout.write(JSON.stringify({{ calls: calls.length, body: calls.length ?
     assert "SENTINEL_PROMPT" not in json.dumps(result["body"])
 
 
+def test_every_allowlisted_capture_forces_private_transport_without_caller_override():
+    """GeoIP and person-profile suppression are immutable on every event body."""
+    if not shutil.which("node"):
+        pytest.skip("node not installed; skipping analytics runtime test")
+
+    script = f"""
+const fs = require("fs");
+const vm = require("vm");
+const source = fs.readFileSync({json.dumps(str(ANALYTICS))}, "utf8");
+const calls = [];
+const storage = {{ getItem: () => null, setItem: () => undefined }};
+const context = {{
+  window: {{}},
+  localStorage: storage,
+  sessionStorage: storage,
+  location: {{ hostname: "crewscore.ai", search: "" }},
+  URLSearchParams,
+  crypto: {{ randomUUID: () => "test-session" }},
+  fetch: (...args) => {{ calls.push(args); return Promise.resolve(); }},
+}};
+vm.createContext(context);
+vm.runInContext(source, context);
+const analytics = context.window.CrewScoreAnalytics;
+const examples = {{
+  cs_site_view: {{ source: "direct" }},
+  cs_rules_expand: {{}},
+  cs_fix_plan: {{}},
+  cs_fix_cancel: {{}},
+  cs_export: {{}},
+  cs_score: {{ source: "paste", profile: "system_prompt", ruleset: "crewscore-hygiene@0.6.0", overall_bucket: 10, controls_found: 8 }},
+  cs_vendor_open: {{ kind: "summary" }},
+  cs_demo_started: {{}},
+  cs_check_completed: {{ source: "paste", profile: "system_prompt", ruleset: "crewscore-hygiene@0.6.0" }},
+  cs_fix_review: {{ dims_to_fix_count: 1 }},
+  cs_mode_change: {{ mode: "simple" }},
+  cs_share: {{ kind: "copy_result" }},
+  cs_product_path: {{ path: "other" }},
+  cs_fix_apply: {{ controls_found: 8 }},
+}};
+for (const event of analytics.schemaPayload().allowed_events) analytics.capture(event, examples[event]);
+analytics.capture("cs_rules_expand", {{ "$geoip_disable": false }});
+analytics.capture("cs_rules_expand", {{ "$process_person_profile": true }});
+process.stdout.write(JSON.stringify({{
+  schema: analytics.schemaPayload(),
+  bodies: calls.map((call) => JSON.parse(call[1].body)),
+}}));
+"""
+    proc = subprocess.run(
+        ["node", "-e", script],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    result = json.loads(proc.stdout)
+    allowed = result["schema"]["allowed_events"]
+    assert len(result["bodies"]) == len(allowed)
+    assert {body["event"] for body in result["bodies"]} == set(allowed)
+    assert "$geoip_disable" not in result["schema"]["allowed_properties"]
+    assert "$process_person_profile" not in result["schema"]["allowed_properties"]
+    assert all(body["properties"]["$geoip_disable"] is True for body in result["bodies"])
+    assert all(
+        body["properties"]["$process_person_profile"] is False
+        for body in result["bodies"]
+    )
+    assert "SENTINEL_PROMPT" not in json.dumps(result["bodies"])
+
+
 def test_browser_capture_labels_human_qa_without_weakening_nonproduction_suppression():
     """QA traffic uses an explicit URL flag; non-production hosts still do not send."""
     if not shutil.which("node"):

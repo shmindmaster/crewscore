@@ -61,6 +61,14 @@ Or: Actions → **Cut release tag** → `push: true` on `main`.
 Tag push runs full multi-OS verify + PyPI trusted publishing + GitHub Release
 notes from CHANGELOG. **No long-lived PyPI token.**
 
+Release-time verification (not performed from a release-candidate branch):
+
+1. Confirm the annotated `vX.Y.Z` tag peels to the exact green `main` SHA.
+2. Confirm PyPI wheel/sdist metadata and the GitHub Release target that SHA.
+3. Confirm the release workflow moved floating Action tag `v2` to the same SHA.
+4. Regenerate the distribution pack from that checkout and retain its
+   `manifest.json` plus `checksums.txt` as launch evidence.
+
 One-time (already documented in `release.yml`): PyPI trusted publisher binding
 for `shmindmaster/crewscore` / `release.yml` / environment `pypi`.
 

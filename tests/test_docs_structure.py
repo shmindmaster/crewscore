@@ -106,9 +106,9 @@ def test_package_version_and_ruleset_appear_in_validation_docs():
     validation = (ROOT / "docs" / "validation.md").read_text(encoding="utf-8")
     corpus = (ROOT / "docs" / "validation-corpus.md").read_text(encoding="utf-8")
     assert RULESET_ID in validation or RULESET_ID in corpus
-    # Package version may lag an unreleased branch; ruleset is the score contract.
+    assert __version__ in validation
+    assert __version__ in corpus
     assert re.search(r"crewscore-hygiene@\d+\.\d+\.\d+", validation + corpus)
-    assert __version__  # importable package version exists
 
 
 def test_scoring_and_controls_states_formula_and_control_count():

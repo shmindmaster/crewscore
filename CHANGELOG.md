@@ -16,6 +16,45 @@ install them, and do not compare their numbers to these.
 
 ---
 
+## [0.6.10] — 2026-08-01 — see the real checker before you scroll
+
+No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
+
+### Added
+
+- **The homepage hero now shows the actual browser-local checker.** A finite,
+  accessible sequence runs the generated engine against the canonical
+  fictional fixture, shows the engine-derived 8-of-23 first gap, applies the
+  selected human-approval wording once, and recomputes 9 of 23 with the next
+  remaining gap. Play, Pause, and Replay are keyboard-operable; autoplay is
+  silent, stops after one run, pauses when hidden, and is disabled under
+  reduced motion.
+- **Launch artifacts are reproducible.** The canonical demo SVG and channel
+  draft distribution pack now come from repository scripts, with a manifest
+  and SHA-256 checksums pinned by tests. Draft generation never posts them.
+
+### Privacy and measurement
+
+- Browser analytics remain restricted to the documented event/property
+  allowlist, distinguish `production` from explicitly flagged `synthetic_qa`
+  traffic, and keep coding-configuration checks separate from governance
+  scores. Prompt text and free-form content are rejected before a network body
+  is built.
+- Every PostHog request now carries immutable `$geoip_disable: true` and
+  `$process_person_profile: false` transport properties. The persistent opt-out
+  still prevents capture, blocked analytics still cannot block local scoring,
+  and automated hero playback emits no events.
+
+### Fixed
+
+- Narrow Linux browser layouts retain the product demo, safety boundary, CTAs,
+  identity, and navigation without horizontal overflow.
+- The hero renders inserted wording once, distinguishes the resolved first gap
+  from the next engine-derived gap, and never announces a completed sequence as
+  paused.
+
+---
+
 ## [0.6.9] — 2026-07-31 — say what the corpus actually proves
 
 No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.

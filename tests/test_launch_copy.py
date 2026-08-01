@@ -21,7 +21,8 @@ SOURCE = REPO / "docs" / "launch-copy.json"
 DATA = REPO / "docs" / "validation-corpus.json"
 GENERATOR = REPO / "scripts" / "generate_dist_pack.py"
 GIT_TRACKED_SOURCE = "docs/launch-copy.json"
-EXPECTED_CHECKSUM_FILE_SHA256 = "29bdc527ee30ec4ca25f06a9540b4bc8133ea68f9803d83ae88350002ce22deb"
+EXPECTED_CHECKSUM_FILE_SHA256 = "7a6a016e91b9e37edac913bd3e95e88a63922e22dc2ae6c5f8ad29b1b68f57e8"
+EXPECTED_MANIFEST_SHA256 = "7f43d41451fb96dc4a37c67cd457a0e2caed74b5943a819f41b11e821682eb32"
 REQUIRED_ARTIFACTS = (
     "show-hn-title.txt",
     "show-hn-first-comment.md",
@@ -301,6 +302,10 @@ def test_launch_copy_source_is_locked_and_template_driven():
     assert "{cliffs_delta}" in source["channels"]["show_hn"]["first_comment"]
     assert "{p_value}" in source["channels"]["show_hn"]["first_comment"]
     assert source["channels"]["show_hn"]["first_comment"].count("{dimension_count}") == 1
+    assert (
+        "allowlisted requests disable PostHog GeoIP enrichment and do not create "
+        "PostHog person profiles"
+    ) in source["channels"]["show_hn"]["first_comment"]
     assert "smell scoring" not in source["channels"]["linkedin"]["text"]
     assert "configuration-smell findings" in source["channels"]["linkedin"]["text"]
 
@@ -348,7 +353,7 @@ def test_launch_copy_generated_pack_matches_repository_facts(tmp_path: Path):
     assert str(corpus["analysis"]["p_value"]) in artifacts_text
     _assert_no_unsupported_claims(artifacts_text)
 
-    for stale in ("0.6.2", "0.6.3", "0.6.8"):
+    for stale in ("0.6.2", "0.6.3", "0.6.8", "0.6.9"):
         assert stale not in artifacts_text, f"stale version surfaced: {stale}"
 
     checksums = (out / "checksums.txt").read_text(encoding="utf-8")
@@ -380,6 +385,7 @@ def test_launch_copy_generates_stable_checksums(tmp_path: Path):
     assert checksums_a == checksums_b
     assert hashlib.sha256(checksums_a).hexdigest() == EXPECTED_CHECKSUM_FILE_SHA256
     assert manifest_a == manifest_b
+    assert hashlib.sha256(manifest_a).hexdigest() == EXPECTED_MANIFEST_SHA256
 
     checksums_a_map = _parse_checksums(checksums_a.decode("utf-8"))
     checksums_b_map = _parse_checksums(checksums_b.decode("utf-8"))

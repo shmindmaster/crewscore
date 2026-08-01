@@ -5,7 +5,7 @@
   const CAPTURE_URL = "https://us.i.posthog.com/capture/";
   const SESSION_KEY = "crewscore_web_analytics_id";
   const OPT_OUT_KEY = "crewscore_analytics_opt_out_v1";
-  const SCHEMA_VERSION = "2026-07-31";
+  const SCHEMA_VERSION = "2026-08-01";
   const MAX_STRING_LENGTH = 80;
 
   const RULESET_RE = /^crewscore-hygiene@\d+\.\d+\.\d+$/;
@@ -38,6 +38,10 @@
   ];
   const PATHS = ["chatgpt", "claude", "cursor", "other", "feedback"];
   const TRAFFIC_CLASSES = ["production", "synthetic_qa"];
+  const FIXED_TRANSPORT_PROPERTIES = Object.freeze({
+    $geoip_disable: true,
+    $process_person_profile: false,
+  });
 
     const EVENT_SCHEMAS = {
     cs_site_view: {
@@ -269,6 +273,7 @@
       score_buckets: BUCKETS.slice(),
       optional_properties: EVENT_OPTIONAL_PROPERTIES,
       prompt_text: "never stored in event props",
+      fixed_transport_properties: Object.assign({}, FIXED_TRANSPORT_PROPERTIES),
       event_schemas: events,
     };
   }
@@ -303,10 +308,10 @@
       event,
       properties: {
         distinct_id: anonymousId(),
-        $process_person_profile: false,
         product: "crewscore",
         schema_version: SCHEMA_VERSION,
         ...safe,
+        ...FIXED_TRANSPORT_PROPERTIES,
       },
     });
 
