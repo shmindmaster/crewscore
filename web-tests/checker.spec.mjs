@@ -670,6 +670,7 @@ test("the native product remains materially visible in the first viewport withou
     { width: 1440, height: 900 },
     { width: 768, height: 1024 },
     { width: 390, height: 844 },
+    { width: 320, height: 844 },
   ]) {
     await page.setViewportSize(viewport);
     await gotoApp(page);
@@ -682,7 +683,83 @@ test("the native product remains materially visible in the first viewport withou
       };
     });
     expect(geometry.top, `${viewport.width}px demo starts in first viewport`).toBeLessThan(viewport.height);
-    expect(geometry.visible, `${viewport.width}px shows a meaningful product slice`).toBeGreaterThanOrEqual(200);
+    const minimumVisible = viewport.width === 320 ? 120 : 200;
+    expect(geometry.visible, `${viewport.width}px shows a meaningful product slice`).toBeGreaterThanOrEqual(minimumVisible);
     expect(geometry.overflow, `${viewport.width}px has no horizontal overflow`).toBeLessThanOrEqual(1);
   }
+});
+
+test("mobile subpages retain navigation and normal vertical reading flow", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "chromium", "One browser can verify deterministic responsive geometry.");
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 320, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/privacy.html");
+    const navLinks = page.locator(".site-nav a");
+    await expect(navLinks).toHaveCount(2);
+    await expect(navLinks.nth(0)).toBeVisible();
+    await expect(navLinks.nth(1)).toBeVisible();
+    const geometry = await page.locator("main.hero").evaluate((node) => {
+      const copy = node.querySelector(".hero-copy").getBoundingClientRect();
+      const nextHeading = node.querySelector("h2").getBoundingClientRect();
+      return {
+        display: getComputedStyle(node).display,
+        vertical: nextHeading.top >= copy.bottom,
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      };
+    });
+    expect(geometry.display, `${viewport.width}px subpage is not a product grid`).not.toBe("grid");
+    expect(geometry.vertical, `${viewport.width}px subpage remains in reading order`).toBe(true);
+    expect(geometry.overflow, `${viewport.width}px subpage has no horizontal overflow`).toBeLessThanOrEqual(1);
+  }
+});
+
+test("a missing canonical demo fixture fails closed without disabling the full checker", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "chromium", "One browser can verify the deterministic missing-asset path.");
+  await page.addInitScript(() => {
+    const captured = [];
+    Object.defineProperty(window, "__missingFixtureCapturedEvents", { value: captured });
+    let analytics;
+    Object.defineProperty(window, "CrewScoreAnalytics", {
+      configurable: true,
+      get: () => analytics,
+      set: (value) => {
+        if (!value || typeof value.capture !== "function") {
+          analytics = value;
+          return;
+        }
+        analytics = new Proxy(value, {
+          get(target, property, receiver) {
+            if (property !== "capture") return Reflect.get(target, property, receiver);
+            return (event, properties) => {
+              captured.push({ event, properties });
+              return Reflect.apply(target.capture, target, [event, properties]);
+            };
+          },
+        });
+      },
+    });
+  });
+  await page.route("**/assets/demo-fixture.js", (route) => route.fulfill({ status: 200, contentType: "text/javascript", body: "" }));
+  const requests = [];
+  page.on("request", (request) => requests.push({ method: request.method(), url: request.url() }));
+
+  await gotoApp(page);
+  const stage = page.locator("#hero-demo");
+  await expect(stage).toHaveAttribute("data-unavailable", "true");
+  await expect(page.locator("#hero-demo-result-label")).toHaveText("Demo unavailable");
+  await expect(page.locator("#hero-demo-status")).toContainText("full checker remains available");
+  await expect(page.locator("#hero-demo-play")).toBeDisabled();
+  await expect(page.locator("#hero-demo-pause")).toBeDisabled();
+  await expect(page.locator("#hero-demo-replay")).toBeDisabled();
+  await expect(page.locator("#try-demo")).toBeDisabled();
+  await expect(page.locator("#placeholder-demo")).toBeDisabled();
+  expect(await page.evaluate(() => window.__missingFixtureCapturedEvents)).toEqual([]);
+  expect(requests.filter((request) => request.method !== "GET" || new URL(request.url).hostname !== "127.0.0.1")).toEqual([]);
+
+  await page.locator("#agent-prompt").fill("Require human approval before sensitive actions. Stop when evidence is missing.");
+  await page.locator("#check-instructions").click();
+  await expect(page.getByRole("heading", { name: /written guardrails found/ })).toBeVisible();
 });

@@ -48,6 +48,26 @@ def test_native_hero_uses_the_generated_engine_instead_of_a_second_score_contrac
     assert "heroMotionQuery.addEventListener(\"change\", handleHeroMotionChange)" in script
 
 
+def test_native_hero_layout_and_mobile_navigation_are_homepage_scoped():
+    html = _html()
+    css = (ROOT / "assets" / "site.css").read_text(encoding="utf-8")
+    assert '<body class="home-page" data-mode="simple">' in html
+    assert '<section class="hero" id="product"' in html
+    assert ".home-page .hero" in css
+    assert ".home-page .site-nav a:nth-child(-n+6)" in css
+    assert ".home-page .site-nav .nav-optional" in css
+    assert ".hero {\n  max-width: 780px;" in css
+
+
+def test_native_hero_requires_the_canonical_fixture_and_fails_closed():
+    script = (ROOT / "assets" / "site.js").read_text(encoding="utf-8")
+    assert 'const DEMO = window.CrewScoreDemoFixture?.prompt || "";' in script
+    assert "You are a helpful support assistant. Answer customer questions clearly and politely." not in script
+    assert "renderHeroUnavailable" in script
+    assert 'stage.dataset.unavailable = "true"' in script
+    assert "The full checker remains available below." in script
+
+
 def test_primary_input_supports_paste_upload_and_public_github():
     html = _html()
     assert 'id="agent-prompt"' in html

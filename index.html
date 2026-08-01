@@ -26,14 +26,14 @@
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"CrewScore","applicationCategory":"BusinessApplication","operatingSystem":"Web, Python 3.11+","description":"A browser-local checklist for written AI-assistant guardrail controls, with an optional offline CLI for recurring checks.","url":"https://crewscore.ai/","codeRepository":"https://github.com/shmindmaster/crewscore","license":"https://spdx.org/licenses/MIT.html","isAccessibleForFree":true,"creator":{"@type":"Person","name":"Sarosh Hussain"},"maintainer":{"@type":"Person","name":"Sarosh Hussain"},"publisher":{"@type":"Organization","name":"Pendoah"}}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Does CrewScore upload my prompt?","acceptedAnswer":{"@type":"Answer","text":"No. Scoring happens locally in your browser and prompt text never leaves the page."}},{"@type":"Question","name":"Does a high result prove an AI agent is safe?","acceptedAnswer":{"@type":"Answer","text":"No. CrewScore checks whether published guardrails are written down, not whether an agent follows them at runtime."}},{"@type":"Question","name":"Can I use CrewScore in CI?","acceptedAnswer":{"@type":"Answer","text":"Yes. The open-source CLI and GitHub Action can report controls, protect a prompt-free baseline, require specific controls, and emit SARIF."}}]}</script>
 </head>
-<body data-mode="simple">
+<body class="home-page" data-mode="simple">
   <div class="site-shell">
     <header class="site-header">
       <a class="brand" href="./" aria-label="CrewScore home"><img class="brand-mark" src="assets/brand/logo-mark.svg" width="34" height="34" alt=""><span>CrewScore</span></a>
       <nav class="site-nav" aria-label="Primary navigation">
         <a href="#product">Product</a><a href="#examples">Examples</a><a href="#rules">Rules</a><a href="#ci">CI</a><a href="#methodology">Methodology</a>
         <a id="feedback-link" href="https://github.com/shmindmaster/crewscore/discussions">Give feedback</a>
-        <a href="https://github.com/shmindmaster/crewscore">GitHub</a>
+        <a class="nav-optional" href="https://github.com/shmindmaster/crewscore">GitHub</a>
         <button class="mode-toggle" id="mode-toggle" type="button" aria-pressed="false">Developer mode</button>
       </nav>
     </header>
