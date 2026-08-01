@@ -40,6 +40,8 @@
 
 ## Commit chain
 - `f0dfea4` — Fix launch source tracking and checksums contract
+- `e08ad10` — Update this report with the verified fix chain and final test evidence
+- This report does not attempt to embed the hash of a commit that contains itself; use `git log -- .superpowers/sdd/launch-readiness/task-1-report.md` for later bookkeeping commits.
 
 ## Actual verification
 - Focused launch tests:
