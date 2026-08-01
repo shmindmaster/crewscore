@@ -196,12 +196,31 @@ def test_demo_svg_gap_label_is_wrapped_into_text_runs(measured):
         assert len(tspans) >= 2
 
 
+def test_playwright_module_probe_rejects_an_executable_without_playwright():
+    """A runnable executable alone must not enable the browser-layout check."""
+    assert _playwright_module_available(sys.executable) is False
+
+
+def _playwright_module_available(node_path: str) -> bool:
+    """Whether this Node executable can load the Playwright module here."""
+    proc = subprocess.run(
+        [node_path, "-e", 'require.resolve("playwright")'],
+        cwd=str(REPO),
+        capture_output=True,
+        text=True,
+    )
+    return proc.returncode == 0
+
+
 def _rendered_svg_text_nodes(svg_path: Path) -> dict[str, Any]:
-    if not shutil.which("node"):
+    node_path = shutil.which("node")
+    if not node_path:
         pytest.skip("node not installed; skipping browser layout assertions")
+    if not _playwright_module_available(node_path):
+        pytest.skip("Playwright module unavailable; skipping browser layout assertions")
     proc = subprocess.run(
         [
-            "node",
+            node_path,
             "-e",
             """
 const fs = require("fs");

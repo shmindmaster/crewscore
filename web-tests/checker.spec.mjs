@@ -292,6 +292,20 @@ test("sanitized result links and SVG cards exclude the original instructions", a
   expect(badgeSvg).not.toContain("SENTINEL_PROMPT_CONTENT_NEVER_SHARE");
 });
 
+test("non-compact SVG cards show the missing-control count while badges retain their compact subtitle", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "chromium", "One deterministic SVG card assertion is sufficient.");
+  await gotoApp(page);
+  await page.getByRole("button", { name: "Try a 10-second demo" }).click();
+
+  const [socialCard, badgeCard] = await page.evaluate(() => [
+    window.__crewscoreUX.svgCard("linkedin"),
+    window.__crewscoreUX.svgCard("badge"),
+  ]);
+  expect(socialCard).toContain(">15 may be missing ·");
+  expect(badgeCard).toContain(">Written-control coverage, not runtime proof<");
+  expect(badgeCard).not.toContain("may be missing");
+});
+
 test("successful copy actions emit bounded share-method telemetry", async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "clipboard", {
