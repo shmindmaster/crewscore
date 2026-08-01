@@ -21,7 +21,8 @@ SOURCE = REPO / "docs" / "launch-copy.json"
 DATA = REPO / "docs" / "validation-corpus.json"
 GENERATOR = REPO / "scripts" / "generate_dist_pack.py"
 GIT_TRACKED_SOURCE = "docs/launch-copy.json"
-EXPECTED_CHECKSUM_FILE_SHA256 = "29bdc527ee30ec4ca25f06a9540b4bc8133ea68f9803d83ae88350002ce22deb"
+EXPECTED_CHECKSUM_FILE_SHA256 = "41879db003684958617d053604f10502d646bc2a43b0938cf2f7acb2332d5363"
+EXPECTED_MANIFEST_SHA256 = "19e27941723dc94eb8411022801de6d0af2c442fdd61d267614d6e06b929c03c"
 REQUIRED_ARTIFACTS = (
     "show-hn-title.txt",
     "show-hn-first-comment.md",
@@ -348,7 +349,7 @@ def test_launch_copy_generated_pack_matches_repository_facts(tmp_path: Path):
     assert str(corpus["analysis"]["p_value"]) in artifacts_text
     _assert_no_unsupported_claims(artifacts_text)
 
-    for stale in ("0.6.2", "0.6.3", "0.6.8"):
+    for stale in ("0.6.2", "0.6.3", "0.6.8", "0.6.9"):
         assert stale not in artifacts_text, f"stale version surfaced: {stale}"
 
     checksums = (out / "checksums.txt").read_text(encoding="utf-8")
@@ -380,6 +381,7 @@ def test_launch_copy_generates_stable_checksums(tmp_path: Path):
     assert checksums_a == checksums_b
     assert hashlib.sha256(checksums_a).hexdigest() == EXPECTED_CHECKSUM_FILE_SHA256
     assert manifest_a == manifest_b
+    assert hashlib.sha256(manifest_a).hexdigest() == EXPECTED_MANIFEST_SHA256
 
     checksums_a_map = _parse_checksums(checksums_a.decode("utf-8"))
     checksums_b_map = _parse_checksums(checksums_b.decode("utf-8"))

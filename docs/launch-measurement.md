@@ -79,6 +79,9 @@ capture from a non-production hostname.
 - Numeric properties are bounded.
 - `traffic_class` is a bounded, optional classification for production versus
   explicitly flagged human QA traffic; it is not derived from prompt content.
+- Every PostHog request adds fixed transport properties `$geoip_disable: true`
+  and `$process_person_profile: false`. Callers cannot override either value;
+  neither property admits user or prompt content.
 - Opt-out (`crewscore_analytics_opt_out_v1`) and offline states never block scoring.
 - Unknown, missing, or extra properties are rejected before any network body is built.
 

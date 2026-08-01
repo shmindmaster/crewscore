@@ -6,9 +6,14 @@ import re
 import time
 from typing import Any
 
-# Exact public 0.6.9 contract. Browser capture has a separately versioned schema.
+# Exact public 0.6.10 contract, backward-compatible with 0.6.9. Browser capture
+# has a separately versioned schema.
 SCHEMA_VERSION = "2026-07-30"
-CAPTURE_SCHEMA_VERSION = "2026-07-31"
+CAPTURE_SCHEMA_VERSION = "2026-08-01"
+CAPTURE_FIXED_TRANSPORT_PROPERTIES = {
+    "$geoip_disable": True,
+    "$process_person_profile": False,
+}
 
 # Maximum allowed control counts per control map for this branch.
 CONTROL_MAX = 23
@@ -325,7 +330,7 @@ def bucket_score(n: int | float) -> str:
 def validate_props(props: dict[str, Any] | None) -> bool:
     """Validate legacy payload content.
 
-    This keeps the 0.6.9 contract: one positional payload argument and
+    This keeps the 0.6.10 contract (and 0.6.9 compatibility): one positional payload argument and
     forbid-only checks for free-text keys.
     """
     if not props:
@@ -337,7 +342,7 @@ def validate_props(props: dict[str, Any] | None) -> bool:
 
 
 def validate_event(event: str, props: dict[str, Any] | None = None) -> bool:
-    """Validate the published 0.6.9 event contract.
+    """Validate the published 0.6.10 event contract.
 
     The public API intentionally remains allowlist-plus-content-safety only.
     Browser-bound callers use ``validate_capture_event`` for the strict schema.
@@ -372,7 +377,7 @@ def append_event(
     *,
     max_events: int = 200,
 ) -> dict[str, Any]:
-    """Append a privacy-checked event; preserve the published 0.6.9 behavior."""
+    """Append a privacy-checked event; preserve the published 0.6.10 behavior."""
     props = dict(props or {})
     validate_event(event, props)
     out: dict[str, Any] = dict(store or {})
@@ -401,7 +406,7 @@ def parse_analytics_allowlists(js_source: str) -> dict[str, frozenset[str]]:
 
 
 def schema_payload() -> dict[str, Any]:
-    """Return the exact machine-readable contract published in 0.6.9."""
+    """Return the exact machine-readable contract published in 0.6.10."""
     return {
         "schema_version": SCHEMA_VERSION,
         "allowed_events": sorted(ALLOWED_EVENTS),
@@ -422,6 +427,7 @@ def capture_schema_payload() -> dict[str, Any]:
         "forbidden_prop_keys": sorted(CAPTURE_FORBIDDEN_PROP_KEYS),
         "score_buckets": list(BUCKETS),
         "prompt_text": "never stored in event props",
+        "fixed_transport_properties": dict(CAPTURE_FIXED_TRANSPORT_PROPERTIES),
         "event_schemas": {
             event: {
                 "required": list(EVENT_REQUIRED_PROPERTIES[event]),

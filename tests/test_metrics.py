@@ -14,6 +14,7 @@ from crewscore.metrics import (
     ALLOWED_EVENTS,
     ALLOWED_PROPERTIES,
     CAPTURE_FORBIDDEN_PROP_KEYS,
+    CAPTURE_FIXED_TRANSPORT_PROPERTIES,
     CAPTURE_SCHEMA_VERSION,
     FORBIDDEN_PROP_KEYS,
     SCHEMA_VERSION,
@@ -183,7 +184,7 @@ def test_validate_props_rejects_forbidden_prompt_keys():
             validate_props({key: "x", "source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0", "overall_bucket": 10, "controls_found": 0})
 
 
-def test_capture_contract_rejects_expanded_content_keys_without_breaking_069_public_api():
+def test_capture_contract_rejects_expanded_content_keys_without_breaking_0610_public_api():
     for key in ("snippet", "input", "source_text"):
         assert validate_props({key: "legacy-safe"}) is True
         assert validate_event("cs_score", {key: "legacy-safe"}) is True
@@ -248,7 +249,7 @@ def test_capture_contract_exposes_optional_traffic_class_for_every_event():
         }
 
 
-def test_validate_event_preserves_published_069_sparse_safe_contract():
+def test_validate_event_preserves_published_0610_sparse_safe_contract():
     assert validate_event("cs_score", {"source": "paste"}) is True
     assert validate_event("cs_score", {"overall_bucket": True, "local_note": "kept locally"}) is True
     with pytest.raises(ValueError, match="must not include prompt text"):
@@ -266,7 +267,7 @@ def test_validate_props_accepts_raw_legacy_payload():
     assert validate_props(payload) is True
 
 
-def test_validate_props_preserves_published_069_keyword_parameter():
+def test_validate_props_preserves_published_0610_keyword_parameter():
     assert validate_props(props={"source": "paste"}) is True
 
 
@@ -316,6 +317,8 @@ def test_analytics_js_schema_payload_matches_python_contract():
     assert sorted(payload_js["allowed_properties"]) == sorted(payload_python["allowed_properties"])
     assert set(payload_js["forbidden_prop_keys"]) == set(payload_python["forbidden_prop_keys"])
     assert payload_js["prompt_text"] == payload_python["prompt_text"]
+    assert payload_js["fixed_transport_properties"] == payload_python["fixed_transport_properties"]
+    assert payload_python["fixed_transport_properties"] == CAPTURE_FIXED_TRANSPORT_PROPERTIES
     assert payload_js["score_buckets"] == payload_python["score_buckets"]
     assert payload_js["optional_properties"] == payload_python["optional_properties"]
 
@@ -360,7 +363,7 @@ def test_legacy_schema_payload_keeps_published_properties_while_capture_adds_tra
     }
     assert "traffic_class" not in legacy["allowed_properties"]
 
-    assert capture["schema_version"] == "2026-07-31"
+    assert capture["schema_version"] == "2026-08-01"
     assert "traffic_class" in capture["allowed_properties"]
 
 
