@@ -6,12 +6,15 @@ Status: DONE
 
 - Product implementation: `b79b0b6556547a8ed845efbe805ef47653b9407a`
 - Current-review remediation: `ca19f79c334ad56f8ea41d4eef45529762f2c8c4`
+- Linux narrow-layout remediation: `3d821ac6361bdce31638d90b8071fcdf2709e11a`
 
 ## Outcome
 
 Added a responsive native product stage beside the existing CrewScore hero copy and CTAs. The finite demonstration calls the existing browser-local `CrewScoreEngine` against the existing synthetic fixture, derives the 8/23 result and first named gap from that result, reads the selected human-approval wording from the generated engine contract, and recomputes the 9/23 result. Autoplay does not use the full checker, visitor prompt text, analytics, storage, URLs, cards, or network services.
 
 The current-review remediation confines the two-column hero and compact mobile navigation to the homepage, restores ordinary vertical flow and complete navigation on long-form pages, prevents horizontal clipping at 320 pixels, and treats the generated canonical fixture as required. If that asset is missing, the hero displays a stable unavailable state and disables its demo controls without emitting analytics or network traffic; the full checker remains functional.
+
+Exact-head PR run `30705689764`, job `91384271094`, exposed a 320-pixel Linux font-metric edge: the document client width was 320 while a homepage descendant expanded the scroll width to 332. The trace proves that the served CSS SHA-1 was `616182696bb8807acd27d0fdc81e328d5f8abe1e`, exactly matching the reviewed source, but the old test retained only aggregate page width and therefore cannot identify the historical leaf element retroactively. The remediation removes the two intrinsic-width pressure points instead of clipping overflow: single-column grids now use a zero minimum track and zero-minimum children, while the homepage header intentionally stacks below 340 pixels. The strict assertion remains and now records every out-of-viewport offender with its selector and bounds if the condition recurs.
 
 ## Changed paths
 
@@ -32,6 +35,8 @@ The product commit changes exactly five paths:
   - After adding the independent-review regression: 109 passed, 15 expected skips.
   - After the accessibility review fixes: 116 passed, 15 expected skips, 1 unrelated WebKit details-toggle retry.
   - Current head: 122 passed, 21 expected project skips, 1 unrelated Firefox interaction retry; the isolated retry passed 1/1.
+  - Linux narrow-layout head, local: 121 passed, 21 expected project skips, 2 unrelated copy-telemetry retries; both passed on retry.
+  - Linux narrow-layout head, Playwright 1.62.0 Linux container: 123 passed, 21 expected project skips, zero retries or failures.
   - Projects: Chromium, Firefox, WebKit, and mobile Chromium.
 - `npx playwright test web-tests/checker.spec.mjs --grep "initial autoplay emits" --reporter=line`
   - 4 passed, one in each browser project.
@@ -46,6 +51,11 @@ The product commit changes exactly five paths:
   - Proportionate post-review hero gate: 33 passed, 3 expected project skips.
 - `npx playwright test web-tests/checker.spec.mjs --project=chromium --grep "native product remains|mobile subpages retain|missing canonical demo fixture" --reporter=line`
   - Current-review remediation gate: 3 passed. Covers 320/390 homepage overflow and visibility, 320/390 privacy-page navigation and vertical flow, and a missing generated fixture with an unaffected full checker.
+- `npx playwright test web-tests/checker.spec.mjs --project=chromium --grep "native product remains|mobile subpages retain" --retries=0 --reporter=line`
+  - Linux narrow-layout focused gate: 2 passed on Windows and 2 passed in the pinned Linux container. At 320 pixels it additionally requires a stacked header whose CrewScore brand and Developer-mode control are contained by the site header.
+- `docker run --rm --ipc=host ... mcr.microsoft.com/playwright:v1.62.0-noble ... CI=1 npm run test:web -- --reporter=line`
+  - Pinned image digest: `sha256:baed2032d533817f3dbe6425de795788430ba345e819a1201337009ba17c9d07`.
+  - Full Linux four-project result: 123 passed, 21 expected project skips, zero retries or failures.
 - `npx playwright test web-tests/checker.spec.mjs:64 --project=firefox --reporter=line`
   - Isolated rerun of the unrelated full-suite interaction retry: 1 passed.
 - `npx playwright test web-tests/checker.spec.mjs --project=webkit --grep "developer mode exposes technical detail" --retries=0 --reporter=line`
@@ -68,8 +78,11 @@ The pinned Playwright CLI was run against the repository static server.
 - Mobile CI fix, 390x844: `C:\Users\SaroshHussain\.codex\visualizations\2026\08\01\019fbd09-3372-79a0-ae94-51d3a75ab3bd\crewscore-hero-mobile-ci-fix.png`
 - Narrow homepage review, 320x844: `C:\Users\SaroshHussain\.codex\visualizations\2026\08\01\019fbd09-3372-79a0-ae94-51d3a75ab3bd\crewscore-home-320-review.png`
 - Narrow privacy-page review, 320x844: `C:\Users\SaroshHussain\.codex\visualizations\2026\08\01\019fbd09-3372-79a0-ae94-51d3a75ab3bd\crewscore-privacy-320-review.png`
+- Narrow Linux-overflow remediation review, 320x844: `C:\Users\SaroshHussain\.codex\visualizations\2026\08\01\019fbd09-3372-79a0-ae94-51d3a75ab3bd\crewscore-home-320-linux-overflow-fix.png`
 
 The product stage was visible in the first viewport at all four homepage sizes. The 320-pixel capture preserves CrewScore identity, Developer mode, the headline, both CTAs, trust chips, and a substantial product slice without horizontal overflow. The 320-pixel privacy capture preserves both navigation links and a normal vertical reading order. Replay and Pause were exercised interactively at the engine-derived 8/23 first-gap state. Browser console inspection returned zero errors and zero warnings. Request inspection during autoplay returned no non-static requests; only the page's static assets were observed.
+
+The post-CI 320-pixel capture confirms the intentional stacked header preserves CrewScore identity and the Developer-mode control while both hero CTAs and a larger product slice remain above the fold.
 
 ## Scope boundaries
 
