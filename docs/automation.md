@@ -68,7 +68,7 @@ for `shmindmaster/crewscore` / `release.yml` / environment `pypi`.
 
 ```bash
 python scripts/generate_dist_pack.py
-# → _production/launch/dist-pack/{show-hn-*,x-post.txt,linkedin-post.md,manifest.json,checksums.txt}
+# → _production/launch/dist-pack/{show-hn-title.txt,show-hn-first-comment.md,x-post.txt,linkedin-post.md,community-post.md,answer-bank.md,manifest.json,checksums.txt}
 # (gitignored — channel drafts are working material, never published docs)
 ```
 
