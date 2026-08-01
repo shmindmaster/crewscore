@@ -18,6 +18,7 @@ from crewscore.metrics import (
     bucket_score,
     parse_analytics_allowlists,
     schema_payload,
+    validate_capture_event,
     validate_event,
     validate_props,
 )
@@ -116,7 +117,7 @@ def test_append_event_stores_unmodified_properties():
 )
 def test_validate_event_rejects_bool_for_integer_fields(event, props):
     with pytest.raises(ValueError, match="integer"):
-        validate_event(event, props)
+        validate_capture_event(event, props)
 
 
 def test_append_event_preserves_extra_properties_and_does_not_strip():
@@ -148,7 +149,7 @@ def test_append_event_rejects_forbidden_property_without_writing():
 
 def test_validate_event_rejects_strict_schema_extras():
     with pytest.raises(ValueError, match="unexpected property"):
-        validate_event("cs_score", {"source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0", "overall_bucket": 10, "controls_found": 8, "local_note": "x"})
+        validate_capture_event("cs_score", {"source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0", "overall_bucket": 10, "controls_found": 8, "local_note": "x"})
 
 
 def test_append_event_accepts_strict_schema_extras_as_safe_local_props():
@@ -180,11 +181,11 @@ def test_validate_props_rejects_forbidden_prompt_keys():
 
 def test_validate_props_rejects_bad_enum_and_free_text():
     with pytest.raises(ValueError):
-        validate_event("cs_score", {"source": "https://evil.site/path", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0", "overall_bucket": 10, "controls_found": 8})
+        validate_capture_event("cs_score", {"source": "https://evil.site/path", "profile": "system_prompt", "ruleset": "crewscore-hygiene@0.6.0", "overall_bucket": 10, "controls_found": 8})
     with pytest.raises(ValueError):
-        validate_event("cs_score", {"source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene", "overall_bucket": 10, "controls_found": 8})
+        validate_capture_event("cs_score", {"source": "paste", "profile": "system_prompt", "ruleset": "crewscore-hygiene", "overall_bucket": 10, "controls_found": 8})
     with pytest.raises(ValueError):
-        validate_event("cs_share", {"kind": "dropbox"})
+        validate_capture_event("cs_share", {"kind": "dropbox"})
 
 
 def test_validate_props_allows_safe_props():
@@ -199,7 +200,14 @@ def test_validate_event_rejects_unknown_event():
 
 def test_validate_event_rejects_missing_required():
     with pytest.raises(ValueError, match="missing required"):
-        validate_event("cs_check_completed", {"source": "paste", "profile": "system_prompt"})
+        validate_capture_event("cs_check_completed", {"source": "paste", "profile": "system_prompt"})
+
+
+def test_validate_event_preserves_published_069_sparse_safe_contract():
+    assert validate_event("cs_score", {"source": "paste"}) is True
+    assert validate_event("cs_score", {"overall_bucket": True, "local_note": "kept locally"}) is True
+    with pytest.raises(ValueError, match="forbidden prompt-content"):
+        validate_event("cs_score", {"prompt": "must never be stored"})
 
 
 def test_validate_props_accepts_raw_legacy_payload():
@@ -259,7 +267,7 @@ def test_analytics_js_schema_payload_matches_python_contract():
     assert sorted(payload_js["allowed_properties"]) == sorted(payload_python["allowed_properties"])
     assert set(payload_js["forbidden_prop_keys"]) == set(payload_python["forbidden_prop_keys"])
     assert payload_js["prompt_text"] == payload_python["prompt_text"]
-    assert payload_js["score_buckets"] == payload_python["score_buckets"]
+    assert payload_js["score_buckets"] == payload_python["capture_score_buckets"]
     assert payload_js["optional_properties"] == payload_python["optional_properties"]
 
     py_events = payload_python["event_schemas"]
@@ -287,5 +295,7 @@ def test_schema_payload_is_prompt_free():
     assert payload["schema_version"] == SCHEMA_VERSION
     assert "cs_score" in payload["allowed_events"]
     assert "prompt" in payload["forbidden_prop_keys"]
+    assert payload["score_buckets"] == ["0", "1-49", "50-69", "70-89", "90-100"]
+    assert payload["network"] == "web client only; Python core never sends metrics"
     blob = str(payload).lower()
     assert "system prompt text" not in blob

@@ -313,7 +313,19 @@ def validate_props(raw_props: dict[str, Any] | None) -> bool:
 
 
 def validate_event(event: str, props: dict[str, Any] | None = None) -> bool:
-    """Validate event name against allowlist and strict property schema."""
+    """Validate the published 0.6.9 event contract.
+
+    The public API intentionally remains allowlist-plus-content-safety only.
+    Browser-bound callers use ``validate_capture_event`` for the strict schema.
+    """
+    if event not in ALLOWED_EVENTS:
+        _raise(event, "event not allowlisted")
+    validate_props(props)
+    return True
+
+
+def validate_capture_event(event: str, props: dict[str, Any] | None = None) -> bool:
+    """Validate a network-bound event against the strict capture schema."""
     if event not in ALLOWED_EVENTS:
         _raise(event, "event not allowlisted")
     if props is None:
@@ -375,7 +387,9 @@ def schema_payload() -> dict[str, Any]:
         "allowed_events": sorted(ALLOWED_EVENTS),
         "allowed_properties": sorted(ALLOWED_PROPERTIES),
         "forbidden_prop_keys": sorted(FORBIDDEN_PROP_KEYS),
-        "score_buckets": list(BUCKETS),
+        "score_buckets": list(SCORE_BUCKETS),
+        "capture_score_buckets": list(BUCKETS),
+        "network": "web client only; Python core never sends metrics",
         "prompt_text": "never stored in event props",
         "event_schemas": {
             event: {

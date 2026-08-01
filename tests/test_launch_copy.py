@@ -21,6 +21,7 @@ SOURCE = REPO / "docs" / "launch-copy.json"
 DATA = REPO / "docs" / "validation-corpus.json"
 GENERATOR = REPO / "scripts" / "generate_dist_pack.py"
 GIT_TRACKED_SOURCE = "docs/launch-copy.json"
+EXPECTED_CHECKSUM_FILE_SHA256 = "29bdc527ee30ec4ca25f06a9540b4bc8133ea68f9803d83ae88350002ce22deb"
 REQUIRED_ARTIFACTS = (
     "show-hn-title.txt",
     "show-hn-first-comment.md",
@@ -36,6 +37,8 @@ REQUIRED_ARTIFACTS = (
 def _launch_copy_source_bytes() -> bytes:
     text = SOURCE.read_text(encoding="utf-8")
     return text.replace("\r\n", "\n").encode("utf-8")
+
+
 EXPECTED_CHECKSUM_NAMES = frozenset(
     {
         "show-hn-title.txt",
@@ -355,6 +358,7 @@ def test_launch_copy_generates_stable_checksums(tmp_path: Path):
     checksums_a = (a / "checksums.txt").read_bytes()
     checksums_b = (b / "checksums.txt").read_bytes()
     assert checksums_a == checksums_b
+    assert hashlib.sha256(checksums_a).hexdigest() == EXPECTED_CHECKSUM_FILE_SHA256
     assert manifest_a == manifest_b
 
     checksums_a_map = _parse_checksums(checksums_a.decode("utf-8"))
@@ -364,9 +368,27 @@ def test_launch_copy_generates_stable_checksums(tmp_path: Path):
     for name in EXPECTED_CHECKSUM_NAMES:
         assert (a / name).read_bytes() == (b / name).read_bytes()
     for name in set(REQUIRED_ARTIFACTS):
+        assert b"\r\n" not in (a / name).read_bytes()
         if name == "checksums.txt":
             continue
         assert _sha256_file(a / name) == checksums_a_map[name]
+
+
+def test_launch_copy_preserves_unrelated_symlink_without_dereferencing(tmp_path: Path):
+    out = tmp_path / "dist-pack"
+    out.mkdir()
+    external = tmp_path / "outside.txt"
+    external.write_text("outside-content", encoding="utf-8")
+    link = out / "unrelated-link.txt"
+    try:
+        link.symlink_to(external)
+    except OSError as exc:
+        pytest.skip(f"symlink creation unavailable: {exc}")
+
+    _generate_pack(out)
+
+    assert link.is_symlink()
+    assert link.resolve() == external.resolve()
 
 
 @pytest.mark.parametrize("fail_point", [1, 2, 3])

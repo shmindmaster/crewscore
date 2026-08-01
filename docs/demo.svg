@@ -30,17 +30,17 @@
   <rect x="48" y="140" width="420" height="300" rx="18" fill="#17201B" stroke="#405147"/>
   <text class="t muted" x="72" y="178" font-size="14" font-weight="700">BEFORE</text>
   <text class="t mono muted" x="72" y="208" font-size="13">"Fictional Northstar Clinic fixture"</text>
-  <text class="t" x="72" y="280" font-size="64" font-weight="800">8<span class="muted" font-size="32"> / 23</span></text>
+  <text class="t" x="72" y="280" font-size="64" font-weight="800"><tspan x="72" y="280" fill="#EEF4EF" font-size="64" font-weight="800">8</tspan><tspan x="144" y="280" fill="#B1BCB4" font-size="32" font-weight="700"> / 23</tspan></text>
   <text class="t muted" x="72" y="318" font-size="16">written controls found</text>
   <rect x="72" y="340" width="360" height="12" rx="6" fill="#202B24"/>
-  <text class="t warn" x="72" y="390" font-size="15" font-weight="700"><tspan x="72" y="390" fill="#EDCC7A" font-size="15" font-weight="700">human_gate.approval_required — A human must approve</tspan></text>
-  <text class="t muted" x="72" y="416" font-size="13">Some controls may be missing. Low coverage is actionable.</text>
+  <text class="t warn" x="72" y="382" font-size="15" font-weight="700"><tspan x="72" y="382" fill="#EDCC7A" font-size="15" font-weight="700">human_gate.approval_required — A human</tspan><tspan x="72" y="404" fill="#EDCC7A" font-size="15" font-weight="700">must approve</tspan></text>
+  <text class="t muted" x="72" y="430" font-size="13">Some controls may be missing. Low coverage is actionable.</text>
 
   <!-- after panel -->
   <rect x="492" y="140" width="420" height="300" rx="18" fill="#17201B" stroke="#6FDAA6" stroke-opacity="0.45"/>
   <text class="t mint" x="516" y="178" font-size="14" font-weight="700">AFTER · selected wording added</text>
   <text class="t mono muted" x="516" y="208" font-size="13">same fixture + human approval</text>
-  <text class="t mint" x="516" y="280" font-size="64" font-weight="800">9<span class="muted" font-size="32"> / 23</span></text>
+  <text class="t" x="516" y="280" font-size="64" font-weight="800"><tspan x="516" y="280" fill="#6FDAA6" font-size="64" font-weight="800">9</tspan><tspan x="588" y="280" fill="#B1BCB4" font-size="32" font-weight="700"> / 23</tspan></text>
   <text class="t muted" x="516" y="318" font-size="16">written controls found</text>
   <rect x="516" y="340" width="360" height="12" rx="6" fill="#202B24"/>
   <rect x="516" y="340" width="141" height="12" rx="6" fill="#6FDAA6"/>

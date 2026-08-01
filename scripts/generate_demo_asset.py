@@ -89,6 +89,16 @@ def _svg_tspans(
     )
 
 
+def _svg_count_text(value: int, total: int, x: int, y: int, size: int, color: str) -> str:
+    """Build a valid text block for count lines with explicit tspans."""
+    return (
+        f"<text class=\"t\" x=\"{x}\" y=\"{y}\" font-size=\"{size}\" font-weight=\"800\">"
+        f"<tspan x=\"{x}\" y=\"{y}\" fill=\"{color}\" font-size=\"{size}\" font-weight=\"800\">{value}</tspan>"
+        f"<tspan x=\"{x + 72}\" y=\"{y}\" fill=\"#B1BCB4\" font-size=\"32\" font-weight=\"700\"> / {total}</tspan>"
+        "</text>"
+    )
+
+
 def _missing_text(remaining: int) -> str:
     return "Some controls may be missing. Low coverage is actionable."
 
@@ -97,7 +107,7 @@ def _render_svg(before: int, after: int, total: int, gap: str) -> str:
     before_track = 360
     after_fill = round(before_track * after / max(1, total))
     before_bar = before_track
-    wrapped_gap = _svg_tspans(gap, 72, 390, 15, "#EDCC7A", 58)
+    wrapped_gap = _svg_tspans(gap, 72, 382, 15, "#EDCC7A", 40, line_height=22)
     return f"""<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540" role="img" aria-labelledby="title desc">
   <title id="title">CrewScore — written control coverage</title>
   <desc id="desc">The fictional Northstar Clinic demo fixture covers {before} of {total} published controls. After adding the selected human-approval wording, coverage rises to {after} of {total}. Coverage is not runtime proof.</desc>
@@ -130,17 +140,17 @@ def _render_svg(before: int, after: int, total: int, gap: str) -> str:
   <rect x="48" y="140" width="420" height="300" rx="18" fill="#17201B" stroke="#405147"/>
   <text class="t muted" x="72" y="178" font-size="14" font-weight="700">BEFORE</text>
   <text class="t mono muted" x="72" y="208" font-size="13">"{BEFORE_TEXT}"</text>
-  <text class="t" x="72" y="280" font-size="64" font-weight="800">{before}<span class="muted" font-size="32"> / {total}</span></text>
+  {_svg_count_text(before, total, 72, 280, 64, "#EEF4EF")}
   <text class="t muted" x="72" y="318" font-size="16">written controls found</text>
   <rect x="72" y="340" width="{before_track}" height="12" rx="6" fill="#202B24"/>
-  <text class="t warn" x="72" y="390" font-size="15" font-weight="700">{wrapped_gap}</text>
-  <text class="t muted" x="72" y="416" font-size="13">{_missing_text(total - before)}</text>
+  <text class="t warn" x="72" y="382" font-size="15" font-weight="700">{wrapped_gap}</text>
+  <text class="t muted" x="72" y="430" font-size="13">{_missing_text(total - before)}</text>
 
   <!-- after panel -->
   <rect x="492" y="140" width="420" height="300" rx="18" fill="#17201B" stroke="#6FDAA6" stroke-opacity="0.45"/>
   <text class="t mint" x="516" y="178" font-size="14" font-weight="700">AFTER · selected wording added</text>
   <text class="t mono muted" x="516" y="208" font-size="13">{AFTER_TEXT}</text>
-  <text class="t mint" x="516" y="280" font-size="64" font-weight="800">{after}<span class="muted" font-size="32"> / {total}</span></text>
+  {_svg_count_text(after, total, 516, 280, 64, "#6FDAA6")}
   <text class="t muted" x="516" y="318" font-size="16">written controls found</text>
   <rect x="516" y="340" width="{before_bar}" height="12" rx="6" fill="#202B24"/>
   <rect x="516" y="340" width="{after_fill}" height="12" rx="6" fill="#6FDAA6"/>
@@ -170,7 +180,8 @@ def generate(output: Path) -> None:
         raise RuntimeError("fixture first gap could not be resolved")
 
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(_render_svg(before, after, total, gap_text), encoding="utf-8")
+    svg = _render_svg(before, after, total, gap_text).replace("\r\n", "\n")
+    output.write_bytes(svg.encode("utf-8"))
     os.utime(output, None)
 
 

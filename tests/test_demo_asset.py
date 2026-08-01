@@ -9,6 +9,7 @@ adds one control with a deterministic human-approval phrase.
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import re
 import tempfile
@@ -16,8 +17,11 @@ import subprocess
 import sys
 import shutil
 from pathlib import Path
+from typing import Any
 
 import pytest
+
+EXPECTED_DEMO_SHA256 = "9e274ac414f89ed210edc2d5266ddf8a2ff7d712652f01bf8609fce648c8ec8b"
 
 REPO = Path(__file__).resolve().parents[1]
 DEMO_SVG = REPO / "docs" / "demo.svg"
@@ -105,7 +109,7 @@ def measured() -> dict[str, object]:
 
 
 def _svg_panel_number(svg: str, anchor_x: str) -> int:
-    match = re.search(rf'<text[^>]*x="{anchor_x}"[^>]*font-size="64"[^>]*>(\d+)', svg)
+    match = re.search(rf'<tspan[^>]*x="{anchor_x}"[^>]*font-size="64"[^>]*>(\d+)</tspan>', svg)
     assert match, f"no 64px headline number anchored at x={anchor_x}"
     return int(match.group(1))
 
@@ -117,7 +121,7 @@ def _first_gap_block(svg: str) -> str:
         re.DOTALL,
     )
     for candidate in candidates:
-        if 'class="t warn" x="72" y="390"' in candidate:
+        if 'class="t warn" x="72" y="382"' in candidate:
             return candidate
     raise AssertionError("could not locate first-gap block")
 
@@ -154,9 +158,8 @@ def test_demo_svg_names_the_gap_the_scorer_names(measured):
         f"demo.svg missing first-gap concept: {concept!r}"
     )
     if detail:
-        assert detail in svg, (
-            f"demo.svg missing first-gap detail: {detail!r}"
-        )
+        text_only = re.sub(r"<[^>]+>", " ", svg)
+        assert all(word in text_only for word in detail.split()), f"demo.svg missing first-gap detail: {detail!r}"
 
 
 def test_demo_svg_uses_the_current_label():
@@ -186,14 +189,14 @@ def test_demo_svg_gap_label_is_wrapped_into_text_runs(measured):
     tspans = re.findall(r"<tspan[^>]*>(.*?)</tspan>", block)
     if tspans:
         assert tspans[0].strip()
-        assert all(len(line.strip()) <= 58 for line in tspans), "first-gap lines must not overflow wrap budget"
+        assert all(len(line.strip()) <= 40 for line in tspans), "first-gap lines must not overflow wrap budget"
     else:
         assert len(block.strip()) <= 58
-    if len(measured["first_gap"]) > 58:
+    if len(measured["first_gap"]) > 40:
         assert len(tspans) >= 2
 
 
-def _rendered_svg_text_nodes(svg_path: Path) -> list[dict[str, float]]:
+def _rendered_svg_text_nodes(svg_path: Path) -> dict[str, Any]:
     if not shutil.which("node"):
         pytest.skip("node not installed; skipping browser layout assertions")
     proc = subprocess.run(
@@ -208,10 +211,11 @@ const { chromium } = require("playwright");
   const svg = fs.readFileSync(process.argv[1], "utf8");
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
-  await page.setContent(`<html><body style=\"margin:0\">${svg}</body></html>`);
-  const violations = await page.evaluate(() => {
+  const dataUrl = `data:image/svg+xml;base64,${Buffer.from(svg, "utf8").toString("base64")}`;
+  await page.goto(dataUrl);
+  const result = await page.evaluate(() => {
     const svg = document.querySelector("svg");
-    if (!svg) return [];
+    if (!svg) return { violations: [{ node: "missing-svg" }], text: [], nodeCount: 0 };
     const panels = [
       { name: "before", x: 48, y: 140, width: 420, height: 300 },
       { name: "after", x: 492, y: 140, width: 420, height: 300 },
@@ -242,10 +246,14 @@ const { chromium } = require("playwright");
         });
       }
     }
-    return violations;
+    return {
+      violations,
+      text: nodes.map((node) => (node.textContent || "").trim()).filter(Boolean),
+      nodeCount: nodes.length,
+    };
   });
   await browser.close();
-  process.stdout.write(JSON.stringify(violations));
+  process.stdout.write(JSON.stringify(result));
 })().catch((error) => {
   process.stderr.write(String(error));
   process.exit(1);
@@ -262,4 +270,18 @@ const { chromium } = require("playwright");
 
 
 def test_demo_svg_gap_panel_layout_stays_within_panels():
-    assert _rendered_svg_text_nodes(DEMO_SVG) == []
+    rendered = _rendered_svg_text_nodes(DEMO_SVG)
+    assert rendered["violations"] == []
+    assert rendered["nodeCount"] >= 20
+    joined = " ".join(rendered["text"])
+    assert "8 / 23" in joined
+    assert "9 / 23" in joined
+    assert "human_gate.approval_required" in joined
+
+
+def test_demo_svg_uses_canonical_lf_utf8_bytes():
+    payload = DEMO_SVG.read_bytes()
+    assert b"\r\n" not in payload
+    assert b"<span" not in payload
+    payload.decode("utf-8")
+    assert hashlib.sha256(payload).hexdigest() == EXPECTED_DEMO_SHA256

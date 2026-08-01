@@ -147,7 +147,8 @@ def _copy_sibling_output(source: Path, sibling: Path) -> None:
     if source.exists():
         if not source.is_dir():
             raise RuntimeError(f"output path is not a directory: {source}")
-        shutil.copytree(source, sibling)
+        # Preserve unrelated links as links; never dereference content outside the pack.
+        shutil.copytree(source, sibling, symlinks=True)
     else:
         sibling.mkdir(parents=True, exist_ok=True)
 
@@ -255,7 +256,8 @@ def _file_record(path: Path) -> dict[str, Any]:
 def _write_artifacts(out: Path, artifacts: dict[str, str]) -> list[dict[str, Any]]:
     for name in ARTIFACTS:
         text = artifacts[name]
-        (out / name).write_text(text + "\n" if not text.endswith("\n") else text, encoding="utf-8")
+        payload = text + "\n" if not text.endswith("\n") else text
+        (out / name).write_bytes(payload.replace("\r\n", "\n").encode("utf-8"))
 
     return [_file_record(out / name) for name in ARTIFACTS]
 
@@ -281,7 +283,7 @@ def _write_manifest(
         "note": pack["note"],
     }
     manifest_path = out / "manifest.json"
-    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    manifest_path.write_bytes((json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode("utf-8"))
     record = _file_record(manifest_path)
     return record
 
@@ -297,7 +299,7 @@ def _write_checksums(
     )
     lines = [f"{row['sha256']}  {row['name']}" for row in included]
     path = out / "checksums.txt"
-    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    path.write_bytes(("\n".join(lines) + "\n").encode("utf-8"))
     return _file_record(path)
 
 
