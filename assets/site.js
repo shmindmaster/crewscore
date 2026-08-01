@@ -246,11 +246,11 @@
       // The rest quote the rendered result, so they need one to exist.
       const result = state.last && state.last.result;
       if (!result) return;
-      if (hit("#copy-result")) return copyText(shareUrl(result), "Result link copied");
-      if (hit("#copy-share-text")) return copyText(`${shareText()}\n${shareUrl(result)}`, "Share text copied");
-      if (hit("#copy-team")) return copyText(`${shareText()}\n${shareUrl(result)}`, "Slack/Teams result copied");
+      if (hit("#copy-result")) return copyText(shareUrl(result), "Result link copied", "copy_result");
+      if (hit("#copy-share-text")) return copyText(`${shareText()}\n${shareUrl(result)}`, "Share text copied", "copy_share_text");
+      if (hit("#copy-team")) return copyText(`${shareText()}\n${shareUrl(result)}`, "Slack/Teams result copied", "copy_team");
       if (hit("#copy-ci")) return copyText(CI_SNIPPET, "CI snippet copied");
-      if (hit("#copy-badge")) return copyText(badgeMarkdown(), "README badge snippet copied");
+      if (hit("#copy-badge")) return copyText(badgeMarkdown(), "README badge snippet copied", "copy_badge");
       if (hit("#native-share")) return nativeShare();
       const social = hit("[data-social]");
       if (social) return shareTo(social.dataset.social);
@@ -430,15 +430,22 @@
     });
   }
 
-  async function copyText(value, success) {
+  async function copyText(value, success, shareKind) {
     try {
-      if (navigator.clipboard?.writeText) { await writeClipboardWithFallbackTimeout(value); toast(success); return true; }
+      if (navigator.clipboard?.writeText) {
+        await writeClipboardWithFallbackTimeout(value);
+        toast(success);
+        if (shareKind) track("cs_share", { kind: shareKind });
+        return true;
+      }
     } catch (_) { /* fall back to a temporary text area */ }
     try {
       const helper = document.createElement("textarea");
       helper.value = value; helper.setAttribute("readonly", ""); helper.style.position = "fixed"; helper.style.opacity = "0";
       document.body.appendChild(helper); helper.select(); const copied = document.execCommand("copy"); helper.remove();
-      toast(copied ? success : "Copy is unavailable - select the text manually"); return copied;
+      toast(copied ? success : "Copy is unavailable - select the text manually");
+      if (copied && shareKind) track("cs_share", { kind: shareKind });
+      return copied;
     } catch (_) { toast("Copy is unavailable - select the text manually"); return false; }
   }
 

@@ -292,6 +292,38 @@ test("sanitized result links and SVG cards exclude the original instructions", a
   expect(badgeSvg).not.toContain("SENTINEL_PROMPT_CONTENT_NEVER_SHARE");
 });
 
+test("successful copy actions emit bounded share-method telemetry", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: () => Promise.resolve() },
+    });
+  });
+  await gotoApp(page);
+  await page.evaluate(() => {
+    window.__capturedEvents = [];
+    window.CrewScoreAnalytics = {
+      capture: (event, properties) => window.__capturedEvents.push({ event, properties }),
+    };
+  });
+  await page.getByRole("button", { name: "Try a 10-second demo" }).click();
+
+  await page.getByRole("button", { name: "Copy result link" }).click();
+  await page.getByRole("button", { name: "Copy share text" }).click();
+  await page.locator(".share-more summary").click();
+  await page.getByRole("button", { name: "Copy for Slack/Teams" }).click();
+  await page.getByRole("button", { name: "Add badge to README" }).click();
+
+  await expect.poll(() => page.evaluate(() => window.__capturedEvents
+    .filter((item) => item.event === "cs_share")
+    .sort((left, right) => left.properties.kind.localeCompare(right.properties.kind)))).toEqual([
+    { event: "cs_share", properties: { kind: "copy_badge" } },
+    { event: "cs_share", properties: { kind: "copy_result" } },
+    { event: "cs_share", properties: { kind: "copy_share_text" } },
+    { event: "cs_share", properties: { kind: "copy_team" } },
+  ]);
+});
+
 test("input methods are real tabs: one panel visible at a time", async ({ page }) => {
   await gotoApp(page);
   await expect(page.locator("#agent-prompt")).toBeVisible();
