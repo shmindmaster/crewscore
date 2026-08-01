@@ -25,14 +25,17 @@ The product commit changes exactly five paths:
 - `py -m pytest -q`
   - 582 passed, 1 skipped.
 - `npm run test:web -- --reporter=line`
-  - 105 passed, 15 expected skips.
+  - Initial product implementation: 105 passed, 15 expected skips.
+  - After adding the independent-review regression: 109 passed, 15 expected skips.
   - Projects: Chromium, Firefox, WebKit, and mobile Chromium.
+- `npx playwright test web-tests/checker.spec.mjs --grep "initial autoplay emits" --reporter=line`
+  - 4 passed, one in each browser project.
 - `git diff --check`
   - Clean.
 - `git ls-files --eol index.html assets/site.css assets/site.js tests/test_web_ux.py web-tests/checker.spec.mjs`
   - All five changed paths reported `i/lf w/lf`.
 
-The browser regressions cover engine-derived 8-to-9 parity, first named gap, finite completion, reduced motion, Play/Pause/Replay keyboard operation, offscreen and document-hidden pause/resume, analytics silence, existing explicit demo-event compatibility, privacy leakage boundaries, offline replay, accessibility, and first-viewport geometry without horizontal overflow.
+The browser regressions cover engine-derived 8-to-9 parity, first named gap, finite completion, reduced motion, Play/Pause/Replay keyboard operation, offscreen and document-hidden pause/resume, analytics silence from before page/script initialization through initial autoplay, existing explicit demo-event compatibility, privacy leakage boundaries, offline replay, accessibility, and first-viewport geometry without horizontal overflow.
 
 ## Interactive browser evidence
 

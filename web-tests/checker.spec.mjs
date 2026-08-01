@@ -474,6 +474,53 @@ test.describe("native hero animation", () => {
     expect(await page.evaluate(() => window.__crewscoreHero.snapshot())).toEqual(final);
   });
 
+  test("initial autoplay emits no analytics or non-static requests", async ({ page }) => {
+    await page.addInitScript(() => {
+      const captured = [];
+      Object.defineProperty(window, "__preNavCapturedEvents", { value: captured });
+      let analytics;
+      Object.defineProperty(window, "CrewScoreAnalytics", {
+        configurable: true,
+        get: () => analytics,
+        set: (value) => {
+          if (!value || typeof value.capture !== "function") {
+            analytics = value;
+            return;
+          }
+          analytics = new Proxy(value, {
+            get(target, property, receiver) {
+              if (property !== "capture") return Reflect.get(target, property, receiver);
+              return (event, properties) => {
+                captured.push({ event, properties });
+                return Reflect.apply(target.capture, target, [event, properties]);
+              };
+            },
+          });
+        },
+      });
+    });
+    const requests = [];
+    page.on("request", (request) => requests.push({
+      method: request.method(),
+      type: request.resourceType(),
+      url: request.url(),
+    }));
+
+    await gotoApp(page);
+    await expect(page.locator("#hero-demo")).toHaveAttribute("data-complete", "true", { timeout: 8000 });
+
+    // analytics.js invokes its normal site-view through a private closure, not
+    // the exported API. The pre-navigation proxy therefore isolates every
+    // exported capture that site.js could make while autoplay initializes and
+    // progresses through all four steps: there must be none.
+    expect(await page.evaluate(() => window.__preNavCapturedEvents)).toEqual([]);
+    const nonStatic = requests.filter((request) => {
+      const url = new URL(request.url);
+      return request.method !== "GET" || url.hostname !== "127.0.0.1";
+    });
+    expect(nonStatic).toEqual([]);
+  });
+
   test("hero playback emits no analytics while the existing explicit demo event remains compatible", async ({ page }) => {
     await gotoApp(page);
     await page.evaluate(() => {
