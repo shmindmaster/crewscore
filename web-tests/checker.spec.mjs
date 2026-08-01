@@ -458,16 +458,73 @@ test.describe("native hero animation", () => {
 
   test("runs the real 8-to-9 sequence, names the first gap, and stops", async ({ page }) => {
     await gotoApp(page);
+    const expected = await page.evaluate(() => {
+      const E = window.CrewScoreEngine;
+      const fixture = window.CrewScoreDemoFixture.prompt;
+      const topGap = (result) => {
+        const missing = result.findings.filter((finding) => finding.status === "missing");
+        const orderedDimensions = E.dimensions.slice().sort(
+          (left, right) => (result.scores[left.key] || 0) - (result.scores[right.key] || 0),
+        );
+        for (const dimension of orderedDimensions) {
+          const finding = missing.find((candidate) => candidate.dimension === dimension.key);
+          if (finding) return finding;
+        }
+        return null;
+      };
+      const before = E.analyzeArtifact(fixture, E.defaultProfile);
+      const resolved = topGap(before);
+      const wording = E.ENGINE.control_fix_templates[resolved.concept];
+      const afterPrompt = `${fixture}\n${wording}`;
+      const after = E.analyzeArtifact(afterPrompt, E.defaultProfile);
+      const next = topGap(after);
+      const count = (result) => result.findings.filter((finding) => finding.status === "matched").length;
+      return {
+        before: count(before),
+        after: count(after),
+        total: before.findings.length,
+        fixture,
+        wording,
+        resolved: resolved.pattern_or_reason,
+        next: next.pattern_or_reason,
+        resolvedConcept: resolved.concept,
+        nextConcept: next.concept,
+        resolvedStatus: resolved.status,
+        nextStatus: next.status,
+      };
+    });
+    expect(expected).toEqual({
+      before: 8,
+      after: 9,
+      total: 23,
+      fixture: expect.any(String),
+      wording: "A human must approve.",
+      resolved: "A human must approve",
+      next: "Log actions and decisions",
+      resolvedConcept: "human_gate.approval_required",
+      nextConcept: "audit.log_actions",
+      resolvedStatus: "missing",
+      nextStatus: "missing",
+    });
     await page.evaluate(() => window.__crewscoreHero.pause());
     await page.evaluate(() => window.__crewscoreHero.advance());
-    await expect(page.locator("#hero-demo-found")).toHaveText("8");
-    await expect(page.locator("#hero-demo-total")).toHaveText("23");
-    await expect(page.locator("#hero-demo-gap")).toHaveText("Asks before sensitive actions");
+    await expect(page.locator("#hero-demo-found")).toHaveText(String(expected.before));
+    await expect(page.locator("#hero-demo-total")).toHaveText(String(expected.total));
+    await expect(page.locator("#hero-demo-gap-label")).toHaveText("First gap");
+    await expect(page.locator("#hero-demo-gap")).toHaveText(expected.resolved);
     await page.evaluate(() => window.__crewscoreHero.advance());
     await expect(page.locator("#hero-demo-addition")).toBeVisible();
-    await expect(page.locator("#hero-demo-wording")).toHaveText("A human must approve.");
+    await expect(page.locator("#hero-demo-wording")).toHaveText(expected.wording);
+    await expect(page.locator("#hero-demo-prompt")).toHaveText(expected.fixture);
+    await expect(page.locator("#hero-demo")).toContainText(expected.wording);
+    expect((await page.locator("#hero-demo").innerText()).split(expected.wording).length - 1).toBe(1);
     await page.evaluate(() => window.__crewscoreHero.advance());
-    await expect(page.locator("#hero-demo-found")).toHaveText("9");
+    await expect(page.locator("#hero-demo-found")).toHaveText(String(expected.after));
+    await expect(page.locator("#hero-demo-gap-label")).toHaveText("Next remaining gap");
+    await expect(page.locator("#hero-demo-gap")).toHaveText(expected.next);
+    await expect(page.locator("#hero-demo-prompt")).toHaveText(expected.fixture);
+    expect((await page.locator("#hero-demo").innerText()).split(expected.wording).length - 1).toBe(1);
+    expect(expected.next).not.toBe(expected.resolved);
     await expect(page.locator("#hero-demo")).toHaveAttribute("data-complete", "true");
     const final = await page.evaluate(() => window.__crewscoreHero.snapshot());
     await page.waitForTimeout(1900);
@@ -488,14 +545,15 @@ test.describe("native hero animation", () => {
     await expect(announcement).toContainText("Demo started");
     await page.evaluate(() => window.__crewscoreHero.advance());
     await expect(announcement).toContainText("8 of 23 written controls");
-    await expect(announcement).toContainText("Asks before sensitive actions");
+    await expect(announcement).toContainText("A human must approve");
     await page.evaluate(() => window.__crewscoreHero.advance());
     await expect(announcement).toContainText("Selected wording added: A human must approve.");
     await page.evaluate(() => window.__crewscoreHero.advance());
     await expect(announcement).toContainText("9 of 23 written controls. Demo complete.");
+    await expect(announcement).toContainText("Next remaining gap: Log actions and decisions.");
   });
 
-  test("explicit play activation announces the current meaningful step", async ({ page }) => {
+  test("explicit play activation announces through the next remaining gap", async ({ page }) => {
     await gotoApp(page);
     await page.evaluate(() => {
       window.__crewscoreHero.replay();
@@ -510,6 +568,13 @@ test.describe("native hero animation", () => {
     await expect(announcement).toHaveAttribute("aria-live", "polite");
     await expect(announcement).toHaveAttribute("role", "status");
     await expect(announcement).toContainText("Demo started. Synthetic instructions are ready for a local check.");
+    await page.evaluate(() => window.__crewscoreHero.advance());
+    await expect(announcement).toContainText("First gap: A human must approve.");
+    await page.evaluate(() => window.__crewscoreHero.advance());
+    await expect(announcement).toContainText("Selected wording added: A human must approve.");
+    await page.evaluate(() => window.__crewscoreHero.advance());
+    await expect(announcement).toContainText("9 of 23 written controls. Demo complete.");
+    await expect(announcement).toContainText("Next remaining gap: Log actions and decisions.");
   });
 
   test("only an explicitly activated pause announces the paused state", async ({ page }) => {

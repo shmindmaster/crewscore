@@ -229,7 +229,8 @@
     if (step === 0) return "Demo started. Synthetic instructions are ready for a local check.";
     if (step === 1) return `Local check found ${beforeCoverage.found} of ${beforeCoverage.total} written controls. First gap: ${heroDemo.beforeGap?.title || "missing control"}.`;
     if (step === 2) return `Selected wording added: ${heroDemo.wording}`;
-    return `Local recheck found ${afterCoverage.found} of ${afterCoverage.total} written controls. Demo complete.`;
+    const nextGap = heroDemo.afterGap?.title;
+    return `Local recheck found ${afterCoverage.found} of ${afterCoverage.total} written controls. Demo complete.${nextGap ? ` Next remaining gap: ${nextGap}.` : " No written-control gap detected."}`;
   }
 
   function activateHeroAnnouncements() {
@@ -268,7 +269,9 @@
 
     stage.dataset.step = String(heroDemo.step);
     stage.dataset.complete = String(rescored);
-    $("hero-demo-prompt").textContent = wordingAdded ? heroDemo.afterPrompt : DEMO;
+    // The engine rechecks afterPrompt, while the visible prompt and addition
+    // compose that same input without repeating the inserted wording.
+    $("hero-demo-prompt").textContent = DEMO;
     $("hero-demo-addition").hidden = !wordingAdded;
     $("hero-demo-wording").textContent = heroDemo.wording;
     $("hero-demo-found").textContent = visibleCoverage ? String(visibleCoverage.found) : "—";
@@ -276,6 +279,7 @@
     $("hero-demo-gap").textContent = !visibleResult
       ? "Waiting for local check"
       : (visibleGap?.title || "No written-control gap detected");
+    $("hero-demo-gap-label").textContent = rescored ? "Next remaining gap" : "First gap";
     $("hero-demo-before").textContent = scored ? `${beforeCoverage.found} of ${beforeCoverage.total}` : "pending";
     $("hero-demo-after").textContent = rescored ? `${afterCoverage.found} of ${afterCoverage.total}` : "pending";
 
@@ -381,11 +385,11 @@
       return;
     }
     heroDemo.before = E.analyzeArtifact(DEMO, E.defaultProfile);
-    heroDemo.beforeGap = heroGapFromResult(heroDemo.before);
+    heroDemo.beforeGap = heroGapFromResult(heroDemo.before, { useFindingReason: true });
     heroDemo.wording = E.ENGINE.control_fix_templates[heroDemo.beforeGap?.concept] || "";
     heroDemo.afterPrompt = `${DEMO}\n${heroDemo.wording}`;
     heroDemo.after = E.analyzeArtifact(heroDemo.afterPrompt, E.defaultProfile);
-    heroDemo.afterGap = heroGapFromResult(heroDemo.after);
+    heroDemo.afterGap = heroGapFromResult(heroDemo.after, { useFindingReason: true });
 
     $("hero-demo-play").addEventListener("click", () => playHeroDemo({ announce: true }));
     $("hero-demo-pause").addEventListener("click", () => pauseHeroDemo({ announce: true }));
@@ -452,12 +456,14 @@
     }
   }
 
-  function heroGapFromResult(result) {
+  function heroGapFromResult(result, options) {
     const gaps = topGaps(result, 1);
     if (!gaps.length) return null;
     const { dimension, finding } = gaps[0];
     return {
-      title: SIMPLE_NAMES[dimension.key] || dimension.label || "Missing control",
+      title: options?.useFindingReason
+        ? (finding.pattern_or_reason || SIMPLE_NAMES[dimension.key] || dimension.label || "Missing control")
+        : (SIMPLE_NAMES[dimension.key] || dimension.label || "Missing control"),
       detail: finding.pattern_or_reason || "Written control not detected",
       concept: finding.concept || finding.rule_id || "",
     };

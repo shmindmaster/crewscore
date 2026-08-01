@@ -37,16 +37,21 @@ def test_native_hero_uses_the_generated_engine_instead_of_a_second_score_contrac
     assert 'id="hero-demo-pause"' in html
     assert 'id="hero-demo-replay"' in html
     assert '<pre id="hero-demo-prompt"></pre>' in html
+    assert 'id="hero-demo-gap-label">First gap</span>' in html
     assert 'id="hero-demo-announcement" aria-live="off" aria-atomic="true"' in html
     assert "E.analyzeArtifact(DEMO, E.defaultProfile)" in script
+    assert "heroGapFromResult(heroDemo.before, { useFindingReason: true })" in script
+    assert "heroGapFromResult(heroDemo.after, { useFindingReason: true })" in script
     assert "E.ENGINE.control_fix_templates[heroDemo.beforeGap?.concept]" in script
-    assert "heroGapFromResult(heroDemo.before)" in script
     assert "8 of 23" not in html
     assert "9 of 23" not in html
     assert "8 of 23" not in script
     assert "9 of 23" not in script
     assert "heroMotionQuery.addEventListener(\"change\", handleHeroMotionChange)" in script
     assert 'visibleGap?.title || "No written-control gap detected"' in script
+    assert '$("hero-demo-prompt").textContent = DEMO' in script
+    assert 'rescored ? "Next remaining gap" : "First gap"' in script
+    assert "Next remaining gap: ${nextGap}" in script
     assert 'pauseHeroDemo({ announce: true })' in script
 
 

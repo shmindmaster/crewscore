@@ -10,6 +10,7 @@ Status: DONE
 - Mobile boundary and Pause announcement remediation: `54c2b14a51b717eabead9f24e49147ff4406a42f`
 - Hosted 390-pixel product-visibility remediation: `dc48bcc85cab9cdf7b8bd53ee3b676ce50eb40f0`
 - Hosted 320-pixel visibility-buffer remediation: `f73500e29a40d391e3817962cddf4448bc003050`
+- Comprehension-review remediation: the commit containing this report
 
 ## Outcome
 
@@ -25,6 +26,8 @@ Hosted exact-head run `30707014234`, job `91387763640`, then exposed a determini
 
 The next exact-head run `30707457455`, job `91388925271`, proved the 390-pixel fix held but exposed a deterministic 320x844 Chromium edge: all three attempts showed 117.515625 visible pixels against the unchanged 120-pixel requirement. The 320-pixel hosted screenshot showed all required content intact but only a thin product slice below it. A homepage-only `max-width: 340px` adjustment reduces header/hero vertical padding and gaps, slightly reduces the narrow headline from 1.95rem to 1.85rem, and tightens only the headline, trust-chip, and safety-boundary spacing. It does not remove or hide the boundary, CTAs, trust chips, identity, or mode control. In the pinned Linux image the resulting product slice is 273.8125 pixels at 320 and 297.984375 pixels at 390, with zero overflow; the Windows comparison is 243.640625 and 236.703125 pixels respectively. This leaves a deliberate margin rather than another threshold edge.
 
+The comprehension-review remediation renders the engine-selected approval wording exactly once: the prompt panel continues to show the canonical synthetic fixture while the adjacent addition element shows the single inserted line, and the engine still recomputes against the composed `afterPrompt`. The first result now names the exact engine finding that the wording resolves, while the completed result labels and names the engine-derived next remaining gap instead of reusing a dimension-level title that could imply the original gap persisted. Play and Replay activate the existing polite status region and announce that final next gap; autoplay, programmatic playback, and passive pause paths remain silent. The exact-finding label is confined to the native hero so the existing full-checker, share-card, and snapshot contracts remain unchanged.
+
 ## Changed paths
 
 The product commit changes exactly five paths:
@@ -34,6 +37,8 @@ The product commit changes exactly five paths:
 3. `assets/site.js`
 4. `tests/test_web_ux.py`
 5. `web-tests/checker.spec.mjs`
+
+The comprehension-review commit changes `index.html`, `assets/site.js`, both listed test files, and this report; it does not alter `assets/site.css` or another product surface.
 
 ## Automated verification
 
@@ -59,6 +64,14 @@ The product commit changes exactly five paths:
   - Accessibility review gate: 16 passed across all four browser projects.
 - `npx playwright test web-tests/checker.spec.mjs --grep "explicit play activation|explicit replay gates" --retries=0 --reporter=line`
   - Separate Play/Replay listener coverage: 8 passed across all four browser projects.
+- `npx playwright test web-tests/checker.spec.mjs --grep "runs the real 8-to-9|explicit replay gates|explicit play activation|initial autoplay emits|hero playback emits no analytics" --retries=0 --reporter=line`
+  - Comprehension-review focused gate: 20 passed across all four browser projects, with retries disabled.
+- `python.exe -m pytest -q`
+  - Comprehension-review full Python gate: 584 passed, 1 skipped.
+- `npm run test:web -- --retries=0 --reporter=line`
+  - Comprehension-review full browser gate: 127 passed, 21 expected project skips across Chromium, Firefox, WebKit, and mobile Chromium, with no retries or failures.
+- `docker run --rm --ipc=host ... mcr.microsoft.com/playwright:v1.62.0-noble ... --project=chromium --grep "runs the real 8-to-9|explicit replay gates|explicit play activation|initial autoplay emits|hero playback emits no analytics|native product remains" --retries=0 --reporter=line`
+  - Comprehension-review pinned-Linux gate: 6 passed with retries disabled. Image digest remains `sha256:baed2032d533817f3dbe6425de795788430ba345e819a1201337009ba17c9d07`.
 - `npx playwright test web-tests/checker.spec.mjs --grep "native hero animation" --retries=0 --reporter=line`
   - Proportionate post-review hero gate: 33 passed, 3 expected project skips.
 - `npx playwright test web-tests/checker.spec.mjs --project=chromium --grep "native product remains|mobile subpages retain|missing canonical demo fixture" --reporter=line`
