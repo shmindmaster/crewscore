@@ -475,6 +475,7 @@ test.describe("native hero animation", () => {
   });
 
   test("initial autoplay emits no analytics or non-static requests", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.addInitScript(() => {
       const captured = [];
       Object.defineProperty(window, "__preNavCapturedEvents", { value: captured });
@@ -620,7 +621,7 @@ test("the native product remains materially visible in the first viewport withou
       };
     });
     expect(geometry.top, `${viewport.width}px demo starts in first viewport`).toBeLessThan(viewport.height);
-    expect(geometry.visible, `${viewport.width}px shows a meaningful product slice`).toBeGreaterThanOrEqual(180);
+    expect(geometry.visible, `${viewport.width}px shows a meaningful product slice`).toBeGreaterThanOrEqual(200);
     expect(geometry.overflow, `${viewport.width}px has no horizontal overflow`).toBeLessThanOrEqual(1);
   }
 });

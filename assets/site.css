@@ -313,15 +313,15 @@ body[data-mode="simple"] .developer-only { display: none !important; }
 }
 @media (max-width: 620px) {
   .site-shell { width: min(100% - 24px, 1180px); }
-  .site-header { gap: 10px; padding: 12px 0; }
-  .site-nav { gap: 10px; }
-  .site-nav a:nth-child(-n+5) { display: none; }
+  .site-header { flex-direction: row; align-items: center; gap: 8px; padding: 10px 0; }
+  .site-nav { flex-wrap: nowrap; gap: 8px; margin-left: auto; }
+  .site-nav a:nth-child(-n+6) { display: none; }
   .url-row { grid-template-columns: 1fr; }
   .profile-picker { grid-template-columns: 1fr; }
-  .hero { gap: 18px; padding: 22px 0 28px; }
+  .hero { gap: 14px; padding: 20px 0 28px; }
   .hero h1 { font-size: clamp(2.05rem, 11vw, 3rem); }
   .hero-copy { font-size: 1rem; }
-  .trust-chips { margin-top: 16px; gap: 6px; }
+  .trust-chips { margin-top: 12px; gap: 6px; }
   .chip { min-height: 28px; padding: 2px 9px; font-size: .78rem; }
   .always-visible { display: none; }
   .hero-demo-screen { grid-template-columns: minmax(0, 1fr) minmax(132px, .72fr); min-height: 230px; }

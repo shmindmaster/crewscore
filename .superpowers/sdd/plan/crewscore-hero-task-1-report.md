@@ -30,6 +30,9 @@ The product commit changes exactly five paths:
   - Projects: Chromium, Firefox, WebKit, and mobile Chromium.
 - `npx playwright test web-tests/checker.spec.mjs --grep "initial autoplay emits" --reporter=line`
   - 4 passed, one in each browser project.
+- `$env:CI='1'; npx playwright test web-tests/checker.spec.mjs --project=chromium --project=mobile-chromium --grep "initial autoplay emits|native product remains" --retries=0 --reporter=line`
+  - Exact PR-CI remediation gate: 3 passed, 1 expected project skip.
+  - The autoplay test sets the approved 390x844 launch viewport before navigation; the geometry test requires at least 200 visible pixels, retaining a 20-pixel buffer above the 180-pixel launch requirement.
 - `git diff --check`
   - Clean.
 - `git ls-files --eol index.html assets/site.css assets/site.js tests/test_web_ux.py web-tests/checker.spec.mjs`
@@ -43,9 +46,9 @@ The pinned Playwright CLI was run against the repository static server.
 
 - Wide, 1440x900: `C:\Users\SaroshHussain\.codex\visualizations\2026\08\01\019fbd09-3372-79a0-ae94-51d3a75ab3bd\crewscore-hero-wide.png`
 - Tablet, 768x1024: `C:\Users\SaroshHussain\.codex\visualizations\2026\08\01\019fbd09-3372-79a0-ae94-51d3a75ab3bd\crewscore-hero-tablet.png`
-- Mobile, 390x844: `C:\Users\SaroshHussain\.codex\visualizations\2026\08\01\019fbd09-3372-79a0-ae94-51d3a75ab3bd\crewscore-hero-mobile-complete.png`
+- Mobile CI fix, 390x844: `C:\Users\SaroshHussain\.codex\visualizations\2026\08\01\019fbd09-3372-79a0-ae94-51d3a75ab3bd\crewscore-hero-mobile-ci-fix.png`
 
-The product stage was visible in the first viewport at all three sizes. Replay and Pause were exercised interactively at the engine-derived 8/23 first-gap state. Browser console inspection returned zero errors and zero warnings. Request inspection during autoplay returned no non-static requests; only the page's static assets were observed.
+The product stage was visible in the first viewport at all three sizes. The final mobile capture shows the tighter one-row navigation and a substantial product slice while preserving the headline, copy, both CTAs, trust chips, readability, and no horizontal overflow. Replay and Pause were exercised interactively at the engine-derived 8/23 first-gap state. Browser console inspection returned zero errors and zero warnings. Request inspection during autoplay returned no non-static requests; only the page's static assets were observed.
 
 ## Scope boundaries
 
