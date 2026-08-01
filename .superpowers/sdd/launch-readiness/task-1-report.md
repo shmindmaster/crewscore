@@ -59,4 +59,4 @@
 ## Remaining concerns
 - Any future change to claim language or corpus semantics must continue to update `docs/launch/launch-copy.json` and tests in the same change set.
 - Full runtime or external certification implications remain out of scope; score values are structural text coverage only (per `docs/validation.md`).
-- Commit SHA: `PLACEHOLDER_SHA`
+- Commit SHA: `3c7ecb3`
