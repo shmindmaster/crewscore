@@ -291,8 +291,8 @@ process.stdout.write(JSON.stringify({{ calls: calls.length, body: calls.length ?
     assert "SENTINEL_PROMPT" not in json.dumps(result["body"])
 
 
-def test_every_allowlisted_capture_forces_geoip_disable_without_caller_override():
-    """GeoIP suppression is immutable transport metadata on every event body."""
+def test_every_allowlisted_capture_forces_private_transport_without_caller_override():
+    """GeoIP and person-profile suppression are immutable on every event body."""
     if not shutil.which("node"):
         pytest.skip("node not installed; skipping analytics runtime test")
 
@@ -332,6 +332,7 @@ const examples = {{
 }};
 for (const event of analytics.schemaPayload().allowed_events) analytics.capture(event, examples[event]);
 analytics.capture("cs_rules_expand", {{ "$geoip_disable": false }});
+analytics.capture("cs_rules_expand", {{ "$process_person_profile": true }});
 process.stdout.write(JSON.stringify({{
   schema: analytics.schemaPayload(),
   bodies: calls.map((call) => JSON.parse(call[1].body)),
@@ -348,7 +349,12 @@ process.stdout.write(JSON.stringify({{
     assert len(result["bodies"]) == len(allowed)
     assert {body["event"] for body in result["bodies"]} == set(allowed)
     assert "$geoip_disable" not in result["schema"]["allowed_properties"]
+    assert "$process_person_profile" not in result["schema"]["allowed_properties"]
     assert all(body["properties"]["$geoip_disable"] is True for body in result["bodies"])
+    assert all(
+        body["properties"]["$process_person_profile"] is False
+        for body in result["bodies"]
+    )
     assert "SENTINEL_PROMPT" not in json.dumps(result["bodies"])
 
 

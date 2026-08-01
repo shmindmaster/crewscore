@@ -7,6 +7,8 @@ Status: DONE — local candidate only; no push, tag, publication, deployment, or
 - Exact base: `c2c23a20f77b94d62998a048b51a6da25d2b9ab9`
 - Branch: `worktree-release-v0610-main`
 - Release-candidate commit: the commit containing this report
+- Independent-review P2 remediation: the follow-up commit containing this
+  report update
 
 ## Outcome
 
@@ -24,6 +26,9 @@ Every allowlisted PostHog capture body now carries immutable
 transport properties rather than caller properties: the strict schema rejects
 caller attempts to set them, the capture builder applies them after validated
 properties, and Python/JavaScript schema parity exposes the same contract.
+The independent-review regression invokes every allowlisted event, inspects
+every actual serialized request body, attempts caller overrides of both fixed
+properties, and proves neither attempt emits an extra request.
 Existing prompt-content rejection, coding-configuration versus governance
 separation, optional `traffic_class`, opt-out, non-production suppression, and
 silent hero autoplay remain covered.
@@ -72,6 +77,16 @@ All seven checksum rows were recomputed from disk and matched.
 - `git diff --check`: clean.
 - Stale-version search: only the historical changelog, explicit 0.6.9
   compatibility comments, and stale-version regression lists retain `0.6.9`.
+- Independent-review P2 TDD mutation: temporarily changing the fixed
+  `$process_person_profile` value to `true` made the new actual-body regression
+  fail; restoring `false` made it pass. The mutation was not retained.
+- Independent-review focused analytics/schema/privacy gate: 77 passed.
+- Independent-review full Python gate: 586 passed, 1 environment-dependent
+  skip.
+- Independent-review browser privacy/analytics gate with retries disabled: 12
+  passed across Chromium, Firefox, WebKit, and mobile Chromium.
+- The review remediation changes only the runtime regression and this report;
+  package artifacts, launch copy, and distribution checksums are unaffected.
 
 ## Release-time gates not performed
 
