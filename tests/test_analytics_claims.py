@@ -212,3 +212,60 @@ process.stdout.write(JSON.stringify({{ before, after: calls.length, optedOut: an
     )
     result = json.loads(proc.stdout)
     assert result == {"before": 1, "after": 1, "optedOut": True}
+
+
+@pytest.mark.parametrize(
+    ("referrer", "expected_source"),
+    [
+        ("", "direct"),
+        ("https://www.google.com/search?q=private+terms", "search"),
+        ("https://www.linkedin.com/feed/update/private-id", "social"),
+        ("https://github.com/private-org/private-repo", "github"),
+        ("https://crewscore.ai/privacy.html", "internal"),
+        ("https://example.org/private/path?token=secret", "referral"),
+        ("not a url", "direct"),
+    ],
+)
+def test_site_view_reduces_referrers_to_bounded_non_pii_sources(
+    referrer, expected_source
+):
+    """Changing the classifier to transmit a host, path, or query must fail."""
+    if not shutil.which("node"):
+        pytest.skip("node not installed; skipping analytics runtime test")
+
+    script = f"""
+const fs = require("fs");
+const vm = require("vm");
+const source = fs.readFileSync({json.dumps(str(ANALYTICS))}, "utf8");
+const calls = [];
+const storage = {{ getItem: () => null, setItem: () => undefined }};
+const context = {{
+  window: {{}},
+  document: {{ referrer: {json.dumps(referrer)} }},
+  localStorage: storage,
+  sessionStorage: storage,
+  location: {{ hostname: "crewscore.ai", href: "https://crewscore.ai/?utm_source=secret" }},
+  URL,
+  crypto: {{ randomUUID: () => "test-session" }},
+  fetch: (...args) => {{ calls.push(args); return Promise.resolve(); }},
+}};
+vm.createContext(context);
+vm.runInContext(source, context);
+const body = JSON.parse(calls[0][1].body);
+process.stdout.write(JSON.stringify(body));
+"""
+    proc = subprocess.run(
+        ["node", "-e", script],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    body = json.loads(proc.stdout)
+    properties = body["properties"]
+    assert body["event"] == "cs_site_view"
+    assert properties["source"] == expected_source
+    serialized = json.dumps(properties)
+    if referrer:
+        assert referrer not in serialized
+    assert "private" not in serialized
+    assert "secret" not in serialized

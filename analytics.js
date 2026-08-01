@@ -87,6 +87,23 @@
     return output;
   }
 
+  function classifyReferrer(referrer) {
+    if (!referrer) return "direct";
+    try {
+      const url = new URL(referrer);
+      if (url.protocol !== "http:" && url.protocol !== "https:") return "direct";
+      const host = url.hostname.toLowerCase();
+      const matches = (domain) => host === domain || host.endsWith(`.${domain}`);
+      if (matches("crewscore.ai")) return "internal";
+      if (matches("github.com")) return "github";
+      if (["google.com", "bing.com", "duckduckgo.com", "search.brave.com", "search.yahoo.com"].some(matches)) return "search";
+      if (["linkedin.com", "x.com", "twitter.com", "facebook.com", "reddit.com", "bsky.app"].some(matches)) return "social";
+      return "referral";
+    } catch (error) {
+      return "direct";
+    }
+  }
+
   function capture(event, properties) {
     if (!ALLOWED_EVENTS.has(event) || location.hostname !== "crewscore.ai" || isOptedOut()) return;
     const body = JSON.stringify({
@@ -111,5 +128,6 @@
   }
 
   window.CrewScoreAnalytics = Object.freeze({ capture, isOptedOut, setOptOut });
-  capture("cs_site_view");
+  const referrer = typeof document === "undefined" ? "" : document.referrer;
+  capture("cs_site_view", { source: classifyReferrer(referrer) });
 })();
