@@ -314,11 +314,13 @@ test("successful copy actions emit bounded share-method telemetry", async ({ pag
   await page.getByRole("button", { name: "Copy for Slack/Teams" }).click();
   await page.getByRole("button", { name: "Add badge to README" }).click();
 
-  await expect.poll(() => page.evaluate(() => window.__capturedEvents.filter((item) => item.event === "cs_share"))).toEqual([
+  await expect.poll(() => page.evaluate(() => window.__capturedEvents
+    .filter((item) => item.event === "cs_share")
+    .sort((left, right) => left.properties.kind.localeCompare(right.properties.kind)))).toEqual([
+    { event: "cs_share", properties: { kind: "copy_badge" } },
     { event: "cs_share", properties: { kind: "copy_result" } },
     { event: "cs_share", properties: { kind: "copy_share_text" } },
     { event: "cs_share", properties: { kind: "copy_team" } },
-    { event: "cs_share", properties: { kind: "copy_badge" } },
   ]);
 });
 
