@@ -218,6 +218,8 @@ def _build_pack() -> tuple[dict[str, Any], bytes]:
         for index, tweet in enumerate(x_thread_texts, start=1):
             if len(tweet) > X_POST_LIMIT:
                 raise RuntimeError(f"x.thread tweet {index} exceeds {X_POST_LIMIT} characters: {len(tweet)}")
+            if not tweet.strip():
+                raise RuntimeError(f"x.thread tweet {index} rendered blank after templating")
         x_rendered["thread"] = x_thread_texts
 
     rendered_channels = {

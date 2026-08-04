@@ -21,8 +21,8 @@ SOURCE = REPO / "docs" / "launch-copy.json"
 DATA = REPO / "docs" / "validation-corpus.json"
 GENERATOR = REPO / "scripts" / "generate_dist_pack.py"
 GIT_TRACKED_SOURCE = "docs/launch-copy.json"
-EXPECTED_CHECKSUM_FILE_SHA256 = "a2752f5ee1cb52324648d8dae94eeddda58da18c687e3d3cec8fcb89268a4b7c"
-EXPECTED_MANIFEST_SHA256 = "d737a2da8f924dc129c654d029db97d8188ba035468bebd944b1d51136431700"
+EXPECTED_CHECKSUM_FILE_SHA256 = "b99bb6ad639bc03b69e7e5818364bc5852cda0a4a83c3a3c0696983de84b6bdb"
+EXPECTED_MANIFEST_SHA256 = "e33b416f0c501912700d671f0abc21967e93a460555124b84ff994d78d667d23"
 REQUIRED_ARTIFACTS = (
     "show-hn-title.txt",
     "show-hn-first-comment.md",
