@@ -206,6 +206,7 @@
     afterGap: null,
     wording: "",
     afterPrompt: "",
+    closedTitle: "",
   };
 
   function heroCoverage(result) {
@@ -214,6 +215,18 @@
       found: findings.filter((finding) => finding.status === "matched").length,
       total: findings.length,
     };
+  }
+
+  function heroClosedControlTitle(before, after) {
+    const matchedAfter = new Set(
+      (after?.findings || [])
+        .filter((finding) => finding.status === "matched")
+        .map((finding) => finding.concept),
+    );
+    const closed = (before?.findings || []).find(
+      (finding) => finding.status === "missing" && matchedAfter.has(finding.concept),
+    );
+    return closed?.pattern_or_reason || "";
   }
 
   function clearHeroTimer() {
@@ -230,7 +243,11 @@
     if (step === 1) return `Local check found ${beforeCoverage.found} of ${beforeCoverage.total} written controls. First gap: ${heroDemo.beforeGap?.title || "missing control"}.`;
     if (step === 2) return `Selected wording added: ${heroDemo.wording}`;
     const nextGap = heroDemo.afterGap?.title;
-    return `Local recheck found ${afterCoverage.found} of ${afterCoverage.total} written controls. Demo complete.${nextGap ? ` Next remaining gap: ${nextGap}.` : " No written-control gap detected."}`;
+    const delta = afterCoverage.found - beforeCoverage.found;
+    const deltaSentence = delta > 0 && heroDemo.closedTitle
+      ? ` +${delta} written control${delta === 1 ? "" : "s"} closed: ${heroDemo.closedTitle}.`
+      : "";
+    return `Local recheck found ${afterCoverage.found} of ${afterCoverage.total} written controls. Demo complete.${deltaSentence}${nextGap ? ` Next remaining gap: ${nextGap}.` : " No written-control gap detected."}`;
   }
 
   function activateHeroAnnouncements() {
@@ -282,6 +299,17 @@
     $("hero-demo-gap-label").textContent = rescored ? "Next remaining gap" : "First gap";
     $("hero-demo-before").textContent = scored ? `${beforeCoverage.found} of ${beforeCoverage.total}` : "pending";
     $("hero-demo-after").textContent = rescored ? `${afterCoverage.found} of ${afterCoverage.total}` : "pending";
+
+    const delta = afterCoverage.found - beforeCoverage.found;
+    const deltaElement = $("hero-demo-delta");
+    if (deltaElement) {
+      const deltaVisible = rescored && delta > 0;
+      deltaElement.hidden = !deltaVisible;
+      if (deltaVisible) {
+        $("hero-demo-delta-value").textContent = `+${delta}`;
+        $("hero-demo-delta-label").textContent = ` written control${delta === 1 ? "" : "s"} covered${heroDemo.closedTitle ? ` — closed: ${heroDemo.closedTitle}` : ""} — coverage, not a runtime safety grade.`;
+      }
+    }
 
     const stepLabels = ["Ready", "Gap found", "Wording added", "Rechecked"];
     const resultLabels = ["Checking locally", "Written controls found", "Selected wording", "Written controls found"];
@@ -365,6 +393,7 @@
     stage.dataset.complete = "true";
     $("hero-demo-prompt").textContent = "Synthetic demo fixture unavailable.";
     $("hero-demo-addition").hidden = true;
+    if ($("hero-demo-delta")) $("hero-demo-delta").hidden = true;
     $("hero-demo-step").textContent = "Unavailable";
     $("hero-demo-result-label").textContent = "Demo unavailable";
     $("hero-demo-found").textContent = "—";
@@ -393,6 +422,7 @@
     heroDemo.afterPrompt = `${DEMO}\n${heroDemo.wording}`;
     heroDemo.after = E.analyzeArtifact(heroDemo.afterPrompt, E.defaultProfile);
     heroDemo.afterGap = heroGapFromResult(heroDemo.after, { useFindingReason: true });
+    heroDemo.closedTitle = heroClosedControlTitle(heroDemo.before, heroDemo.after);
 
     $("hero-demo-play").addEventListener("click", () => playHeroDemo({ announce: true }));
     $("hero-demo-pause").addEventListener("click", () => pauseHeroDemo({ announce: true }));
