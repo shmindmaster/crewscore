@@ -439,14 +439,17 @@ test("reduced motion shows an engine-derived complete before and after hero", as
     const wording = E.ENGINE.control_fix_templates[gap.concept];
     const after = E.analyzeArtifact(`${fixture}\n${wording}`, E.defaultProfile);
     const count = (result) => result.findings.filter((finding) => finding.status === "matched").length;
-    return { before: count(before), after: count(after), total: before.findings.length, wording };
+    return { before: count(before), after: count(after), total: before.findings.length, wording, closed: gap.pattern_or_reason };
   });
-  expect(expected).toEqual({ before: 8, after: 9, total: 23, wording: "A human must approve." });
+  expect(expected).toEqual({ before: 8, after: 9, total: 23, wording: "A human must approve.", closed: "A human must approve" });
   await expect(page.locator("#hero-demo")).toHaveAttribute("data-complete", "true");
   await expect(page.locator("#hero-demo-before")).toHaveText(`${expected.before} of ${expected.total}`);
   await expect(page.locator("#hero-demo-after")).toHaveText(`${expected.after} of ${expected.total}`);
   await expect(page.locator("#hero-demo-found")).toHaveText(String(expected.after));
   await expect(page.locator("#hero-demo-wording")).toHaveText(expected.wording);
+  await expect(page.locator("#hero-demo-delta")).toBeVisible();
+  await expect(page.locator("#hero-demo-delta-value")).toHaveText(`+${expected.after - expected.before}`);
+  await expect(page.locator("#hero-demo-delta-label")).toContainText(`closed: ${expected.closed}`);
   await expect(page.locator("#hero-demo-status")).toContainText("Reduced motion");
 });
 
@@ -518,10 +521,14 @@ test.describe("native hero animation", () => {
     await expect(page.locator("#hero-demo-prompt")).toHaveText(expected.fixture);
     await expect(page.locator("#hero-demo")).toContainText(expected.wording);
     expect((await page.locator("#hero-demo").innerText()).split(expected.wording).length - 1).toBe(1);
+    await expect(page.locator("#hero-demo-delta")).toBeHidden();
     await page.evaluate(() => window.__crewscoreHero.advance());
     await expect(page.locator("#hero-demo-found")).toHaveText(String(expected.after));
     await expect(page.locator("#hero-demo-gap-label")).toHaveText("Next remaining gap");
     await expect(page.locator("#hero-demo-gap")).toHaveText(expected.next);
+    await expect(page.locator("#hero-demo-delta")).toBeVisible();
+    await expect(page.locator("#hero-demo-delta-value")).toHaveText(`+${expected.after - expected.before}`);
+    await expect(page.locator("#hero-demo-delta-label")).toContainText(`closed: ${expected.resolved}`);
     await expect(page.locator("#hero-demo-prompt")).toHaveText(expected.fixture);
     expect((await page.locator("#hero-demo").innerText()).split(expected.wording).length - 1).toBe(1);
     expect(expected.next).not.toBe(expected.resolved);
@@ -550,6 +557,7 @@ test.describe("native hero animation", () => {
     await expect(announcement).toContainText("Selected wording added: A human must approve.");
     await page.evaluate(() => window.__crewscoreHero.advance());
     await expect(announcement).toContainText("9 of 23 written controls. Demo complete.");
+    await expect(announcement).toContainText("+1 written control closed: A human must approve.");
     await expect(announcement).toContainText("Next remaining gap: Log actions and decisions.");
     const completedMessage = await announcement.textContent();
     const pause = page.getByRole("button", { name: "Pause", exact: true });
@@ -590,6 +598,7 @@ test.describe("native hero animation", () => {
     await expect(announcement).toContainText("Selected wording added: A human must approve.");
     await page.evaluate(() => window.__crewscoreHero.advance());
     await expect(announcement).toContainText("9 of 23 written controls. Demo complete.");
+    await expect(announcement).toContainText("+1 written control closed: A human must approve.");
     await expect(announcement).toContainText("Next remaining gap: Log actions and decisions.");
   });
 
