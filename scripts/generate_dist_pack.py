@@ -19,10 +19,13 @@ ARTIFACTS = (
     "show-hn-title.txt",
     "show-hn-first-comment.md",
     "x-post.txt",
+    "x-thread.md",
     "linkedin-post.md",
     "community-post.md",
     "answer-bank.md",
 )
+X_POST_LIMIT = 280
+X_THREAD_MAX_TWEETS = 10
 CHECKSUM_EXCLUDED_ARTIFACTS = {"checksums.txt"}
 CHECKSUM_INCLUDE_ARTIFACTS = ARTIFACTS + ("manifest.json",)
 CHECKSUM_EXPORT_ARTIFACTS = CHECKSUM_INCLUDE_ARTIFACTS + ("checksums.txt",)
@@ -171,6 +174,17 @@ def _build_pack() -> tuple[dict[str, Any], bytes]:
         if not isinstance(channels.get(channel_name), dict) or "text" not in channels[channel_name]:
             raise RuntimeError(f"{channel_name} requires text")
 
+    x_channel = channels["x"]
+    x_thread = x_channel.get("thread")
+    if x_thread is not None:
+        if not isinstance(x_thread, list) or not x_thread:
+            raise RuntimeError("x.thread must be a non-empty list when present")
+        if len(x_thread) > X_THREAD_MAX_TWEETS:
+            raise RuntimeError(f"x.thread exceeds {X_THREAD_MAX_TWEETS} tweets")
+        for index, tweet in enumerate(x_thread, start=1):
+            if not isinstance(tweet, str) or not tweet.strip():
+                raise RuntimeError(f"x.thread tweet {index} must be a non-empty string")
+
     answer_bank = source.get("answer_bank")
     if not isinstance(answer_bank, list) or not answer_bank:
         raise RuntimeError("launch-copy source requires a non-empty answer_bank")
@@ -197,12 +211,21 @@ def _build_pack() -> tuple[dict[str, Any], bytes]:
         "oneliner": _readme_oneliner(),
     }
 
+    x_rendered = {"text": _render_template(channels["x"]["text"], facts)}
+    x_thread_texts = None
+    if x_thread is not None:
+        x_thread_texts = [_render_template(tweet, facts) for tweet in x_thread]
+        for index, tweet in enumerate(x_thread_texts, start=1):
+            if len(tweet) > X_POST_LIMIT:
+                raise RuntimeError(f"x.thread tweet {index} exceeds {X_POST_LIMIT} characters: {len(tweet)}")
+        x_rendered["thread"] = x_thread_texts
+
     rendered_channels = {
         "show_hn": {
             "title": _render_template(channels["show_hn"]["title"], facts),
             "first_comment": _render_template(channels["show_hn"]["first_comment"], facts),
         },
-        "x": {"text": _render_template(channels["x"]["text"], facts)},
+        "x": x_rendered,
         "linkedin": {"text": _render_template(channels["linkedin"]["text"], facts)},
         "community_post": {"text": _render_template(channels["community_post"]["text"], facts)},
     }
@@ -234,10 +257,14 @@ def _artifact_blobs(pack: dict[str, Any]) -> dict[str, str]:
     answer_bank = "\n\n".join(
         f"### {entry['question']}\n\n{entry['answer']}" for entry in pack["answer_bank"]
     )
+    x_channel = pack["channels"]["x"]
+    x_thread = x_channel.get("thread")
+    x_thread_blob = "\n\n".join(x_thread) + "\n" if x_thread else ""
     return {
         "show-hn-title.txt": pack["channels"]["show_hn"]["title"],
         "show-hn-first-comment.md": pack["channels"]["show_hn"]["first_comment"],
-        "x-post.txt": pack["channels"]["x"]["text"],
+        "x-post.txt": x_channel["text"],
+        "x-thread.md": x_thread_blob,
         "linkedin-post.md": pack["channels"]["linkedin"]["text"],
         "community-post.md": pack["channels"]["community_post"]["text"],
         "answer-bank.md": answer_bank + "\n" if answer_bank else "",

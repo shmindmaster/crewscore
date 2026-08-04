@@ -21,12 +21,13 @@ SOURCE = REPO / "docs" / "launch-copy.json"
 DATA = REPO / "docs" / "validation-corpus.json"
 GENERATOR = REPO / "scripts" / "generate_dist_pack.py"
 GIT_TRACKED_SOURCE = "docs/launch-copy.json"
-EXPECTED_CHECKSUM_FILE_SHA256 = "e091bf24510f63078f5e8f4feaac774e6108dd66a601763e164f24f7e68e5dfd"
-EXPECTED_MANIFEST_SHA256 = "507ccbd8c84eecac825b6371f62d8d1c49790c3b025b10a28487a390f8bf1775"
+EXPECTED_CHECKSUM_FILE_SHA256 = "a2752f5ee1cb52324648d8dae94eeddda58da18c687e3d3cec8fcb89268a4b7c"
+EXPECTED_MANIFEST_SHA256 = "d737a2da8f924dc129c654d029db97d8188ba035468bebd944b1d51136431700"
 REQUIRED_ARTIFACTS = (
     "show-hn-title.txt",
     "show-hn-first-comment.md",
     "x-post.txt",
+    "x-thread.md",
     "linkedin-post.md",
     "community-post.md",
     "answer-bank.md",
@@ -45,6 +46,7 @@ EXPECTED_CHECKSUM_NAMES = frozenset(
         "show-hn-title.txt",
         "show-hn-first-comment.md",
         "x-post.txt",
+        "x-thread.md",
         "linkedin-post.md",
         "community-post.md",
         "answer-bank.md",
@@ -113,13 +115,26 @@ def _mutate_corpus_to_unparseable():
 
 def _render_x_post() -> str:
     source = json.loads(SOURCE.read_text(encoding="utf-8"))
+    x_text = source["channels"]["x"]["text"].format(**_x_facts())
+    return x_text if x_text.endswith("\n") else f"{x_text}\n"
+
+
+def _render_x_thread() -> list[str]:
+    source = json.loads(SOURCE.read_text(encoding="utf-8"))
+    thread = source["channels"]["x"].get("thread")
+    if thread is None:
+        return []
+    return [tweet.format(**_x_facts()) for tweet in thread]
+
+
+def _x_facts() -> dict:
     readme = (REPO / "README.md").read_text(encoding="utf-8")
     readme_line = next(
         (line.lstrip("# ").strip() for line in readme.splitlines() if line.startswith("### ")),
         "Coverage-first structural checklist for AI agent prompts.",
     )
     corpus = _corpus()
-    facts = {
+    return {
         "package_version": __version__,
         "ruleset": RULESET_ID,
         "dimension_count": len(DIMENSION_KEYS),
@@ -137,8 +152,6 @@ def _render_x_post() -> str:
         "operating_context": "Pendoah is the company operating context for this project.",
         "oneliner": readme_line,
     }
-    x_text = source["channels"]["x"]["text"].format(**facts)
-    return x_text if x_text.endswith("\n") else f"{x_text}\n"
 
 
 def _snapshot_dir(path: Path) -> dict[str, str]:
@@ -224,6 +237,16 @@ def test_generate_dist_pack_x_channel_respects_post_limit(tmp_path: Path):
     assert generated == x_text
     assert len(generated) <= 280
 
+    thread = _render_x_thread()
+    generated_thread = (out / "x-thread.md").read_text(encoding="utf-8")
+    if thread:
+        assert generated_thread == "\n\n".join(thread) + "\n"
+        for tweet in thread:
+            assert tweet.strip(), "thread tweet must not be blank"
+            assert len(tweet) <= 280, f"thread tweet exceeds limit: {len(tweet)}"
+    else:
+        assert generated_thread == ""
+
 
 def _corpus() -> dict:
     return json.loads(DATA.read_text(encoding="utf-8"))
@@ -298,6 +321,9 @@ def test_launch_copy_source_is_locked_and_template_driven():
     assert "{package_version}" in source["channels"]["x"]["text"]
     assert "{package_version}" in source["channels"]["linkedin"]["text"]
     assert "{package_version}" in source["channels"]["community_post"]["text"]
+    x_thread = source["channels"]["x"].get("thread")
+    assert isinstance(x_thread, list) and x_thread, "x.thread must be a non-empty list"
+    assert any("{package_version}" in tweet for tweet in x_thread)
     assert "{production_n}" in source["channels"]["show_hn"]["first_comment"]
     assert "{cliffs_delta}" in source["channels"]["show_hn"]["first_comment"]
     assert "{p_value}" in source["channels"]["show_hn"]["first_comment"]
@@ -329,6 +355,7 @@ def test_launch_copy_generated_pack_matches_repository_facts(tmp_path: Path):
         "show-hn-title.txt",
         "show-hn-first-comment.md",
         "x-post.txt",
+        "x-thread.md",
         "linkedin-post.md",
         "community-post.md",
         "answer-bank.md",
@@ -365,6 +392,7 @@ def test_launch_copy_generated_pack_matches_repository_facts(tmp_path: Path):
         "show-hn-title.txt",
         "show-hn-first-comment.md",
         "x-post.txt",
+        "x-thread.md",
         "linkedin-post.md",
         "community-post.md",
         "answer-bank.md",
