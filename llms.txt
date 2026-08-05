@@ -1,0 +1,27 @@
+# CrewScore
+
+> CrewScore is a free, open-source prompt-hygiene checker. It scores written prompts against 23 published guardrail controls across 8 dimensions and reports the controls a prompt is missing. It is a checklist, not a benchmark or certification: a score does not prove runtime quality, safety, or compliance.
+
+## CrewScore
+
+- [CrewScore](https://crewscore.ai/): prompt-hygiene checker and scoring tool
+- [Documentation](https://crewscore.ai/docs/): usage, rules, and configuration
+- [Validation study](https://crewscore.ai/docs/validation-corpus.md): reproducible corpus report
+- [Vendor checklist](https://crewscore.ai/vendor-checklist/): vendor prompt-hygiene checklist
+- [Security](https://crewscore.ai/security.html): security posture
+- [Privacy](https://crewscore.ai/privacy.html): analytics and privacy boundary
+- [Repository](https://github.com/shmindmaster/crewscore): source code
+- [PyPI package](https://pypi.org/project/crewscore/): installable package
+
+## How to use
+
+Install: `pip install crewscore`
+Run: `crewscore scan .`
+Require a human gate: `crewscore scan . --require human_gate.approval_required`
+
+## Key facts
+
+- 23 published written-guardrail controls across 8 dimensions.
+- Validation: 83 production-labeled prompts median 10/100; 273 general GPT-store prompts median 0/100; separation delta 0.614 (p = 0.0001).
+- Scoring: each dimension scores its covered controls; the overall score is the floor of the mean of the 8 dimension scores. One control stated in each dimension scores 36, all 23 controls score 100. The number measures whether controls are written down, not runtime behavior.
+- Configuration-smell advisories are a separate track and never feed the score.
