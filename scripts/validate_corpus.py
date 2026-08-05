@@ -31,7 +31,6 @@ Design constraints, from SH-2402:
 from __future__ import annotations
 
 import argparse
-from datetime import date
 import json
 import math
 import random
@@ -534,7 +533,7 @@ def render(payload: dict) -> str:
         "# Corpus validation: does CrewScore coverage separate production-labeled "
         "prompts from general-purpose ones?",
         "",
-        f"Validation ruleset `{payload['ruleset']}` · package `{__version__}` · generated `{date.today().isoformat()}`.",
+        f"Validation ruleset `{payload['ruleset']}` · package `{__version__}` · generated from the committed corpus snapshot.",
         "Reproducible command: `py scripts/validate_corpus.py`. This supersedes the withdrawn 1,368-prompt study.",
         "",
         "## Corpora",
