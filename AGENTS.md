@@ -15,6 +15,25 @@ It does **not** (yet) run live adversarial LLM attacks or parse LangGraph/CrewAI
 
 Ruleset id: **`crewscore-hygiene@0.6.0`** (`crewscore rules` prints it; `crewscore/scoring.py:RULESET_ID` is the source of truth).
 
+## Start here
+
+Read this file before editing repository policy, scoring semantics, or public
+claims.
+
+## Tracker
+
+Linear tracks outcomes and acceptance criteria; GitHub owns code and release
+artifacts.
+
+## RepoWise
+
+Keep RepoWise indexed to current `main` so symbol and document discovery reflects
+the active ruleset.
+
+## Safety
+
+Do not overclaim score meaning, validation coverage, or runtime assurance.
+
 ## Stack
 
 - Python 3.11+
@@ -135,6 +154,11 @@ tests/
 - Breaking CLI flags are acceptable if all docs and tests update in the same change.
 - Never document `pip install agent-guard` as *this* product (that PyPI name is taken by another package).
 - **Read `docs/validation.md` before writing or editing any claim about what the governance score proves.** It documents the reproducible 356-prompt corpus and the withdrawn 1,368-prompt study; do not re-inflate a "production-readiness" framing without new evidence.
+
+## Completion criteria
+
+A change is complete when the targeted checks pass, documentation matches
+behavior, and claims remain aligned with `docs/validation.md`.
 
 ## Do not
 
