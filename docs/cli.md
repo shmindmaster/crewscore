@@ -99,7 +99,7 @@ crewscore test --prompt-file ./system-prompt.md \
 Embed the badge (path relative to your repo):
 
 ```markdown
-![CrewScore](../assets/brand/checked-badge.svg)
+![CrewScore](./crewscore.svg)
 ```
 
 Human mode also prints a one-line share blurb. Reports are structural-scan
