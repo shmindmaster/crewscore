@@ -18,6 +18,7 @@ agent-guard-report-*.html
 .grok/
 .pytest_cache/
 .superpowers/
+.vscode/
 .worktrees/
 _product-experience/
 _production/
