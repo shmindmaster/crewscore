@@ -132,6 +132,19 @@ legacy numeric logic; new workflows should use an explicit control policy.
 - `@v2` is a floating major tag moved to each compatible release by the release
   workflow, so consumers pick up Action fixes without editing every workflow.
   Pin `@vX.Y.Z` instead if you want immutability.
+- Any action you run executes with your workflow's token, so pin the actions in
+  jobs that hold write permissions or an OIDC identity token to a full commit
+  SHA, with the version in an adjacent comment keeping it reviewable:
+
+  ```yaml
+  - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+  ```
+
+  A mutable tag is owned by whoever publishes that action; in a privileged job,
+  moving it re-points the code that holds your credentials. Add a
+  `github-actions` entry to `.github/dependabot.yml` and Dependabot will keep
+  both the SHA and the comment current. This repository does exactly that, and
+  `tests/test_workflow_provenance.py` fails the build when a pin regresses.
 - Templates: [`example-ci.yml`](../.github/workflows/example-ci.yml) and this
   repo's [self-test](../.github/workflows/crewscore-selftest.yml).
 

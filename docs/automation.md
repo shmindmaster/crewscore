@@ -27,8 +27,32 @@ agent opens owner same-repo PR
 | Correctness | pytest matrix + browser + Action self-test |
 | Trust boundary | Self-hosted jobs only for owner same-repo PRs |
 | Landing | `allow_auto_merge` + `auto-merge-owner-prs.yml` |
+| Merge decision code | `.github/scripts/owner-automerge.js`, loaded from the **base revision** (`.github-base/`), never from the PR |
 | Reviews | **Not required** (`required_pull_request_reviews` off) |
 | Opt-out | Label PR `no-automerge` |
+
+## Supply-chain controls for CI itself
+
+The machine path is only trustworthy if the machine cannot be redirected, so
+the workflows are held to two rules:
+
+1. **Every third-party action is pinned to a full commit SHA** with the tag in
+   an adjacent `# vX.Y.Z` comment. A mutable tag (`@v7`, `@main`) is controlled
+   by whoever owns that repository; in a job holding `contents: write` or an
+   OIDC token, moving it is remote code execution with release credentials
+   attached. The comment is what makes a SHA reviewable and is what Dependabot
+   matches on when it proposes the next bump.
+2. **Code that decides whether a PR merges cannot come from that PR.**
+   `auto-merge-owner-prs.yml` checks out `pull_request.base.sha` into
+   `.github-base/` (`persist-credentials: false`) and requires the controller
+   from there. A PR can still change the controller, but only after the change
+   has landed and is covered by the branch ruleset.
+
+`.github/dependabot.yml` runs the `github-actions` ecosystem weekly, which is
+the intended update path for those SHAs. `tests/test_workflow_provenance.py`
+enforces both rules, including a fixture attack: a PR that ships a controller
+merging anything, and an assertion that the workflow's decision path ignores
+it.
 
 ## Former "human gates" → automation status
 

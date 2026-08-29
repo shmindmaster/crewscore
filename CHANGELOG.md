@@ -25,6 +25,17 @@ No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
   followed: a linked directory is not descended, which makes directory-link
   cycles structurally impossible, and a linked file is not read. Broken links
   are skipped cleanly instead of raising. There is no flag to opt back in.
+- Pinned every third-party GitHub Action in `.github/workflows/` and in
+  `action.yml` to a full commit SHA, with the tag recorded in an adjacent
+  `# vX.Y.Z` comment. Priority was the jobs that hold write permissions or an
+  OIDC identity token (`release.yml` publishing and release creation,
+  `auto-merge-owner-prs.yml`); unprivileged jobs were pinned too, because an
+  unpinned step is a step nobody reviewed.
+- `auto-merge-owner-prs.yml` now loads its merge controller from a checkout of
+  `github.event.pull_request.base.sha` (`.github-base/`, with
+  `persist-credentials: false`) instead of from the pull request. It previously
+  loaded `.github/scripts/owner-automerge.js` out of the PR checkout, so a PR
+  could rewrite the code that decides whether it is approved and merged.
 
 ### Added
 
@@ -33,6 +44,14 @@ No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
   scan caused by containment is distinguishable from an empty repo. Skipped
   paths are never emitted as scan rows, so the `--json` row key set is
   unchanged.
+- `.github/dependabot.yml` keeps the `github-actions` ecosystem on a weekly
+  schedule and now sets `commit-message` prefixes, so SHA pins are bumped by
+  reviewed Dependabot PRs instead of drifting.
+- `tests/test_workflow_provenance.py` and `tests/fixtures/`: no mutable action
+  refs (and no missing version comments) anywhere, no mutable refs in
+  privileged jobs, one SHA per action, the auto-merge controller loaded from
+  the base revision, and a fixture attack in which a pull request ships a
+  controller that merges anything and is ignored.
 
 ### Changed
 
