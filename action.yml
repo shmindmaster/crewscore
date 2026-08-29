@@ -60,6 +60,10 @@ inputs:
     description: "Optional path for prompt-free SARIF 2.1.0 missing-control findings."
     required: false
     default: ""
+  include-snippets:
+    description: 'DEPRECATED: set to "true" to also copy matched prompt substrings into the JSON log, summary, and sticky PR comment. The default keeps every machine output prompt-free (rule IDs, dimensions, status, control labels). This escape hatch will be removed after one release.'
+    required: false
+    default: "false"
 
 outputs:
   scored:
@@ -103,6 +107,7 @@ runs:
         FAIL_ON_REGRESSION: ${{ inputs.fail-on-regression }}
         CONFIG: ${{ inputs.config }}
         SARIF: ${{ inputs.sarif }}
+        INCLUDE_SNIPPETS: ${{ inputs.include-snippets }}
       run: |
         set -euo pipefail
 
@@ -132,6 +137,9 @@ runs:
           if [ "$FAIL_ON_REGRESSION" = "true" ]; then ARGS+=(--fail-on-regression); fi
           if [ -n "$CONFIG" ]; then ARGS+=(--config "$CONFIG"); fi
           if [ -n "$SARIF" ]; then ARGS+=(--sarif "$SARIF"); fi
+          # Opt-in only: the default keeps prompt text out of the JSON echoed
+          # to the log and out of the summary that becomes the PR comment.
+          if [ "$INCLUDE_SNIPPETS" = "true" ]; then ARGS+=(--include-snippets); fi
           OUTPUT=$(crewscore "${ARGS[@]}")
           EXIT=$?
         else
@@ -156,6 +164,7 @@ runs:
           if [ "$FAIL_ON_REGRESSION" = "true" ]; then ARGS+=(--fail-on-regression); fi
           if [ -n "$CONFIG" ]; then ARGS+=(--config "$CONFIG"); fi
           if [ -n "$SARIF" ]; then ARGS+=(--sarif "$SARIF"); fi
+          if [ "$INCLUDE_SNIPPETS" = "true" ]; then ARGS+=(--include-snippets); fi
           OUTPUT=$(crewscore "${ARGS[@]}")
           EXIT=$?
         fi

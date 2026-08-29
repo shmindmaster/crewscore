@@ -1,9 +1,16 @@
-"""Transparent markdown summaries for CI / PR comments (not a black box)."""
+"""Transparent markdown summaries for CI / PR comments (not a black box).
+
+Prompt-free by contract: callers pass findings through
+`findings_export.public_findings()` first, so a job summary and the sticky PR
+comment carry rule IDs, dimensions, status, and control labels — never the
+matched substring of the prompt that was scanned.
+"""
 
 from __future__ import annotations
 
 from typing import Any
 
+from crewscore.findings_export import finding_detail
 from crewscore.scoring import DIMENSIONS, RULESET_ID, ScoreResult
 
 # Plain-language explanation for warning keys that a reader cannot act on
@@ -197,7 +204,7 @@ def format_score_markdown(
                 status = f.get("status") or "?"
                 rid = f.get("rule_id")
                 rid_s = f"`{rid}` " if rid else ""
-                detail = f.get("snippet") or f.get("pattern_or_reason") or ""
+                detail = finding_detail(f)
                 icon = "✅" if status == "matched" else "❌"
                 lines.append(f"- {icon} **{status}** {rid_s}{detail}")
                 shown += 1

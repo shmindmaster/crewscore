@@ -58,6 +58,18 @@ workflow actually needs before you make anything fail.
           echo "tier=${{ steps.crewscore.outputs.tier }}"
 ```
 
+### Prompt-free by default
+
+The step echoes `--json` into the build log, writes `--summary`, and (on
+`pull_request`) posts that summary as a sticky PR comment. All three are
+prompt-free by default: they carry rule IDs, dimensions, status, and control
+labels, never the matched substring of the file that was scanned. `sarif` is
+prompt-free and is not affected by any input.
+
+Set `include-snippets: "true"` only if you have a workflow that already parses
+the `snippet` key. It is a deprecated compatibility escape hatch and will be
+removed after one release.
+
 ### Optional — inline code-scanning annotations from SARIF
 
 The SARIF report is prompt-free (control IDs and file paths, no prompt text or
@@ -89,6 +101,7 @@ snippets), so it is safe to upload to code scanning:
 | `fail-on-regression` | no | `false` | Fail only if a baseline control disappears |
 | `config` | no | `""` | Optional `.crewscore.yml` control-policy file |
 | `sarif` | no | `""` | Optional destination for prompt-free SARIF 2.1.0 findings |
+| `include-snippets` | no | `false` | **Deprecated.** `"true"` re-admits matched prompt substrings into the JSON log, summary, and sticky PR comment. Default keeps every machine output prompt-free; removed after one release |
 
 Provide **either** `prompt-file` **or** `scan-path`. In scan mode the outputs
 use the minimum overall across governed files only — coding-agent config is

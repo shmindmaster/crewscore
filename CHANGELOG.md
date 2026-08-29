@@ -16,6 +16,53 @@ install them, and do not compare their numbers to these.
 
 ---
 
+## [0.6.12] — 2026-08-29 — machine outputs stop quoting the prompt
+
+No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
+
+### Fixed
+
+- **Every machine output is prompt-free by default.** A regex match substring
+  (up to 120 characters of the scanned prompt) was copied into
+  `findings[].snippet` and then serialized into `test --json`, `scan --json`,
+  the `GITHUB_STEP_SUMMARY` job summary, the sticky PR comment, and the HTML
+  report. A build log and a PR comment are more public than the prompt being
+  audited, so the snippet is still computed (scoring is untouched) but is no
+  longer serialized. Machine outputs still carry rule ID, dimension, status,
+  concept label, and remediation, and renderers degrade to the control label
+  rather than printing `None`.
+- **HTML reports follow the same rule.** `--report` output is routinely
+  uploaded as a CI artifact, so it is gated identically.
+
+### Added
+
+- `--include-snippets` on `test` and `scan`, plus an `include-snippets` Action
+  input (default `"false"`, forwarded only when it is literally `"true"`). It
+  is a **deprecated compatibility escape hatch** for callers that already
+  parse `snippet`, and it will be removed after one release. It does not apply
+  to `--sarif`, which stays control-only either way, and it never re-enables a
+  governance grade for coding-agent config.
+- `crewscore/findings_export.py`: the single serialization gate.
+  `public_findings()` drops `snippet` unless the caller opts in;
+  `finding_detail()` degrades to the control label.
+- `tests/test_prompt_free_outputs.py` and two Action-manifest tests lock the
+  contract, including the coding-agent-config JSON shape and the claim that
+  configuration-smell `detail` strings quote nothing from the scanned file.
+
+### Changed
+
+- The local terminal is unchanged: `crewscore test --explain` still prints the
+  matched text, because it is explicitly requested and never leaves the
+  machine.
+
+### Docs
+
+- `docs/cli.md` documents the prompt-free contract, the per-surface table, and
+  the deprecation. `docs/github-action.md` and `README.md` note it for CI
+  users.
+
+---
+
 ## [0.6.11] — 2026-08-01 — preserve canonical release bytes on Windows
 
 No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.

@@ -13,6 +13,7 @@ from rich.panel import Panel
 
 from crewscore import __version__
 from crewscore.export_eval import write_eval_stubs
+from crewscore.findings_export import public_findings
 from crewscore.policy import (
     PolicyError,
     baseline_payload,
@@ -104,6 +105,16 @@ err_console = Console(stderr=True)
 BRAND = "CrewScore"
 HOMEPAGE = "https://crewscore.ai"
 REPO = "https://github.com/shmindmaster/crewscore"
+
+# Shared help text for the opt-in that re-admits prompt text into machine
+# output. It is a compatibility escape hatch, not a feature: the default is
+# prompt-free, and the flag is scheduled for removal after one release.
+_SNIPPET_OPT_IN_HELP = (
+    "DEPRECATED compatibility escape hatch: also copy matched prompt "
+    "substrings into --json, --summary and --report output. Default (off) "
+    "emits rule IDs, dimension, status and the control label only. This flag "
+    "will be removed after one release."
+)
 
 
 def _resolve_policy_or_exit(
@@ -206,6 +217,12 @@ main.add_command(assess_vendor)
     help="Show matched/missing signals with rule IDs (default: on — scores are not a black box)",
 )
 @click.option(
+    "--include-snippets",
+    "include_snippets",
+    is_flag=True,
+    help=_SNIPPET_OPT_IN_HELP,
+)
+@click.option(
     "--report",
     type=click.Path(),
     default=None,
@@ -286,6 +303,7 @@ def test(
     as_json,
     threshold,
     explain,
+    include_snippets,
     report,
     badge,
     summary,
@@ -364,11 +382,22 @@ def test(
         root=prompt_path.parent if prompt_path else None,
     )
 
+    # Findings split here: everything that leaves the machine (report, JSON,
+    # summary file, job summary, SARIF) is rendered from the redacted copy,
+    # while --explain keeps the real match text for the local terminal.
+    shared = public_findings(findings, include_snippets=include_snippets)
+    if include_snippets:
+        err_console.print(
+            "[yellow]--include-snippets is deprecated:[/yellow] matched prompt "
+            "text is being copied into machine output. It will be removed after "
+            "one release; prefer the default prompt-free payload."
+        )
+
     if report:
         report_path = Path(report)
         report_path.parent.mkdir(parents=True, exist_ok=True)
         report_path.write_text(
-            render_html_report(result, findings=findings),
+            render_html_report(result, findings=shared),
             encoding="utf-8",
         )
     if badge:
@@ -376,18 +405,20 @@ def test(
         badge_path.parent.mkdir(parents=True, exist_ok=True)
         badge_path.write_text(render_badge_svg(result), encoding="utf-8")
     if sarif:
+        # SARIF is uploaded to code scanning, where the opt-in does not apply:
+        # it is control IDs and locations only, with or without the flag.
         write_sarif(
             sarif,
             [
                 (
                     str(prompt_path) if prompt_path else "prompt",
                     result.governance_applicable,
-                    findings,
+                    public_findings(findings),
                 )
             ],
         )
 
-    md_body = format_score_markdown(result, findings=findings)
+    md_body = format_score_markdown(result, findings=shared)
     if summary:
         summary_path = Path(summary)
         summary_path.parent.mkdir(parents=True, exist_ok=True)
@@ -412,7 +443,7 @@ def test(
             # apparatus of a governance grade. Coding-agent config already
             # has `overall`/`dimensions` withheld; publishing these two would
             # let a reader reconstruct a score from them alone.
-            payload["findings"] = findings
+            payload["findings"] = shared
             payload["transparency"] = scoring_transparency_block()
             payload["coverage"] = {
                 "matched": matched_n,
@@ -1406,6 +1437,12 @@ def init(path: Path, force: bool):
     help="Show matched vs missing signals for the lowest-scoring file",
 )
 @click.option(
+    "--include-snippets",
+    "include_snippets",
+    is_flag=True,
+    help=_SNIPPET_OPT_IN_HELP,
+)
+@click.option(
     "--summary",
     type=click.Path(),
     default=None,
@@ -1472,6 +1509,7 @@ def scan(
     threshold,
     max_smells,
     explain,
+    include_snippets,
     summary,
     profile,
     include_inline,
@@ -1489,6 +1527,12 @@ def scan(
     literals embedded in .py/.ts/.js source. Offline structural scan only.
     """
     root = Path(path).resolve()
+    if include_snippets:
+        err_console.print(
+            "[yellow]--include-snippets is deprecated:[/yellow] matched prompt "
+            "text is being copied into machine output. It will be removed after "
+            "one release; prefer the default prompt-free payload."
+        )
     policy = _resolve_policy_or_exit(
         config=config,
         require=required_controls,
@@ -1608,7 +1652,16 @@ def scan(
         )
         if policy.enabled:
             item["policy"] = policy_result
-        sarif_entries.append((item["path"], applicable, findings))
+        # Same gate as `test`: findings that reach a machine artifact are the
+        # redacted copy unless the caller opted in. `scan --explain` reads the
+        # raw list, because that one never leaves the terminal.
+        sarif_entries.append(
+            (
+                item["path"],
+                applicable,
+                public_findings(findings, include_snippets=include_snippets),
+            )
+        )
     if sarif:
         write_sarif(sarif, sarif_entries)
 
