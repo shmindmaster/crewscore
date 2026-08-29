@@ -11,6 +11,14 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+from crewscore.pathsafe import (
+    DESCEND,
+    READ,
+    SKIP,
+    SkippedPath,
+    classify_entry,
+    resolve_root,
+)
 from crewscore.scan import MAX_DEPTH, MAX_FILE_BYTES, SKIP_DIRS
 
 # Exact names only (case-sensitive). Callers burying prompts under other names
@@ -120,14 +128,20 @@ def extract_inline_prompts(path: Path, *, root: Path | None = None) -> list[Inli
 
 
 def discover_inline_prompts(
-    root: Path, *, max_depth: int = MAX_DEPTH
+    root: Path,
+    *,
+    max_depth: int = MAX_DEPTH,
+    skipped: list[SkippedPath] | None = None,
 ) -> list[InlinePrompt]:
     """Walk a tree and extract inline prompts from supported source files.
 
     Skips the same directories as ``scan.SKIP_DIRS`` and files larger than
     ``scan.MAX_FILE_BYTES``. Depth is measured relative to root (root = 0).
+
+    `skipped`, when provided, collects paths discovery refused to open because
+    they could leave the scan root - the same containment rule `scan` applies.
     """
-    root = Path(root).resolve()
+    root = resolve_root(root)
     if not root.is_dir():
         return []
 
@@ -142,12 +156,13 @@ def discover_inline_prompts(
             return
         for entry in entries:
             try:
-                if entry.is_dir():
-                    if entry.name in SKIP_DIRS:
-                        continue
+                action, reason = classify_entry(entry, root, ignore_names=SKIP_DIRS)
+                if action == DESCEND:
                     _walk(entry, depth + 1)
-                elif entry.is_file() and entry.suffix.lower() in SOURCE_EXTENSIONS:
+                elif action == READ and entry.suffix.lower() in SOURCE_EXTENSIONS:
                     found.extend(extract_inline_prompts(entry, root=root))
+                elif action == SKIP and reason is not None and skipped is not None:
+                    skipped.append(SkippedPath(entry, reason))
             except OSError:
                 continue
 

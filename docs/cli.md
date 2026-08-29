@@ -41,6 +41,13 @@ crewscore scan examples/corpus
   single file; a table for a scan).
 - Exits `1` if no candidate files are found.
 - Skips `node_modules`, `.git`, `venv`, `.venv`, `dist`, `__pycache__`.
+- **Never follows symlinks or junctions.** A linked directory is not descended
+  (so link cycles cannot hang the walk) and a linked file is not read, which
+  keeps the scan inside `PATH` even when the tree links out of it. Refusals are
+  reported on stderr - `--json` prints one `{"skipped_unsafe_path": {...}}`
+  object per refusal, so an empty result is never mistaken for a clean tree -
+  and are never added as rows, so the `--json` row shape is unchanged. There
+  is no flag to opt back in.
 
 This is the default CI gate for repos with more than one agent artifact.
 

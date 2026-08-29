@@ -24,6 +24,7 @@ from crewscore.hero import coverage_from_findings, hero_missing_control
 from crewscore.report import render_badge_svg, render_html_report, share_text
 from crewscore.rules_catalog import SCORING_METHOD, catalog_payload, scoring_transparency_block
 from crewscore.sarif import write_sarif
+from crewscore.pathsafe import SKIP_REASON_TEXT, SkippedPath
 from crewscore.scan import (
     MAX_FILE_BYTES,
     discover_inline_prompt_sources,
@@ -147,10 +148,12 @@ def _evaluate_policy_or_exit(settings, **kwargs):
         sys.exit(1)
 
 
-def _baseline_entries(root: Path, profile: str | None) -> list[tuple[str, str, list[dict]]]:
+def _baseline_entries(
+    root: Path, profile: str | None, *, skipped: list[SkippedPath] | None = None
+) -> list[tuple[str, str, list[dict]]]:
     """Collect public control state for a prompt-free baseline file."""
     entries: list[tuple[str, str, list[dict]]] = []
-    for path in discover_prompt_files(root):
+    for path in discover_prompt_files(root, skipped=skipped):
         resolved = profile or classify_path(path)
         if not governance_applies(resolved):
             continue
@@ -158,6 +161,35 @@ def _baseline_entries(root: Path, profile: str | None) -> list[tuple[str, str, l
         _dimensions, findings = structural_analysis.analyze_with_findings(text)
         entries.append((path.resolve().relative_to(root).as_posix(), resolved, findings))
     return entries
+
+
+def _report_skipped_paths(skipped: list[SkippedPath], *, as_json: bool) -> None:
+    """Print containment refusals to stderr; stdout stays pure JSON.
+
+    These are not scan rows: a skipped path was never read, so it has no score
+    and no tier, and adding it to the `--json` array would break every consumer
+    that reads one. `--json` gets one machine-readable object per refusal on
+    stderr instead, so "skipped as unsafe" stays distinguishable from "nothing
+    was found".
+    """
+    if not skipped:
+        return
+    # File discovery and inline extraction walk the same tree, so the same link
+    # is refused twice. Report it once.
+    seen: set[tuple[str, str]] = set()
+    unique: list[SkippedPath] = []
+    for item in skipped:
+        key = (str(item.path), item.reason)
+        if key not in seen:
+            seen.add(key)
+            unique.append(item)
+    if as_json:
+        for item in unique:
+            click.echo(json.dumps({"skipped_unsafe_path": item.as_dict()}), err=True)
+        return
+    for item in unique:
+        reason = SKIP_REASON_TEXT.get(item.reason, item.reason)
+        err_console.print(f"[yellow]Skipped {item.path} - {reason}.[/yellow]")
 
 
 def render_score_bar(score: int) -> str:
@@ -1302,7 +1334,9 @@ def baseline(path: Path, output_path: Path | None, profile: str | None):
     """
     root = path.resolve()
     forced_profile = profile.lower() if profile else None
-    entries = _baseline_entries(root, forced_profile)
+    skipped: list[SkippedPath] = []
+    entries = _baseline_entries(root, forced_profile, skipped=skipped)
+    _report_skipped_paths(skipped, as_json=False)
     destination = output_path or root / ".crewscore-baseline.json"
     destination = destination.resolve()
     payload = baseline_payload(entries, ruleset=RULESET_ID)
@@ -1345,7 +1379,9 @@ def init(path: Path, force: bool):
         err_console.print("[dim]Review them first, or re-run `crewscore init --force`.[/dim]")
         sys.exit(1)
 
-    entries = _baseline_entries(root, None)
+    skipped: list[SkippedPath] = []
+    entries = _baseline_entries(root, None, skipped=skipped)
+    _report_skipped_paths(skipped, as_json=False)
     baseline_path.write_text(
         json.dumps(baseline_payload(entries, ruleset=RULESET_ID), indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
@@ -1541,12 +1577,16 @@ def scan(
         fail_on_regression=fail_on_regression,
     )
     oversized: list[Path] = []
-    files = discover_prompt_files(root, oversized=oversized)
-    inlines = discover_inline_prompt_sources(root) if include_inline else []
+    skipped: list[SkippedPath] = []
+    files = discover_prompt_files(root, oversized=oversized, skipped=skipped)
+    inlines = (
+        discover_inline_prompt_sources(root, skipped=skipped) if include_inline else []
+    )
+    _report_skipped_paths(skipped, as_json=as_json)
     if oversized and not as_json:
-        for skipped in oversized:
+        for oversized_path in oversized:
             err_console.print(
-                f"[yellow]Skipped {skipped} — larger than 500KB. "
+                f"[yellow]Skipped {oversized_path} — larger than 500KB. "
                 "Score it directly with crewscore test --prompt-file.[/yellow]"
             )
 
@@ -1567,6 +1607,14 @@ def scan(
                 "agents/, prompts/, or prompt/ directories, and (default) "
                 "system_prompt string literals in .py/.ts/.js source. "
                 "Disable inline with --no-inline.[/dim]"
+            )
+        if skipped:
+            # Empty because the scan refused to follow links is a different
+            # fact from empty because there is nothing to score, and `[]` on
+            # stdout cannot say which one it is.
+            err_console.print(
+                f"[yellow]{len(skipped)} path(s) skipped as unsafe - links are "
+                "never followed, so the scan stayed inside the root.[/yellow]"
             )
         sys.exit(1)
 
@@ -1876,4 +1924,5 @@ def scan(
 
 if __name__ == "__main__":
     main()
+
 

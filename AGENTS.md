@@ -106,6 +106,7 @@ crewscore/
   scoring.py              # shared result model / tiers / RULESET_ID
   profiles.py             # artifact classification (filename-only) -> which ruleset applies
   scan.py                 # repo-walk file discovery + per-file scoring for `scan`
+  pathsafe.py             # shared scan-root containment (links never followed)
   smells.py                # offline config-smell detection (arXiv:2606.15828)
   rules_catalog.py         # open rule catalog + per-dimension provenance
   summary.py                # PR/job markdown (transparent)

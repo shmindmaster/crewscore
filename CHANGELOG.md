@@ -14,6 +14,32 @@ install them, and do not compare their numbers to these.
 
 ## [Unreleased]
 
+No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
+
+### Security
+
+- **Repository scans are contained to the requested root.** Discovery now
+  resolves the scan root once and requires every candidate to resolve inside
+  it, through one shared boundary (`crewscore/pathsafe.py`) used by both file
+  discovery and inline extraction. Symlinks and Windows junctions are never
+  followed: a linked directory is not descended, which makes directory-link
+  cycles structurally impossible, and a linked file is not read. Broken links
+  are skipped cleanly instead of raising. There is no flag to opt back in.
+
+### Added
+
+- Refusals are reported instead of dropped: one stderr line per path, or one
+  `{"skipped_unsafe_path": {...}}` object per path under `--json`, so an empty
+  scan caused by containment is distinguishable from an empty repo. Skipped
+  paths are never emitted as scan rows, so the `--json` row key set is
+  unchanged.
+
+### Changed
+
+- A symlinked directory **inside** the root is no longer descended either. That
+  is deliberate fail-closed behavior, not a regression: it is what makes link
+  cycles impossible.
+
 ---
 
 ## [0.6.12] — 2026-08-29 — machine outputs stop quoting the prompt
