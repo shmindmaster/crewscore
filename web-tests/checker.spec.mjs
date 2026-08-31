@@ -552,6 +552,12 @@ test.describe("shared result links", () => {
     let results = await openShare(page, legacyShare(8, { ruleset: "totally-made-up@1" }));
     await expectRejected(results, "unknown_ruleset", "ruleset CrewScore does not publish");
 
+    // The one that matters: semver-shaped and plausible, but never published.
+    // A shape-only check accepts this and renders the supplied partition as a
+    // historical CrewScore result.
+    results = await openShare(page, legacyShare(8, { ruleset: "crewscore-hygiene@999.0.0" }));
+    await expectRejected(results, "unknown_ruleset", "ruleset CrewScore does not publish");
+
     results = await openShare(page, legacyShare(8, { ruleset: "crewscore-hygiene@0.5.0" }));
     await expect(results.getByRole("heading", { name: `8 of ${CANONICAL_CONTROLS.length} written guardrails found` })).toBeVisible();
     await expect(results).toContainText("crewscore-hygiene@0.5.0");

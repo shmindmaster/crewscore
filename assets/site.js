@@ -13,7 +13,21 @@
   // hand-written fragment cannot make the decoder walk an unbounded array.
   const MAX_SHARE_FRAGMENT_CHARS = 4096;
   const MAX_SHARE_IDS = 64;
-  const RULESET_PATTERN = /^crewscore-hygiene@\d+\.\d+\.\d+$/;
+  // Every ruleset id CrewScore has published, from the history of
+  // scoring.py:RULESET_ID. Membership, not shape: a semver-shaped name like
+  // crewscore-hygiene@999.0.0 was never published, and rendering its partition
+  // as a historical CrewScore result is exactly what unknown_ruleset must stop.
+  // Add the new id here in the same change that bumps RULESET_ID.
+  const PUBLISHED_RULESETS = new Set([
+    "crewscore-hygiene@0.1.0",
+    "crewscore-hygiene@0.2.2",
+    "crewscore-hygiene@0.2.3",
+    "crewscore-hygiene@0.3.0",
+    "crewscore-hygiene@0.3.1",
+    "crewscore-hygiene@0.4.0",
+    "crewscore-hygiene@0.5.0",
+    "crewscore-hygiene@0.6.0",
+  ]);
   const MODE_KEY = "crewscore_web_mode_v1";
   const ANALYTICS_OPT_OUT_KEY = "crewscore_analytics_opt_out_v1";
   const SIMPLE_NAMES = {
@@ -917,7 +931,7 @@
     const version = shareVersion(payload.v);
     if (version === null) return shareFailure("unsupported_version");
 
-    if (typeof payload.ruleset !== "string" || !RULESET_PATTERN.test(payload.ruleset)) return shareFailure("unknown_ruleset");
+    if (typeof payload.ruleset !== "string" || !PUBLISHED_RULESETS.has(payload.ruleset)) return shareFailure("unknown_ruleset");
     const profiles = (E.profiles || []).map((profile) => profile.key);
     if (typeof payload.profile !== "string" || profiles.indexOf(payload.profile) === -1) return shareFailure("unknown_profile");
     if (payload.profile === E.configProfile) return shareFailure("profile_incompatible");
@@ -986,13 +1000,19 @@
       ? `<div class="hero-gap-card"><span class="gap-eyebrow">First gap to review</span><strong>${escapeHtml(gapTitle)}</strong><p>Shared as missing. Original prompt text was not included.</p></div>`
       : `<div class="hero-gap-card is-clear"><span class="gap-eyebrow">First gap to review</span><strong>No missing controls in this share</strong><p>Original prompt text was not included.</p></div>`;
     mount.innerHTML = `<div class="result-moment is-fresh"><div class="result-kicker">Shared CrewScore result</div><div class="result-fraction" aria-hidden="true"><span class="found">${foundN}</span><span class="of">of</span><span class="total">${total}</span></div><h2 id="results-heading" class="result-fraction-label">${foundN} of ${total} written guardrails found</h2><div class="coverage-meter" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="${foundN} of ${total} controls"><span style="width:${pct}%"></span></div><p class="result-summary">${missingN} controls were shared as missing. The original instructions were not included.</p>${heroShared}</div><div class="coverage-disclosure">Written-control coverage, not runtime proof. A shared result is a historical summary, not a live scan.</div>${current ? "" : `<div class="warning">This result uses ${escapeHtml(share.ruleset)} and cannot be edited or rescored here. Check your own instructions with the current rules.</div>`}<button class="button" id="shared-check" type="button">Check my instructions</button>`;
-    $("shared-check").addEventListener("click", () => { $("agent-prompt").focus(); scrollTo($("checker-workspace"), "start"); });
+    // setMethod, not a bare focus: the reader's last method is restored from
+    // storage at init, so if they previously chose upload or URL the paste
+    // panel is hidden and focusing its textarea silently does nothing.
+    $("shared-check").addEventListener("click", () => { setMethod("paste", true); scrollTo($("checker-workspace"), "start"); });
   }
 
   function renderShareFailure(reason, message) {
     const mount = $("results");
     mount.innerHTML = `<div class="result-moment" data-share-error="${escapeHtml(reason)}"><div class="result-kicker">Shared result</div><h2 id="results-heading">This shared result link could not be read</h2><p class="result-summary">${escapeHtml(message)} No coverage number is shown, because this link does not carry one that can be trusted.</p></div><div class="coverage-disclosure">The link was read in this browser only. Nothing in it was sent anywhere, and no usage event was recorded for it.</div><div class="result-actions"><button class="button" id="shared-check" type="button">Check my instructions</button><button class="button-secondary" id="shared-error-dismiss" type="button">Dismiss this message</button></div>`;
-    $("shared-check").addEventListener("click", () => { $("agent-prompt").focus(); scrollTo($("checker-workspace"), "start"); });
+    // setMethod, not a bare focus: the reader's last method is restored from
+    // storage at init, so if they previously chose upload or URL the paste
+    // panel is hidden and focusing its textarea silently does nothing.
+    $("shared-check").addEventListener("click", () => { setMethod("paste", true); scrollTo($("checker-workspace"), "start"); });
     $("shared-error-dismiss").addEventListener("click", () => {
       try { window.history.replaceState(null, "", `${location.pathname}${location.search}`); } catch (_) { /* a cosmetic URL change must never break the page */ }
       mount.innerHTML = RESULTS_PLACEHOLDER_HTML;

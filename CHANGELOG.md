@@ -75,6 +75,18 @@ No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
   number or meter, and records no analytics event.
 - Share fragments and the control arrays inside them are bounded before
   decoding, so an oversized link cannot make the page walk unbounded input.
+- `unknown_ruleset` checks membership, not shape. It previously accepted any
+  semver-shaped name, so `crewscore-hygiene@999.0.0` rendered its supplied
+  partition as a historical CrewScore result. Shared links are now validated
+  against the explicit list of published ruleset ids.
+- Opening a shared result records no `cs_site_view`. The event fired during
+  analytics init, before the decoder rendered anything, so the panel's "no
+  usage event was recorded for it" was false on `crewscore.ai` -- and only
+  there, since the transport exits early on every other host, which is why the
+  localhost browser tests could not see it.
+- The shared-result recovery button switches to the paste method before
+  focusing. The reader's last input method is restored from storage, so after
+  choosing upload or URL the button focused a hidden textarea and did nothing.
 
 - Diagnostics on stderr are greppable again. `err_console` hard-wrapped at the
   detected width (80 columns when stderr is not a tty), inserting real newlines
