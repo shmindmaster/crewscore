@@ -7,6 +7,13 @@
   if (!E) return;
 
   const MAX_IMPORT_BYTES = 500000;
+  const SHARE_VERSION = 2;
+  const SHARE_VERSION_LEGACY = 1;
+  // A real 23-control share encodes to under 1 KB. These bounds exist so a
+  // hand-written fragment cannot make the decoder walk an unbounded array.
+  const MAX_SHARE_FRAGMENT_CHARS = 4096;
+  const MAX_SHARE_IDS = 64;
+  const RULESET_PATTERN = /^crewscore-hygiene@\d+\.\d+\.\d+$/;
   const MODE_KEY = "crewscore_web_mode_v1";
   const ANALYTICS_OPT_OUT_KEY = "crewscore_analytics_opt_out_v1";
   const SIMPLE_NAMES = {
@@ -736,7 +743,7 @@
 
   function sharePayload(result) {
     const { found, missing } = controlsForResult(result);
-    return { v: 1, ruleset: result.ruleset, profile: result.profile, found, missing };
+    return { v: SHARE_VERSION, ruleset: result.ruleset, profile: result.profile, total: allControls().length, found, missing };
   }
   function base64Url(value) {
     const bytes = new TextEncoder().encode(JSON.stringify(value));
@@ -869,30 +876,138 @@
     }
   }
 
+  // A share link is an unsigned fragment: anyone can edit one, and the reader
+  // has no way to tell an edited link from a real one. Every number the page
+  // shows therefore has to come from the canonical control list, never from
+  // the lengths of the arrays carried in the link.
+  const SHARE_ERRORS = {
+    payload_too_large: "This shared link is larger than a CrewScore result link can be.",
+    unreadable: "This shared link is damaged or was cut short.",
+    unsupported_version: "This shared link was written by a newer version of CrewScore.",
+    unknown_ruleset: "This shared link names a ruleset CrewScore does not publish.",
+    unknown_profile: "This shared link names an artifact type CrewScore does not score.",
+    profile_incompatible: "This shared link is for coding-agent instructions, which get configuration smells instead of a written-control count.",
+    too_many_ids: "This shared link lists more controls than CrewScore scores.",
+    duplicate_id: "This shared link lists the same control more than once.",
+    overlap: "This shared link lists a control as both found and missing.",
+    unknown_id: "This shared link lists a control CrewScore does not score.",
+    incomplete_partition: "This shared link does not account for every published control.",
+    impossible_total: "This shared link claims a number that does not follow from the controls it lists.",
+  };
+
+  function shareFailure(reason) {
+    return { ok: false, reason, message: SHARE_ERRORS[reason] || SHARE_ERRORS.unreadable };
+  }
+
+  function shareVersion(declared) {
+    if (declared === undefined || declared === null) return SHARE_VERSION_LEGACY;
+    const version = Number(declared);
+    if (version === SHARE_VERSION_LEGACY || version === SHARE_VERSION) return version;
+    return null;
+  }
+
+  function decodeSharedPayload(encoded) {
+    if (typeof encoded !== "string" || !encoded) return shareFailure("unreadable");
+    if (encoded.length > MAX_SHARE_FRAGMENT_CHARS) return shareFailure("payload_too_large");
+
+    let payload;
+    try { payload = decodeBase64Url(encoded); } catch (_) { return shareFailure("unreadable"); }
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) return shareFailure("unreadable");
+
+    const version = shareVersion(payload.v);
+    if (version === null) return shareFailure("unsupported_version");
+
+    if (typeof payload.ruleset !== "string" || !RULESET_PATTERN.test(payload.ruleset)) return shareFailure("unknown_ruleset");
+    const profiles = (E.profiles || []).map((profile) => profile.key);
+    if (typeof payload.profile !== "string" || profiles.indexOf(payload.profile) === -1) return shareFailure("unknown_profile");
+    if (payload.profile === E.configProfile) return shareFailure("profile_incompatible");
+
+    const found = payload.found;
+    const missing = payload.missing;
+    if (!Array.isArray(found) || !Array.isArray(missing)) return shareFailure("unreadable");
+    if (found.length > MAX_SHARE_IDS || missing.length > MAX_SHARE_IDS) return shareFailure("too_many_ids");
+    if (!found.every((key) => typeof key === "string") || !missing.every((key) => typeof key === "string")) return shareFailure("unreadable");
+
+    const foundSet = new Set(found);
+    const missingSet = new Set(missing);
+    if (foundSet.size !== found.length || missingSet.size !== missing.length) return shareFailure("duplicate_id");
+    if (found.some((key) => missingSet.has(key))) return shareFailure("overlap");
+
+    const canonical = allControls();
+    const known = new Set(canonical.map((control) => control.key));
+    if (found.some((key) => !known.has(key)) || missing.some((key) => !known.has(key))) return shareFailure("unknown_id");
+    if (foundSet.size + missingSet.size !== canonical.length) return shareFailure("incomplete_partition");
+
+    const derivedFound = [];
+    const derivedMissing = [];
+    canonical.forEach((control) => {
+      if (foundSet.has(control.key)) derivedFound.push(control.key);
+      else if (missingSet.has(control.key)) derivedMissing.push(control.key);
+    });
+    if (derivedFound.length + derivedMissing.length !== canonical.length) return shareFailure("incomplete_partition");
+
+    const total = canonical.length;
+    const derivedTotals = [
+      ["total", total],
+      ["found_count", derivedFound.length],
+      ["missing_count", derivedMissing.length],
+      ["score", Math.round((100 * derivedFound.length) / total)],
+    ];
+    for (let index = 0; index < derivedTotals.length; index += 1) {
+      const name = derivedTotals[index][0];
+      if (!(name in payload)) continue;
+      if (payload[name] !== derivedTotals[index][1]) return shareFailure("impossible_total");
+    }
+
+    return {
+      ok: true,
+      share: {
+        version,
+        ruleset: payload.ruleset,
+        profile: payload.profile,
+        total,
+        found: derivedFound,
+        missing: derivedMissing,
+      },
+    };
+  }
+
+  function renderSharedResult(share) {
+    const mount = $("results");
+    const current = share.ruleset === E.ruleset;
+    const total = share.total;
+    const foundN = share.found.length;
+    const missingN = share.missing.length;
+    const pct = total ? Math.round((100 * foundN) / total) : 0;
+    const gapKey = share.missing[0];
+    const gapControl = gapKey ? allControls().find((control) => control.key === gapKey) : null;
+    const gapTitle = gapControl ? (SIMPLE_NAMES[gapControl.dimension] || gapControl.label) : (gapKey || null);
+    const heroShared = gapTitle
+      ? `<div class="hero-gap-card"><span class="gap-eyebrow">First gap to review</span><strong>${escapeHtml(gapTitle)}</strong><p>Shared as missing. Original prompt text was not included.</p></div>`
+      : `<div class="hero-gap-card is-clear"><span class="gap-eyebrow">First gap to review</span><strong>No missing controls in this share</strong><p>Original prompt text was not included.</p></div>`;
+    mount.innerHTML = `<div class="result-moment is-fresh"><div class="result-kicker">Shared CrewScore result</div><div class="result-fraction" aria-hidden="true"><span class="found">${foundN}</span><span class="of">of</span><span class="total">${total}</span></div><h2 id="results-heading" class="result-fraction-label">${foundN} of ${total} written guardrails found</h2><div class="coverage-meter" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="${foundN} of ${total} controls"><span style="width:${pct}%"></span></div><p class="result-summary">${missingN} controls were shared as missing. The original instructions were not included.</p>${heroShared}</div><div class="coverage-disclosure">Written-control coverage, not runtime proof. A shared result is a historical summary, not a live scan.</div>${current ? "" : `<div class="warning">This result uses ${escapeHtml(share.ruleset)} and cannot be edited or rescored here. Check your own instructions with the current rules.</div>`}<button class="button" id="shared-check" type="button">Check my instructions</button>`;
+    $("shared-check").addEventListener("click", () => { $("agent-prompt").focus(); scrollTo($("checker-workspace"), "start"); });
+  }
+
+  function renderShareFailure(reason, message) {
+    const mount = $("results");
+    mount.innerHTML = `<div class="result-moment" data-share-error="${escapeHtml(reason)}"><div class="result-kicker">Shared result</div><h2 id="results-heading">This shared result link could not be read</h2><p class="result-summary">${escapeHtml(message)} No coverage number is shown, because this link does not carry one that can be trusted.</p></div><div class="coverage-disclosure">The link was read in this browser only. Nothing in it was sent anywhere, and no usage event was recorded for it.</div><div class="result-actions"><button class="button" id="shared-check" type="button">Check my instructions</button><button class="button-secondary" id="shared-error-dismiss" type="button">Dismiss this message</button></div>`;
+    $("shared-check").addEventListener("click", () => { $("agent-prompt").focus(); scrollTo($("checker-workspace"), "start"); });
+    $("shared-error-dismiss").addEventListener("click", () => {
+      try { window.history.replaceState(null, "", `${location.pathname}${location.search}`); } catch (_) { /* a cosmetic URL change must never break the page */ }
+      mount.innerHTML = RESULTS_PLACEHOLDER_HTML;
+      bindPlaceholderDemo();
+      scrollTo($("checker-workspace"), "start");
+    });
+  }
+
   function decodeSharedResult() {
-    const match = location.hash.match(/^#cs-result=(.+)$/); if (!match) return;
-    try {
-      const shared = decodeBase64Url(match[1]);
-      if (shared.v !== 1 || !Array.isArray(shared.found) || !Array.isArray(shared.missing) || typeof shared.ruleset !== "string") throw new Error("bad shared result");
-      const current = shared.ruleset === E.ruleset;
-      const known = new Set(allControls().map((control) => control.key));
-      const valid = shared.found.every((key) => known.has(key)) && shared.missing.every((key) => known.has(key));
-      const mount = $("results");
-      const total = allControls().length;
-      const foundN = shared.found.length;
-      const missingN = shared.missing.length;
-      const pct = total ? Math.round((100 * foundN) / total) : 0;
-      const gapKey = shared.missing[0];
-      const gapControl = gapKey ? allControls().find((c) => c.key === gapKey) : null;
-      const gapTitle = gapControl
-        ? (SIMPLE_NAMES[gapControl.dimension] || gapControl.label)
-        : (gapKey || null);
-      const heroShared = gapTitle
-        ? `<div class="hero-gap-card"><span class="gap-eyebrow">First gap to review</span><strong>${escapeHtml(gapTitle)}</strong><p>Shared as missing. Original prompt text was not included.</p></div>`
-        : `<div class="hero-gap-card is-clear"><span class="gap-eyebrow">First gap to review</span><strong>No missing controls in this share</strong><p>Original prompt text was not included.</p></div>`;
-      mount.innerHTML = `<div class="result-moment is-fresh"><div class="result-kicker">Shared CrewScore result</div><div class="result-fraction" aria-hidden="true"><span class="found">${foundN}</span><span class="of">of</span><span class="total">${total}</span></div><h2 id="results-heading" class="result-fraction-label">${foundN} of ${total} written guardrails found</h2><div class="coverage-meter" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="${foundN} of ${total} controls"><span style="width:${pct}%"></span></div><p class="result-summary">${missingN} controls were shared as missing. The original instructions were not included.</p>${heroShared}</div><div class="coverage-disclosure">Written-control coverage, not runtime proof. A shared result is a historical summary, not a live scan.</div>${!current || !valid ? `<div class="warning">This result uses ${escapeHtml(shared.ruleset)} and cannot be edited or rescored here. Check your own instructions with the current rules.</div>` : ""}<button class="button" id="shared-check" type="button">Check my instructions</button>`;
-      $("shared-check").addEventListener("click", () => { $("agent-prompt").focus(); scrollTo($("checker-workspace"), "start"); });
-    } catch (_) { toast("This shared CrewScore result could not be read."); }
+    const match = location.hash.match(/^#cs-result=(.+)$/);
+    if (!match) return;
+    let decoded;
+    try { decoded = decodeSharedPayload(match[1]); } catch (_) { decoded = shareFailure("unreadable"); }
+    if (decoded.ok) renderSharedResult(decoded.share);
+    else renderShareFailure(decoded.reason, decoded.message);
   }
 
   function supportedGithubUrl(raw) {
@@ -1025,16 +1140,23 @@
     optOut.addEventListener("change", () => { writeStorage(ANALYTICS_OPT_OUT_KEY, optOut.checked ? "1" : "0"); window.CrewScoreAnalytics?.setOptOut?.(optOut.checked); toast(optOut.checked ? "Anonymous usage events disabled on this device" : "Anonymous usage events enabled on this device"); });
   }
 
+  function bindPlaceholderDemo() {
+    // Rebound, not just bound: dismissing an invalid share restores the static
+    // placeholder markup, and that node is a fresh one.
+    $("placeholder-demo")?.addEventListener("click", () => $("try-demo").click());
+  }
+
   setMode(readStorage(MODE_KEY) || "simple", false);
   setMethod(readStorage(METHOD_KEY) || "paste", false);
   bindEvents();
   bindResultActions();
   initializeHeroDemo();
-  $("placeholder-demo")?.addEventListener("click", () => $("try-demo").click());
+  bindPlaceholderDemo();
   const stamp = $("build-stamp");
   if (stamp) stamp.textContent = `v${E.ENGINE?.version || ""} · ${E.ruleset || ""}`.trim();
+  const RESULTS_PLACEHOLDER_HTML = $("results").innerHTML;
   decodeSharedResult();
-  window.__crewscoreUX = Object.freeze({ score, sharePayload, supportedGithubUrl, fullAppendDiff, svgCard });
+  window.__crewscoreUX = Object.freeze({ score, sharePayload, supportedGithubUrl, fullAppendDiff, svgCard, decodeSharedPayload });
   // Listeners are bound; a click before this point hits inert markup. The body
   // carries data-mode from static HTML, so that attribute cannot serve as the
   // readiness signal for tests or for anything else that automates the page.

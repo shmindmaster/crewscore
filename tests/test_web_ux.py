@@ -156,6 +156,42 @@ def test_result_and_share_contracts_are_present_without_prompt_export():
     assert "prompt text is never included" in script.lower()
 
 
+def test_shared_result_links_are_validated_against_the_canonical_control_set():
+    """A hand-edited share fragment must not be able to claim a coverage.
+
+    Playwright owns the behaviour; this guards the contract that the decoder
+    exists, is versioned, and never reads a count off the shared arrays.
+    """
+    script = (ROOT / "assets" / "site.js").read_text(encoding="utf-8")
+    assert "SHARE_VERSION = 2" in script
+    assert "SHARE_VERSION_LEGACY = 1" in script
+    assert "decodeSharedPayload" in script
+    assert "MAX_SHARE_FRAGMENT_CHARS" in script
+    assert "MAX_SHARE_IDS" in script
+    for reason in (
+        "payload_too_large",
+        "unreadable",
+        "unsupported_version",
+        "unknown_ruleset",
+        "unknown_profile",
+        "profile_incompatible",
+        "too_many_ids",
+        "duplicate_id",
+        "overlap",
+        "unknown_id",
+        "incomplete_partition",
+        "impossible_total",
+    ):
+        assert reason in script, f"missing named rejection reason: {reason}"
+    # Counts come from the canonical control list, not from the shared arrays.
+    assert "share.total" in script
+    assert "share.found.length" in script
+    assert "shared.found.length" not in script
+    # A rejected link is recoverable and carries no analytics.
+    assert "Dismiss this message" in script
+    assert 'data-share-error="' in script
+
+
 def test_copy_fallback_is_not_held_by_a_stuck_browser_clipboard_api():
     script = (ROOT / "assets" / "site.js").read_text(encoding="utf-8")
     assert "writeClipboardWithFallbackTimeout" in script
