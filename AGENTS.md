@@ -106,6 +106,7 @@ crewscore/
   scoring.py              # shared result model / tiers / RULESET_ID
   profiles.py             # artifact classification (filename-only) -> which ruleset applies
   scan.py                 # repo-walk file discovery + per-file scoring for `scan`
+  pathsafe.py             # shared scan-root containment (links never followed)
   smells.py                # offline config-smell detection (arXiv:2606.15828)
   rules_catalog.py         # open rule catalog + per-dimension provenance
   summary.py                # PR/job markdown (transparent)
@@ -114,6 +115,7 @@ crewscore/
   metrics.py                  # privacy-safe metrics schema (parity with analytics.js)
   web_export.py                # builds score-engine.js payload
   report.py                     # HTML report + SVG badge
+  findings_export.py             # serialization gate: public_findings() drops prompt snippets
   scorers/
     structural_analysis.py      # governance-dimension regex matching
     fix_patterns.py               # FIX_TEMPLATES per dimension
@@ -145,6 +147,7 @@ tests/
 - **Length is never rewarded.** Every line costs the agent context on every run. Fix templates stay terse, and `fix` reports its own context cost.
 - **Never hand a governance grade to coding-agent config.** `AGENTS.md`/`CLAUDE.md`-class files are classified by filename only (`profiles.py:classify_path`, content is never sniffed) and judged on configuration smells instead. Measured on the arXiv:2606.15828 corpus, the governance ruleset scored 100/100 real config files in the worst tier — the number is meaningless for that artifact, and publishing it is the fastest way to look broken. Any new output surface (report, badge, summary, share text, web) must branch on `governance_applicable`. `--profile` is the only override; when a caller forces governance templates onto config via `crewscore fix --profile system_prompt`, the JSON payload must carry `forced_governance_write: true` and human output must warn.
 - **Config `--json` payloads carry no governance fields.** When `governance_applicable` is `false`, `overall`, `dimensions`, `findings`, and `transparency` are **absent** from `crewscore test --json` / `crewscore scan --json` output — not zeroed, omitted. Consumers read `tier`, `smells`, `source`, `warnings`, `profile`, `ruleset` instead. Do not reintroduce those fields for config rows.
+- **Machine outputs are prompt-free by default.** A regex match substring is prompt text, and a build log, job summary, sticky PR comment, and uploaded HTML report are all more public than the prompt being audited. `findings_export.public_findings()` is the single gate: it drops `snippet` unless a caller passes `--include-snippets` (a deprecated escape hatch). Scoring still computes the snippet — only serialization is gated — and the local `--explain` terminal keeps it. Any new output surface must go through that gate and must degrade to the control label rather than rendering `None`.
 - **Smells are advisory, never scored.** Folding them into the number would silently change what `--threshold N` means in someone's CI. `--max-smells N` is the separate gate for config files; changing smells into a score needs corpus evidence, not a patch release.
 - **Rules declare their provenance.** New dimensions must be graded `evidence-backed` / `plausible` / `author-intuition` in `rules_catalog.DIMENSION_PROVENANCE`; evidence-backed requires a citation. Approximations of a published detector must say so in their output. Per `docs/validation.md`, Cost, Compliance, and Audit currently have known-poor construct validity — treat proposals to strengthen or remove them as scoring work needing evidence, not a doc fix.
 - **Console output must be cp1252-encodable.** Windows redirects stdout through the ANSI code page; a stray arrow character once crashed `crewscore rules`. Use ASCII in printed strings.

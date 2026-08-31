@@ -7,6 +7,7 @@ from html import escape
 from xml.sax.saxutils import escape as xml_escape
 
 from crewscore import __version__
+from crewscore.findings_export import finding_detail
 from crewscore.scoring import DIMENSIONS, RULESET_ID, ScoreResult
 
 HOMEPAGE = "https://crewscore.ai"
@@ -329,9 +330,7 @@ def render_html_report(
             for f in items:
                 rid = f.get("rule_id") or ""
                 status = f.get("status") or ""
-                reason = f.get("pattern_or_reason") or ""
-                snippet = f.get("snippet")
-                detail = snippet or reason
+                detail = finding_detail(f)
                 rid_s = f"<code>{escape(str(rid))}</code> " if rid else ""
                 parts.append(
                     f'<li class="{escape(status)}">'

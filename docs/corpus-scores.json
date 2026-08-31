@@ -1,0 +1,6528 @@
+{
+  "controls": [
+    "audit.actor_attribution",
+    "audit.log_actions",
+    "audit.tamper_evident",
+    "citation.inline_marker",
+    "citation.link_source",
+    "citation.require",
+    "compliance.data_protection",
+    "compliance.named_regime",
+    "compliance.stated_obligation",
+    "cost.budget_cap",
+    "cost.output_bound",
+    "hallucination.admit_uncertainty",
+    "hallucination.defer_to_expert",
+    "hallucination.grounding",
+    "hallucination.no_fabrication",
+    "human_gate.approval_required",
+    "human_gate.no_autonomous_action",
+    "injection.named_defense",
+    "injection.override_resistance",
+    "injection.prompt_confidentiality",
+    "safe_stop.escalate",
+    "safe_stop.stop_condition",
+    "safe_stop.uncertainty_trigger"
+  ],
+  "disclaimer": "Coverage counts which of 23 controls the prompt TEXT states. It is not quality, not safety, not certification, and not evidence of runtime behavior. A low score means the text is silent on a control, not that the product lacks it.",
+  "files": [
+    {
+      "bytes": 57313,
+      "controls_fired": [
+        "human_gate.no_autonomous_action",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 50,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "68fd34d8528f2844",
+      "score": 10
+    },
+    {
+      "bytes": 13019,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "e120ea63f4601941",
+      "score": 4
+    },
+    {
+      "bytes": 119683,
+      "controls_fired": [
+        "citation.inline_marker",
+        "citation.require",
+        "cost.budget_cap",
+        "cost.output_bound",
+        "hallucination.no_fabrication",
+        "injection.named_defense",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 67,
+        "compliance": 0,
+        "cost": 100,
+        "hallucination": 25,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 33
+      },
+      "file_id": "c4d53e779bdb5477",
+      "score": 32
+    },
+    {
+      "bytes": 98917,
+      "controls_fired": [
+        "citation.inline_marker",
+        "citation.require",
+        "cost.output_bound",
+        "injection.named_defense",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 67,
+        "compliance": 0,
+        "cost": 50,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 33
+      },
+      "file_id": "b57fae130449a82e",
+      "score": 22
+    },
+    {
+      "bytes": 33126,
+      "controls_fired": [
+        "citation.require",
+        "injection.named_defense",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 33
+      },
+      "file_id": "83e8a99f1bc4649a",
+      "score": 12
+    },
+    {
+      "bytes": 55546,
+      "controls_fired": [
+        "citation.require",
+        "compliance.stated_obligation",
+        "injection.named_defense",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 33,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 33
+      },
+      "file_id": "48a5f257b3a1c5c1",
+      "score": 16
+    },
+    {
+      "bytes": 43593,
+      "controls_fired": [
+        "citation.require",
+        "human_gate.approval_required",
+        "human_gate.no_autonomous_action",
+        "injection.named_defense",
+        "injection.override_resistance",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 100,
+        "injection": 67,
+        "safe_stop": 33
+      },
+      "file_id": "6dfbba4e581f9a3d",
+      "score": 29
+    },
+    {
+      "bytes": 43200,
+      "controls_fired": [
+        "citation.require",
+        "cost.budget_cap",
+        "hallucination.no_fabrication",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 50,
+        "hallucination": 25,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "45e3efe308a3edc8",
+      "score": 17
+    },
+    {
+      "bytes": 10836,
+      "controls_fired": [
+        "hallucination.no_fabrication"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "39e87244438a1a3b",
+      "score": 3
+    },
+    {
+      "bytes": 15001,
+      "controls_fired": [
+        "human_gate.approval_required",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 50,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "d638e65ca23dbfca",
+      "score": 10
+    },
+    {
+      "bytes": 4522,
+      "controls_fired": [],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "d966ed6216de6826",
+      "score": 0
+    },
+    {
+      "bytes": 21254,
+      "controls_fired": [
+        "hallucination.no_fabrication"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "747c42a5d0774613",
+      "score": 3
+    },
+    {
+      "bytes": 1521,
+      "controls_fired": [],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "c0824231aa4c9362",
+      "score": 0
+    },
+    {
+      "bytes": 39940,
+      "controls_fired": [
+        "hallucination.no_fabrication",
+        "human_gate.no_autonomous_action",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 50,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "5f98f3a81d0febea",
+      "score": 13
+    },
+    {
+      "bytes": 53829,
+      "controls_fired": [
+        "citation.inline_marker",
+        "citation.link_source",
+        "citation.require",
+        "hallucination.no_fabrication",
+        "human_gate.approval_required",
+        "injection.named_defense",
+        "injection.override_resistance",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 100,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 50,
+        "injection": 67,
+        "safe_stop": 33
+      },
+      "file_id": "bf092169df123241",
+      "score": 34
+    },
+    {
+      "bytes": 14045,
+      "controls_fired": [
+        "citation.require",
+        "safe_stop.stop_condition",
+        "safe_stop.uncertainty_trigger"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 67
+      },
+      "file_id": "cd0c192ea2d368f1",
+      "score": 12
+    },
+    {
+      "bytes": 38842,
+      "controls_fired": [
+        "citation.require",
+        "hallucination.no_fabrication",
+        "safe_stop.stop_condition",
+        "safe_stop.uncertainty_trigger"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 67
+      },
+      "file_id": "0889b5d2f25cbe9f",
+      "score": 15
+    },
+    {
+      "bytes": 19008,
+      "controls_fired": [
+        "citation.require",
+        "human_gate.no_autonomous_action",
+        "safe_stop.stop_condition",
+        "safe_stop.uncertainty_trigger"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 50,
+        "injection": 0,
+        "safe_stop": 67
+      },
+      "file_id": "7542c662741d4742",
+      "score": 18
+    },
+    {
+      "bytes": 9023,
+      "controls_fired": [
+        "citation.require",
+        "hallucination.admit_uncertainty",
+        "safe_stop.stop_condition",
+        "safe_stop.uncertainty_trigger"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 67
+      },
+      "file_id": "85dafeac92b768e6",
+      "score": 15
+    },
+    {
+      "bytes": 32189,
+      "controls_fired": [
+        "citation.require",
+        "hallucination.no_fabrication",
+        "safe_stop.stop_condition",
+        "safe_stop.uncertainty_trigger"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 67
+      },
+      "file_id": "856614f19648dc55",
+      "score": 15
+    },
+    {
+      "bytes": 12569,
+      "controls_fired": [
+        "citation.require",
+        "hallucination.admit_uncertainty",
+        "safe_stop.stop_condition",
+        "safe_stop.uncertainty_trigger"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 67
+      },
+      "file_id": "66290e69d44bead4",
+      "score": 15
+    },
+    {
+      "bytes": 5505,
+      "controls_fired": [
+        "citation.require",
+        "hallucination.no_fabrication"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "38caea68ea7831da",
+      "score": 7
+    },
+    {
+      "bytes": 34711,
+      "controls_fired": [
+        "citation.require",
+        "human_gate.no_autonomous_action",
+        "injection.prompt_confidentiality",
+        "safe_stop.uncertainty_trigger"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 50,
+        "injection": 33,
+        "safe_stop": 33
+      },
+      "file_id": "d37efc5bd7ea47bd",
+      "score": 18
+    },
+    {
+      "bytes": 36948,
+      "controls_fired": [],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "5feeb3045f14697a",
+      "score": 0
+    },
+    {
+      "bytes": 40977,
+      "controls_fired": [
+        "citation.require",
+        "hallucination.admit_uncertainty",
+        "human_gate.no_autonomous_action",
+        "safe_stop.uncertainty_trigger"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 50,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "31991ee84da42277",
+      "score": 17
+    },
+    {
+      "bytes": 22317,
+      "controls_fired": [
+        "hallucination.admit_uncertainty",
+        "human_gate.approval_required",
+        "safe_stop.stop_condition",
+        "safe_stop.uncertainty_trigger"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 50,
+        "injection": 0,
+        "safe_stop": 67
+      },
+      "file_id": "4b8b4dd6d39a84e1",
+      "score": 17
+    },
+    {
+      "bytes": 62552,
+      "controls_fired": [
+        "citation.inline_marker",
+        "cost.budget_cap",
+        "cost.output_bound"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 100,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "69babb0e95056408",
+      "score": 16
+    },
+    {
+      "bytes": 6184,
+      "controls_fired": [],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "1fada6f980d15243",
+      "score": 0
+    },
+    {
+      "bytes": 2883,
+      "controls_fired": [],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "d71ed94c6db198e6",
+      "score": 0
+    },
+    {
+      "bytes": 31945,
+      "controls_fired": [
+        "citation.require",
+        "human_gate.approval_required",
+        "human_gate.no_autonomous_action",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 100,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "4c932386ccffef57",
+      "score": 20
+    },
+    {
+      "bytes": 14149,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "119c642e67bbcd65",
+      "score": 4
+    },
+    {
+      "bytes": 52456,
+      "controls_fired": [
+        "citation.inline_marker",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "de337625b19136fe",
+      "score": 8
+    },
+    {
+      "bytes": 20297,
+      "controls_fired": [],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "83b19d801288eb47",
+      "score": 0
+    },
+    {
+      "bytes": 2147,
+      "controls_fired": [],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "7417bca3d37b07e8",
+      "score": 0
+    },
+    {
+      "bytes": 12224,
+      "controls_fired": [
+        "hallucination.no_fabrication",
+        "human_gate.no_autonomous_action"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 50,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "ecd2d444d6f21107",
+      "score": 9
+    },
+    {
+      "bytes": 10209,
+      "controls_fired": [
+        "citation.require",
+        "compliance.stated_obligation"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 33,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "85fda779b74535b2",
+      "score": 8
+    },
+    {
+      "bytes": 32057,
+      "controls_fired": [
+        "citation.require",
+        "hallucination.admit_uncertainty",
+        "hallucination.no_fabrication",
+        "safe_stop.stop_condition",
+        "safe_stop.uncertainty_trigger"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 50,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 67
+      },
+      "file_id": "3d1733f28d6b96d6",
+      "score": 18
+    },
+    {
+      "bytes": 21943,
+      "controls_fired": [],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "1b32360ccbbb2bd1",
+      "score": 0
+    },
+    {
+      "bytes": 47083,
+      "controls_fired": [
+        "human_gate.no_autonomous_action"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 50,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "46910b01411aed06",
+      "score": 6
+    },
+    {
+      "bytes": 4848,
+      "controls_fired": [
+        "hallucination.no_fabrication",
+        "safe_stop.uncertainty_trigger"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "7cc0813471b7ceb1",
+      "score": 7
+    },
+    {
+      "bytes": 23706,
+      "controls_fired": [
+        "citation.require",
+        "hallucination.no_fabrication",
+        "human_gate.approval_required",
+        "safe_stop.uncertainty_trigger"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 50,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "8c87ebff15c9b8a9",
+      "score": 17
+    },
+    {
+      "bytes": 18976,
+      "controls_fired": [
+        "human_gate.approval_required",
+        "human_gate.no_autonomous_action",
+        "injection.named_defense",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 100,
+        "injection": 33,
+        "safe_stop": 33
+      },
+      "file_id": "8005584ab8a6adc2",
+      "score": 20
+    },
+    {
+      "bytes": 8227,
+      "controls_fired": [
+        "citation.require",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "fb9f453dfcc6a12d",
+      "score": 8
+    },
+    {
+      "bytes": 43959,
+      "controls_fired": [
+        "human_gate.approval_required",
+        "human_gate.no_autonomous_action"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 100,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "054175b842a215b9",
+      "score": 12
+    },
+    {
+      "bytes": 6820,
+      "controls_fired": [],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "55e60479fdb25af2",
+      "score": 0
+    },
+    {
+      "bytes": 58755,
+      "controls_fired": [
+        "citation.inline_marker",
+        "hallucination.admit_uncertainty",
+        "injection.prompt_confidentiality",
+        "safe_stop.uncertainty_trigger"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 33
+      },
+      "file_id": "b1ae87a5b05f4df4",
+      "score": 15
+    },
+    {
+      "bytes": 9381,
+      "controls_fired": [
+        "citation.require",
+        "injection.prompt_confidentiality"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 0
+      },
+      "file_id": "ff92558926fb2ca6",
+      "score": 8
+    },
+    {
+      "bytes": 12151,
+      "controls_fired": [],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "2c68673d3b06b848",
+      "score": 0
+    },
+    {
+      "bytes": 10153,
+      "controls_fired": [
+        "human_gate.approval_required",
+        "human_gate.no_autonomous_action"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 100,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "d2d0e0bc87c6200e",
+      "score": 12
+    },
+    {
+      "bytes": 2416,
+      "controls_fired": [],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "a4d85f06ef828155",
+      "score": 0
+    },
+    {
+      "bytes": 5493,
+      "controls_fired": [
+        "human_gate.approval_required",
+        "human_gate.no_autonomous_action"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 100,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "5902d744d7e0c718",
+      "score": 12
+    },
+    {
+      "bytes": 5873,
+      "controls_fired": [
+        "compliance.named_regime"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 33,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "ea7e508c38539d04",
+      "score": 4
+    },
+    {
+      "bytes": 1158,
+      "controls_fired": [],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "f4425951e84c0f22",
+      "score": 0
+    },
+    {
+      "bytes": 1783,
+      "controls_fired": [],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "273b07686ee0c4da",
+      "score": 0
+    },
+    {
+      "bytes": 12317,
+      "controls_fired": [
+        "cost.budget_cap",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 50,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "5a7ce16fd8b29ae6",
+      "score": 10
+    },
+    {
+      "bytes": 26151,
+      "controls_fired": [
+        "human_gate.no_autonomous_action",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 50,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "9bdf2cffeb55bfb1",
+      "score": 10
+    },
+    {
+      "bytes": 18618,
+      "controls_fired": [
+        "cost.budget_cap",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 50,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "43c1825f96ac1f4a",
+      "score": 10
+    },
+    {
+      "bytes": 8110,
+      "controls_fired": [
+        "human_gate.no_autonomous_action"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 50,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "e97c4ff9ad1f6f8c",
+      "score": 6
+    },
+    {
+      "bytes": 34890,
+      "controls_fired": [
+        "citation.require",
+        "human_gate.no_autonomous_action",
+        "safe_stop.stop_condition",
+        "safe_stop.uncertainty_trigger"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 50,
+        "injection": 0,
+        "safe_stop": 67
+      },
+      "file_id": "e4b9366ae55cf5ef",
+      "score": 18
+    },
+    {
+      "bytes": 18569,
+      "controls_fired": [
+        "citation.require",
+        "injection.prompt_confidentiality",
+        "safe_stop.stop_condition",
+        "safe_stop.uncertainty_trigger"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 67
+      },
+      "file_id": "f720ece5ecd76eff",
+      "score": 16
+    },
+    {
+      "bytes": 7923,
+      "controls_fired": [
+        "citation.require"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "9a8e9805c7b7bd3e",
+      "score": 4
+    },
+    {
+      "bytes": 3842,
+      "controls_fired": [
+        "injection.prompt_confidentiality"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 0
+      },
+      "file_id": "6a2508f2b21b02cc",
+      "score": 4
+    },
+    {
+      "bytes": 21032,
+      "controls_fired": [
+        "human_gate.approval_required"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 50,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "8b3fdfa1e7c9a247",
+      "score": 6
+    },
+    {
+      "bytes": 765,
+      "controls_fired": [],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "d7ccb5eff4fd7174",
+      "score": 0
+    },
+    {
+      "bytes": 9898,
+      "controls_fired": [
+        "human_gate.approval_required",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 50,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "336b48533f73b33e",
+      "score": 10
+    },
+    {
+      "bytes": 9909,
+      "controls_fired": [
+        "human_gate.approval_required",
+        "injection.override_resistance"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 50,
+        "injection": 33,
+        "safe_stop": 0
+      },
+      "file_id": "0cb222ba644e2717",
+      "score": 10
+    },
+    {
+      "bytes": 11082,
+      "controls_fired": [
+        "human_gate.approval_required",
+        "injection.override_resistance",
+        "safe_stop.stop_condition",
+        "safe_stop.uncertainty_trigger"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 50,
+        "injection": 33,
+        "safe_stop": 67
+      },
+      "file_id": "7a1db6acc03d6ce1",
+      "score": 18
+    },
+    {
+      "bytes": 7876,
+      "controls_fired": [
+        "human_gate.approval_required",
+        "injection.override_resistance"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 50,
+        "injection": 33,
+        "safe_stop": 0
+      },
+      "file_id": "e9d3d28a19b2ec41",
+      "score": 10
+    },
+    {
+      "bytes": 25211,
+      "controls_fired": [
+        "hallucination.no_fabrication",
+        "human_gate.approval_required",
+        "injection.override_resistance",
+        "safe_stop.stop_condition",
+        "safe_stop.uncertainty_trigger"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 50,
+        "injection": 33,
+        "safe_stop": 67
+      },
+      "file_id": "86f93a78005ee4df",
+      "score": 21
+    },
+    {
+      "bytes": 25533,
+      "controls_fired": [
+        "hallucination.no_fabrication",
+        "human_gate.approval_required",
+        "injection.override_resistance",
+        "safe_stop.stop_condition",
+        "safe_stop.uncertainty_trigger"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 50,
+        "injection": 33,
+        "safe_stop": 67
+      },
+      "file_id": "95f16afc6e37894a",
+      "score": 21
+    },
+    {
+      "bytes": 8910,
+      "controls_fired": [
+        "safe_stop.uncertainty_trigger"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "3e37b50241dfe895",
+      "score": 4
+    },
+    {
+      "bytes": 14593,
+      "controls_fired": [
+        "citation.require"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "ae219ce9322e3a1e",
+      "score": 4
+    },
+    {
+      "bytes": 11697,
+      "controls_fired": [
+        "hallucination.no_fabrication",
+        "human_gate.approval_required",
+        "safe_stop.uncertainty_trigger"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 50,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "2045c6364a1eb635",
+      "score": 13
+    },
+    {
+      "bytes": 32843,
+      "controls_fired": [
+        "human_gate.no_autonomous_action",
+        "safe_stop.uncertainty_trigger"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 50,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "25e1c2d6fddaa8e3",
+      "score": 10
+    },
+    {
+      "bytes": 374,
+      "controls_fired": [],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "b52edc389c8c28b6",
+      "score": 0
+    },
+    {
+      "bytes": 245,
+      "controls_fired": [],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "a3ba580413f0e9b2",
+      "score": 0
+    },
+    {
+      "bytes": 235,
+      "controls_fired": [],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "e1538255a30b5690",
+      "score": 0
+    },
+    {
+      "bytes": 414,
+      "controls_fired": [],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "aac8c1ec849d36b0",
+      "score": 0
+    },
+    {
+      "bytes": 1938,
+      "controls_fired": [],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "a3790bd4f0226147",
+      "score": 0
+    },
+    {
+      "bytes": 4007,
+      "controls_fired": [],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "7397e81abd29a723",
+      "score": 0
+    },
+    {
+      "bytes": 9592,
+      "controls_fired": [
+        "citation.inline_marker",
+        "cost.output_bound"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 50,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "6743d81da90db5bd",
+      "score": 10
+    },
+    {
+      "bytes": 17166,
+      "controls_fired": [
+        "citation.require",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "fdea2bac5dae9f20",
+      "score": 8
+    },
+    {
+      "bytes": 46154,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "production",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "338ff0b27532a25b",
+      "score": 4
+    },
+    {
+      "bytes": 1344,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "48d5291c828574ac",
+      "score": 0
+    },
+    {
+      "bytes": 1304,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "2ff636cf1889ac96",
+      "score": 0
+    },
+    {
+      "bytes": 1376,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "890d380bc332048e",
+      "score": 0
+    },
+    {
+      "bytes": 1713,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "bf3250500d71b6b2",
+      "score": 0
+    },
+    {
+      "bytes": 901,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "9626c594d124938d",
+      "score": 0
+    },
+    {
+      "bytes": 3700,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "a3c4b0501aa14b48",
+      "score": 0
+    },
+    {
+      "bytes": 4213,
+      "controls_fired": [
+        "citation.require"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "c9a43bae32b50d4f",
+      "score": 4
+    },
+    {
+      "bytes": 839,
+      "controls_fired": [
+        "citation.require"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "927b6cd8ca3a4456",
+      "score": 4
+    },
+    {
+      "bytes": 4211,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "af71e347eaf21969",
+      "score": 0
+    },
+    {
+      "bytes": 3430,
+      "controls_fired": [
+        "hallucination.admit_uncertainty",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "ec771125b4fcbc87",
+      "score": 7
+    },
+    {
+      "bytes": 3117,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "84a913e44287ef40",
+      "score": 0
+    },
+    {
+      "bytes": 1742,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "9d4c6f91c80691a7",
+      "score": 0
+    },
+    {
+      "bytes": 677,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "0c62b13b97040838",
+      "score": 0
+    },
+    {
+      "bytes": 1654,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "0415ad6bb1fa3bc1",
+      "score": 0
+    },
+    {
+      "bytes": 3851,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "ec81c8efd5cde1d0",
+      "score": 0
+    },
+    {
+      "bytes": 2494,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "bd705533df30ac64",
+      "score": 0
+    },
+    {
+      "bytes": 1521,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "6ebf8f22ffc0dfe1",
+      "score": 0
+    },
+    {
+      "bytes": 2070,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "42d239ab618e850d",
+      "score": 0
+    },
+    {
+      "bytes": 4061,
+      "controls_fired": [
+        "hallucination.no_fabrication"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "777b9c2325f5ea13",
+      "score": 3
+    },
+    {
+      "bytes": 9804,
+      "controls_fired": [
+        "citation.link_source",
+        "citation.require"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 67,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "d7e99c711becd2fe",
+      "score": 8
+    },
+    {
+      "bytes": 1926,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "c33c5563e76e2e24",
+      "score": 0
+    },
+    {
+      "bytes": 1107,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "bc4245f556660248",
+      "score": 0
+    },
+    {
+      "bytes": 5937,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "abc7d7b32d1e7d43",
+      "score": 0
+    },
+    {
+      "bytes": 3749,
+      "controls_fired": [
+        "citation.require"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "63f6cb155540e9a9",
+      "score": 4
+    },
+    {
+      "bytes": 34844,
+      "controls_fired": [
+        "human_gate.no_autonomous_action"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 50,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "d5842cd4f8d6796e",
+      "score": 6
+    },
+    {
+      "bytes": 1338,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "7a93d7130733f589",
+      "score": 0
+    },
+    {
+      "bytes": 1392,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "d9e51964d82627ef",
+      "score": 0
+    },
+    {
+      "bytes": 3223,
+      "controls_fired": [
+        "citation.require"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "fa39f22301608ad5",
+      "score": 4
+    },
+    {
+      "bytes": 1499,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "00c1f31325cf72ef",
+      "score": 0
+    },
+    {
+      "bytes": 2229,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "309e5f35ae5cc380",
+      "score": 0
+    },
+    {
+      "bytes": 5071,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "297a092c44559fe1",
+      "score": 0
+    },
+    {
+      "bytes": 549,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "33571d74e0e39fb4",
+      "score": 0
+    },
+    {
+      "bytes": 1416,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "aed55e58b3bcc97f",
+      "score": 0
+    },
+    {
+      "bytes": 7445,
+      "controls_fired": [
+        "injection.named_defense"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 0
+      },
+      "file_id": "eebe7ced7153048f",
+      "score": 4
+    },
+    {
+      "bytes": 2563,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "9c230fc051e1e63c",
+      "score": 0
+    },
+    {
+      "bytes": 3261,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "dc74e17405738cc8",
+      "score": 4
+    },
+    {
+      "bytes": 11578,
+      "controls_fired": [
+        "citation.require"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "2e75dd2dfa47f52e",
+      "score": 4
+    },
+    {
+      "bytes": 7899,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "dd4072ed5563abc8",
+      "score": 0
+    },
+    {
+      "bytes": 4727,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "1a383df346d9303a",
+      "score": 4
+    },
+    {
+      "bytes": 1911,
+      "controls_fired": [
+        "citation.require"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "2eae841ac9ce98da",
+      "score": 4
+    },
+    {
+      "bytes": 940,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "7f0f10feb13d7fa6",
+      "score": 0
+    },
+    {
+      "bytes": 1686,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "a589eb7476b31b84",
+      "score": 0
+    },
+    {
+      "bytes": 2761,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "105012a7f3564b64",
+      "score": 0
+    },
+    {
+      "bytes": 4546,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "4ad2e676ff0c2408",
+      "score": 4
+    },
+    {
+      "bytes": 506,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "df06451cc1352beb",
+      "score": 0
+    },
+    {
+      "bytes": 6231,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "02b0a204df8a7bf1",
+      "score": 4
+    },
+    {
+      "bytes": 2714,
+      "controls_fired": [
+        "injection.named_defense",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 33
+      },
+      "file_id": "b9d1430dac8704c8",
+      "score": 8
+    },
+    {
+      "bytes": 2394,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "22c88c27e3cc3ac6",
+      "score": 0
+    },
+    {
+      "bytes": 3025,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "fbafacff71eb72a8",
+      "score": 4
+    },
+    {
+      "bytes": 7752,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "ec5b9f12bc316a25",
+      "score": 4
+    },
+    {
+      "bytes": 1048,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "d23d5593a2f6156b",
+      "score": 0
+    },
+    {
+      "bytes": 9049,
+      "controls_fired": [
+        "citation.require"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "3fe5779c99f7318a",
+      "score": 4
+    },
+    {
+      "bytes": 859,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "ed17fed004faf340",
+      "score": 0
+    },
+    {
+      "bytes": 1056,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "709d940ab95a687e",
+      "score": 0
+    },
+    {
+      "bytes": 526,
+      "controls_fired": [
+        "citation.require"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "b055fb0ca3dcc78e",
+      "score": 4
+    },
+    {
+      "bytes": 5934,
+      "controls_fired": [
+        "human_gate.no_autonomous_action"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 50,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "342cdfc3faa00514",
+      "score": 6
+    },
+    {
+      "bytes": 2589,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "65709b3235731a8e",
+      "score": 0
+    },
+    {
+      "bytes": 3335,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "0f294a9d267182eb",
+      "score": 0
+    },
+    {
+      "bytes": 2254,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "ac57db893c607032",
+      "score": 0
+    },
+    {
+      "bytes": 7957,
+      "controls_fired": [
+        "citation.require"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "fe07570b74e9f382",
+      "score": 4
+    },
+    {
+      "bytes": 2302,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "c92ffb05ba0b137f",
+      "score": 0
+    },
+    {
+      "bytes": 943,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "9f961c05b5c79696",
+      "score": 0
+    },
+    {
+      "bytes": 1998,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "538a2c2bde36b40c",
+      "score": 0
+    },
+    {
+      "bytes": 1498,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "909e6c001beea16e",
+      "score": 4
+    },
+    {
+      "bytes": 2996,
+      "controls_fired": [
+        "injection.prompt_confidentiality"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 0
+      },
+      "file_id": "27e0e98a5a06e99d",
+      "score": 4
+    },
+    {
+      "bytes": 1550,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "8e607d00fcf05b6d",
+      "score": 0
+    },
+    {
+      "bytes": 817,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "dd502454fb70a8ef",
+      "score": 0
+    },
+    {
+      "bytes": 974,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "35cd953b06bee050",
+      "score": 0
+    },
+    {
+      "bytes": 1662,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "5e1816a74a29a9e7",
+      "score": 0
+    },
+    {
+      "bytes": 5171,
+      "controls_fired": [
+        "injection.override_resistance",
+        "injection.prompt_confidentiality"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 67,
+        "safe_stop": 0
+      },
+      "file_id": "b9a6e1a4b4556de0",
+      "score": 8
+    },
+    {
+      "bytes": 1846,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "25883479597d90e9",
+      "score": 0
+    },
+    {
+      "bytes": 8121,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "1f17ebc3d1d75885",
+      "score": 0
+    },
+    {
+      "bytes": 3863,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "7f8660f80f1d4381",
+      "score": 0
+    },
+    {
+      "bytes": 4987,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "0e5f4077d642135d",
+      "score": 0
+    },
+    {
+      "bytes": 1139,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "55fb71f0bc4cef45",
+      "score": 0
+    },
+    {
+      "bytes": 833,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "8d6e840d6f8dc3bc",
+      "score": 0
+    },
+    {
+      "bytes": 4677,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "ed894b29b4e81642",
+      "score": 0
+    },
+    {
+      "bytes": 1348,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "e8d0dd9a5aae2b74",
+      "score": 0
+    },
+    {
+      "bytes": 3033,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "f81bc965b47d0120",
+      "score": 0
+    },
+    {
+      "bytes": 8724,
+      "controls_fired": [
+        "compliance.named_regime",
+        "injection.named_defense",
+        "injection.override_resistance",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 33,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 67,
+        "safe_stop": 33
+      },
+      "file_id": "fe20ebc60e781b5a",
+      "score": 16
+    },
+    {
+      "bytes": 4155,
+      "controls_fired": [
+        "citation.require",
+        "hallucination.no_fabrication",
+        "injection.prompt_confidentiality"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 0
+      },
+      "file_id": "04ef00e068d037cf",
+      "score": 11
+    },
+    {
+      "bytes": 2398,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "6db31c277d624e0f",
+      "score": 4
+    },
+    {
+      "bytes": 5654,
+      "controls_fired": [
+        "citation.require"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "ed2c7194fbf67bb7",
+      "score": 4
+    },
+    {
+      "bytes": 1633,
+      "controls_fired": [
+        "injection.prompt_confidentiality"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 0
+      },
+      "file_id": "fadd9b4965c503de",
+      "score": 4
+    },
+    {
+      "bytes": 5483,
+      "controls_fired": [
+        "injection.named_defense",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 33
+      },
+      "file_id": "1baf49708130e577",
+      "score": 8
+    },
+    {
+      "bytes": 3953,
+      "controls_fired": [
+        "hallucination.no_fabrication",
+        "injection.named_defense",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 33
+      },
+      "file_id": "fce2718b200306ac",
+      "score": 11
+    },
+    {
+      "bytes": 2557,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "c614d10dd908aa5e",
+      "score": 0
+    },
+    {
+      "bytes": 7483,
+      "controls_fired": [
+        "citation.inline_marker"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "d0e57eff2af7f25f",
+      "score": 4
+    },
+    {
+      "bytes": 2691,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "aed9eed18222e160",
+      "score": 0
+    },
+    {
+      "bytes": 1803,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "260b1e3d2079a9a2",
+      "score": 0
+    },
+    {
+      "bytes": 3979,
+      "controls_fired": [
+        "injection.named_defense",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 33
+      },
+      "file_id": "2666f1f41ee715cd",
+      "score": 8
+    },
+    {
+      "bytes": 8199,
+      "controls_fired": [
+        "hallucination.admit_uncertainty",
+        "injection.prompt_confidentiality"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 0
+      },
+      "file_id": "4b4b260e09ef4059",
+      "score": 7
+    },
+    {
+      "bytes": 1498,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "ca02288df936ab9e",
+      "score": 0
+    },
+    {
+      "bytes": 8483,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "ac06d9d4138594a8",
+      "score": 0
+    },
+    {
+      "bytes": 842,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "436536cb8a5dff51",
+      "score": 0
+    },
+    {
+      "bytes": 2803,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "315618936abe865a",
+      "score": 4
+    },
+    {
+      "bytes": 6406,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "a48a565f8364695d",
+      "score": 0
+    },
+    {
+      "bytes": 5126,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "41d5057e78f9f3c1",
+      "score": 0
+    },
+    {
+      "bytes": 4501,
+      "controls_fired": [
+        "injection.named_defense",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 33
+      },
+      "file_id": "81f5c921fe1d4769",
+      "score": 8
+    },
+    {
+      "bytes": 1239,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "f18e2d803aec29ff",
+      "score": 0
+    },
+    {
+      "bytes": 2286,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "5ea8294efbbade71",
+      "score": 0
+    },
+    {
+      "bytes": 2599,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "4aadb1e63acbf347",
+      "score": 0
+    },
+    {
+      "bytes": 924,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "ed0a93f48b3f2afb",
+      "score": 0
+    },
+    {
+      "bytes": 4819,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "a1cb07003ead45bc",
+      "score": 4
+    },
+    {
+      "bytes": 1993,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "36980846c87496e0",
+      "score": 4
+    },
+    {
+      "bytes": 4365,
+      "controls_fired": [
+        "citation.require"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "b0a9f9eea6de5c32",
+      "score": 4
+    },
+    {
+      "bytes": 1052,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "f632b81d8f775cb9",
+      "score": 0
+    },
+    {
+      "bytes": 4247,
+      "controls_fired": [
+        "injection.named_defense",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 33
+      },
+      "file_id": "9e80f13bc2ff344f",
+      "score": 8
+    },
+    {
+      "bytes": 1356,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "1aaa7cd22bdcd3c7",
+      "score": 0
+    },
+    {
+      "bytes": 3840,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "95e15b2f55936b26",
+      "score": 0
+    },
+    {
+      "bytes": 1095,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "1ead60e8143f78f5",
+      "score": 0
+    },
+    {
+      "bytes": 4815,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "ed725bae1b12c600",
+      "score": 0
+    },
+    {
+      "bytes": 8688,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "3391423b42b509b4",
+      "score": 0
+    },
+    {
+      "bytes": 620,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "d2536eb6584a7d5b",
+      "score": 0
+    },
+    {
+      "bytes": 854,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "7a9e97c6395ee3a5",
+      "score": 0
+    },
+    {
+      "bytes": 3888,
+      "controls_fired": [
+        "citation.inline_marker"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "a54677d40e4cc91f",
+      "score": 4
+    },
+    {
+      "bytes": 4999,
+      "controls_fired": [
+        "citation.require",
+        "safe_stop.escalate",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 67
+      },
+      "file_id": "7e392ec25266cc90",
+      "score": 12
+    },
+    {
+      "bytes": 2617,
+      "controls_fired": [
+        "hallucination.defer_to_expert",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "a2618645c01a9926",
+      "score": 7
+    },
+    {
+      "bytes": 3484,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "d3e148c95df3cb98",
+      "score": 0
+    },
+    {
+      "bytes": 869,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "cc5e26fe9458a429",
+      "score": 0
+    },
+    {
+      "bytes": 1007,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "50c0715967f41ebf",
+      "score": 0
+    },
+    {
+      "bytes": 1786,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "1dbe6a34fb943e59",
+      "score": 0
+    },
+    {
+      "bytes": 5474,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "033bd2471e847626",
+      "score": 0
+    },
+    {
+      "bytes": 2802,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "675a828561b49f27",
+      "score": 0
+    },
+    {
+      "bytes": 1459,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "78fcfe14537f37dd",
+      "score": 0
+    },
+    {
+      "bytes": 3360,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "1a02bd8d5e2fb3b5",
+      "score": 0
+    },
+    {
+      "bytes": 5027,
+      "controls_fired": [
+        "citation.require",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "cd5936a9f51bb068",
+      "score": 8
+    },
+    {
+      "bytes": 682,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "d7458ea5f22184da",
+      "score": 0
+    },
+    {
+      "bytes": 6523,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "65a5ae94119d8b1d",
+      "score": 0
+    },
+    {
+      "bytes": 5082,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "24af8eb99bc792b9",
+      "score": 0
+    },
+    {
+      "bytes": 1689,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "6cd32448e08de8a8",
+      "score": 0
+    },
+    {
+      "bytes": 3095,
+      "controls_fired": [
+        "injection.named_defense",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 33
+      },
+      "file_id": "b99db830d47ac932",
+      "score": 8
+    },
+    {
+      "bytes": 2451,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "dd0959fae819bc46",
+      "score": 4
+    },
+    {
+      "bytes": 1344,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "5b2c60e91b622750",
+      "score": 0
+    },
+    {
+      "bytes": 1136,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "b15c34324fb830ac",
+      "score": 0
+    },
+    {
+      "bytes": 1499,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "3cfc44163aaca5a4",
+      "score": 0
+    },
+    {
+      "bytes": 794,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "fd747ffa7911c5ac",
+      "score": 0
+    },
+    {
+      "bytes": 2232,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "02d45c0c60c26e8a",
+      "score": 0
+    },
+    {
+      "bytes": 1970,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "f575dd3ba07c6f47",
+      "score": 4
+    },
+    {
+      "bytes": 4719,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "70e63f6c7dd88dbb",
+      "score": 0
+    },
+    {
+      "bytes": 1659,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "50123d627e6e2578",
+      "score": 0
+    },
+    {
+      "bytes": 9799,
+      "controls_fired": [
+        "injection.named_defense",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 33
+      },
+      "file_id": "2da501dd77ae9c05",
+      "score": 8
+    },
+    {
+      "bytes": 1905,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "32ca5bf5826c93c8",
+      "score": 0
+    },
+    {
+      "bytes": 1256,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "f6db6aded9033b9d",
+      "score": 0
+    },
+    {
+      "bytes": 3030,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "fd343347c7adc44e",
+      "score": 0
+    },
+    {
+      "bytes": 3029,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "94c4ac52f3fb897d",
+      "score": 0
+    },
+    {
+      "bytes": 3123,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "5880a8a7b88e660f",
+      "score": 0
+    },
+    {
+      "bytes": 3858,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "4a22f574df3c6386",
+      "score": 0
+    },
+    {
+      "bytes": 509,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "818a6262e04b1f13",
+      "score": 0
+    },
+    {
+      "bytes": 2056,
+      "controls_fired": [
+        "injection.named_defense",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 33
+      },
+      "file_id": "83b4214dcc1ed629",
+      "score": 8
+    },
+    {
+      "bytes": 3249,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "7b9ceb92f257c1f0",
+      "score": 0
+    },
+    {
+      "bytes": 1713,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "076794f9f1902bda",
+      "score": 0
+    },
+    {
+      "bytes": 1573,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "28dafe0b33fe7d11",
+      "score": 0
+    },
+    {
+      "bytes": 9725,
+      "controls_fired": [
+        "hallucination.defer_to_expert"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "2ca3101e7fe100b7",
+      "score": 3
+    },
+    {
+      "bytes": 2201,
+      "controls_fired": [
+        "citation.require"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "8e445862467d2402",
+      "score": 4
+    },
+    {
+      "bytes": 6860,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "2d26e073ce8cdf05",
+      "score": 0
+    },
+    {
+      "bytes": 2096,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "a180123a62b40d89",
+      "score": 0
+    },
+    {
+      "bytes": 4859,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "82434ccaced79e4e",
+      "score": 0
+    },
+    {
+      "bytes": 1418,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "73e4a36d6deb56b8",
+      "score": 0
+    },
+    {
+      "bytes": 3221,
+      "controls_fired": [
+        "citation.require"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "1438345dca4fdff0",
+      "score": 4
+    },
+    {
+      "bytes": 2164,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "b0f9e38c4cf867e8",
+      "score": 0
+    },
+    {
+      "bytes": 2851,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "b15749cce5749c05",
+      "score": 0
+    },
+    {
+      "bytes": 5752,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "c6461917029b36b5",
+      "score": 0
+    },
+    {
+      "bytes": 1104,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "2f55601c8551548e",
+      "score": 0
+    },
+    {
+      "bytes": 845,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "48d3b0e0636c5ee8",
+      "score": 0
+    },
+    {
+      "bytes": 814,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "b15cf61553274f5f",
+      "score": 0
+    },
+    {
+      "bytes": 8691,
+      "controls_fired": [
+        "injection.named_defense",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 33
+      },
+      "file_id": "f3c23076a28a8b9f",
+      "score": 8
+    },
+    {
+      "bytes": 2035,
+      "controls_fired": [
+        "injection.named_defense"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 0
+      },
+      "file_id": "3682ba1e14963359",
+      "score": 4
+    },
+    {
+      "bytes": 1210,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "e32efb452412665f",
+      "score": 0
+    },
+    {
+      "bytes": 1166,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "6e5497bf290e31a5",
+      "score": 0
+    },
+    {
+      "bytes": 1425,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "2b059fadcc2dc428",
+      "score": 0
+    },
+    {
+      "bytes": 1917,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "a09bad4410901afb",
+      "score": 0
+    },
+    {
+      "bytes": 1134,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "fb0e77c9795fccda",
+      "score": 0
+    },
+    {
+      "bytes": 816,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "648050917a931226",
+      "score": 0
+    },
+    {
+      "bytes": 6743,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "bf309b6b4cc3428c",
+      "score": 0
+    },
+    {
+      "bytes": 2197,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "4731ce33feeb0866",
+      "score": 4
+    },
+    {
+      "bytes": 834,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "b20ab4733d47674e",
+      "score": 0
+    },
+    {
+      "bytes": 5580,
+      "controls_fired": [
+        "injection.prompt_confidentiality"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 0
+      },
+      "file_id": "088532f09e1f9f84",
+      "score": 4
+    },
+    {
+      "bytes": 8991,
+      "controls_fired": [
+        "citation.require",
+        "injection.named_defense",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 33
+      },
+      "file_id": "84de4f1c588fa8de",
+      "score": 12
+    },
+    {
+      "bytes": 1435,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "e1e7f25a8563708a",
+      "score": 0
+    },
+    {
+      "bytes": 2068,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "3d1edd4ae6668b7d",
+      "score": 0
+    },
+    {
+      "bytes": 4663,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "fcf81e46f6ad99c0",
+      "score": 0
+    },
+    {
+      "bytes": 1085,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "f024acf4d6bf5c03",
+      "score": 0
+    },
+    {
+      "bytes": 2251,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "00660ec8321103d4",
+      "score": 0
+    },
+    {
+      "bytes": 3693,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "6789858f3a163000",
+      "score": 0
+    },
+    {
+      "bytes": 666,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "89f8f5a9b8719635",
+      "score": 0
+    },
+    {
+      "bytes": 5062,
+      "controls_fired": [
+        "citation.require"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "7e79f1a603f9878a",
+      "score": 4
+    },
+    {
+      "bytes": 9505,
+      "controls_fired": [
+        "injection.prompt_confidentiality"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 0
+      },
+      "file_id": "b60fabb65c626cc8",
+      "score": 4
+    },
+    {
+      "bytes": 775,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "c25ab70a4f29b542",
+      "score": 0
+    },
+    {
+      "bytes": 2324,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "651b079c3cd5a846",
+      "score": 0
+    },
+    {
+      "bytes": 2879,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "81690608737dca99",
+      "score": 0
+    },
+    {
+      "bytes": 3857,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "b16c2f153c5a50ea",
+      "score": 0
+    },
+    {
+      "bytes": 4886,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "0efa4fc3b3b085b6",
+      "score": 0
+    },
+    {
+      "bytes": 1784,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "6c886bc0d044c79f",
+      "score": 0
+    },
+    {
+      "bytes": 2037,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "51b6fb9311b575b5",
+      "score": 0
+    },
+    {
+      "bytes": 1591,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "920a19d1ae396620",
+      "score": 0
+    },
+    {
+      "bytes": 3192,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "97378d3979e7d7bc",
+      "score": 0
+    },
+    {
+      "bytes": 1091,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "8a3f95ab9c85c02a",
+      "score": 0
+    },
+    {
+      "bytes": 2835,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "a79c55c7a9c7f6ae",
+      "score": 0
+    },
+    {
+      "bytes": 532,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "26a4f007ed255f6a",
+      "score": 0
+    },
+    {
+      "bytes": 1185,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "ade7ca2b63b5dc19",
+      "score": 0
+    },
+    {
+      "bytes": 2905,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "275e5f6660e3f491",
+      "score": 0
+    },
+    {
+      "bytes": 3601,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "bf9a40c7f3f3335e",
+      "score": 0
+    },
+    {
+      "bytes": 2060,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "d802fed457c667ca",
+      "score": 0
+    },
+    {
+      "bytes": 2048,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "7e650378428daf90",
+      "score": 0
+    },
+    {
+      "bytes": 2360,
+      "controls_fired": [
+        "injection.named_defense",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 33
+      },
+      "file_id": "afe4ffce588a2686",
+      "score": 8
+    },
+    {
+      "bytes": 1666,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "312176a7a1d24a2c",
+      "score": 0
+    },
+    {
+      "bytes": 3215,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "01ba2dcc9bbe0e0c",
+      "score": 4
+    },
+    {
+      "bytes": 6057,
+      "controls_fired": [
+        "hallucination.no_fabrication"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 25,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "c09ef80120a0eb7a",
+      "score": 3
+    },
+    {
+      "bytes": 2657,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "637eafecfa7593f7",
+      "score": 0
+    },
+    {
+      "bytes": 2642,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "b82da21399fc068a",
+      "score": 0
+    },
+    {
+      "bytes": 13959,
+      "controls_fired": [
+        "injection.override_resistance",
+        "injection.prompt_confidentiality"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 67,
+        "safe_stop": 0
+      },
+      "file_id": "56a94e321f046ca7",
+      "score": 8
+    },
+    {
+      "bytes": 2028,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "3b55d3d0ce626aca",
+      "score": 0
+    },
+    {
+      "bytes": 3091,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "afc2092fbe95afe4",
+      "score": 4
+    },
+    {
+      "bytes": 1318,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "4e46e82affe5c8ce",
+      "score": 0
+    },
+    {
+      "bytes": 848,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "d033869c05d994af",
+      "score": 0
+    },
+    {
+      "bytes": 2033,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "22b9cb81f81ad231",
+      "score": 0
+    },
+    {
+      "bytes": 3696,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "435bc379f14bec36",
+      "score": 0
+    },
+    {
+      "bytes": 1001,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "afdab6dd3c38305d",
+      "score": 0
+    },
+    {
+      "bytes": 7125,
+      "controls_fired": [
+        "injection.prompt_confidentiality",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 33
+      },
+      "file_id": "464263d0e8e1311f",
+      "score": 8
+    },
+    {
+      "bytes": 3852,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "88b76b2d4a250e3b",
+      "score": 0
+    },
+    {
+      "bytes": 1382,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "b5316d077e9bf648",
+      "score": 0
+    },
+    {
+      "bytes": 2087,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "95ac443ff9cd8441",
+      "score": 0
+    },
+    {
+      "bytes": 1132,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "417f38f607ad85cb",
+      "score": 0
+    },
+    {
+      "bytes": 1412,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "d5e4e218d4d28a5c",
+      "score": 0
+    },
+    {
+      "bytes": 4120,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "51f1534000c82f76",
+      "score": 0
+    },
+    {
+      "bytes": 4040,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "aedf62ac4b8c71a4",
+      "score": 0
+    },
+    {
+      "bytes": 609,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "844c43a39a5c4ba1",
+      "score": 0
+    },
+    {
+      "bytes": 1013,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "2313a97312085e4b",
+      "score": 0
+    },
+    {
+      "bytes": 1348,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "045f053d0e480481",
+      "score": 0
+    },
+    {
+      "bytes": 775,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "adcfaa7aa331ccd3",
+      "score": 0
+    },
+    {
+      "bytes": 2062,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "c941ca3e4390092f",
+      "score": 0
+    },
+    {
+      "bytes": 1131,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "5f3773ed03892017",
+      "score": 0
+    },
+    {
+      "bytes": 3874,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "34554362caab1efd",
+      "score": 4
+    },
+    {
+      "bytes": 3236,
+      "controls_fired": [
+        "injection.named_defense",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 33
+      },
+      "file_id": "ec993985695b117c",
+      "score": 8
+    },
+    {
+      "bytes": 466,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "66231407868d087f",
+      "score": 0
+    },
+    {
+      "bytes": 2704,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "a2d70435afb2eab2",
+      "score": 0
+    },
+    {
+      "bytes": 5957,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "3fed2f194159825b",
+      "score": 0
+    },
+    {
+      "bytes": 498,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "6f67f9c2886b53f8",
+      "score": 0
+    },
+    {
+      "bytes": 3154,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "dce1f852c5fc0b58",
+      "score": 0
+    },
+    {
+      "bytes": 853,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "82de12e520565728",
+      "score": 0
+    },
+    {
+      "bytes": 1213,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "26a09f2731ca509c",
+      "score": 4
+    },
+    {
+      "bytes": 628,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "7715ace44f0d4d52",
+      "score": 0
+    },
+    {
+      "bytes": 1612,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "6a913eed31cb2e38",
+      "score": 4
+    },
+    {
+      "bytes": 4302,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "046384a035b2b8fc",
+      "score": 0
+    },
+    {
+      "bytes": 743,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "5d87ec4b81e02d4a",
+      "score": 0
+    },
+    {
+      "bytes": 2599,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "70153a50290d725a",
+      "score": 0
+    },
+    {
+      "bytes": 809,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "db59e4f66a6e3de1",
+      "score": 4
+    },
+    {
+      "bytes": 2867,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "56ead7e477b36547",
+      "score": 0
+    },
+    {
+      "bytes": 6471,
+      "controls_fired": [
+        "injection.named_defense",
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 33
+      },
+      "file_id": "1f15f6dcc622aa33",
+      "score": 8
+    },
+    {
+      "bytes": 2782,
+      "controls_fired": [
+        "injection.prompt_confidentiality"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 33,
+        "safe_stop": 0
+      },
+      "file_id": "d520e531f846aa5b",
+      "score": 4
+    },
+    {
+      "bytes": 2684,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "a967630f6e32aea5",
+      "score": 0
+    },
+    {
+      "bytes": 937,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "edd615c70ea8939c",
+      "score": 0
+    },
+    {
+      "bytes": 1200,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "512e5e658977a10c",
+      "score": 0
+    },
+    {
+      "bytes": 2099,
+      "controls_fired": [
+        "citation.inline_marker"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "335c0670f063e21c",
+      "score": 4
+    },
+    {
+      "bytes": 478,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "fe64003ca486bea5",
+      "score": 0
+    },
+    {
+      "bytes": 555,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "a56637387c43e268",
+      "score": 0
+    },
+    {
+      "bytes": 1184,
+      "controls_fired": [
+        "citation.inline_marker"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 33,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "6837f5a06d09525d",
+      "score": 4
+    },
+    {
+      "bytes": 1952,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "25f876b30a32c789",
+      "score": 0
+    },
+    {
+      "bytes": 2094,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "cf932271b2db4b89",
+      "score": 0
+    },
+    {
+      "bytes": 624,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "b56864993e6dd998",
+      "score": 0
+    },
+    {
+      "bytes": 1104,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "bae6592e2fadc94c",
+      "score": 0
+    },
+    {
+      "bytes": 1442,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "3f6c1db76ce28ba3",
+      "score": 4
+    },
+    {
+      "bytes": 404,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "3bac3be0a4bab617",
+      "score": 0
+    },
+    {
+      "bytes": 3466,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "4503ba2460397838",
+      "score": 4
+    },
+    {
+      "bytes": 1649,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "2fe6aec816abb221",
+      "score": 0
+    },
+    {
+      "bytes": 1070,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "6ccc0ba8c8b8b4aa",
+      "score": 0
+    },
+    {
+      "bytes": 1748,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "2fab3797e964a496",
+      "score": 4
+    },
+    {
+      "bytes": 3237,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "7643edfacffd0d23",
+      "score": 4
+    },
+    {
+      "bytes": 1597,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "be3eb341c08bfe67",
+      "score": 0
+    },
+    {
+      "bytes": 1251,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "ba9b838281e061b5",
+      "score": 0
+    },
+    {
+      "bytes": 8506,
+      "controls_fired": [],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 0
+      },
+      "file_id": "dbd28cad64cf2c12",
+      "score": 0
+    },
+    {
+      "bytes": 1274,
+      "controls_fired": [
+        "safe_stop.stop_condition"
+      ],
+      "corpus": "gpt_store",
+      "dimensions": {
+        "audit": 0,
+        "citation": 0,
+        "compliance": 0,
+        "cost": 0,
+        "hallucination": 0,
+        "human_gate": 0,
+        "injection": 0,
+        "safe_stop": 33
+      },
+      "file_id": "0c76a987a09ce986",
+      "score": 4
+    }
+  ],
+  "generated_from": {
+    "gpt_store": {
+      "sha": "3adfb7b38423b64a995057483c1f9007ed5f4da5",
+      "url": "https://github.com/linexjlin/GPTs"
+    },
+    "production": {
+      "sha": "2054f580b1203da061e8e3df3c6449de2ad7c322",
+      "url": "https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools"
+    }
+  },
+  "package_version": "0.6.11",
+  "ruleset": "crewscore-hygiene@0.6.0",
+  "schema_version": "1.0"
+}

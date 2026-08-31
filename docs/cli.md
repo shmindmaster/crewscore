@@ -28,6 +28,10 @@ crewscore scan examples/corpus
 ```
 
 - Prints path → artifact → score → verdict (JSON with `--json`).
+- Machine output is **prompt-free by default**: rule IDs, dimensions, status,
+  control labels, and remediation — never the matched substring of the file
+  that was scanned. See
+  [Prompt-free output](#prompt-free-output-and---include-snippets).
 - `--threshold N` exits `2` if any **system prompt** scores below `N`.
   [Coding-agent config is exempt](../README.md#two-artifacts-two-rulesets) — it
   is not judged on that number.
@@ -37,6 +41,13 @@ crewscore scan examples/corpus
   single file; a table for a scan).
 - Exits `1` if no candidate files are found.
 - Skips `node_modules`, `.git`, `venv`, `.venv`, `dist`, `__pycache__`.
+- **Never follows symlinks or junctions.** A linked directory is not descended
+  (so link cycles cannot hang the walk) and a linked file is not read, which
+  keeps the scan inside `PATH` even when the tree links out of it. Refusals are
+  reported on stderr - `--json` prints one `{"skipped_unsafe_path": {...}}`
+  object per refusal, so an empty result is never mistaken for a clean tree -
+  and are never added as rows, so the `--json` row shape is unchanged. There
+  is no flag to opt back in.
 
 This is the default CI gate for repos with more than one agent artifact.
 
@@ -54,6 +65,43 @@ name; a dimension expands to all of its published controls. `--baseline FILE
 --fail-on-regression` fails only when a previously found control disappears.
 `--sarif FILE` writes missing-control findings without prompt text or snippets.
 See [policies.md](policies.md) for the small `.crewscore.yml` schema.
+
+---
+
+## Prompt-free output and `--include-snippets`
+
+CrewScore matches regexes against your prompt, and a match substring *is* your
+prompt. Copying it into a `--json` payload, a job summary, a sticky PR comment,
+or an HTML report publishes the artifact being audited to everyone who can read
+that build — a private system prompt has no business in a CI log.
+
+So every machine surface is prompt-free by default:
+
+| Surface | Carries | Never carries |
+|---------|---------|---------------|
+| `--json` (`test`, `scan`) | rule IDs, dimension, status, control label | `snippet` |
+| `--summary` / `GITHUB_STEP_SUMMARY` | same, plus the formula and tier | matched text |
+| `--sarif` | control IDs, dimension, file location | matched text |
+| `--report` (HTML) | same as `--summary` | matched text |
+
+The local terminal is the exception: `crewscore test --explain` still prints the
+matched text, because you asked for it and it never leaves your machine.
+
+Scoring is unaffected. The snippet is still computed — it is simply not
+serialized.
+
+### `--include-snippets` (deprecated)
+
+```bash
+crewscore test --prompt-file ./system-prompt.md --json --include-snippets
+crewscore scan . --json --include-snippets
+```
+
+Re-admits the matched substrings into `--json`, `--summary`, and `--report`.
+**Deprecated compatibility escape hatch — it will be removed after one
+release.** It does not apply to `--sarif` (a code-scanning upload is
+control-only either way) and it never re-enables a governance grade for
+coding-agent config.
 
 ---
 
@@ -104,6 +152,10 @@ Embed the badge (path relative to your repo):
 
 Human mode also prints a one-line share blurb. Reports are structural-scan
 artifacts — not runtime proof of anything.
+
+The HTML report is prompt-free by default (rule IDs, dimensions, status, and
+control labels), so it is safe to upload as a CI artifact. `--include-snippets`
+re-admits matched prompt text and is deprecated.
 
 ---
 

@@ -14,6 +14,7 @@ models, enforce runtime tool gates, or certify vendors.
 | Open catalog + provenance | `crewscore/rules_catalog.py` | `crewscore rules` surface |
 | Remediation templates | `crewscore/scorers/fix_patterns.py` | Text suggestions only |
 | Repo discovery | `crewscore/scan.py` | `crewscore scan` |
+| Scan-root containment | `crewscore/pathsafe.py` | One boundary for both discovery walks; links never followed |
 | Explicit CI policy | `crewscore/policy.py` | require / baseline / regression |
 | SARIF | `crewscore/sarif.py` | Prompt-free missing-control findings |
 | PR/job markdown | `crewscore/summary.py` | Sticky comments / step summary |
@@ -103,6 +104,11 @@ Local-only / generated paths (not product architecture): `dist/`,
 ## Security and privacy boundaries
 
 - Core CLI path is offline; no network required to score.
+- Discovery stays inside the caller-selected root (`crewscore/pathsafe.py`):
+  the root is resolved once and every candidate must resolve inside it.
+  Symlinks and junctions are never followed, so a linked directory is not
+  descended - which also makes link cycles impossible - and a linked file is
+  never opened. Refusals are reported on stderr, never as scan rows.
 - SARIF, baselines, and policy files carry **control IDs**, not prompt text.
 - Browser scoring keeps prompt text in page memory; share/export payloads are
   metadata / control IDs. Analytics use an allowlisted event schema
