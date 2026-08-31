@@ -53,6 +53,15 @@ No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
   the base revision, and a fixture attack in which a pull request ships a
   controller that merges anything and is ignored.
 
+### Fixed
+
+- Diagnostics on stderr are greppable again. `err_console` hard-wrapped at the
+  detected width (80 columns when stderr is not a tty), inserting real newlines
+  mid-sentence, so `crewscore scan . 2>&1 | grep "larger than 500KB"` missed the
+  message whenever a long path pushed the break into the phrase. stderr is now
+  soft-wrapped: the terminal still wraps it visually, only the emitted bytes
+  change.
+
 ### Changed
 
 - A symlinked directory **inside** the root is no longer descended either. That

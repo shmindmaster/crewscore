@@ -101,7 +101,12 @@ def _read_prompt_file(path: Path) -> str:
 
 
 console = Console()
-err_console = Console(stderr=True)
+# soft_wrap: diagnostics on stderr must stay greppable. Rich otherwise hard-wraps
+# at the detected width (80 when stderr is not a tty), inserting real newlines
+# mid-sentence, so `crewscore scan ... 2>&1 | grep "larger than 500KB"` silently
+# missed the message whenever a long path pushed the break into the phrase. The
+# terminal still wraps it visually; only the emitted bytes change.
+err_console = Console(stderr=True, soft_wrap=True)
 
 BRAND = "CrewScore"
 HOMEPAGE = "https://crewscore.ai"
