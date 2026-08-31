@@ -31,6 +31,7 @@ Design constraints, from SH-2402:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import random
@@ -56,6 +57,11 @@ from crewscore import __version__  # noqa: E402
 CACHE = REPO / ".corpus-cache"
 REPORT = REPO / "docs" / "validation-corpus.md"
 DATA = REPO / "docs" / "validation-corpus.json"
+# Per-file scores. Derived data we own outright; the prompt text behind it is
+# not ours to redistribute and never leaves the pinned upstream. Same run,
+# same leak scan.
+SCORES = REPO / "docs" / "corpus-scores.json"
+SCORES_CSV = REPO / "docs" / "corpus-scores.csv"
 
 SEED = 20260729
 RESAMPLES = 10_000
@@ -357,19 +363,52 @@ def score_corpus(files: list[tuple[str, str]]) -> dict:
     control_hits: dict[str, int] = {
         c.key: 0 for cs in CONCEPTS.values() for c in cs
     }
-    for _path, text in files:
+    # Per-file rows. The aggregate numbers below are computed from exactly
+    # these records, so publishing them lets a reader audit every headline
+    # figure from the raw scores. Derived data only: no prompt text, no
+    # matched spans, no line numbers. See docs/corpus-scores.md.
+    per_file: list[dict] = []
+    for path, text in files:
         lowered = text.lower()
         dims = {}
+        fired: list[str] = []
         for dimension, patterns in SCORER_MAP.items():
             matched = {rid for rid, _, _ in _match_patterns(lowered, patterns)}
             covered = covered_concepts(dimension, matched)
             for c in covered:
                 control_hits[c.key] += 1
+                fired.append(c.key)
             total = len(CONCEPTS[dimension])
             k = len(covered)
             dims[dimension] = 0 if not k else (100 * k + total // 2) // total
-        overalls.append(overall_score(dims))
-    return {"overalls": overalls, "control_hits": control_hits}
+        score = overall_score(dims)
+        overalls.append(score)
+        # Opaque, deterministic id instead of the path.
+        #
+        # Not caution — a measurement. The leak scan rejected paths on
+        # 2026-08-24 with the window 'T Customizer, File Finder & JSON Action'.
+        # In the GPT-Store collection the filename *is* the assistant's name
+        # and the prompt text restates it, so a path is prompt content wearing
+        # a different hat. Publishing it would redistribute exactly what the
+        # licence notes say is not ours to redistribute.
+        #
+        # The id is sha256 of the upstream-relative path, so anyone can
+        # regenerate the mapping locally from the pinned SHA and audit any row.
+        # Nothing is hidden; it just is not restated here.
+        per_file.append(
+            {
+                "file_id": hashlib.sha256(path.encode("utf-8")).hexdigest()[:16],
+                "score": score,
+                "bytes": len(text),
+                "dimensions": dict(dims),
+                "controls_fired": sorted(fired),
+            }
+        )
+    return {
+        "overalls": overalls,
+        "control_hits": control_hits,
+        "per_file": per_file,
+    }
 
 
 def analyse(groups: dict[str, dict], rng: random.Random) -> dict:
@@ -436,7 +475,7 @@ def control_table(groups: dict[str, dict]) -> list[dict]:
 # ─── self-checks: these fail the run ──────────────────────────────────
 
 
-def self_check(payload: dict, texts: list[str]) -> list[str]:
+def self_check(payload: dict, texts: list[str], extra: dict | None = None) -> list[str]:
     """Every failure mode from the withdrawn study, as an assertion."""
     errs: list[str] = []
 
@@ -489,14 +528,19 @@ def self_check(payload: dict, texts: list[str]) -> list[str]:
             errs.append(f"{key}: quartiles out of order")
 
     # 6. No prompt text may leave the machine. Checked against the inputs
-    #    rather than trusted to discipline.
-    blob = json.dumps(payload)
+    #    rather than trusted to discipline. `extra` carries any additional
+    #    artifact written in the same run (the per-file scores), so a new
+    #    output cannot quietly escape this scan.
+    blob = json.dumps(payload) + ("" if extra is None else json.dumps(extra))
     for text in texts:
         squeezed = " ".join(text.split())
         for i in range(0, max(0, len(squeezed) - LEAK_WINDOW), LEAK_WINDOW):
             window = squeezed[i : i + LEAK_WINDOW]
             if window and window in blob:
-                errs.append(f"output contains {LEAK_WINDOW}+ chars of input text")
+                errs.append(
+                    f"output contains {LEAK_WINDOW}+ chars of input text: "
+                    f"{window!r}"
+                )
                 return errs
     return errs
 
@@ -752,7 +796,32 @@ def main() -> int:
         len(payload["controls"]) * 4 + len(payload["groups"]) * 4 + 4
     )
 
-    errs = self_check(payload, texts)
+    # Per-file scores, in the same run so the rows and the report are provably
+    # the same computation. Schema is a whitelist: anything not listed here
+    # cannot reach the file, which is what keeps prompt text out by
+    # construction rather than by care.
+    scores_payload = {
+        "schema_version": "1.0",
+        "ruleset": RULESET_ID,
+        "package_version": __version__,
+        "generated_from": {
+            c.key: {"url": c.url, "sha": c.sha} for c in CORPORA
+        },
+        "disclaimer": (
+            "Coverage counts which of 23 controls the prompt TEXT states. It is "
+            "not quality, not safety, not certification, and not evidence of "
+            "runtime behavior. A low score means the text is silent on a "
+            "control, not that the product lacks it."
+        ),
+        "controls": sorted(c.key for cs in CONCEPTS.values() for c in cs),
+        "files": [
+            {"corpus": key, **row}
+            for key, g in groups.items()
+            for row in g["per_file"]
+        ],
+    }
+
+    errs = self_check(payload, texts, extra=scores_payload)
     if errs:
         print("SELF-CHECK FAILED - nothing written:", file=sys.stderr)
         for e in errs:
@@ -770,9 +839,26 @@ def main() -> int:
         print("report matches a fresh run")
         return 0
 
-    REPORT.write_text(report, encoding="utf-8")
+    # newline="\n" on every write: without it Windows translates to CRLF, the
+    # committed LF files show as fully rewritten, and `--check` fails on a
+    # run that computed identical numbers. Surfaced 2026-08-24.
+    SCORES.write_text(
+        json.dumps(scores_payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    csv_lines = ["corpus,file_id,score,bytes,controls_fired"]
+    for row in scores_payload["files"]:
+        csv_lines.append(
+            f"{row['corpus']},{row['file_id']},{row['score']},{row['bytes']},"
+            f"\"{'|'.join(row['controls_fired'])}\""
+        )
+    SCORES_CSV.write_text("\n".join(csv_lines) + "\n", encoding="utf-8",
+                          newline="\n")
+
+    REPORT.write_text(report, encoding="utf-8", newline="\n")
     DATA.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n",
-                    encoding="utf-8")
+                    encoding="utf-8", newline="\n")
     a = payload["analysis"]
     print(f"delta={a['delta']} p={a['p_value']} CI={a['ci95']}", file=sys.stderr)
     print(f"wrote {REPORT.relative_to(REPO)} and {DATA.relative_to(REPO)}",
