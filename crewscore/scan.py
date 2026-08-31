@@ -5,6 +5,14 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from crewscore.pathsafe import (
+    DESCEND,
+    READ,
+    SKIP,
+    SkippedPath,
+    classify_entry,
+    resolve_root,
+)
 from crewscore.scoring import build_result
 from crewscore.scorers import structural_analysis
 from crewscore.smells import detect_smells, find_repo_root
@@ -141,7 +149,10 @@ def _matches_prompt_conventions(path: Path, root: Path) -> bool:
 
 
 def discover_prompt_files(
-    root: Path, *, oversized: list[Path] | None = None
+    root: Path,
+    *,
+    oversized: list[Path] | None = None,
+    skipped: list[SkippedPath] | None = None,
 ) -> list[Path]:
     """Find likely agent instruction / system-prompt files under root.
 
@@ -156,8 +167,12 @@ def discover_prompt_files(
     `oversized`, when provided, collects files that match the discovery
     conventions but were skipped only for exceeding MAX_FILE_BYTES, so the
     caller can tell the user instead of dropping them silently.
+
+    `skipped`, when provided, collects paths discovery refused to open because
+    they could leave the scan root - symlinks, junctions and paths that resolve
+    outside it. Nothing outside the root is ever read.
     """
-    root = Path(root).resolve()
+    root = resolve_root(root)
     if not root.is_dir():
         return []
 
@@ -173,13 +188,12 @@ def discover_prompt_files(
 
         for entry in entries:
             try:
-                if entry.is_dir():
-                    if entry.name in SKIP_DIRS:
-                        continue
+                action, reason = classify_entry(entry, root, ignore_names=SKIP_DIRS)
+                if action == DESCEND:
                     # Also skip hidden dirs other than those we might care about?
-                    # Spec only lists explicit skip set — do not skip all hidden.
+                    # Spec only lists explicit skip set - do not skip all hidden.
                     _walk(entry, depth + 1)
-                elif entry.is_file():
+                elif action == READ:
                     if _should_include(entry, root):
                         found.add(entry.resolve())
                     elif (
@@ -188,6 +202,8 @@ def discover_prompt_files(
                         and _matches_prompt_conventions(entry, root)
                     ):
                         oversized.append(entry.resolve())
+                elif action == SKIP and reason is not None and skipped is not None:
+                    skipped.append(SkippedPath(entry, reason))
             except OSError:
                 continue
 
@@ -263,7 +279,9 @@ def score_paths(
     return results
 
 
-def discover_inline_prompt_sources(root: Path) -> list[Any]:
+def discover_inline_prompt_sources(
+    root: Path, *, skipped: list[SkippedPath] | None = None
+) -> list[Any]:
     """Discover system-prompt string literals embedded in source files.
 
     Thin re-export of ``crewscore.extract_inline.discover_inline_prompts`` so
@@ -272,7 +290,7 @@ def discover_inline_prompt_sources(root: Path) -> list[Any]:
     """
     from crewscore.extract_inline import discover_inline_prompts
 
-    return discover_inline_prompts(root)
+    return discover_inline_prompts(root, skipped=skipped)
 
 
 def score_inline_prompts(

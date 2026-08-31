@@ -13,6 +13,7 @@ from rich.panel import Panel
 
 from crewscore import __version__
 from crewscore.export_eval import write_eval_stubs
+from crewscore.findings_export import public_findings
 from crewscore.policy import (
     PolicyError,
     baseline_payload,
@@ -23,6 +24,7 @@ from crewscore.hero import coverage_from_findings, hero_missing_control
 from crewscore.report import render_badge_svg, render_html_report, share_text
 from crewscore.rules_catalog import SCORING_METHOD, catalog_payload, scoring_transparency_block
 from crewscore.sarif import write_sarif
+from crewscore.pathsafe import SKIP_REASON_TEXT, SkippedPath
 from crewscore.scan import (
     MAX_FILE_BYTES,
     discover_inline_prompt_sources,
@@ -99,11 +101,26 @@ def _read_prompt_file(path: Path) -> str:
 
 
 console = Console()
-err_console = Console(stderr=True)
+# soft_wrap: diagnostics on stderr must stay greppable. Rich otherwise hard-wraps
+# at the detected width (80 when stderr is not a tty), inserting real newlines
+# mid-sentence, so `crewscore scan ... 2>&1 | grep "larger than 500KB"` silently
+# missed the message whenever a long path pushed the break into the phrase. The
+# terminal still wraps it visually; only the emitted bytes change.
+err_console = Console(stderr=True, soft_wrap=True)
 
 BRAND = "CrewScore"
 HOMEPAGE = "https://crewscore.ai"
 REPO = "https://github.com/shmindmaster/crewscore"
+
+# Shared help text for the opt-in that re-admits prompt text into machine
+# output. It is a compatibility escape hatch, not a feature: the default is
+# prompt-free, and the flag is scheduled for removal after one release.
+_SNIPPET_OPT_IN_HELP = (
+    "DEPRECATED compatibility escape hatch: also copy matched prompt "
+    "substrings into --json, --summary and --report output. Default (off) "
+    "emits rule IDs, dimension, status and the control label only. This flag "
+    "will be removed after one release."
+)
 
 
 def _resolve_policy_or_exit(
@@ -136,10 +153,12 @@ def _evaluate_policy_or_exit(settings, **kwargs):
         sys.exit(1)
 
 
-def _baseline_entries(root: Path, profile: str | None) -> list[tuple[str, str, list[dict]]]:
+def _baseline_entries(
+    root: Path, profile: str | None, *, skipped: list[SkippedPath] | None = None
+) -> list[tuple[str, str, list[dict]]]:
     """Collect public control state for a prompt-free baseline file."""
     entries: list[tuple[str, str, list[dict]]] = []
-    for path in discover_prompt_files(root):
+    for path in discover_prompt_files(root, skipped=skipped):
         resolved = profile or classify_path(path)
         if not governance_applies(resolved):
             continue
@@ -147,6 +166,35 @@ def _baseline_entries(root: Path, profile: str | None) -> list[tuple[str, str, l
         _dimensions, findings = structural_analysis.analyze_with_findings(text)
         entries.append((path.resolve().relative_to(root).as_posix(), resolved, findings))
     return entries
+
+
+def _report_skipped_paths(skipped: list[SkippedPath], *, as_json: bool) -> None:
+    """Print containment refusals to stderr; stdout stays pure JSON.
+
+    These are not scan rows: a skipped path was never read, so it has no score
+    and no tier, and adding it to the `--json` array would break every consumer
+    that reads one. `--json` gets one machine-readable object per refusal on
+    stderr instead, so "skipped as unsafe" stays distinguishable from "nothing
+    was found".
+    """
+    if not skipped:
+        return
+    # File discovery and inline extraction walk the same tree, so the same link
+    # is refused twice. Report it once.
+    seen: set[tuple[str, str]] = set()
+    unique: list[SkippedPath] = []
+    for item in skipped:
+        key = (str(item.path), item.reason)
+        if key not in seen:
+            seen.add(key)
+            unique.append(item)
+    if as_json:
+        for item in unique:
+            click.echo(json.dumps({"skipped_unsafe_path": item.as_dict()}), err=True)
+        return
+    for item in unique:
+        reason = SKIP_REASON_TEXT.get(item.reason, item.reason)
+        err_console.print(f"[yellow]Skipped {item.path} - {reason}.[/yellow]")
 
 
 def render_score_bar(score: int) -> str:
@@ -204,6 +252,12 @@ main.add_command(assess_vendor)
     "--explain/--no-explain",
     default=True,
     help="Show matched/missing signals with rule IDs (default: on — scores are not a black box)",
+)
+@click.option(
+    "--include-snippets",
+    "include_snippets",
+    is_flag=True,
+    help=_SNIPPET_OPT_IN_HELP,
 )
 @click.option(
     "--report",
@@ -286,6 +340,7 @@ def test(
     as_json,
     threshold,
     explain,
+    include_snippets,
     report,
     badge,
     summary,
@@ -364,11 +419,22 @@ def test(
         root=prompt_path.parent if prompt_path else None,
     )
 
+    # Findings split here: everything that leaves the machine (report, JSON,
+    # summary file, job summary, SARIF) is rendered from the redacted copy,
+    # while --explain keeps the real match text for the local terminal.
+    shared = public_findings(findings, include_snippets=include_snippets)
+    if include_snippets:
+        err_console.print(
+            "[yellow]--include-snippets is deprecated:[/yellow] matched prompt "
+            "text is being copied into machine output. It will be removed after "
+            "one release; prefer the default prompt-free payload."
+        )
+
     if report:
         report_path = Path(report)
         report_path.parent.mkdir(parents=True, exist_ok=True)
         report_path.write_text(
-            render_html_report(result, findings=findings),
+            render_html_report(result, findings=shared),
             encoding="utf-8",
         )
     if badge:
@@ -376,18 +442,20 @@ def test(
         badge_path.parent.mkdir(parents=True, exist_ok=True)
         badge_path.write_text(render_badge_svg(result), encoding="utf-8")
     if sarif:
+        # SARIF is uploaded to code scanning, where the opt-in does not apply:
+        # it is control IDs and locations only, with or without the flag.
         write_sarif(
             sarif,
             [
                 (
                     str(prompt_path) if prompt_path else "prompt",
                     result.governance_applicable,
-                    findings,
+                    public_findings(findings),
                 )
             ],
         )
 
-    md_body = format_score_markdown(result, findings=findings)
+    md_body = format_score_markdown(result, findings=shared)
     if summary:
         summary_path = Path(summary)
         summary_path.parent.mkdir(parents=True, exist_ok=True)
@@ -412,7 +480,7 @@ def test(
             # apparatus of a governance grade. Coding-agent config already
             # has `overall`/`dimensions` withheld; publishing these two would
             # let a reader reconstruct a score from them alone.
-            payload["findings"] = findings
+            payload["findings"] = shared
             payload["transparency"] = scoring_transparency_block()
             payload["coverage"] = {
                 "matched": matched_n,
@@ -1271,7 +1339,9 @@ def baseline(path: Path, output_path: Path | None, profile: str | None):
     """
     root = path.resolve()
     forced_profile = profile.lower() if profile else None
-    entries = _baseline_entries(root, forced_profile)
+    skipped: list[SkippedPath] = []
+    entries = _baseline_entries(root, forced_profile, skipped=skipped)
+    _report_skipped_paths(skipped, as_json=False)
     destination = output_path or root / ".crewscore-baseline.json"
     destination = destination.resolve()
     payload = baseline_payload(entries, ruleset=RULESET_ID)
@@ -1314,7 +1384,9 @@ def init(path: Path, force: bool):
         err_console.print("[dim]Review them first, or re-run `crewscore init --force`.[/dim]")
         sys.exit(1)
 
-    entries = _baseline_entries(root, None)
+    skipped: list[SkippedPath] = []
+    entries = _baseline_entries(root, None, skipped=skipped)
+    _report_skipped_paths(skipped, as_json=False)
     baseline_path.write_text(
         json.dumps(baseline_payload(entries, ruleset=RULESET_ID), indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
@@ -1406,6 +1478,12 @@ def init(path: Path, force: bool):
     help="Show matched vs missing signals for the lowest-scoring file",
 )
 @click.option(
+    "--include-snippets",
+    "include_snippets",
+    is_flag=True,
+    help=_SNIPPET_OPT_IN_HELP,
+)
+@click.option(
     "--summary",
     type=click.Path(),
     default=None,
@@ -1472,6 +1550,7 @@ def scan(
     threshold,
     max_smells,
     explain,
+    include_snippets,
     summary,
     profile,
     include_inline,
@@ -1489,6 +1568,12 @@ def scan(
     literals embedded in .py/.ts/.js source. Offline structural scan only.
     """
     root = Path(path).resolve()
+    if include_snippets:
+        err_console.print(
+            "[yellow]--include-snippets is deprecated:[/yellow] matched prompt "
+            "text is being copied into machine output. It will be removed after "
+            "one release; prefer the default prompt-free payload."
+        )
     policy = _resolve_policy_or_exit(
         config=config,
         require=required_controls,
@@ -1497,12 +1582,16 @@ def scan(
         fail_on_regression=fail_on_regression,
     )
     oversized: list[Path] = []
-    files = discover_prompt_files(root, oversized=oversized)
-    inlines = discover_inline_prompt_sources(root) if include_inline else []
+    skipped: list[SkippedPath] = []
+    files = discover_prompt_files(root, oversized=oversized, skipped=skipped)
+    inlines = (
+        discover_inline_prompt_sources(root, skipped=skipped) if include_inline else []
+    )
+    _report_skipped_paths(skipped, as_json=as_json)
     if oversized and not as_json:
-        for skipped in oversized:
+        for oversized_path in oversized:
             err_console.print(
-                f"[yellow]Skipped {skipped} — larger than 500KB. "
+                f"[yellow]Skipped {oversized_path} — larger than 500KB. "
                 "Score it directly with crewscore test --prompt-file.[/yellow]"
             )
 
@@ -1523,6 +1612,14 @@ def scan(
                 "agents/, prompts/, or prompt/ directories, and (default) "
                 "system_prompt string literals in .py/.ts/.js source. "
                 "Disable inline with --no-inline.[/dim]"
+            )
+        if skipped:
+            # Empty because the scan refused to follow links is a different
+            # fact from empty because there is nothing to score, and `[]` on
+            # stdout cannot say which one it is.
+            err_console.print(
+                f"[yellow]{len(skipped)} path(s) skipped as unsafe - links are "
+                "never followed, so the scan stayed inside the root.[/yellow]"
             )
         sys.exit(1)
 
@@ -1608,7 +1705,16 @@ def scan(
         )
         if policy.enabled:
             item["policy"] = policy_result
-        sarif_entries.append((item["path"], applicable, findings))
+        # Same gate as `test`: findings that reach a machine artifact are the
+        # redacted copy unless the caller opted in. `scan --explain` reads the
+        # raw list, because that one never leaves the terminal.
+        sarif_entries.append(
+            (
+                item["path"],
+                applicable,
+                public_findings(findings, include_snippets=include_snippets),
+            )
+        )
     if sarif:
         write_sarif(sarif, sarif_entries)
 
@@ -1823,4 +1929,5 @@ def scan(
 
 if __name__ == "__main__":
     main()
+
 

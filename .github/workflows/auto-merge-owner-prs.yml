@@ -31,17 +31,43 @@ jobs:
       !contains(github.event.pull_request.labels.*.name, 'no-automerge')
     runs-on: ubuntu-latest
     steps:
-      - name: Check out auto-merge controller
-        uses: actions/checkout@v7
+      - name: Check out pull request head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Confused deputy: the controller below decides whether this PR gets
+      # auto-merged, so it must never come from the PR. Reading it from the
+      # base revision means a PR can only change the merge controller after
+      # that change is merged, reviewed, and protected by the branch ruleset.
+      #
+      # The path is written after the PR checkout on purpose: checkout into a
+      # subdirectory cannot shadow or be shadowed by PR content once it runs
+      # second, and persist-credentials: false leaves no token in .git/config
+      # for anything in either tree to read.
+      - name: Check out auto-merge controller from the base revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: .github-base
+          persist-credentials: false
 
       - name: Enable or complete protected squash merge
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
+            const fs = require("node:fs");
             const path = require("node:path");
-            const controller = require(
-              path.join(process.env.GITHUB_WORKSPACE, ".github/scripts/owner-automerge.js")
+            const controllerPath = path.join(
+              process.env.GITHUB_WORKSPACE,
+              ".github-base/.github/scripts/owner-automerge.js"
             );
+            if (!fs.existsSync(controllerPath)) {
+              throw new Error(
+                "Auto-merge controller missing from the base revision; refusing to act."
+              );
+            }
+            const controller = require(controllerPath);
             await controller.enableOrMergeOwnerPr({
               github,
               core,

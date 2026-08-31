@@ -14,6 +14,107 @@ install them, and do not compare their numbers to these.
 
 ## [Unreleased]
 
+No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
+
+### Security
+
+- **Repository scans are contained to the requested root.** Discovery now
+  resolves the scan root once and requires every candidate to resolve inside
+  it, through one shared boundary (`crewscore/pathsafe.py`) used by both file
+  discovery and inline extraction. Symlinks and Windows junctions are never
+  followed: a linked directory is not descended, which makes directory-link
+  cycles structurally impossible, and a linked file is not read. Broken links
+  are skipped cleanly instead of raising. There is no flag to opt back in.
+- Pinned every third-party GitHub Action in `.github/workflows/` and in
+  `action.yml` to a full commit SHA, with the tag recorded in an adjacent
+  `# vX.Y.Z` comment. Priority was the jobs that hold write permissions or an
+  OIDC identity token (`release.yml` publishing and release creation,
+  `auto-merge-owner-prs.yml`); unprivileged jobs were pinned too, because an
+  unpinned step is a step nobody reviewed.
+- `auto-merge-owner-prs.yml` now loads its merge controller from a checkout of
+  `github.event.pull_request.base.sha` (`.github-base/`, with
+  `persist-credentials: false`) instead of from the pull request. It previously
+  loaded `.github/scripts/owner-automerge.js` out of the PR checkout, so a PR
+  could rewrite the code that decides whether it is approved and merged.
+
+### Added
+
+- Refusals are reported instead of dropped: one stderr line per path, or one
+  `{"skipped_unsafe_path": {...}}` object per path under `--json`, so an empty
+  scan caused by containment is distinguishable from an empty repo. Skipped
+  paths are never emitted as scan rows, so the `--json` row key set is
+  unchanged.
+- `.github/dependabot.yml` keeps the `github-actions` ecosystem on a weekly
+  schedule and now sets `commit-message` prefixes, so SHA pins are bumped by
+  reviewed Dependabot PRs instead of drifting.
+- `tests/test_workflow_provenance.py` and `tests/fixtures/`: no mutable action
+  refs (and no missing version comments) anywhere, no mutable refs in
+  privileged jobs, one SHA per action, the auto-merge controller loaded from
+  the base revision, and a fixture attack in which a pull request ships a
+  controller that merges anything and is ignored.
+
+### Fixed
+
+- Diagnostics on stderr are greppable again. `err_console` hard-wrapped at the
+  detected width (80 columns when stderr is not a tty), inserting real newlines
+  mid-sentence, so `crewscore scan . 2>&1 | grep "larger than 500KB"` missed the
+  message whenever a long path pushed the break into the phrase. stderr is now
+  soft-wrapped: the terminal still wraps it visually, only the emitted bytes
+  change.
+
+### Changed
+
+- A symlinked directory **inside** the root is no longer descended either. That
+  is deliberate fail-closed behavior, not a regression: it is what makes link
+  cycles impossible.
+
+---
+
+## [0.6.12] — 2026-08-29 — machine outputs stop quoting the prompt
+
+No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
+
+### Fixed
+
+- **Every machine output is prompt-free by default.** A regex match substring
+  (up to 120 characters of the scanned prompt) was copied into
+  `findings[].snippet` and then serialized into `test --json`, `scan --json`,
+  the `GITHUB_STEP_SUMMARY` job summary, the sticky PR comment, and the HTML
+  report. A build log and a PR comment are more public than the prompt being
+  audited, so the snippet is still computed (scoring is untouched) but is no
+  longer serialized. Machine outputs still carry rule ID, dimension, status,
+  concept label, and remediation, and renderers degrade to the control label
+  rather than printing `None`.
+- **HTML reports follow the same rule.** `--report` output is routinely
+  uploaded as a CI artifact, so it is gated identically.
+
+### Added
+
+- `--include-snippets` on `test` and `scan`, plus an `include-snippets` Action
+  input (default `"false"`, forwarded only when it is literally `"true"`). It
+  is a **deprecated compatibility escape hatch** for callers that already
+  parse `snippet`, and it will be removed after one release. It does not apply
+  to `--sarif`, which stays control-only either way, and it never re-enables a
+  governance grade for coding-agent config.
+- `crewscore/findings_export.py`: the single serialization gate.
+  `public_findings()` drops `snippet` unless the caller opts in;
+  `finding_detail()` degrades to the control label.
+- `tests/test_prompt_free_outputs.py` and two Action-manifest tests lock the
+  contract, including the coding-agent-config JSON shape and the claim that
+  configuration-smell `detail` strings quote nothing from the scanned file.
+
+### Changed
+
+- The local terminal is unchanged: `crewscore test --explain` still prints the
+  matched text, because it is explicitly requested and never leaves the
+  machine.
+
+### Docs
+
+- `docs/cli.md` documents the prompt-free contract, the per-surface table, and
+  the deprecation. `docs/github-action.md` and `README.md` note it for CI
+  users.
+
 ---
 
 ## [0.6.11] — 2026-08-01 — preserve canonical release bytes on Windows

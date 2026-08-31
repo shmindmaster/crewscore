@@ -389,6 +389,85 @@ def test_action_defaults_to_report_only_and_exposes_control_policy_inputs():
     assert 'ARGS+=(--sarif "$SARIF")' in text
 
 
+def test_action_include_snippets_is_an_opt_in_input_defaulting_off():
+    """Machine outputs stay prompt-free unless a caller opts in explicitly.
+
+    The step echoes `--json` into the build log and turns `--summary` into the
+    sticky PR comment, so both are public. The flag must only be passed when
+    the input is literally "true" - a defaulted-on escape hatch would put
+    prompt text back into every consumer's log.
+    """
+    manifest = _action_manifest()
+    block = manifest["inputs"]["include-snippets"]
+    assert block["default"] == "false"
+    assert block["required"] is False
+    assert "deprecated" in str(block["description"]).lower()
+
+    text = _action_text()
+    assert 'INCLUDE_SNIPPETS: ${{ inputs.include-snippets }}' in text
+    guard = 'if [ "$INCLUDE_SNIPPETS" = "true" ]; then ARGS+=(--include-snippets); fi'
+    # One guard per branch: scan and test must both be opt-in.
+    assert text.count(guard) == 2
+    # And the flag is never passed unconditionally, anywhere else in the step.
+    assert text.count("--include-snippets") == 2
+
+
+def _argv_for_include_snippets(tmp_path: Path, value: str) -> str:
+    """Run the real step through bash and return the argv the CLI received."""
+    bash = _resolve_bash()
+    if bash is None:
+        pytest.skip("no real bash interpreter found for the end-to-end step test")
+
+    script, env = _resolve_run_crewscore_step(
+        {
+            "prompt-file": "prompt.md",
+            "scan-path": "",
+            "threshold": "50",
+            "max-smells": "",
+            "explain": "false",
+            "summary": "",
+            "include-snippets": value,
+        }
+    )
+
+    work = tmp_path / f"run-{value}"
+    argv_log = work / "argv.txt"
+    bin_dir = work / "bin"
+    bin_dir.mkdir(parents=True, exist_ok=True)
+    with open(bin_dir / "crewscore", "w", encoding="utf-8", newline="\n") as f:
+        f.write("#!/bin/bash\n")
+        f.write('printf "%s\\n" "$*" > "' + str(argv_log).replace("\\", "/") + '"\n')
+        f.write("printf '%s\\n' '[]'\n")
+        f.write("exit 0\n")
+    (bin_dir / "crewscore").chmod(0o755)
+
+    gh_output = tmp_path / "github_output.txt"
+    gh_output.write_text("", encoding="utf-8")
+    env_vars = {
+        **os.environ,
+        "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}",
+        **env,
+    }
+    env_vars["GITHUB_OUTPUT"] = str(gh_output)
+    proc = subprocess.run(
+        [bash, "-c", script], capture_output=True, text=True, env=env_vars, cwd=tmp_path
+    )
+    assert proc.returncode == 0, proc.stderr
+    return argv_log.read_text(encoding="utf-8")
+
+
+def test_action_include_snippets_default_keeps_the_flag_out_of_argv(tmp_path):
+    """The documented default must keep prompt text out of the log and comment.
+
+    Both directions are exercised against the real step, so flipping the
+    manifest default to "true" - the regression this guards against - fails
+    here instead of silently publishing prompts.
+    """
+    default = _action_manifest()["inputs"]["include-snippets"]["default"]
+    assert "--include-snippets" not in _argv_for_include_snippets(tmp_path, default)
+    assert "--include-snippets" in _argv_for_include_snippets(tmp_path, "true")
+
+
 def test_action_scan_and_test_both_pass_summary():
     """Both scan and single-file paths must write --summary when configured."""
     text = _action_text()

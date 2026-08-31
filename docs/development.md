@@ -74,6 +74,19 @@ enable **squash auto-merge** when checks pass. See [automation.md](automation.md
 - Label **`no-automerge`** to force a manual merge.
 - Humans still own: public launch posts, Gate 0 strategy, scoring arithmetic
   changes, and choosing when to cut a PyPI tag.
+- The merge controller (`.github/scripts/owner-automerge.js`) is loaded from a
+  checkout of the PR's **base** revision (`.github-base/`), not from the PR.
+  Editing it in a PR changes the controller for the *next* PR, not this one.
+- Third-party actions are pinned to full commit SHAs with the version in an
+  adjacent `# vX.Y.Z` comment (`.github/dependabot.yml` bumps them weekly).
+  When you add a step, resolve the SHA - do not copy a tag and call it pinned:
+
+  ```bash
+  gh api repos/OWNER/REPO/git/ref/tags/vX.Y.Z --jq .object.sha
+  ```
+
+  `pytest tests/test_workflow_provenance.py` fails on any mutable ref, any
+  missing version comment, and any action resolving to two different SHAs.
 
 ## Public contracts
 
