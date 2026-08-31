@@ -583,3 +583,68 @@ def test_no_score_events_for_config_results_are_gate_enforced():
     score_idx = score_fn.find('track("cs_score"')
     guard_idx = score_fn.find("if (result.governance_applicable)")
     assert 0 <= check_idx < guard_idx < score_idx
+
+
+def _site_view_calls_on_production(hash_value: str) -> int:
+    """Load analytics.js on the production hostname and count events sent at init.
+
+    The browser suite runs on localhost, where capture() returns early on the
+    hostname guard, so it cannot observe this at all. Simulating crewscore.ai
+    is the only way the claim is actually tested.
+    """
+    script = f"""
+const fs = require("fs");
+const vm = require("vm");
+const source = fs.readFileSync({json.dumps(str(ANALYTICS))}, "utf8");
+const calls = [];
+const session = new Map();
+const context = {{
+  window: {{}},
+  document: {{ referrer: "" }},
+  localStorage: {{ getItem: () => null, setItem: () => undefined }},
+  sessionStorage: {{
+    getItem: (key) => session.get(key) || null,
+    setItem: (key, value) => session.set(key, String(value)),
+  }},
+  location: {{ hostname: "crewscore.ai", hash: {json.dumps(hash_value)} }},
+  crypto: {{ randomUUID: () => "test-session" }},
+  fetch: (...args) => {{ calls.push(args); return Promise.resolve(); }},
+}};
+vm.createContext(context);
+vm.runInContext(source, context);
+process.stdout.write(JSON.stringify({{ calls: calls.length }}));
+"""
+    proc = subprocess.run(
+        ["node", "-e", script], capture_output=True, text=True, check=True
+    )
+    return json.loads(proc.stdout)["calls"]
+
+
+def test_opening_a_shared_link_records_no_usage_event_on_production():
+    """The share failure panel says so in as many words; make it true.
+
+    cs_site_view fires during analytics init, before the decoder renders
+    anything. On crewscore.ai that reached the wire, so "no usage event was
+    recorded for it" was false exactly where it mattered.
+    """
+    if not shutil.which("node"):
+        pytest.skip("node not installed; skipping analytics runtime test")
+
+    assert _site_view_calls_on_production("#cs-result=eyJ2IjoyfQ") == 0
+
+
+def test_a_normal_visit_still_records_one_site_view():
+    """Canary. Without it, deleting cs_site_view entirely would pass the test above."""
+    if not shutil.which("node"):
+        pytest.skip("node not installed; skipping analytics runtime test")
+
+    assert _site_view_calls_on_production("") == 1
+
+
+def test_the_share_panel_claim_and_the_suppression_stay_together():
+    """If the wording goes, the guard is unexplained; if the guard goes, the wording lies."""
+    site = SITE_JS.read_text(encoding="utf-8")
+    analytics = ANALYTICS.read_text(encoding="utf-8")
+    assert "no usage event was recorded for it" in site
+    assert "isSharedResultView" in analytics
+    assert "#cs-result=" in analytics

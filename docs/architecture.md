@@ -111,8 +111,10 @@ Local-only / generated paths (not product architecture): `dist/`,
   never opened. Refusals are reported on stderr, never as scan rows.
 - SARIF, baselines, and policy files carry **control IDs**, not prompt text.
 - Browser scoring keeps prompt text in page memory; share/export payloads are
-  metadata / control IDs. Analytics use an allowlisted event schema
-  (`metrics.py` ↔ `analytics.js`).
+  metadata / control IDs. Shared result links are unsigned local fragments, so
+  they are validated as untrusted input before any number is rendered — see
+  [Shared result links](development.md#shared-result-links). Analytics use an
+  allowlisted event schema (`metrics.py` ↔ `analytics.js`).
 - Vendor checklist and LinkedIn copy are self-attested summaries, not audits.
 
 ## Related docs

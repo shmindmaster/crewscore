@@ -100,6 +100,33 @@ Treat these as the public surface while pre-1.0:
 
 Breaking any of them needs a minor version bump and CHANGELOG entry.
 
+## Shared result links
+
+The browser checker can share a result as `#cs-result=<base64url>` appended to
+the current page. The fragment never leaves the device and is deliberately
+unsigned, so `assets/site.js` treats it as untrusted input.
+
+| Field | Meaning |
+| --- | --- |
+| `v` | Payload version. `2` is current; `1` and an absent `v` are the original shape and are accepted unchanged. |
+| `ruleset` | Must be a published ruleset id (`crewscore-hygiene@x.y.z`). |
+| `profile` | Must be a known profile. `coding_agent_config` is incompatible: those artifacts get configuration smells, not a written-control count. |
+| `total` | The canonical control count the share was made against (v2). |
+| `found`, `missing` | Control IDs. Together they must be a complete, disjoint partition of the canonical control set. |
+
+The decoder rejects, with a named reason, duplicate IDs, an ID listed as both
+found and missing, an incomplete partition, unknown IDs, an unknown or
+incompatible profile/ruleset pair, a declared total that does not follow from
+the partition, an unsupported version, and oversized fragments or arrays.
+Displayed counts are re-derived from the canonical control list, never from the
+arrays carried in the link. A rejected link shows the reason with a recovery
+action, renders no coverage number, and records no analytics event.
+
+A share made under a different published ruleset still opens — with the
+"cannot be edited or rescored here" notice — as long as its control IDs still
+form a valid partition of the current canonical set. A share whose control list
+no longer matches the current ruleset is rejected like any other invalid link.
+
 ## Media and demo assets
 
 | Asset | Purpose | Policy |

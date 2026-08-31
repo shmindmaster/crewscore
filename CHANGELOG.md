@@ -52,8 +52,41 @@ No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
   privileged jobs, one SHA per action, the auto-merge controller loaded from
   the base revision, and a fixture attack in which a pull request ships a
   controller that merges anything and is ignored.
+- **Shared browser result links are decoded and validated before anything is
+  shown.** A versioned decoder (`v2`; `v1` and an unversioned payload are
+  accepted unchanged) re-derives the control lists from the published canonical
+  control set, so every number on a shared result follows from the controls the
+  link actually lists. `assets/site.js` exposes `decodeSharedPayload` for
+  inspection.
 
 ### Fixed
+- **A hand-edited share fragment could claim coverage the control set cannot
+  contain.** Reading a shared result trusted the length of the arrays in the
+  fragment, so repeating a control ID inflated the count: a link carrying 8
+  distinct found controls rendered "10 of 23 written guardrails found" while
+  also reporting 15 missing. Displayed counts now come from the canonical
+  control list, never from `arr.length`.
+- **Impossible shared states are now rejected with a named reason** instead of
+  being rendered: `duplicate_id`, `overlap`, `incomplete_partition`,
+  `unknown_id`, `unknown_ruleset`, `unknown_profile`, `profile_incompatible`,
+  `impossible_total`, `unsupported_version`, `too_many_ids`,
+  `payload_too_large`, and `unreadable`. A rejected link shows the reason with
+  **Check my instructions** and **Dismiss this message**, renders no coverage
+  number or meter, and records no analytics event.
+- Share fragments and the control arrays inside them are bounded before
+  decoding, so an oversized link cannot make the page walk unbounded input.
+- `unknown_ruleset` checks membership, not shape. It previously accepted any
+  semver-shaped name, so `crewscore-hygiene@999.0.0` rendered its supplied
+  partition as a historical CrewScore result. Shared links are now validated
+  against the explicit list of published ruleset ids.
+- Opening a shared result records no `cs_site_view`. The event fired during
+  analytics init, before the decoder rendered anything, so the panel's "no
+  usage event was recorded for it" was false on `crewscore.ai` -- and only
+  there, since the transport exits early on every other host, which is why the
+  localhost browser tests could not see it.
+- The shared-result recovery button switches to the paste method before
+  focusing. The reader's last input method is restored from storage, so after
+  choosing upload or URL the button focused a hidden textarea and did nothing.
 
 - Diagnostics on stderr are greppable again. `err_console` hard-wrapped at the
   detected width (80 columns when stderr is not a tty), inserting real newlines
@@ -63,7 +96,6 @@ No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
   change.
 
 ### Changed
-
 - A symlinked directory **inside** the root is no longer descended either. That
   is deliberate fail-closed behavior, not a regression: it is what makes link
   cycles impossible.

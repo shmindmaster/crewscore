@@ -1,8 +1,19 @@
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { readFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 
 const LONG_UNICODE = `${"请保留这段测试文本。".repeat(140)}\nSENTINEL_PROMPT_CONTENT_NEVER_SEND`;
+
+// The page loads the generated engine, so building share payloads from the same
+// file keeps a test's idea of the canonical control list from drifting apart
+// from the one the decoder validates against.
+const require = createRequire(import.meta.url);
+require("../score-engine.js");
+const ENGINE = globalThis.CrewScoreEngine;
+const CANONICAL_CONTROLS = ENGINE.dimensions.flatMap((dimension) => ENGINE.ENGINE.concepts[dimension.key].map((control) => control.key));
+const SHARE_RULESET = ENGINE.ruleset;
+const SHARE_PROFILE = ENGINE.defaultProfile;
 
 /**
  * Open the checker and wait until site.js has bound its listeners.
@@ -358,6 +369,326 @@ test("successful copy actions emit bounded share-method telemetry", async ({ pag
     { event: "cs_share", properties: { kind: "copy_share_text" } },
     { event: "cs_share", properties: { kind: "copy_team" } },
   ]);
+});
+
+test.describe("shared result links", () => {
+  /** base64url, matching what site.js writes into the fragment. */
+  function encodeShare(payload) {
+    return Buffer.from(JSON.stringify(payload), "utf8")
+      .toString("base64")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+  }
+
+  /** A complete, disjoint partition of the canonical control set. */
+  function partition(foundCount) {
+    return { found: CANONICAL_CONTROLS.slice(0, foundCount), missing: CANONICAL_CONTROLS.slice(foundCount) };
+  }
+
+  function legacyShare(foundCount, overrides) {
+    return { v: 1, ruleset: SHARE_RULESET, profile: SHARE_PROFILE, ...partition(foundCount), ...overrides };
+  }
+
+  function currentShare(foundCount, overrides) {
+    return { v: 2, ruleset: SHARE_RULESET, profile: SHARE_PROFILE, total: CANONICAL_CONTROLS.length, ...partition(foundCount), ...overrides };
+  }
+
+  async function openShare(page, payload) {
+    await page.goto(`/#cs-result=${encodeShare(payload)}`);
+    // A hash-only change from "/" is a same-document navigation, so the decoder
+    // would never run. Force one full document load: that is what a reader
+    // opening the shared link actually gets.
+    await page.reload();
+    await expect(page.locator("body")).toHaveAttribute("data-ready", "true");
+    return page.locator("#results");
+  }
+
+  /**
+   * A rejected link must be clear and recoverable, and must never render a
+   * number: the whole point of the defect is that an edited fragment could
+   * previously claim a coverage it could not have.
+   */
+  async function expectRejected(results, reason, messageFragment) {
+    await expect(results.locator(".result-moment")).toHaveAttribute("data-share-error", reason);
+    await expect(results.getByRole("heading", { name: "This shared result link could not be read" })).toBeVisible();
+    await expect(results).toContainText(messageFragment);
+    expect(await results.locator(".result-fraction").count()).toBe(0);
+    expect(await results.locator(".coverage-meter").count()).toBe(0);
+    expect(await results.getByText(/written guardrails found/).count()).toBe(0);
+    await expect(results.getByRole("button", { name: "Check my instructions" })).toBeVisible();
+    await expect(results.getByRole("button", { name: "Dismiss this message" })).toBeVisible();
+  }
+
+  async function captureShareEvents(page) {
+    await page.addInitScript(() => {
+      const captured = [];
+      Object.defineProperty(window, "__shareCapturedEvents", { value: captured });
+      let analytics;
+      Object.defineProperty(window, "CrewScoreAnalytics", {
+        configurable: true,
+        get: () => analytics,
+        set: (value) => {
+          if (!value || typeof value.capture !== "function") { analytics = value; return; }
+          analytics = new Proxy(value, {
+            get(target, property, receiver) {
+              if (property !== "capture") return Reflect.get(target, property, receiver);
+              return (event, properties) => {
+                captured.push({ event, properties });
+                return Reflect.apply(target.capture, target, [event, properties]);
+              };
+            },
+          });
+        },
+      });
+    });
+    return () => page.evaluate(() => window.__shareCapturedEvents);
+  }
+
+  test("a valid legacy v1 link still renders counts from the canonical control set", async ({ page }) => {
+    const foundCount = 8;
+    const results = await openShare(page, legacyShare(foundCount));
+
+    await expect(results.locator(".result-fraction .found")).toHaveText(String(foundCount));
+    await expect(results.locator(".result-fraction .total")).toHaveText(String(CANONICAL_CONTROLS.length));
+    await expect(results.getByRole("heading", { name: `${foundCount} of ${CANONICAL_CONTROLS.length} written guardrails found` })).toBeVisible();
+    await expect(results).toContainText(`${CANONICAL_CONTROLS.length - foundCount} controls were shared as missing`);
+    await expect(results).toContainText("Written-control coverage, not runtime proof.");
+    expect(await results.locator("[data-share-error]").count()).toBe(0);
+  });
+
+  test("an unversioned legacy link and a v2 link both open", async ({ page }) => {
+    const unversioned = currentShare(8);
+    delete unversioned.v;
+    let results = await openShare(page, unversioned);
+    await expect(results.getByRole("heading", { name: `8 of ${CANONICAL_CONTROLS.length} written guardrails found` })).toBeVisible();
+    expect(await results.locator("[data-share-error]").count()).toBe(0);
+
+    results = await openShare(page, currentShare(8));
+    await expect(results.getByRole("heading", { name: `8 of ${CANONICAL_CONTROLS.length} written guardrails found` })).toBeVisible();
+    await expect(results.locator(".result-fraction .total")).toHaveText(String(CANONICAL_CONTROLS.length));
+    expect(await results.locator("[data-share-error]").count()).toBe(0);
+  });
+
+  test("a link copied from a live check opens back to the numbers it was copied from", async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, "clipboard", {
+        configurable: true,
+        value: { writeText: (value) => { window.__copiedResult = value; return Promise.resolve(); } },
+      });
+    });
+    await gotoApp(page);
+    await page.getByRole("button", { name: "Try a 10-second demo" }).click();
+    await expect(page.getByRole("heading", { name: "8 of 23 written guardrails found" })).toBeVisible();
+    await page.getByRole("button", { name: "Copy result link" }).click();
+    const link = await page.evaluate(() => window.__copiedResult);
+    expect(link).toContain("#cs-result=");
+    expect(link).not.toContain("Northstar Clinic");
+
+    await page.goto(link);
+    await page.reload();
+    await expect(page.locator("body")).toHaveAttribute("data-ready", "true");
+    const results = page.locator("#results");
+    await expect(results.getByRole("heading", { name: "8 of 23 written guardrails found" })).toBeVisible();
+    await expect(results.locator(".result-fraction .total")).toHaveText(String(CANONICAL_CONTROLS.length));
+    expect(await results.locator("[data-share-error]").count()).toBe(0);
+  });
+
+  test("a duplicate control id cannot claim an impossible score", async ({ page }) => {
+    // The exact defect: two ids repeated into `found` make arr.length report a
+    // coverage that the canonical control set cannot contain.
+    const { found, missing } = partition(8);
+    const inflated = [...found, found[0], found[1]];
+    expect(inflated.length).toBe(10);
+
+    const results = await openShare(page, legacyShare(8, { found: inflated, missing }));
+    await expectRejected(results, "duplicate_id", "lists the same control more than once");
+    await expect(results).not.toContainText("10 of 23");
+    await expect(page.locator("body")).not.toContainText("10 of 23");
+  });
+
+  test("a control shared as both found and missing is rejected", async ({ page }) => {
+    const { found, missing } = partition(8);
+    const results = await openShare(page, legacyShare(8, { found: [...found, missing[0]] }));
+    await expectRejected(results, "overlap", "both found and missing");
+  });
+
+  test("an incomplete partition is rejected", async ({ page }) => {
+    const results = await openShare(page, legacyShare(8, { found: [] }));
+    await expectRejected(results, "incomplete_partition", "does not account for every published control");
+  });
+
+  test("an unknown control id is rejected", async ({ page }) => {
+    const { found } = partition(8);
+    const results = await openShare(page, legacyShare(8, { found: [...found.slice(1), "injected.not_a_control"] }));
+    await expectRejected(results, "unknown_id", "lists a control CrewScore does not score");
+  });
+
+  test("an oversized fragment is rejected before anything is decoded", async ({ page }) => {
+    const wide = [];
+    for (let index = 0; index < 60; index += 1) wide.push("x".repeat(70));
+    expect(encodeShare(legacyShare(8, { found: wide })).length).toBeGreaterThan(4096);
+    const results = await openShare(page, legacyShare(8, { found: wide }));
+    await expectRejected(results, "payload_too_large", "larger than a CrewScore result link can be");
+  });
+
+  test("a link listing more controls than CrewScore scores is rejected", async ({ page }) => {
+    const padded = [];
+    for (let index = 0; index < 70; index += 1) padded.push(`pad.control_${index}`);
+    expect(encodeShare(legacyShare(8, { found: padded })).length).toBeLessThan(4096);
+    const results = await openShare(page, legacyShare(8, { found: padded }));
+    await expectRejected(results, "too_many_ids", "lists more controls than CrewScore scores");
+  });
+
+  test("an incompatible or unknown profile is rejected", async ({ page }) => {
+    let results = await openShare(page, legacyShare(8, { profile: "coding_agent_config" }));
+    await expectRejected(results, "profile_incompatible", "configuration smells instead of a written-control count");
+
+    results = await openShare(page, legacyShare(8, { profile: "not_a_profile" }));
+    await expectRejected(results, "unknown_profile", "artifact type CrewScore does not score");
+  });
+
+  test("an unknown ruleset is rejected while a different published version still opens", async ({ page }) => {
+    let results = await openShare(page, legacyShare(8, { ruleset: "totally-made-up@1" }));
+    await expectRejected(results, "unknown_ruleset", "ruleset CrewScore does not publish");
+
+    // The one that matters: semver-shaped and plausible, but never published.
+    // A shape-only check accepts this and renders the supplied partition as a
+    // historical CrewScore result.
+    results = await openShare(page, legacyShare(8, { ruleset: "crewscore-hygiene@999.0.0" }));
+    await expectRejected(results, "unknown_ruleset", "ruleset CrewScore does not publish");
+
+    results = await openShare(page, legacyShare(8, { ruleset: "crewscore-hygiene@0.5.0" }));
+    await expect(results.getByRole("heading", { name: `8 of ${CANONICAL_CONTROLS.length} written guardrails found` })).toBeVisible();
+    await expect(results).toContainText("crewscore-hygiene@0.5.0");
+    await expect(results).toContainText("cannot be edited or rescored here");
+    expect(await results.locator("[data-share-error]").count()).toBe(0);
+  });
+
+  test("a claimed total that does not follow from the partition is rejected", async ({ page }) => {
+    let results = await openShare(page, currentShare(8, { total: 99 }));
+    await expectRejected(results, "impossible_total", "claims a number that does not follow");
+
+    results = await openShare(page, legacyShare(8, { found_count: CANONICAL_CONTROLS.length }));
+    await expectRejected(results, "impossible_total", "claims a number that does not follow");
+
+    results = await openShare(page, legacyShare(8, { score: 100 }));
+    await expectRejected(results, "impossible_total", "claims a number that does not follow");
+  });
+
+  test("a future payload version is rejected instead of guessed at", async ({ page }) => {
+    const results = await openShare(page, currentShare(8, { v: 99 }));
+    await expectRejected(results, "unsupported_version", "newer version of CrewScore");
+  });
+
+  test("the decoder names a specific reason for every impossible state", async ({ page }) => {
+    await gotoApp(page);
+    const { found, missing } = partition(8);
+    const cases = [
+      ["valid legacy", legacyShare(8)],
+      ["valid current", currentShare(8)],
+      ["duplicate", legacyShare(8, { found: [...found, found[0]] })],
+      ["overlap", legacyShare(8, { found: [...found, missing[0]] })],
+      ["incomplete", legacyShare(8, { found: [] })],
+      ["unknown id", legacyShare(8, { found: [...found.slice(1), "no.such_control"] })],
+      ["unknown ruleset", legacyShare(8, { ruleset: "nope" })],
+      ["unknown profile", legacyShare(8, { profile: "nope" })],
+      ["config profile", legacyShare(8, { profile: "coding_agent_config" })],
+      ["bad version", legacyShare(8, { v: 7 })],
+      ["bad total", currentShare(8, { total: 42 })],
+      ["not base64", "not-base64-at-all"],
+      ["empty", ""],
+    ];
+    const encoded = cases.map(([name, payload]) => [name, typeof payload === "string" ? payload : encodeShare(payload)]);
+    const outcomes = await page.evaluate(
+      (entries) => entries.map(([name, value]) => {
+        const decoded = window.__crewscoreUX.decodeSharedPayload(value);
+        return [name, decoded.ok ? "ok" : decoded.reason];
+      }),
+      encoded,
+    );
+    expect(Object.fromEntries(outcomes)).toEqual({
+      "valid legacy": "ok",
+      "valid current": "ok",
+      duplicate: "duplicate_id",
+      overlap: "overlap",
+      incomplete: "incomplete_partition",
+      "unknown id": "unknown_id",
+      "unknown ruleset": "unknown_ruleset",
+      "unknown profile": "unknown_profile",
+      "config profile": "profile_incompatible",
+      "bad version": "unsupported_version",
+      "bad total": "impossible_total",
+      "not base64": "unreadable",
+      empty: "unreadable",
+    });
+  });
+
+  test("the decoded counts come from the canonical control set, not from the arrays", async ({ page }) => {
+    await gotoApp(page);
+    const share = await page.evaluate((encoded) => window.__crewscoreUX.decodeSharedPayload(encoded), encodeShare(legacyShare(8)));
+    expect(share).toMatchObject({ ok: true });
+    expect(share.share.total).toBe(CANONICAL_CONTROLS.length);
+    expect(share.share.found).toHaveLength(8);
+    expect(share.share.missing).toHaveLength(CANONICAL_CONTROLS.length - 8);
+    expect([...share.share.found, ...share.share.missing].sort()).toEqual([...CANONICAL_CONTROLS].sort());
+    expect(new Set([...share.share.found, ...share.share.missing]).size).toBe(CANONICAL_CONTROLS.length);
+    // Canonical order, so the same partition always re-serializes to one link.
+    const order = new Map(CANONICAL_CONTROLS.map((key, index) => [key, index]));
+    const isCanonicalOrder = (keys) => keys.every((key, index) => index === 0 || order.get(keys[index - 1]) < order.get(key));
+    expect(isCanonicalOrder(share.share.found)).toBe(true);
+    expect(isCanonicalOrder(share.share.missing)).toBe(true);
+  });
+
+  test("an invalid shared link emits no analytics and sends nothing off the page", async ({ page, context }) => {
+    const readEvents = await captureShareEvents(page);
+    const requests = [];
+    page.on("request", (request) => requests.push({ method: request.method(), url: request.url(), body: request.postData() || "" }));
+
+    const marker = "SHARE_PAYLOAD_SENTINEL_ONLY_HERE";
+    const results = await openShare(page, legacyShare(8, { found: [`injected.${marker}`] }));
+    await expect(results.locator(".result-moment")).toHaveAttribute("data-share-error", "unknown_id");
+
+    // Nothing was captured, so no payload content could have been captured.
+    const events = await readEvents();
+    expect(events).toEqual([]);
+    expect(JSON.stringify(events)).not.toContain(marker);
+    const offsite = requests.filter((request) => request.method !== "GET" || new URL(request.url).hostname !== "127.0.0.1");
+    expect(offsite).toEqual([]);
+    expect(requests.map((request) => request.body).join("\n")).not.toContain(marker);
+    // The recovery path is local, so it survives losing the network entirely.
+    await context.setOffline(true);
+    await expect(results.getByRole("button", { name: "Check my instructions" })).toBeVisible();
+    await results.getByRole("button", { name: "Check my instructions" }).click();
+    await expect(page.locator("#agent-prompt")).toBeFocused();
+  });
+
+  test("a valid shared link still emits no analytics", async ({ page }) => {
+    const readEvents = await captureShareEvents(page);
+    const results = await openShare(page, currentShare(8));
+    await expect(results.getByRole("heading", { name: `8 of ${CANONICAL_CONTROLS.length} written guardrails found` })).toBeVisible();
+    expect(await readEvents()).toEqual([]);
+  });
+
+  test("an invalid shared link can be re-checked or dismissed", async ({ page }) => {
+    let results = await openShare(page, legacyShare(8, { found: [] }));
+    await expect(results.locator(".result-moment")).toHaveAttribute("data-share-error", "incomplete_partition");
+    // The recovery surface is new markup, so it is checked like any other.
+    expect((await new AxeBuilder({ page }).include("#results").analyze()).violations).toEqual([]);
+
+    await results.getByRole("button", { name: "Check my instructions" }).click();
+    await expect(page.locator("#agent-prompt")).toBeFocused();
+
+    results = await openShare(page, legacyShare(8, { found: [] }));
+    await expect(results.locator(".result-moment")).toHaveAttribute("data-share-error", "incomplete_partition");
+    await results.getByRole("button", { name: "Dismiss this message" }).click();
+    await expect(results.getByRole("heading", { name: "Your result will appear here" })).toBeVisible();
+    expect(new URL(page.url()).hash).toBe("");
+
+    // The restored placeholder is live markup, not an inert copy.
+    await results.getByRole("button", { name: "Run a sample check" }).click();
+    await expect(results.getByRole("heading", { name: "8 of 23 written guardrails found" })).toBeVisible();
+  });
 });
 
 test("input methods are real tabs: one panel visible at a time", async ({ page }) => {

@@ -295,6 +295,16 @@
     }
   }
 
+  // Opening a shared result is someone else's link, not a visit this site gets
+  // to count. The share UI tells the reader "no usage event was recorded for
+  // it", and cs_site_view fires during init before that message renders, so
+  // without this the claim is false on the production hostname -- and only
+  // there, because capture() below exits early anywhere else. That is why the
+  // browser tests, which run on localhost, could not catch it.
+  function isSharedResultView() {
+    try { return /^#cs-result=/.test(location.hash || ""); } catch (_) { return false; }
+  }
+
   function capture(event, properties) {
     if (!ALLOWED_EVENTS.has(event)) return;
     if (location.hostname !== "crewscore.ai" || isOptedOut()) return;
@@ -360,7 +370,7 @@
     schemaVersion: SCHEMA_VERSION,
   });
 
-  if (typeof document !== "undefined") {
+  if (typeof document !== "undefined" && !isSharedResultView()) {
     const referrer = document.referrer;
     capture("cs_site_view", { source: classifyReferrer(referrer) });
   }
