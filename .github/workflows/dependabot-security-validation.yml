@@ -21,7 +21,7 @@ jobs:
           python-version: "3.12"
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: "20"
+          node-version: "24.20.0"
       - name: Install Python dependencies
         run: pip install -e ".[dev]"
       - name: Install browser dependencies
