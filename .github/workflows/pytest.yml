@@ -45,6 +45,8 @@ jobs:
           node-version: "24.20.0"
       - name: Install browser test dependencies
         run: npm ci --include=dev
+      - name: Run merge-controller tests
+        run: npm run test:automerge
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium firefox webkit
       - name: Run browser tests

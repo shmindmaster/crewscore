@@ -10,7 +10,8 @@ name: Auto-merge owner PRs
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize, ready_for_review, labeled]
+    types: [opened, reopened, synchronize, ready_for_review, labeled, unlabeled]
+    branches: [main]
 
 permissions:
   contents: write
@@ -22,13 +23,14 @@ concurrency:
 
 jobs:
   enable-automerge:
-    # Only maintainer PRs from this repo (same trust boundary as pytest runners).
+    # Structural admission only: owner-authored, same-repo head. Who SENT the
+    # event is decided inside the controller, because a non-owner event (a
+    # collaborator's push, anyone applying no-automerge) must still run -- to
+    # withdraw an armed request, never to arm one. A skipped job cannot revoke.
     if: >
       github.event_name == 'pull_request' &&
-      github.event.pull_request.draft == false &&
       github.event.pull_request.user.login == github.repository_owner &&
-      github.event.pull_request.head.repo.full_name == github.repository &&
-      !contains(github.event.pull_request.labels.*.name, 'no-automerge')
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - name: Check out pull request head
@@ -72,4 +74,6 @@ jobs:
               github,
               core,
               pr: context.payload.pull_request,
+              optOut: ${{ contains(github.event.pull_request.labels.*.name, 'no-automerge') }},
+              trustedSender: ${{ github.event.sender.login == github.repository_owner && github.event.pull_request.draft == false }},
             });
