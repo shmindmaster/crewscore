@@ -5,7 +5,8 @@
   "author": "Sarosh Hussain",
   "description": "Browser verification for the static CrewScore website",
   "scripts": {
-    "test:web": "playwright test"
+    "test:web": "playwright test",
+    "test:automerge": "node --test .github/scripts/owner-automerge.test.js"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",

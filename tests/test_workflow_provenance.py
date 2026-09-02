@@ -244,12 +244,25 @@ def test_automerge_keeps_its_existing_mitigations():
 
     assert "github.repository_owner" in condition
     assert "head.repo.full_name" in condition
-    assert "no-automerge" in condition
+    # The stop-switch and the sender check moved out of the job condition on
+    # purpose: a job that is skipped cannot withdraw an armed request. Both now
+    # reach the controller as arguments, so assert the wiring, not the filter.
+    assert "no-automerge" not in condition
+    assert "sender.login" not in condition
+    script_steps = [
+        step for step in job["steps"] if str(step.get("uses", "")).startswith("actions/github-script@")
+    ]
+    assert len(script_steps) == 1
+    script = script_steps[0]["with"]["script"]
+    assert "optOut:" in script and "no-automerge" in script
+    assert "trustedSender:" in script and "github.event.sender.login == github.repository_owner" in script
 
     controller = (ROOT / CONTROLLER_REL).read_text(encoding="utf-8")
     assert "expectedHeadOid" in controller
     assert "pr.head.sha" in controller
     assert "mergeMethod: SQUASH" in controller
+    assert "disablePullRequestAutoMerge" in controller
+    assert "trustedSender" in controller
 
 
 @pytest.mark.skipif(
