@@ -8,8 +8,10 @@ honest changes.
 ```bash
 git clone https://github.com/shmindmaster/crewscore.git
 cd crewscore
-pip install -e ".[dev]"
-pytest -q
+python -m venv .venv
+# Activate .venv, then use its interpreter for installation and tests.
+python -m pip install -e ".[dev]"
+python -m pytest -q
 ```
 
 Runtime dependencies stay intentionally small: **click** and **rich**. Dev extra
@@ -19,9 +21,16 @@ Optional browser tests (static site):
 
 ```bash
 npm ci --include=dev
-npx playwright install chromium
+npx playwright install chromium firefox webkit
 npm run test:web
 ```
+
+Recreate a virtual environment if its base Python installation was removed;
+do not copy an old environment between interpreter installations. Use a new
+environment path if another task owns the existing one. Browser checks need
+the frozen npm install above; a stale `node_modules` can run a different
+Playwright version than the lockfile. Reduced motion belongs under
+`use.contextOptions`; the browser canary verifies it actually reaches the page.
 
 ## Commands you will use
 

@@ -612,6 +612,8 @@
     });
     renderFixReview();
     $("fix-review").hidden = false;
+    $("fix-heading").setAttribute("tabindex", "-1");
+    $("fix-heading").focus({ preventScroll: true });
     scrollTo($("fix-review"), "start");
     track("cs_fix_review", { dims_to_fix_count: controls.length });
   }
@@ -680,7 +682,12 @@
     }));
     list.querySelectorAll("[data-copy-control]").forEach((button) => button.addEventListener("click", () => copyText(state.selections.get(button.dataset.copyControl).text, "Control wording copied")));
     $("apply-selected").onclick = applySelection;
-    $("cancel-selected").onclick = () => { state.selections.clear(); $("fix-review").hidden = true; toast("Review cancelled - original instructions kept"); };
+    $("cancel-selected").onclick = () => {
+      state.selections.clear();
+      $("fix-review").hidden = true;
+      $("review-fixes")?.focus();
+      toast("Review cancelled - original instructions kept");
+    };
     updateFixPreview();
   }
 
@@ -702,6 +709,8 @@
     state.selections.clear();
     $("fix-review").hidden = true;
     score("fix_apply");
+    $("results-heading").setAttribute("tabindex", "-1");
+    $("results-heading").focus({ preventScroll: true });
     toast("Added to the working copy below — rescored");
     track("cs_fix_apply", { controls_found: selected.length });
   }
