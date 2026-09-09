@@ -9,6 +9,8 @@ The 2026-09-09 portfolio check at `d57a975` passed 639 Python tests in a fresh
 isolated Python 3.13 environment. The old local virtual environment pointed
 to a removed Python installation. A frozen npm installation also replaced
 stale Playwright 1.62.0 modules with the lockfile's 1.62.1.
+The existing upstream upgrade to Playwright 1.63.0 was then integrated and
+the same full browser suite passed again after frozen installation.
 
 Browser traces then demonstrated that top-level `use.reducedMotion` was
 ignored. The corrected `use.contextOptions.reducedMotion` has a browser
