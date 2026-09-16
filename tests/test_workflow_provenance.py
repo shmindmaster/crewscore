@@ -82,14 +82,21 @@ def _job_uses(job: dict) -> list[str]:
     uses = []
     if job.get("uses"):
         uses.append(job["uses"])
-    uses.extend(step.get("uses") for step in job.get("steps", []) or [])
+    uses.extend(
+        step["uses"]
+        for step in job.get("steps", []) or []
+        if isinstance(step.get("uses"), str) and step["uses"]
+    )
     return uses
 
 
 def test_job_uses_includes_reusable_workflow_references():
     job = {
         "uses": "example/ci/.github/workflows/test.yml@" + "a" * 40,
-        "steps": [{"uses": "actions/checkout@" + "b" * 40}],
+        "steps": [
+            {"uses": "actions/checkout@" + "b" * 40},
+            {"run": "echo normal shell step"},
+        ],
     }
     assert _job_uses(job) == [job["uses"], job["steps"][0]["uses"]]
 
