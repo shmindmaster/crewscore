@@ -90,6 +90,29 @@ def _job_uses(job: dict) -> list[str]:
     return uses
 
 
+def _privileged_checkout_violations(workflow: dict) -> list[str]:
+    """Find PR-controlled or mutable checkouts in every write-capable job."""
+    violations = []
+    for job_name, job in (workflow.get("jobs") or {}).items():
+        if not _is_privileged(_effective_permissions(workflow, job)):
+            continue
+        for index, step in enumerate(job.get("steps", []) or []):
+            uses = str(step.get("uses", ""))
+            if not uses.startswith("actions/checkout@"):
+                continue
+            step_name = step.get("name", f"step {index + 1}")
+            prefix = f"{job_name}/{step_name}"
+            _, action_ref = _split_ref(uses)
+            options = step.get("with", {}) or {}
+            if not FULL_SHA_RE.match(action_ref):
+                violations.append(f"{prefix}: checkout action is not SHA-pinned")
+            if options.get("ref") != "${{ github.event.pull_request.base.sha }}":
+                violations.append(f"{prefix}: checkout ref is not the immutable base SHA")
+            if options.get("persist-credentials") is not False:
+                violations.append(f"{prefix}: checkout persists credentials")
+    return violations
+
+
 def test_job_uses_includes_reusable_workflow_references():
     job = {
         "uses": "example/ci/.github/workflows/test.yml@" + "a" * 40,
@@ -227,25 +250,45 @@ def test_automerge_controller_is_loaded_from_the_base_revision():
     assert f"{BASE_CHECKOUT_PATH}/{CONTROLLER_REL}" in paths
 
 
-def test_automerge_base_checkout_is_pinned_immutable_and_credential_free():
-    """The base checkout is the whole mitigation; check its properties."""
+def test_every_privileged_automerge_checkout_is_base_owned_and_credential_free():
+    """Every write-capable job must exclude PR code from every checkout."""
     workflow = _load(WORKFLOW_DIR / AUTOMERGE_WORKFLOW)
+    assert _privileged_checkout_violations(workflow) == []
+
     job = workflow["jobs"]["enable-automerge"]
     checkouts = [
         step
         for step in job.get("steps", [])
         if str(step.get("uses", "")).startswith("actions/checkout@")
     ]
-    assert len(checkouts) == 1, "privileged auto-merge job must never check out PR code"
-    base = [step for step in checkouts if step.get("with", {}).get("ref")]
-    assert len(base) == 1, "expected exactly one checkout pinned to a ref"
+    assert len(checkouts) == 1, "controller job must have exactly one base checkout"
+    assert checkouts[0]["with"]["path"] == BASE_CHECKOUT_PATH
 
-    step = base[0]
-    _, ref = _split_ref(step["uses"])
-    assert FULL_SHA_RE.match(ref), f"base checkout is not pinned to a SHA: {ref}"
-    assert step["with"]["ref"] == "${{ github.event.pull_request.base.sha }}"
-    assert step["with"]["path"] == BASE_CHECKOUT_PATH
-    assert step["with"]["persist-credentials"] is False
+
+def test_privileged_checkout_guard_catches_a_second_job_loading_pr_code():
+    workflow = {
+        "permissions": {"contents": "write", "pull-requests": "write"},
+        "jobs": {
+            "enable-automerge": {"steps": []},
+            "unsafe-head": {
+                "steps": [
+                    {
+                        "name": "Check out pull request head",
+                        "uses": "actions/checkout@" + "a" * 40,
+                        "with": {
+                            "ref": "${{ github.event.pull_request.head.sha }}",
+                            "persist-credentials": False,
+                        },
+                    }
+                ]
+            },
+        },
+    }
+
+    assert _privileged_checkout_violations(workflow) == [
+        "unsafe-head/Check out pull request head: "
+        "checkout ref is not the immutable base SHA"
+    ]
 
 
 def test_automerge_keeps_its_existing_mitigations():
