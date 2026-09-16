@@ -14,6 +14,10 @@ It is a **checklist of 23 published controls**, not a quality ranking and not
 runtime red-teaming. Low coverage is actionable; high coverage only means the
 text is present.
 
+**Public-good thesis:** written safeguards should be inspectable with an
+offline, open ruleset before teams depend on runtime claims that are harder to
+reproduce or independently review.
+
 **We scanned 356 publicly collected agent prompts: 83 production-labeled prompts and 273
 general-purpose prompts. Among the production-labeled subset, median coverage was 10
 of 100.** GPT-Store median: 0 of 100.
@@ -38,6 +42,9 @@ of 100.** GPT-Store median: 0 of 100.
 > Created and maintained by **Sarosh Hussain**. **Pendoah** is the company
 > operating context for this project. Technical claims are grounded in the
 > code, tests, and cited validation material.
+
+[Roadmap](ROADMAP.md) · [Governance](GOVERNANCE.md) ·
+[Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
 ```bash
 pip install crewscore
