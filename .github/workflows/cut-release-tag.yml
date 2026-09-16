@@ -1,7 +1,9 @@
 # Agent-executable release tag cut. No human code review.
 #
 # Preconditions: package version in pyproject.toml matches a CHANGELOG section,
-# and that version is not already tagged. Pushing the tag runs release.yml.
+# and that version is not already tagged. GITHUB_TOKEN tag pushes do not start
+# other workflows, so a second least-privilege job dispatches release.yml at the
+# exact tag after verifying that the annotated tag peels to this main SHA.
 name: Cut release tag
 
 on:
@@ -13,12 +15,21 @@ on:
         default: false
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: cut-release-tag
+  cancel-in-progress: false
 
 jobs:
   cut:
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+      pushed: ${{ steps.release.outputs.pushed }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -28,14 +39,69 @@ jobs:
         with:
           python-version: "3.12"
       - name: Dry-run or push tag
+        id: release
         env:
           PUSH: ${{ inputs.push }}
         run: |
           set -euo pipefail
+          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          TAG="v$VERSION"
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Refusing non-release tag: $TAG" >&2
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           if [ "$PUSH" = "true" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             python scripts/cut_release.py --push
+            echo "pushed=true" >> "$GITHUB_OUTPUT"
           else
             python scripts/cut_release.py
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
           fi
+
+  handoff:
+    name: Dispatch release at the verified tag
+    needs: cut
+    if: needs.cut.outputs.pushed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Verify annotated tag target and dispatch release
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.cut.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Refusing non-release tag: $TAG" >&2
+            exit 1
+          fi
+
+          REF_JSON=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${TAG}")
+          TAG_OBJECT_TYPE=$(jq -r '.object.type' <<< "$REF_JSON")
+          TAG_OBJECT_SHA=$(jq -r '.object.sha' <<< "$REF_JSON")
+          if [ "$TAG_OBJECT_TYPE" != "tag" ]; then
+            echo "$TAG is not an annotated tag" >&2
+            exit 1
+          fi
+
+          TAG_JSON=$(gh api "repos/${GITHUB_REPOSITORY}/git/tags/${TAG_OBJECT_SHA}")
+          TARGET_TYPE=$(jq -r '.object.type' <<< "$TAG_JSON")
+          TARGET_SHA=$(jq -r '.object.sha' <<< "$TAG_JSON")
+          if [ "$TARGET_TYPE" != "commit" ] || [ "$TARGET_SHA" != "$EXPECTED_SHA" ]; then
+            echo "$TAG peels to $TARGET_TYPE $TARGET_SHA, expected commit $EXPECTED_SHA" >&2
+            exit 1
+          fi
+
+          gh workflow run release.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref "$TAG" \
+            --raw-field dry-run=false \
+            --raw-field expected-sha="$EXPECTED_SHA"
+          echo "release_handoff=workflow_dispatch:$TAG"

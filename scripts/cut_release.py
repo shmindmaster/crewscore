@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Cut a release tag that matches the package version (agent-executable).
 
-Does not publish itself — pushing the tag triggers .github/workflows/release.yml.
+Does not publish itself. A normal user-authenticated tag push triggers
+`.github/workflows/release.yml`; GitHub suppresses new workflow runs for tags
+pushed with `GITHUB_TOKEN`, so `cut-release-tag.yml` performs a separately
+verified exact-tag dispatch after this script returns.
 
 Usage:
   python scripts/cut_release.py           # dry-run: print intended tag
@@ -73,7 +76,7 @@ def main() -> int:
     _run(["git", "tag", "-a", tag, "-m", msg])
     _run(["git", "push", "origin", tag])
     print(f"pushed={tag}")
-    print("release_workflow=triggered_by_tag_push")
+    print(f"next=confirm_release_workflow_started_for_{tag}")
     return 0
 
 

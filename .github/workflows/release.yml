@@ -22,12 +22,20 @@ on:
     # "Tag v2 says 2 but the package says 0.1.0" - correct, but it should never
     # have been asked the question.
     tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+  # Manual dispatch is fail-safe by default. Publishing also requires the
+  # dispatch ref itself to be a version tag; cut-release-tag.yml is the
+  # base-owned path that verifies its tag target before requesting dry-run=false.
   workflow_dispatch:
     inputs:
       dry-run:
         description: "Build and verify only; do not publish"
         type: boolean
         default: true
+      expected-sha:
+        description: "Required exact commit for a publishing dispatch"
+        type: string
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -51,6 +59,23 @@ jobs:
           - os: macOS
             runner: '"macos-latest"'
     steps:
+      - name: Publishing dispatch must resolve to the verified commit
+        if: github.event_name == 'workflow_dispatch' && !inputs.dry-run && runner.os == 'Linux'
+        shell: bash
+        env:
+          EXPECTED_SHA: ${{ inputs.expected-sha }}
+        run: |
+          set -euo pipefail
+          if [ -z "$EXPECTED_SHA" ]; then
+            echo "A publishing dispatch requires expected-sha" >&2
+            exit 1
+          fi
+          if [ "$GITHUB_SHA" != "$EXPECTED_SHA" ]; then
+            echo "Dispatch resolved to $GITHUB_SHA, expected $EXPECTED_SHA" >&2
+            exit 1
+          fi
+          echo "OK dispatch resolved to verified commit $EXPECTED_SHA"
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
@@ -247,4 +272,3 @@ jobs:
             git push -f origin "refs/tags/$TAG"
             echo "moved $TAG -> $REF_NAME (${{ github.sha }})"
           done
-

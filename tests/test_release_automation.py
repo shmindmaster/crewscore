@@ -9,7 +9,15 @@ import subprocess
 import sys
 from pathlib import Path
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def _workflow(name: str) -> dict:
+    return yaml.safe_load(
+        (ROOT / ".github" / "workflows" / name).read_text(encoding="utf-8")
+    )
 
 
 def test_owner_automerge_retries_transient_merge_state_and_fails_closed():
@@ -44,6 +52,72 @@ def test_cut_release_dry_run_matches_package_version():
     assert "intended_tag=v" in out
     assert "changelog_section=ok" in out
     assert "dry_run=1" in out
+
+
+def test_cut_release_script_does_not_claim_every_tag_push_starts_release():
+    source = (ROOT / "scripts" / "cut_release.py").read_text(encoding="utf-8")
+    assert "release_workflow=triggered_by_tag_push" not in source
+    assert "next=confirm_release_workflow_started_for_{tag}" in source
+
+
+def test_cut_release_dispatches_release_at_the_verified_exact_tag():
+    """A GITHUB_TOKEN tag push cannot be the release-workflow handoff."""
+    workflow = _workflow("cut-release-tag.yml")
+    cut = workflow["jobs"]["cut"]
+    handoff = workflow["jobs"]["handoff"]
+
+    assert workflow["permissions"] == {"contents": "read"}
+    assert workflow["concurrency"]["cancel-in-progress"] is False
+    assert cut["permissions"] == {"contents": "write"}
+    assert set(cut["outputs"]) == {"tag", "pushed"}
+
+    assert handoff["needs"] == "cut"
+    assert handoff["if"] == "needs.cut.outputs.pushed == 'true'"
+    assert handoff["permissions"] == {"actions": "write", "contents": "read"}
+    assert not any(
+        str(step.get("uses", "")).startswith("actions/checkout@")
+        for step in handoff["steps"]
+    )
+
+    script = handoff["steps"][0]["run"]
+    assert '[[ ! "$TAG" =~ ^v[0-9]+\\.[0-9]+\\.[0-9]+$ ]]' in script
+    assert 'git/ref/tags/${TAG}' in script
+    assert 'TAG_OBJECT_TYPE" != "tag"' in script
+    assert 'TARGET_TYPE" != "commit"' in script
+    assert 'TARGET_SHA" != "$EXPECTED_SHA"' in script
+    assert "gh workflow run release.yml" in script
+    assert '--ref "$TAG"' in script
+    assert "--raw-field dry-run=false" in script
+    assert '--raw-field expected-sha="$EXPECTED_SHA"' in script
+
+
+def test_release_dispatch_is_fail_safe_unless_ref_is_an_exact_release_tag():
+    workflow = _workflow("release.yml")
+    dispatch = workflow[True]["workflow_dispatch"]
+    dry_run = dispatch["inputs"]["dry-run"]
+    expected_sha = dispatch["inputs"]["expected-sha"]
+    publish_condition = workflow["jobs"]["publish"]["if"]
+    verify_steps = workflow["jobs"]["verify"]["steps"]
+
+    assert dry_run == {
+        "description": "Build and verify only; do not publish",
+        "type": "boolean",
+        "default": True,
+    }
+    assert expected_sha == {
+        "description": "Required exact commit for a publishing dispatch",
+        "type": "string",
+        "required": False,
+        "default": "",
+    }
+    assert "startsWith(github.ref, 'refs/tags/v')" in publish_condition
+    assert "!inputs.dry-run" in publish_condition
+
+    sha_guard = verify_steps[0]
+    assert "!inputs.dry-run" in sha_guard["if"]
+    assert sha_guard["env"]["EXPECTED_SHA"] == "${{ inputs.expected-sha }}"
+    assert 'if [ -z "$EXPECTED_SHA" ]' in sha_guard["run"]
+    assert 'GITHUB_SHA" != "$EXPECTED_SHA"' in sha_guard["run"]
 
 
 def test_competitor_matrix_offline_writes_docs():

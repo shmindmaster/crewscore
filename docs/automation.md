@@ -88,7 +88,7 @@ present is still applied.
 | Category naming workshop | **Locked default** (SH-2388 Done) | "Configuration smells" + written-control checklist |
 | Ecosystem strategy essay | **Canceled** (SH-2385) | Ship integrations with CI only |
 | Manual Show HN copy shop | **Scripted drafts** | `python scripts/generate_dist_pack.py` |
-| Manual release tag after "review" | **Scripted** | `python scripts/cut_release.py --push` or Actions `Cut release tag` |
+| Manual release tag after "review" | **Scripted** | `python scripts/cut_release.py --push` or Actions `Cut release tag` with a verified exact-tag handoff |
 | Dimension reweight committee | **Corpus job** (SH-2386) | Automated hit-rate / separation report proposes change |
 | AgentLinter research workshop | **Scrape matrix** (SH-2384) | Scripted public docs matrix |
 | Live adversarial product | **Deferred** (SH-2344) | `export-eval` handoff only; no in-product live attacks |
@@ -104,17 +104,27 @@ python scripts/cut_release.py          # dry-run
 python scripts/cut_release.py --push   # annotated tag + push → release.yml
 ```
 
-Or: Actions → **Cut release tag** → `push: true` on `main`.
+Or: Actions → **Cut release tag** → `push: true` on `main`. GitHub does not
+start another workflow from a tag pushed with `GITHUB_TOKEN`, so the Actions
+path does not rely on the push event. A separate job with `actions: write` and
+read-only repository access verifies that the annotated tag peels to the exact
+`main` SHA from the tag-cut run, then dispatches `release.yml` at that tag with
+publishing enabled and passes the verified commit as `expected-sha`. The
+release workflow refuses a publishing dispatch unless GitHub resolved the tag
+to that same commit. The tag-cut job has `contents: write` but no Actions write
+permission; the dispatch job has Actions write but no repository write permission.
 
-Tag push runs full multi-OS verify + PyPI trusted publishing + GitHub Release
+A user-authenticated tag push, or the verified exact-tag Actions dispatch,
+runs full multi-OS verification, PyPI trusted publishing, and GitHub Release
 notes from CHANGELOG. **No long-lived PyPI token.**
 
 Release-time verification (not performed from a release-candidate branch):
 
 1. Confirm the annotated `vX.Y.Z` tag peels to the exact green `main` SHA.
-2. Confirm PyPI wheel/sdist metadata and the GitHub Release target that SHA.
-3. Confirm the release workflow moved floating Action tag `v2` to the same SHA.
-4. Regenerate the distribution pack from that checkout and retain its
+2. Confirm the release run used `refs/tags/vX.Y.Z`, not `main`.
+3. Confirm PyPI wheel/sdist metadata and the GitHub Release target that SHA.
+4. Confirm the release workflow moved floating Action tag `v2` to the same SHA.
+5. Regenerate the distribution pack from that checkout and retain its
    `manifest.json` plus `checksums.txt` as launch evidence.
 
 One-time (already documented in `release.yml`): PyPI trusted publisher binding
