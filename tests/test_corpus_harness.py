@@ -11,6 +11,7 @@ Two classes of test here:
 
 from __future__ import annotations
 
+import json
 import random
 import subprocess
 import sys
@@ -164,6 +165,42 @@ def test_leak_guard_scans_every_possible_window(text: str, leak: str):
     payload["controls"][0]["label"] = leak
     errs = self_check(payload, [text])
     assert any("input text" in error for error in errs), errs
+
+
+def test_leak_guard_catches_ascii_escaped_non_ascii_source():
+    secret = "秘密" * 30
+    payload = _payload()
+    payload["controls"][0]["label"] = secret
+    serialized = json.dumps(payload)
+    assert secret[:LEAK_WINDOW] not in serialized
+    assert "\\u79d8" in serialized
+    errs = self_check(payload, [secret], artifacts=[serialized])
+    assert any("serialized input text" in error for error in errs), errs
+    diagnostic = "\n".join(errs)
+    assert secret not in diagnostic
+    assert "\\u79d8" not in diagnostic
+    assert "window sha256:" in diagnostic
+
+
+def test_leak_guard_catches_json_escaped_short_lines():
+    lines = [f"private-segment-{index:02d}" for index in range(12)]
+    assert all(len(line) < LEAK_WINDOW for line in lines)
+    secret = "\n".join(lines)
+    payload = _payload()
+    payload["controls"][0]["label"] = secret
+    serialized = json.dumps(payload)
+    collapsed = " ".join(secret.split())
+    assert collapsed[:LEAK_WINDOW] not in serialized
+    assert "\\n" in serialized
+    errs = self_check(payload, [secret], artifacts=[serialized])
+    assert any("serialized input text" in error for error in errs), errs
+
+
+def test_leak_guard_does_not_form_windows_across_artifact_boundaries():
+    secret = "0123456789" * 6
+    artifacts = [secret[:30], secret[30:]]
+    assert all(len(artifact) < LEAK_WINDOW for artifact in artifacts)
+    assert self_check(_payload(), [secret], artifacts=artifacts) == []
 
 
 def test_corpus_score_bytes_are_utf8_bytes_not_python_characters():

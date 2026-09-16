@@ -26,12 +26,19 @@ No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
 
 - The corpus privacy self-check now inspects every 40-character window,
   including exact-length inputs, unaligned matches, and the final possible
-  window. The previous stride sampled the input and could miss all three.
+  window, across raw, newline-normalized, whitespace-collapsed, and JSON-
+  serialized source forms in every generated artifact. The previous stride
+  sampled normalized text only and could miss both boundary cases and escaped
+  non-ASCII or multi-line content.
 - Owner auto-merge now queries current labels, draft state, author,
   repositories, merge state, and head OID from the controller loaded from the
-  protected base revision before every attempt. Both enable and direct-merge
-  mutations are bound to that exact event head, so stale event payload state
-  can no longer arm or complete a merge.
+  protected base revision at admission and again immediately before every
+  enable mutation. Arming is atomically bound to the event head. GitHub
+  exposes no equivalent atomic label/draft precondition, so the second read
+  narrows but cannot eliminate transient arming during the final API round
+  trip; `labeled` and `converted_to_draft` events withdraw an armed request.
+  The controller no longer performs irreversible direct merges, so an
+  already-clean PR is left for an explicit merge decision.
 - SARIF redaction is unconditional. The deprecated snippet compatibility flag
   can affect JSON, HTML, and Markdown output, but never code-scanning output.
 

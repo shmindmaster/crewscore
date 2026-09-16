@@ -30,32 +30,7 @@ const DISABLE_MUTATION = `mutation DisableOwnerAutoMerge($id: ID!) {
   disablePullRequestAutoMerge(input: { pullRequestId: $id }) { clientMutationId }
 }`;
 
-const MERGE_MUTATION = `mutation MergeOwnerPullRequest($id: ID!, $headOid: GitObjectID!) {
-  mergePullRequest(input: {
-    pullRequestId: $id,
-    mergeMethod: SQUASH,
-    expectedHeadOid: $headOid
-  }) {
-    pullRequest { merged }
-  }
-}`;
-
 const defaultSleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
-
-async function mergeCleanPullRequest({ github, core, pr, headOid }) {
-  if (!headOid) {
-    throw new Error(`Fresh head OID missing for PR #${pr.number}; refusing to merge`);
-  }
-  const result = await github.graphql(MERGE_MUTATION, {
-    id: pr.node_id,
-    headOid,
-  });
-  if (!result.mergePullRequest.pullRequest.merged) {
-    throw new Error(`GitHub did not merge clean PR #${pr.number}`);
-  }
-  core.info(`Clean PR #${pr.number} squash-merged at expected head ${headOid}`);
-  return "merged";
-}
 
 /**
  * Withdrawal is the safety direction, so it must be at least as robust as
@@ -150,12 +125,57 @@ function freshAdmissionBlock({
   return null;
 }
 
+async function stopForAdmissionBlock({
+  github,
+  core,
+  pr,
+  state,
+  trustedSender,
+  repositoryOwner,
+  repositoryNameWithOwner,
+  retry,
+}) {
+  const block = freshAdmissionBlock({
+    state,
+    trustedSender,
+    repositoryOwner,
+    repositoryNameWithOwner,
+    expectedHeadOid: pr.head && pr.head.sha,
+  });
+  if (!block) return null;
+
+  // A delayed event for an older head must not mutate auto-merge state that a
+  // newer event may already have established for the current head. Current-
+  // state admission failures still withdraw below.
+  if (block.code === "stale-head") {
+    core.warning(`PR #${pr.number}: ${block.reason}; leaving current-head auto-merge state unchanged.`);
+    return block.code;
+  }
+  const outcome = await withdrawArmedRequest({
+    github,
+    core,
+    pr,
+    reason: block.reason,
+    initialState: state,
+    ...retry,
+  });
+  return outcome === "withdrawn" ? `disabled-${block.code}` : block.code;
+}
+
 /**
  * Every pull_request event on an owner-authored same-repo PR reaches this
  * function. The event decides who triggered the run; the trusted base
  * controller queries GitHub for the current author, repositories, labels,
- * draft flag, merge state, and head OID before every attempt. Stale event
- * payload fields can therefore never arm or complete a merge.
+ * draft flag, merge state, and head OID at admission and again immediately
+ * before every arm mutation. GitHub only offers an atomic precondition for the
+ * head OID, not labels or draft state, so the second query narrows but cannot
+ * eliminate the final API round-trip race. A subsequent label/draft event
+ * withdraws an armed request. This controller never merges directly, because
+ * an irreversible merge cannot be repaired after such a race.
+ *
+ * The historical function name remains for protected-base rollout
+ * compatibility; despite that name, the current controller only reconciles
+ * auto-merge state.
  */
 async function enableOrMergeOwnerPr({
   github,
@@ -171,31 +191,17 @@ async function enableOrMergeOwnerPr({
   const retry = { sleep, maxAttempts, retryDelayMs };
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     const state = await github.graphql(STATE_QUERY, { id: pr.node_id });
-    const block = freshAdmissionBlock({
+    const admissionOutcome = await stopForAdmissionBlock({
+      github,
+      core,
+      pr,
       state,
       trustedSender,
       repositoryOwner,
       repositoryNameWithOwner,
-      expectedHeadOid: pr.head && pr.head.sha,
+      retry,
     });
-    if (block) {
-      // A delayed event for an older head must not mutate auto-merge state
-      // that a newer event may already have established for the current head.
-      // Current-state admission failures still withdraw below.
-      if (block.code === "stale-head") {
-        core.warning(`PR #${pr.number}: ${block.reason}; leaving current-head auto-merge state unchanged.`);
-        return block.code;
-      }
-      const outcome = await withdrawArmedRequest({
-        github,
-        core,
-        pr,
-        reason: block.reason,
-        initialState: state,
-        ...retry,
-      });
-      return outcome === "withdrawn" ? `disabled-${block.code}` : block.code;
-    }
+    if (admissionOutcome) return admissionOutcome;
     const existing = state.node.autoMergeRequest;
     if (existing) {
       if (existing.mergeMethod === "SQUASH") {
@@ -212,24 +218,59 @@ async function enableOrMergeOwnerPr({
       continue;
     }
 
-    if (state.node.mergeStateStatus === "CLEAN") {
-      return mergeCleanPullRequest({ github, core, pr, headOid: state.node.headRefOid });
+    // Re-query every mutable admission field immediately before an arm
+    // mutation. expectedHeadOid gives the mutation an atomic head guard; no
+    // equivalent GitHub precondition exists for labels or draft state.
+    const mutationState = await github.graphql(STATE_QUERY, { id: pr.node_id });
+    const preMutationOutcome = await stopForAdmissionBlock({
+      github,
+      core,
+      pr,
+      state: mutationState,
+      trustedSender,
+      repositoryOwner,
+      repositoryNameWithOwner,
+      retry,
+    });
+    if (preMutationOutcome) return preMutationOutcome;
+
+    const currentExisting = mutationState.node.autoMergeRequest;
+    if (currentExisting) {
+      if (currentExisting.mergeMethod === "SQUASH") {
+        core.info(`Auto-merge is already enabled for PR #${pr.number}`);
+        return "already-enabled";
+      }
+      await github.graphql(DISABLE_MUTATION, { id: pr.node_id });
+      core.warning(
+        `PR #${pr.number} gained auto-merge with ${currentExisting.mergeMethod}; ` +
+          "withdrew it before retrying SQUASH."
+      );
+      continue;
+    }
+
+    if (mutationState.node.mergeStateStatus === "CLEAN") {
+      core.warning(
+        `PR #${pr.number} is already clean; refusing an irreversible direct merge ` +
+          "because labels and draft state cannot be atomically preconditioned."
+      );
+      return "clean-not-armed";
     }
 
     try {
       await github.graphql(ENABLE_MUTATION, {
         id: pr.node_id,
-        headOid: state.node.headRefOid,
+        headOid: mutationState.node.headRefOid,
       });
       core.info(`Auto-merge enabled for PR #${pr.number}`);
       return "enabled";
     } catch (error) {
       const message = String(error);
       if (/clean status/i.test(message)) {
-        // The status and head may both have changed. Re-query them instead of
-        // merging from the stale state that lost the race.
-        if (attempt === maxAttempts) throw error;
-        continue;
+        core.warning(
+          `PR #${pr.number} became clean before auto-merge could be armed; ` +
+            "refusing an irreversible direct merge."
+        );
+        return "clean-not-armed";
       }
       const transientMergeState = /unstable status/i.test(message);
       if (!transientMergeState || attempt === maxAttempts) {

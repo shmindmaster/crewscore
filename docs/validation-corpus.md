@@ -138,5 +138,6 @@ here. A different corpus would move these numbers.
 Self-checks: 104 assertions passed. The run
 fails and writes nothing if any rate is unachievable at its own n, if
 a denominator is missing, if the interval and the p-value disagree, or
-if any 40-character run of input text appears in the output.
+if any 40-character run of raw, whitespace-normalized, or serialized
+input text appears in any generated output artifact.
 

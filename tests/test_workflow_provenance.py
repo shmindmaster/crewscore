@@ -247,6 +247,7 @@ def test_automerge_keeps_its_existing_mitigations():
     workflow = _load(WORKFLOW_DIR / AUTOMERGE_WORKFLOW)
     job = workflow["jobs"]["enable-automerge"]
     condition = job["if"]
+    event_types = workflow[True]["pull_request"]["types"]
 
     permissions = _effective_permissions(workflow, job)
     assert permissions.get("contents") == "write"
@@ -262,6 +263,7 @@ def test_automerge_keeps_its_existing_mitigations():
     # reach the controller as arguments, so assert the wiring, not the filter.
     assert "no-automerge" not in condition
     assert "sender.login" not in condition
+    assert "converted_to_draft" in event_types
     script_steps = [
         step for step in job["steps"] if str(step.get("uses", "")).startswith("actions/github-script@")
     ]
@@ -296,6 +298,8 @@ def test_automerge_keeps_its_existing_mitigations():
     assert "mergeMethod: SQUASH" in controller
     assert "disablePullRequestAutoMerge" in controller
     assert "trustedSender" in controller
+    assert "mergePullRequest" not in controller
+    assert "MergeOwnerPullRequest" not in controller
 
 
 @pytest.mark.skipif(

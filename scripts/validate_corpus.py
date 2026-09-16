@@ -99,21 +99,43 @@ def _rolling_window_hashes(text: str, width: int):
         yield start, value
 
 
-def _first_leaked_window(blob: str, texts: list[str]) -> str | None:
-    """Return the first exact prompt-text window present in ``blob``."""
+def _privacy_representations(text: str) -> tuple[str, ...]:
+    """Return source forms that can appear in a generated text artifact.
+
+    The generated JSON files use ASCII escaping, while Markdown keeps Unicode
+    and JSON string values escape newlines, quotes, and backslashes. Checking
+    only collapsed source text misses both cases. These forms cover the raw,
+    newline-normalized, whitespace-collapsed, and JSON-string serialization
+    of each without guessing which output format carried a leak.
+    """
+    newline_normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    source_forms = tuple(dict.fromkeys((text, newline_normalized, " ".join(text.split()))))
+    representations: list[str] = list(source_forms)
+    for source in source_forms:
+        for ensure_ascii in (True, False):
+            # Strip the surrounding JSON quotes; only serialized source
+            # content should count toward the privacy window.
+            representations.append(json.dumps(source, ensure_ascii=ensure_ascii)[1:-1])
+    return tuple(dict.fromkeys(representations))
+
+
+def _first_leaked_window(blobs: list[str], texts: list[str]) -> str | None:
+    """Return the first source/serialization window in an output artifact."""
     output_hashes = {
-        value for _start, value in _rolling_window_hashes(blob, LEAK_WINDOW)
+        value
+        for blob in blobs
+        for _start, value in _rolling_window_hashes(blob, LEAK_WINDOW)
     }
     if not output_hashes:
         return None
     for text in texts:
-        squeezed = " ".join(text.split())
-        for start, value in _rolling_window_hashes(squeezed, LEAK_WINDOW):
-            if value not in output_hashes:
-                continue
-            window = squeezed[start : start + LEAK_WINDOW]
-            if window in blob:
-                return window
+        for representation in _privacy_representations(text):
+            for start, value in _rolling_window_hashes(representation, LEAK_WINDOW):
+                if value not in output_hashes:
+                    continue
+                window = representation[start : start + LEAK_WINDOW]
+                if any(window in blob for blob in blobs):
+                    return window
     return None
 
 
@@ -520,7 +542,13 @@ def control_table(groups: dict[str, dict]) -> list[dict]:
 # ─── self-checks: these fail the run ──────────────────────────────────
 
 
-def self_check(payload: dict, texts: list[str], extra: dict | None = None) -> list[str]:
+def self_check(
+    payload: dict,
+    texts: list[str],
+    extra: dict | None = None,
+    *,
+    artifacts: list[str] | None = None,
+) -> list[str]:
     """Every failure mode from the withdrawn study, as an assertion."""
     errs: list[str] = []
 
@@ -572,16 +600,20 @@ def self_check(payload: dict, texts: list[str], extra: dict | None = None) -> li
         if not d["q1"] <= d["median"] <= d["q3"]:
             errs.append(f"{key}: quartiles out of order")
 
-    # 6. No prompt text may leave the machine. Checked against the inputs
-    #    rather than trusted to discipline. `extra` carries any additional
-    #    artifact written in the same run (the per-file scores), so a new
-    #    output cannot quietly escape this scan.
-    blob = json.dumps(payload) + ("" if extra is None else json.dumps(extra))
-    leaked_window = _first_leaked_window(blob, texts)
+    # 6. No prompt text may leave the machine. Check each actual serialized
+    #    artifact independently so JSON escaping, Unicode, and newline forms
+    #    cannot evade the scan and windows cannot form across file boundaries.
+    #    The compact fallback keeps direct self_check() callers safe.
+    if artifacts is None:
+        artifacts = [json.dumps(payload)]
+        if extra is not None:
+            artifacts.append(json.dumps(extra))
+    leaked_window = _first_leaked_window(artifacts, texts)
     if leaked_window is not None:
+        leak_id = hashlib.sha256(leaked_window.encode("utf-8")).hexdigest()[:16]
         errs.append(
-            f"output contains {LEAK_WINDOW}+ chars of input text: "
-            f"{leaked_window!r}"
+            f"output contains {LEAK_WINDOW}+ chars of serialized input text "
+            f"(window sha256:{leak_id})"
         )
     return errs
 
@@ -780,7 +812,8 @@ def render(payload: dict) -> str:
         f"Self-checks: {payload['self_checks']} assertions passed. The run",
         "fails and writes nothing if any rate is unachievable at its own n, if",
         "a denominator is missing, if the interval and the p-value disagree, or",
-        "if any 40-character run of input text appears in the output.",
+        "if any 40-character run of raw, whitespace-normalized, or serialized",
+        "input text appears in any generated output artifact.",
         "",
     ]
     return "\n".join(lines) + "\n"
@@ -862,14 +895,29 @@ def main() -> int:
         ],
     }
 
-    errs = self_check(payload, texts, extra=scores_payload)
+    report = render(payload)
+    data_json = json.dumps(payload, indent=2, sort_keys=True) + "\n"
+    scores_json = json.dumps(scores_payload, indent=2, sort_keys=True) + "\n"
+    csv_lines = ["corpus,file_id,score,bytes,controls_fired"]
+    for row in scores_payload["files"]:
+        csv_lines.append(
+            f"{row['corpus']},{row['file_id']},{row['score']},{row['bytes']},"
+            f"\"{'|'.join(row['controls_fired'])}\""
+        )
+    scores_csv = "\n".join(csv_lines) + "\n"
+
+    errs = self_check(
+        payload,
+        texts,
+        extra=scores_payload,
+        artifacts=[report, data_json, scores_json, scores_csv],
+    )
     if errs:
         print("SELF-CHECK FAILED - nothing written:", file=sys.stderr)
         for e in errs:
             print(f"  - {e}", file=sys.stderr)
         return 2
 
-    report = render(payload)
     if args.check:
         if not REPORT.exists():
             print(f"{REPORT} missing", file=sys.stderr)
@@ -884,22 +932,14 @@ def main() -> int:
     # committed LF files show as fully rewritten, and `--check` fails on a
     # run that computed identical numbers. Surfaced 2026-08-24.
     SCORES.write_text(
-        json.dumps(scores_payload, indent=2, sort_keys=True) + "\n",
+        scores_json,
         encoding="utf-8",
         newline="\n",
     )
-    csv_lines = ["corpus,file_id,score,bytes,controls_fired"]
-    for row in scores_payload["files"]:
-        csv_lines.append(
-            f"{row['corpus']},{row['file_id']},{row['score']},{row['bytes']},"
-            f"\"{'|'.join(row['controls_fired'])}\""
-        )
-    SCORES_CSV.write_text("\n".join(csv_lines) + "\n", encoding="utf-8",
-                          newline="\n")
+    SCORES_CSV.write_text(scores_csv, encoding="utf-8", newline="\n")
 
     REPORT.write_text(report, encoding="utf-8", newline="\n")
-    DATA.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n",
-                    encoding="utf-8", newline="\n")
+    DATA.write_text(data_json, encoding="utf-8", newline="\n")
     a = payload["analysis"]
     print(f"delta={a['delta']} p={a['p_value']} CI={a['ci95']}", file=sys.stderr)
     print(f"wrote {REPORT.relative_to(REPO)} and {DATA.relative_to(REPO)}",

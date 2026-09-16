@@ -59,12 +59,12 @@ const state = (mergeStateStatus, autoMergeRequest = null, overrides = {}) => ({
     ...overrides,
   },
 });
-const merged = { mergePullRequest: { pullRequest: { merged: true } } };
-
 test("retries UNSTABLE and enables auto-merge when checks are pending", async () => {
   const h = harness([
     state("UNSTABLE"),
+    state("UNSTABLE"),
     new Error("Pull request is in unstable status"),
+    state("BLOCKED"),
     state("BLOCKED"),
     { enablePullRequestAutoMerge: { clientMutationId: null } },
   ]);
@@ -72,26 +72,22 @@ test("retries UNSTABLE and enables auto-merge when checks are pending", async ()
   assert.deepEqual(h.sleeps, [5000]);
 });
 
-test("merges with the exact head when an enable race reaches CLEAN", async () => {
+test("an enable race reaching CLEAN refuses a direct merge", async () => {
   const h = harness([
     state("UNSTABLE"),
+    state("UNSTABLE"),
     new Error("Pull request is in clean status"),
-    state("CLEAN"),
-    merged,
   ]);
-  assert.equal(await enableOrMergeOwnerPr({ ...h, pr }), "merged");
-  assert.deepEqual(h.calls.at(-1), {
-    operation: "MergeOwnerPullRequest",
-    variables: { id: pr.node_id, headOid: freshHead },
-  });
+  assert.equal(await enableOrMergeOwnerPr({ ...h, pr }), "clean-not-armed");
+  assert.ok(!h.calls.some((call) => call.operation === "MergeOwnerPullRequest"));
 });
 
-test("merges an initially CLEAN pull request", async () => {
-  const h = harness([state("CLEAN"), merged]);
-  assert.equal(await enableOrMergeOwnerPr({ ...h, pr }), "merged");
+test("an initially CLEAN pull request is never merged directly", async () => {
+  const h = harness([state("CLEAN"), state("CLEAN")]);
+  assert.equal(await enableOrMergeOwnerPr({ ...h, pr }), "clean-not-armed");
   assert.deepEqual(h.calls.map((call) => call.operation), [
     "OwnerAutoMergeState",
-    "MergeOwnerPullRequest",
+    "OwnerAutoMergeState",
   ]);
 });
 
@@ -104,7 +100,11 @@ test("is idempotent when auto-merge is already enabled", async () => {
 test("fails closed after bounded UNSTABLE retries", async () => {
   const responses = [];
   for (let attempt = 0; attempt < 6; attempt += 1) {
-    responses.push(state("UNSTABLE"), new Error("Pull request is in unstable status"));
+    responses.push(
+      state("UNSTABLE"),
+      state("UNSTABLE"),
+      new Error("Pull request is in unstable status"),
+    );
   }
   const h = harness(responses);
   await assert.rejects(enableOrMergeOwnerPr({ ...h, pr }), /unstable status/);
@@ -113,7 +113,7 @@ test("fails closed after bounded UNSTABLE retries", async () => {
 });
 
 test("propagates non-transient GraphQL failures", async () => {
-  const h = harness([state("BLOCKED"), new Error("permission denied")]);
+  const h = harness([state("BLOCKED"), state("BLOCKED"), new Error("permission denied")]);
   await assert.rejects(enableOrMergeOwnerPr({ ...h, pr }), /permission denied/);
   assert.deepEqual(h.sleeps, []);
 });
@@ -200,12 +200,14 @@ test("replaces an existing non-squash auto-merge request with SQUASH", async () 
     state("BLOCKED", { enabledAt: "2026-07-31T00:00:00Z", mergeMethod: "MERGE" }),
     { disablePullRequestAutoMerge: { clientMutationId: null } },
     state("BLOCKED"),
+    state("BLOCKED"),
     { enablePullRequestAutoMerge: { clientMutationId: null } },
   ]);
   assert.equal(await enableOrMergeOwnerPr({ ...h, pr }), "enabled");
   assert.deepEqual(h.calls.map((call) => call.operation), [
     "OwnerAutoMergeState",
     "DisableOwnerAutoMerge",
+    "OwnerAutoMergeState",
     "OwnerAutoMergeState",
     "EnableOwnerAutoMerge",
   ]);
@@ -223,6 +225,30 @@ test("fresh draft state withdraws an armed request despite a ready event payload
   ]);
   assert.equal(await enableOrMergeOwnerPr({ ...h, pr }), "disabled-draft");
   assert.ok(!h.calls.some((call) => call.operation === "MergeOwnerPullRequest"));
+});
+
+test("a label added between admission reads blocks the clean path", async () => {
+  const h = harness([
+    state("CLEAN"),
+    state("CLEAN", null, { labels: { nodes: [{ name: "no-automerge" }] } }),
+  ]);
+  assert.equal(await enableOrMergeOwnerPr({ ...h, pr }), "by-label");
+  assert.deepEqual(h.calls.map((call) => call.operation), [
+    "OwnerAutoMergeState",
+    "OwnerAutoMergeState",
+  ]);
+});
+
+test("a draft transition between admission reads prevents auto-merge arming", async () => {
+  const h = harness([
+    state("BLOCKED"),
+    state("BLOCKED", null, { isDraft: true }),
+  ]);
+  assert.equal(await enableOrMergeOwnerPr({ ...h, pr }), "draft");
+  assert.deepEqual(h.calls.map((call) => call.operation), [
+    "OwnerAutoMergeState",
+    "OwnerAutoMergeState",
+  ]);
 });
 
 test("fresh owner state fails closed when the PR is no longer owner-authored", async () => {
@@ -249,6 +275,7 @@ test("a stale event head cannot arm or merge a newer pull-request head", async (
 
 test("enabling auto-merge is atomically bound to the fresh event head", async () => {
   const h = harness([
+    state("BLOCKED"),
     state("BLOCKED"),
     { enablePullRequestAutoMerge: { clientMutationId: null } },
   ]);

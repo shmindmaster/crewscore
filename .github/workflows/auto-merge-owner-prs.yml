@@ -3,14 +3,14 @@
 # Human review is NOT required. Required status checks on `main` are the gate:
 #   test (3.11), test (3.12), test (3.13), browser tests, selftest
 #
-# The workflow enables squash auto-merge while checks are pending. If GitHub
-# reports the PR already clean, it squash-merges at the exact expected head.
-# Both paths remain subject to the required checks and branch ruleset.
+# The workflow enables squash auto-merge while checks are pending. It never
+# performs a direct merge: GitHub cannot atomically bind a merge to label or
+# draft state, so an already-clean PR is left for an explicit merge decision.
 name: Auto-merge owner PRs
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize, ready_for_review, labeled, unlabeled]
+    types: [opened, reopened, synchronize, converted_to_draft, ready_for_review, labeled, unlabeled]
     branches: [main]
 
 permissions:
@@ -54,7 +54,7 @@ jobs:
           path: .github-base
           persist-credentials: false
 
-      - name: Enable or complete protected squash merge
+      - name: Reconcile protected squash auto-merge
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |

@@ -54,6 +54,20 @@ enforces both rules, including a fixture attack: a PR that ships a controller
 merging anything, and an assertion that the workflow's decision path ignores
 it.
 
+The controller reads labels, draft state, ownership, repositories, merge
+state, and head OID twice: once at admission and again immediately before an
+enable mutation. `expectedHeadOid` makes the head check atomic. GitHub provides
+no conditional mutation for labels or draft state, so a change after the
+second read can still transiently arm auto-merge during the final API round
+trip. `labeled` and `converted_to_draft` events withdraw that request. The
+controller never performs a direct merge, so an already-clean PR is left for
+an explicit merge decision rather than risking an irreversible race.
+
+Accordingly, `no-automerge` is not a transactional promise that arming can
+never be observed. Its defensible contract is: a transition observed by the
+second admission read blocks arming; a later label/draft event withdraws an
+armed request; and this automation never directly completes a merge.
+
 ## Former "human gates" → automation status
 
 | Former human item | Status | Automation |
