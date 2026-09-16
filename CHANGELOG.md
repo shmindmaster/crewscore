@@ -33,7 +33,10 @@ No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
 - Owner auto-merge now queries current labels, draft state, author,
   repositories, merge state, and head OID from the controller loaded from the
   protected base revision at admission and again immediately before every
-  enable mutation. Arming is atomically bound to the event head. GitHub
+  enable mutation. The write-capable workflow is now base-owned through
+  `pull_request_target`, checks out only the immutable base revision, and
+  serializes stop events behind in-flight arming without cancellation. Arming
+  is atomically bound to the event head. GitHub
   exposes no equivalent atomic label/draft precondition, so the second read
   narrows but cannot eliminate transient arming during the final API round
   trip; `labeled` and `converted_to_draft` events withdraw an armed request.

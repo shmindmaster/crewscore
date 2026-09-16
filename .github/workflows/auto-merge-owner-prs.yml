@@ -1,4 +1,4 @@
-# Machine merge gate for maintainer-owned same-repo PRs.
+# Base-owned machine merge gate for maintainer-owned same-repo PRs.
 #
 # Human review is NOT required. Required status checks on `main` are the gate:
 #   test (3.11), test (3.12), test (3.13), browser tests, selftest
@@ -9,7 +9,9 @@
 name: Auto-merge owner PRs
 
 on:
-  pull_request:
+  # This workflow has write permissions, so it must be loaded from the base
+  # branch. pull_request would let the PR rewrite its own privileged wrapper.
+  pull_request_target:
     types: [opened, reopened, synchronize, converted_to_draft, ready_for_review, labeled, unlabeled]
     branches: [main]
 
@@ -19,7 +21,9 @@ permissions:
 
 concurrency:
   group: auto-merge-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  # A stop event must queue behind any in-flight arming mutation and then
+  # withdraw it. Canceling the running reconciliation can lose that withdrawal.
+  cancel-in-progress: false
 
 jobs:
   enable-automerge:
@@ -28,25 +32,13 @@ jobs:
     # collaborator's push, anyone applying no-automerge) must still run -- to
     # withdraw an armed request, never to arm one. A skipped job cannot revoke.
     if: >
-      github.event_name == 'pull_request' &&
+      github.event_name == 'pull_request_target' &&
       github.event.pull_request.user.login == github.repository_owner &&
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
-      - name: Check out pull request head
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      # Confused deputy: the controller below decides whether this PR gets
-      # auto-merged, so it must never come from the PR. Reading it from the
-      # base revision means a PR can only change the merge controller after
-      # that change is merged, reviewed, and protected by the branch ruleset.
-      #
-      # The path is written after the PR checkout on purpose: checkout into a
-      # subdirectory cannot shadow or be shadowed by PR content once it runs
-      # second, and persist-credentials: false leaves no token in .git/config
-      # for anything in either tree to read.
+      # The only checkout is the immutable base revision. This privileged job
+      # never checks out or executes pull-request code.
       - name: Check out auto-merge controller from the base revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

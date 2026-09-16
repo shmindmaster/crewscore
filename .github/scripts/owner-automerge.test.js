@@ -239,6 +239,33 @@ test("a label added between admission reads blocks the clean path", async () => 
   ]);
 });
 
+test("a serialized stop event withdraws an in-flight event's armed request", async () => {
+  const h = harness([
+    // First event completes its already in-flight arming mutation.
+    state("BLOCKED"),
+    state("BLOCKED"),
+    { enablePullRequestAutoMerge: { clientMutationId: null } },
+    // cancel-in-progress: false lets the queued stop event run next. Its fresh
+    // state observes both the label and the request that must be withdrawn.
+    state(
+      "BLOCKED",
+      { enabledAt: "2026-09-16T00:00:00Z", mergeMethod: "SQUASH" },
+      { labels: { nodes: [{ name: "no-automerge" }] } },
+    ),
+    { disablePullRequestAutoMerge: { clientMutationId: null } },
+  ]);
+
+  assert.equal(await enableOrMergeOwnerPr({ ...h, pr }), "enabled");
+  assert.equal(await enableOrMergeOwnerPr({ ...h, pr }), "disabled-by-label");
+  assert.deepEqual(h.calls.map((call) => call.operation), [
+    "OwnerAutoMergeState",
+    "OwnerAutoMergeState",
+    "EnableOwnerAutoMerge",
+    "OwnerAutoMergeState",
+    "DisableOwnerAutoMerge",
+  ]);
+});
+
 test("a draft transition between admission reads prevents auto-merge arming", async () => {
   const h = harness([
     state("BLOCKED"),

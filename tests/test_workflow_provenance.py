@@ -201,10 +201,8 @@ def test_each_action_resolves_to_one_sha_across_all_workflows():
 def test_automerge_controller_is_loaded_from_the_base_revision():
     """The confused-deputy fix: the PR must not supply its own judge.
 
-    Requiring the controller out of `GITHUB_WORKSPACE` resolves inside the PR
-    checkout, so a PR could ship a controller that approves anything. Every
-    reference to the controller in this workflow has to come from the
-    base-revision checkout instead.
+    The write-capable workflow itself and every controller reference must be
+    base-revision owned. The job must never check out or execute PR code.
     """
     workflow = _load(WORKFLOW_DIR / AUTOMERGE_WORKFLOW)
     _, step = _controller_step(workflow)
@@ -231,6 +229,7 @@ def test_automerge_base_checkout_is_pinned_immutable_and_credential_free():
         for step in job.get("steps", [])
         if str(step.get("uses", "")).startswith("actions/checkout@")
     ]
+    assert len(checkouts) == 1, "privileged auto-merge job must never check out PR code"
     base = [step for step in checkouts if step.get("with", {}).get("ref")]
     assert len(base) == 1, "expected exactly one checkout pinned to a ref"
 
@@ -247,7 +246,12 @@ def test_automerge_keeps_its_existing_mitigations():
     workflow = _load(WORKFLOW_DIR / AUTOMERGE_WORKFLOW)
     job = workflow["jobs"]["enable-automerge"]
     condition = job["if"]
-    event_types = workflow[True]["pull_request"]["types"]
+    events = workflow[True]
+    event_types = events["pull_request_target"]["types"]
+
+    assert "pull_request_target" in events
+    assert "pull_request" not in events
+    assert workflow["concurrency"]["cancel-in-progress"] is False
 
     permissions = _effective_permissions(workflow, job)
     assert permissions.get("contents") == "write"
@@ -258,12 +262,14 @@ def test_automerge_keeps_its_existing_mitigations():
 
     assert "github.repository_owner" in condition
     assert "head.repo.full_name" in condition
+    assert "github.event_name == 'pull_request_target'" in condition
     # The stop-switch and the sender check moved out of the job condition on
     # purpose: a job that is skipped cannot withdraw an armed request. Both now
     # reach the controller as arguments, so assert the wiring, not the filter.
     assert "no-automerge" not in condition
     assert "sender.login" not in condition
     assert "converted_to_draft" in event_types
+    assert not any(str(step.get("uses", "")).startswith("./") for step in job["steps"])
     script_steps = [
         step for step in job["steps"] if str(step.get("uses", "")).startswith("actions/github-script@")
     ]

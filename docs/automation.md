@@ -25,7 +25,7 @@ agent opens owner same-repo PR
 | Control | Mechanism |
 | --- | --- |
 | Correctness | pytest matrix + browser + Action self-test |
-| Trust boundary | Self-hosted jobs only for owner same-repo PRs |
+| Trust boundary | Ephemeral GitHub-hosted runners; the write-capable reconciler is base-owned and never checks out PR code |
 | Landing | `allow_auto_merge` + `auto-merge-owner-prs.yml` |
 | Merge decision code | `.github/scripts/owner-automerge.js`, loaded from the **base revision** (`.github-base/`), never from the PR |
 | Reviews | **Not required** (`required_pull_request_reviews` off) |
@@ -43,10 +43,12 @@ the workflows are held to two rules:
    attached. The comment is what makes a SHA reviewable and is what Dependabot
    matches on when it proposes the next bump.
 2. **Code that decides whether a PR merges cannot come from that PR.**
-   `auto-merge-owner-prs.yml` checks out `pull_request.base.sha` into
-   `.github-base/` (`persist-credentials: false`) and requires the controller
-   from there. A PR can still change the controller, but only after the change
-   has landed and is covered by the branch ruleset.
+   The write-capable `auto-merge-owner-prs.yml` uses `pull_request_target`, so
+   GitHub loads the workflow from the protected base branch. Its only checkout
+   is `pull_request.base.sha` into `.github-base/`
+   (`persist-credentials: false`); it never checks out or executes PR code. A
+   PR can still propose a controller change, but that code cannot run with
+   write permission until it has landed behind the branch ruleset.
 
 `.github/dependabot.yml` runs the `github-actions` ecosystem weekly, which is
 the intended update path for those SHAs. `tests/test_workflow_provenance.py`
@@ -67,6 +69,14 @@ Accordingly, `no-automerge` is not a transactional promise that arming can
 never be observed. Its defensible contract is: a transition observed by the
 second admission read blocks arming; a later label/draft event withdraws an
 armed request; and this automation never directly completes a merge.
+
+Reconciliation events are serialized per PR with
+`cancel-in-progress: false`. If a stop event arrives while an arming mutation
+is already in flight, it waits, then reads current state and withdraws the
+request that completed ahead of it. A newer queued event may replace an older
+pending event under GitHub's concurrency semantics, but every replacement
+queries current labels and draft state, so a stop condition that remains
+present is still applied.
 
 ## Former "human gates" → automation status
 
