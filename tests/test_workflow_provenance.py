@@ -223,9 +223,9 @@ def test_automerge_controller_is_loaded_from_the_base_revision():
 def test_automerge_base_checkout_is_pinned_immutable_and_credential_free():
     """The base checkout is the whole mitigation; check its properties."""
     workflow = _load(WORKFLOW_DIR / AUTOMERGE_WORKFLOW)
+    job = workflow["jobs"]["enable-automerge"]
     checkouts = [
         step
-        for job in workflow["jobs"].values()
         for step in job.get("steps", [])
         if str(step.get("uses", "")).startswith("actions/checkout@")
     ]
