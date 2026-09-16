@@ -80,7 +80,9 @@ the new text.
 Required status checks on `main` are the merge gate. Maintainer same-repo PRs
 enable **squash auto-merge** when checks pass. See [automation.md](automation.md).
 
-- Label **`no-automerge`** to force a manual merge.
+- Apply **`no-automerge`** before arming to block auto-merge. If it is applied
+  after arming, the resulting event asks the controller to withdraw the
+  request; the label is a stop signal, not a transactional lock.
 - Humans still own: public launch posts, Gate 0 strategy, scoring arithmetic
   changes, and choosing when to cut a PyPI tag.
 - The merge controller (`.github/scripts/owner-automerge.js`) is loaded from a
