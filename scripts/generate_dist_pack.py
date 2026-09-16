@@ -211,7 +211,14 @@ def _build_pack() -> tuple[dict[str, Any], bytes]:
         "oneliner": _readme_oneliner(),
     }
 
-    x_rendered = {"text": _render_template(channels["x"]["text"], facts)}
+    x_post_text = _render_template(channels["x"]["text"], facts)
+    if not x_post_text.strip():
+        raise RuntimeError("x.text rendered blank after templating")
+    if len(x_post_text) > X_POST_LIMIT:
+        raise RuntimeError(
+            f"x.text exceeds {X_POST_LIMIT} characters: {len(x_post_text)}"
+        )
+    x_rendered = {"text": x_post_text}
     x_thread_texts = None
     if x_thread is not None:
         x_thread_texts = [_render_template(tweet, facts) for tweet in x_thread]

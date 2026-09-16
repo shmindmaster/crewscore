@@ -21,8 +21,8 @@ SOURCE = REPO / "docs" / "launch-copy.json"
 DATA = REPO / "docs" / "validation-corpus.json"
 GENERATOR = REPO / "scripts" / "generate_dist_pack.py"
 GIT_TRACKED_SOURCE = "docs/launch-copy.json"
-EXPECTED_CHECKSUM_FILE_SHA256 = "b99bb6ad639bc03b69e7e5818364bc5852cda0a4a83c3a3c0696983de84b6bdb"
-EXPECTED_MANIFEST_SHA256 = "e33b416f0c501912700d671f0abc21967e93a460555124b84ff994d78d667d23"
+EXPECTED_CHECKSUM_FILE_SHA256 = "9b1f7bcf8d1a8cef0ee47a3d19e17e7a406e70bea1b35e11a7cc4d3147e4eae3"
+EXPECTED_MANIFEST_SHA256 = "a45e6957fe971bb1abd4675c24fb0f42fb65c4ca4870472234887857737470d0"
 REQUIRED_ARTIFACTS = (
     "show-hn-title.txt",
     "show-hn-first-comment.md",
@@ -84,6 +84,18 @@ def _temporary_corpus(mutator) -> None:
     finally:
         if backup.exists():
             shutil.move(str(backup), DATA)
+
+
+@contextmanager
+def _temporary_launch_copy(mutator) -> None:
+    original = SOURCE.read_bytes()
+    try:
+        payload = json.loads(original.decode("utf-8"))
+        mutator(payload)
+        SOURCE.write_text(json.dumps(payload), encoding="utf-8")
+        yield
+    finally:
+        SOURCE.write_bytes(original)
 
 
 def _corpus_payload() -> dict:
@@ -246,6 +258,16 @@ def test_generate_dist_pack_x_channel_respects_post_limit(tmp_path: Path):
             assert len(tweet) <= 280, f"thread tweet exceeds limit: {len(tweet)}"
     else:
         assert generated_thread == ""
+
+
+def test_generate_dist_pack_rejects_overlong_primary_x_post(tmp_path: Path):
+    def make_overlong(payload: dict) -> None:
+        payload["channels"]["x"]["text"] = "x" * 281
+
+    with _temporary_launch_copy(make_overlong):
+        result = _generate_pack_raw(tmp_path / "dist-pack")
+    assert result.returncode != 0
+    assert "x.text exceeds 280 characters: 281" in (result.stdout + result.stderr)
 
 
 def _corpus() -> dict:

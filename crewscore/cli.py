@@ -119,7 +119,8 @@ _SNIPPET_OPT_IN_HELP = (
     "DEPRECATED compatibility escape hatch: also copy matched prompt "
     "substrings into --json, --summary and --report output. Default (off) "
     "emits rule IDs, dimension, status and the control label only. This flag "
-    "will be removed after one release."
+    "never applies to --sarif, which is always prompt-free. This flag will be "
+    "removed after one release."
 )
 
 
@@ -426,8 +427,8 @@ def test(
     if include_snippets:
         err_console.print(
             "[yellow]--include-snippets is deprecated:[/yellow] matched prompt "
-            "text is being copied into machine output. It will be removed after "
-            "one release; prefer the default prompt-free payload."
+            "text is being copied into JSON, HTML, and Markdown output. SARIF "
+            "remains prompt-free. The flag will be removed after one release."
         )
 
     if report:
@@ -1571,8 +1572,8 @@ def scan(
     if include_snippets:
         err_console.print(
             "[yellow]--include-snippets is deprecated:[/yellow] matched prompt "
-            "text is being copied into machine output. It will be removed after "
-            "one release; prefer the default prompt-free payload."
+            "text is being copied into JSON and Markdown output. SARIF remains "
+            "prompt-free. The flag will be removed after one release."
         )
     policy = _resolve_policy_or_exit(
         config=config,
@@ -1712,7 +1713,10 @@ def scan(
             (
                 item["path"],
                 applicable,
-                public_findings(findings, include_snippets=include_snippets),
+                # SARIF is routinely uploaded to code scanning. The deprecated
+                # compatibility flag never applies to it, even when JSON and
+                # Markdown outputs intentionally re-admit snippets.
+                public_findings(findings),
             )
         )
     if sarif:
@@ -1929,5 +1933,3 @@ def scan(
 
 if __name__ == "__main__":
     main()
-
-

@@ -36,7 +36,7 @@ the schema is a whitelist, enforced by `tests/test_corpus_scores.py`:
 | `corpus` | `gpt_store` or `production` |
 | `file_id` | 16 hex characters — `sha256(path)[:16]`, deterministic, not reversible |
 | `score` | Overall coverage, 0–100 |
-| `bytes` | Length of the prompt text |
+| `bytes` | UTF-8 byte length of the prompt text |
 | `dimensions` | Per-dimension coverage for the 8 governance dimensions |
 | `controls_fired` | Sorted control keys that matched, drawn from the 23 in `controls` |
 

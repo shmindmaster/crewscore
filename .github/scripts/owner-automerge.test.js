@@ -7,8 +7,14 @@ const { enableOrMergeOwnerPr } = require("./owner-automerge.js");
 const pr = {
   number: 33,
   node_id: "PR_node",
-  head: { sha: "faa4c2a71fc5378038a3760ff7d366fe551604c4" },
+  user: { login: "shmindmaster" },
+  head: {
+    sha: "faa4c2a71fc5378038a3760ff7d366fe551604c4",
+    repo: { full_name: "shmindmaster/crewscore" },
+  },
+  base: { repo: { full_name: "shmindmaster/crewscore" } },
 };
+const freshHead = "faa4c2a71fc5378038a3760ff7d366fe551604c4";
 
 function harness(responses) {
   const calls = [];
@@ -28,11 +34,30 @@ function harness(responses) {
     warning: (message) => messages.push(message),
   };
   const sleep = async (milliseconds) => sleeps.push(milliseconds);
-  return { github, core, sleep, calls, sleeps, messages };
+  return {
+    github,
+    core,
+    sleep,
+    calls,
+    sleeps,
+    messages,
+    repositoryOwner: "shmindmaster",
+    repositoryNameWithOwner: "shmindmaster/crewscore",
+  };
 }
 
-const state = (mergeStateStatus, autoMergeRequest = null) => ({
-  node: { mergeStateStatus, autoMergeRequest },
+const state = (mergeStateStatus, autoMergeRequest = null, overrides = {}) => ({
+  node: {
+    mergeStateStatus,
+    autoMergeRequest,
+    headRefOid: freshHead,
+    isDraft: false,
+    author: { login: "shmindmaster" },
+    headRepository: { nameWithOwner: "shmindmaster/crewscore" },
+    baseRepository: { nameWithOwner: "shmindmaster/crewscore" },
+    labels: { nodes: [], pageInfo: { hasNextPage: false } },
+    ...overrides,
+  },
 });
 const merged = { mergePullRequest: { pullRequest: { merged: true } } };
 
@@ -51,12 +76,13 @@ test("merges with the exact head when an enable race reaches CLEAN", async () =>
   const h = harness([
     state("UNSTABLE"),
     new Error("Pull request is in clean status"),
+    state("CLEAN"),
     merged,
   ]);
   assert.equal(await enableOrMergeOwnerPr({ ...h, pr }), "merged");
   assert.deepEqual(h.calls.at(-1), {
     operation: "MergeOwnerPullRequest",
-    variables: { id: pr.node_id, headOid: pr.head.sha },
+    variables: { id: pr.node_id, headOid: freshHead },
   });
 });
 
@@ -94,10 +120,14 @@ test("propagates non-transient GraphQL failures", async () => {
 
 test("no-automerge withdraws an already-armed request instead of skipping", async () => {
   const h = harness([
-    state("BLOCKED", { enabledAt: "2026-07-31T00:00:00Z", mergeMethod: "SQUASH" }),
+    state(
+      "BLOCKED",
+      { enabledAt: "2026-07-31T00:00:00Z", mergeMethod: "SQUASH" },
+      { labels: { nodes: [{ name: "no-automerge" }] } },
+    ),
     { disablePullRequestAutoMerge: { clientMutationId: null } },
   ]);
-  assert.equal(await enableOrMergeOwnerPr({ ...h, pr, optOut: true }), "disabled-by-label");
+  assert.equal(await enableOrMergeOwnerPr({ ...h, pr }), "disabled-by-label");
   assert.deepEqual(h.calls.map((call) => call.operation), [
     "OwnerAutoMergeState",
     "DisableOwnerAutoMerge",
@@ -105,8 +135,8 @@ test("no-automerge withdraws an already-armed request instead of skipping", asyn
 });
 
 test("no-automerge with nothing armed neither enables nor merges, even when CLEAN", async () => {
-  const h = harness([state("CLEAN")]);
-  assert.equal(await enableOrMergeOwnerPr({ ...h, pr, optOut: true }), "opted-out");
+  const h = harness([state("CLEAN", null, { labels: { nodes: [{ name: "no-automerge" }] } })]);
+  assert.equal(await enableOrMergeOwnerPr({ ...h, pr }), "by-label");
   assert.equal(h.calls.length, 1);
 });
 
@@ -134,19 +164,34 @@ test("a non-owner sender with nothing armed is a no-op, even when CLEAN", async 
 
 test("withdrawal retries a transient failure instead of leaving the request armed", async () => {
   const h = harness([
+    state(
+      "BLOCKED",
+      { enabledAt: "2026-07-31T00:00:00Z", mergeMethod: "SQUASH" },
+      { labels: { nodes: [{ name: "no-automerge" }] } },
+    ),
     new Error("Something went wrong while executing your query"),
-    state("BLOCKED", { enabledAt: "2026-07-31T00:00:00Z", mergeMethod: "SQUASH" }),
+    state(
+      "BLOCKED",
+      { enabledAt: "2026-07-31T00:00:00Z", mergeMethod: "SQUASH" },
+      { labels: { nodes: [{ name: "no-automerge" }] } },
+    ),
     { disablePullRequestAutoMerge: { clientMutationId: null } },
   ]);
-  assert.equal(await enableOrMergeOwnerPr({ ...h, pr, optOut: true }), "disabled-by-label");
+  assert.equal(await enableOrMergeOwnerPr({ ...h, pr, trustedSender: false }), "disabled-by-label");
   assert.deepEqual(h.sleeps, [5000]);
 });
 
 test("withdrawal fails loudly after bounded retries", async () => {
-  const responses = [];
+  const responses = [
+    state(
+      "BLOCKED",
+      { enabledAt: "2026-07-31T00:00:00Z", mergeMethod: "SQUASH" },
+      { labels: { nodes: [{ name: "no-automerge" }] } },
+    ),
+  ];
   for (let attempt = 0; attempt < 6; attempt += 1) responses.push(new Error("upstream unavailable"));
   const h = harness(responses);
-  await assert.rejects(enableOrMergeOwnerPr({ ...h, pr, optOut: true }), /upstream unavailable/);
+  await assert.rejects(enableOrMergeOwnerPr({ ...h, pr, trustedSender: false }), /upstream unavailable/);
   assert.deepEqual(h.sleeps, [5000, 5000, 5000, 5000, 5000]);
 });
 
@@ -154,13 +199,72 @@ test("replaces an existing non-squash auto-merge request with SQUASH", async () 
   const h = harness([
     state("BLOCKED", { enabledAt: "2026-07-31T00:00:00Z", mergeMethod: "MERGE" }),
     { disablePullRequestAutoMerge: { clientMutationId: null } },
+    state("BLOCKED"),
     { enablePullRequestAutoMerge: { clientMutationId: null } },
   ]);
   assert.equal(await enableOrMergeOwnerPr({ ...h, pr }), "enabled");
   assert.deepEqual(h.calls.map((call) => call.operation), [
     "OwnerAutoMergeState",
     "DisableOwnerAutoMerge",
+    "OwnerAutoMergeState",
     "EnableOwnerAutoMerge",
   ]);
   assert.ok(h.messages.some((message) => /replaced with SQUASH/.test(message)));
+});
+
+test("fresh draft state withdraws an armed request despite a ready event payload", async () => {
+  const h = harness([
+    state(
+      "CLEAN",
+      { enabledAt: "2026-07-31T00:00:00Z", mergeMethod: "SQUASH" },
+      { isDraft: true },
+    ),
+    { disablePullRequestAutoMerge: { clientMutationId: null } },
+  ]);
+  assert.equal(await enableOrMergeOwnerPr({ ...h, pr }), "disabled-draft");
+  assert.ok(!h.calls.some((call) => call.operation === "MergeOwnerPullRequest"));
+});
+
+test("fresh owner state fails closed when the PR is no longer owner-authored", async () => {
+  const h = harness([state("CLEAN", null, { author: { login: "someone-else" } })]);
+  assert.equal(await enableOrMergeOwnerPr({ ...h, pr }), "non-owner");
+  assert.ok(!h.calls.some((call) => /^(MergeOwnerPullRequest|EnableOwnerAutoMerge)$/.test(call.operation)));
+});
+
+test("missing trusted repository owner context fails closed", async () => {
+  const h = harness([state("CLEAN")]);
+  delete h.repositoryOwner;
+  assert.equal(await enableOrMergeOwnerPr({ ...h, pr }), "non-owner");
+  assert.ok(!h.calls.some((call) => /^(MergeOwnerPullRequest|EnableOwnerAutoMerge)$/.test(call.operation)));
+});
+
+test("a stale event head cannot arm or merge a newer pull-request head", async () => {
+  const stalePr = { ...pr, head: { ...pr.head, sha: "1111111111111111111111111111111111111111" } };
+  const h = harness([
+    state("CLEAN", { enabledAt: "2026-07-31T00:00:00Z", mergeMethod: "SQUASH" }),
+  ]);
+  assert.equal(await enableOrMergeOwnerPr({ ...h, pr: stalePr }), "stale-head");
+  assert.deepEqual(h.calls.map((call) => call.operation), ["OwnerAutoMergeState"]);
+});
+
+test("enabling auto-merge is atomically bound to the fresh event head", async () => {
+  const h = harness([
+    state("BLOCKED"),
+    { enablePullRequestAutoMerge: { clientMutationId: null } },
+  ]);
+  assert.equal(await enableOrMergeOwnerPr({ ...h, pr }), "enabled");
+  assert.deepEqual(h.calls.at(-1), {
+    operation: "EnableOwnerAutoMerge",
+    variables: { id: pr.node_id, headOid: freshHead },
+  });
+});
+
+test("a truncated fresh label set fails closed instead of missing the stop label", async () => {
+  const h = harness([
+    state("CLEAN", null, {
+      labels: { nodes: [], pageInfo: { hasNextPage: true } },
+    }),
+  ]);
+  assert.equal(await enableOrMergeOwnerPr({ ...h, pr }), "labels-truncated");
+  assert.ok(!h.calls.some((call) => /^(MergeOwnerPullRequest|EnableOwnerAutoMerge)$/.test(call.operation)));
 });

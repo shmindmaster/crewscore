@@ -27,7 +27,7 @@
   "disclaimer": "Coverage counts which of 23 controls the prompt TEXT states. It is not quality, not safety, not certification, and not evidence of runtime behavior. A low score means the text is silent on a control, not that the product lacks it.",
   "files": [
     {
-      "bytes": 57313,
+      "bytes": 57324,
       "controls_fired": [
         "human_gate.no_autonomous_action",
         "safe_stop.stop_condition"
@@ -66,7 +66,7 @@
       "score": 4
     },
     {
-      "bytes": 119683,
+      "bytes": 119995,
       "controls_fired": [
         "citation.inline_marker",
         "citation.require",
@@ -91,7 +91,7 @@
       "score": 32
     },
     {
-      "bytes": 98917,
+      "bytes": 98989,
       "controls_fired": [
         "citation.inline_marker",
         "citation.require",
@@ -114,7 +114,7 @@
       "score": 22
     },
     {
-      "bytes": 33126,
+      "bytes": 33246,
       "controls_fired": [
         "citation.require",
         "injection.named_defense",
@@ -135,7 +135,7 @@
       "score": 12
     },
     {
-      "bytes": 55546,
+      "bytes": 55746,
       "controls_fired": [
         "citation.require",
         "compliance.stated_obligation",
@@ -157,7 +157,7 @@
       "score": 16
     },
     {
-      "bytes": 43593,
+      "bytes": 43595,
       "controls_fired": [
         "citation.require",
         "human_gate.approval_required",
@@ -222,7 +222,7 @@
       "score": 3
     },
     {
-      "bytes": 15001,
+      "bytes": 15035,
       "controls_fired": [
         "human_gate.approval_required",
         "safe_stop.stop_condition"
@@ -242,7 +242,7 @@
       "score": 10
     },
     {
-      "bytes": 4522,
+      "bytes": 4534,
       "controls_fired": [],
       "corpus": "production",
       "dimensions": {
@@ -259,7 +259,7 @@
       "score": 0
     },
     {
-      "bytes": 21254,
+      "bytes": 21306,
       "controls_fired": [
         "hallucination.no_fabrication"
       ],
@@ -278,7 +278,7 @@
       "score": 3
     },
     {
-      "bytes": 1521,
+      "bytes": 1523,
       "controls_fired": [],
       "corpus": "production",
       "dimensions": {
@@ -316,7 +316,7 @@
       "score": 13
     },
     {
-      "bytes": 53829,
+      "bytes": 53840,
       "controls_fired": [
         "citation.inline_marker",
         "citation.link_source",
@@ -342,7 +342,7 @@
       "score": 34
     },
     {
-      "bytes": 14045,
+      "bytes": 14067,
       "controls_fired": [
         "citation.require",
         "safe_stop.stop_condition",
@@ -363,7 +363,7 @@
       "score": 12
     },
     {
-      "bytes": 38842,
+      "bytes": 38844,
       "controls_fired": [
         "citation.require",
         "hallucination.no_fabrication",
@@ -385,7 +385,7 @@
       "score": 15
     },
     {
-      "bytes": 19008,
+      "bytes": 19028,
       "controls_fired": [
         "citation.require",
         "human_gate.no_autonomous_action",
@@ -429,7 +429,7 @@
       "score": 15
     },
     {
-      "bytes": 32189,
+      "bytes": 32197,
       "controls_fired": [
         "citation.require",
         "hallucination.no_fabrication",
@@ -493,7 +493,7 @@
       "score": 7
     },
     {
-      "bytes": 34711,
+      "bytes": 34714,
       "controls_fired": [
         "citation.require",
         "human_gate.no_autonomous_action",
@@ -515,7 +515,7 @@
       "score": 18
     },
     {
-      "bytes": 36948,
+      "bytes": 37424,
       "controls_fired": [],
       "corpus": "production",
       "dimensions": {
@@ -532,7 +532,7 @@
       "score": 0
     },
     {
-      "bytes": 40977,
+      "bytes": 40995,
       "controls_fired": [
         "citation.require",
         "hallucination.admit_uncertainty",
@@ -554,7 +554,7 @@
       "score": 17
     },
     {
-      "bytes": 22317,
+      "bytes": 22325,
       "controls_fired": [
         "hallucination.admit_uncertainty",
         "human_gate.approval_required",
@@ -631,7 +631,7 @@
       "score": 0
     },
     {
-      "bytes": 31945,
+      "bytes": 31947,
       "controls_fired": [
         "citation.require",
         "human_gate.approval_required",
@@ -653,7 +653,7 @@
       "score": 20
     },
     {
-      "bytes": 14149,
+      "bytes": 14151,
       "controls_fired": [
         "safe_stop.stop_condition"
       ],
@@ -692,7 +692,7 @@
       "score": 8
     },
     {
-      "bytes": 20297,
+      "bytes": 20301,
       "controls_fired": [],
       "corpus": "production",
       "dimensions": {
@@ -766,7 +766,7 @@
       "score": 8
     },
     {
-      "bytes": 32057,
+      "bytes": 32081,
       "controls_fired": [
         "citation.require",
         "hallucination.admit_uncertainty",
@@ -789,7 +789,7 @@
       "score": 18
     },
     {
-      "bytes": 21943,
+      "bytes": 21945,
       "controls_fired": [],
       "corpus": "production",
       "dimensions": {
@@ -845,7 +845,7 @@
       "score": 7
     },
     {
-      "bytes": 23706,
+      "bytes": 23864,
       "controls_fired": [
         "citation.require",
         "hallucination.no_fabrication",
@@ -889,7 +889,7 @@
       "score": 20
     },
     {
-      "bytes": 8227,
+      "bytes": 8253,
       "controls_fired": [
         "citation.require",
         "safe_stop.stop_condition"
@@ -909,7 +909,7 @@
       "score": 8
     },
     {
-      "bytes": 43959,
+      "bytes": 43961,
       "controls_fired": [
         "human_gate.approval_required",
         "human_gate.no_autonomous_action"
@@ -946,7 +946,7 @@
       "score": 0
     },
     {
-      "bytes": 58755,
+      "bytes": 58779,
       "controls_fired": [
         "citation.inline_marker",
         "hallucination.admit_uncertainty",
@@ -968,7 +968,7 @@
       "score": 15
     },
     {
-      "bytes": 9381,
+      "bytes": 9391,
       "controls_fired": [
         "citation.require",
         "injection.prompt_confidentiality"
@@ -988,7 +988,7 @@
       "score": 8
     },
     {
-      "bytes": 12151,
+      "bytes": 12159,
       "controls_fired": [],
       "corpus": "production",
       "dimensions": {
@@ -1025,7 +1025,7 @@
       "score": 12
     },
     {
-      "bytes": 2416,
+      "bytes": 2440,
       "controls_fired": [],
       "corpus": "production",
       "dimensions": {
@@ -1062,7 +1062,7 @@
       "score": 12
     },
     {
-      "bytes": 5873,
+      "bytes": 5890,
       "controls_fired": [
         "compliance.named_regime"
       ],
@@ -1115,7 +1115,7 @@
       "score": 0
     },
     {
-      "bytes": 12317,
+      "bytes": 12357,
       "controls_fired": [
         "cost.budget_cap",
         "safe_stop.stop_condition"
@@ -1135,7 +1135,7 @@
       "score": 10
     },
     {
-      "bytes": 26151,
+      "bytes": 26165,
       "controls_fired": [
         "human_gate.no_autonomous_action",
         "safe_stop.stop_condition"
@@ -1155,7 +1155,7 @@
       "score": 10
     },
     {
-      "bytes": 18618,
+      "bytes": 18620,
       "controls_fired": [
         "cost.budget_cap",
         "safe_stop.stop_condition"
@@ -1238,7 +1238,7 @@
       "score": 16
     },
     {
-      "bytes": 7923,
+      "bytes": 8443,
       "controls_fired": [
         "citation.require"
       ],
@@ -1312,7 +1312,7 @@
       "score": 0
     },
     {
-      "bytes": 9898,
+      "bytes": 9910,
       "controls_fired": [
         "human_gate.approval_required",
         "safe_stop.stop_condition"
@@ -1394,7 +1394,7 @@
       "score": 10
     },
     {
-      "bytes": 25211,
+      "bytes": 25257,
       "controls_fired": [
         "hallucination.no_fabrication",
         "human_gate.approval_required",
@@ -1417,7 +1417,7 @@
       "score": 21
     },
     {
-      "bytes": 25533,
+      "bytes": 25579,
       "controls_fired": [
         "hallucination.no_fabrication",
         "human_gate.approval_required",
@@ -1459,7 +1459,7 @@
       "score": 4
     },
     {
-      "bytes": 14593,
+      "bytes": 14595,
       "controls_fired": [
         "citation.require"
       ],
@@ -1478,7 +1478,7 @@
       "score": 4
     },
     {
-      "bytes": 11697,
+      "bytes": 11699,
       "controls_fired": [
         "hallucination.no_fabrication",
         "human_gate.approval_required",
@@ -1604,7 +1604,7 @@
       "score": 0
     },
     {
-      "bytes": 4007,
+      "bytes": 4009,
       "controls_fired": [],
       "corpus": "production",
       "dimensions": {
@@ -1641,7 +1641,7 @@
       "score": 10
     },
     {
-      "bytes": 17166,
+      "bytes": 17194,
       "controls_fired": [
         "citation.require",
         "safe_stop.stop_condition"
@@ -1661,7 +1661,7 @@
       "score": 8
     },
     {
-      "bytes": 46154,
+      "bytes": 46186,
       "controls_fired": [
         "safe_stop.stop_condition"
       ],
@@ -1680,7 +1680,7 @@
       "score": 4
     },
     {
-      "bytes": 1344,
+      "bytes": 3404,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -1731,7 +1731,7 @@
       "score": 0
     },
     {
-      "bytes": 1713,
+      "bytes": 2375,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -1765,7 +1765,7 @@
       "score": 0
     },
     {
-      "bytes": 3700,
+      "bytes": 3891,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -1782,7 +1782,7 @@
       "score": 0
     },
     {
-      "bytes": 4213,
+      "bytes": 4221,
       "controls_fired": [
         "citation.require"
       ],
@@ -1820,7 +1820,7 @@
       "score": 4
     },
     {
-      "bytes": 4211,
+      "bytes": 5769,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -1837,7 +1837,7 @@
       "score": 0
     },
     {
-      "bytes": 3430,
+      "bytes": 3432,
       "controls_fired": [
         "hallucination.admit_uncertainty",
         "safe_stop.stop_condition"
@@ -1857,7 +1857,7 @@
       "score": 7
     },
     {
-      "bytes": 3117,
+      "bytes": 3118,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -1874,7 +1874,7 @@
       "score": 0
     },
     {
-      "bytes": 1742,
+      "bytes": 1753,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -1891,7 +1891,7 @@
       "score": 0
     },
     {
-      "bytes": 677,
+      "bytes": 1289,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -1908,7 +1908,7 @@
       "score": 0
     },
     {
-      "bytes": 1654,
+      "bytes": 1656,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -1925,7 +1925,7 @@
       "score": 0
     },
     {
-      "bytes": 3851,
+      "bytes": 3853,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -1942,7 +1942,7 @@
       "score": 0
     },
     {
-      "bytes": 2494,
+      "bytes": 2542,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -1976,7 +1976,7 @@
       "score": 0
     },
     {
-      "bytes": 2070,
+      "bytes": 2084,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -1993,7 +1993,7 @@
       "score": 0
     },
     {
-      "bytes": 4061,
+      "bytes": 4083,
       "controls_fired": [
         "hallucination.no_fabrication"
       ],
@@ -2012,7 +2012,7 @@
       "score": 3
     },
     {
-      "bytes": 9804,
+      "bytes": 9878,
       "controls_fired": [
         "citation.link_source",
         "citation.require"
@@ -2032,7 +2032,7 @@
       "score": 8
     },
     {
-      "bytes": 1926,
+      "bytes": 4888,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -2066,7 +2066,7 @@
       "score": 0
     },
     {
-      "bytes": 5937,
+      "bytes": 5949,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -2083,7 +2083,7 @@
       "score": 0
     },
     {
-      "bytes": 3749,
+      "bytes": 3755,
       "controls_fired": [
         "citation.require"
       ],
@@ -2102,7 +2102,7 @@
       "score": 4
     },
     {
-      "bytes": 34844,
+      "bytes": 35191,
       "controls_fired": [
         "human_gate.no_autonomous_action"
       ],
@@ -2155,7 +2155,7 @@
       "score": 0
     },
     {
-      "bytes": 3223,
+      "bytes": 3231,
       "controls_fired": [
         "citation.require"
       ],
@@ -2174,7 +2174,7 @@
       "score": 4
     },
     {
-      "bytes": 1499,
+      "bytes": 1501,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -2208,7 +2208,7 @@
       "score": 0
     },
     {
-      "bytes": 5071,
+      "bytes": 5077,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -2259,7 +2259,7 @@
       "score": 0
     },
     {
-      "bytes": 7445,
+      "bytes": 7534,
       "controls_fired": [
         "injection.named_defense"
       ],
@@ -2278,7 +2278,7 @@
       "score": 4
     },
     {
-      "bytes": 2563,
+      "bytes": 2579,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -2314,7 +2314,7 @@
       "score": 4
     },
     {
-      "bytes": 11578,
+      "bytes": 11588,
       "controls_fired": [
         "citation.require"
       ],
@@ -2333,7 +2333,7 @@
       "score": 4
     },
     {
-      "bytes": 7899,
+      "bytes": 7943,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -2350,7 +2350,7 @@
       "score": 0
     },
     {
-      "bytes": 4727,
+      "bytes": 4747,
       "controls_fired": [
         "safe_stop.stop_condition"
       ],
@@ -2369,7 +2369,7 @@
       "score": 4
     },
     {
-      "bytes": 1911,
+      "bytes": 1915,
       "controls_fired": [
         "citation.require"
       ],
@@ -2405,7 +2405,7 @@
       "score": 0
     },
     {
-      "bytes": 1686,
+      "bytes": 2328,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -2422,7 +2422,7 @@
       "score": 0
     },
     {
-      "bytes": 2761,
+      "bytes": 2771,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -2439,7 +2439,7 @@
       "score": 0
     },
     {
-      "bytes": 4546,
+      "bytes": 4550,
       "controls_fired": [
         "safe_stop.stop_condition"
       ],
@@ -2475,7 +2475,7 @@
       "score": 0
     },
     {
-      "bytes": 6231,
+      "bytes": 6257,
       "controls_fired": [
         "safe_stop.stop_condition"
       ],
@@ -2514,7 +2514,7 @@
       "score": 8
     },
     {
-      "bytes": 2394,
+      "bytes": 2397,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -2531,7 +2531,7 @@
       "score": 0
     },
     {
-      "bytes": 3025,
+      "bytes": 3027,
       "controls_fired": [
         "safe_stop.stop_condition"
       ],
@@ -2550,7 +2550,7 @@
       "score": 4
     },
     {
-      "bytes": 7752,
+      "bytes": 7790,
       "controls_fired": [
         "safe_stop.stop_condition"
       ],
@@ -2586,7 +2586,7 @@
       "score": 0
     },
     {
-      "bytes": 9049,
+      "bytes": 9061,
       "controls_fired": [
         "citation.require"
       ],
@@ -2622,7 +2622,7 @@
       "score": 0
     },
     {
-      "bytes": 1056,
+      "bytes": 2478,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -2658,7 +2658,7 @@
       "score": 4
     },
     {
-      "bytes": 5934,
+      "bytes": 5938,
       "controls_fired": [
         "human_gate.no_autonomous_action"
       ],
@@ -2677,7 +2677,7 @@
       "score": 6
     },
     {
-      "bytes": 2589,
+      "bytes": 2595,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -2694,7 +2694,7 @@
       "score": 0
     },
     {
-      "bytes": 3335,
+      "bytes": 3337,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -2711,7 +2711,7 @@
       "score": 0
     },
     {
-      "bytes": 2254,
+      "bytes": 2256,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -2728,7 +2728,7 @@
       "score": 0
     },
     {
-      "bytes": 7957,
+      "bytes": 7963,
       "controls_fired": [
         "citation.require"
       ],
@@ -2781,7 +2781,7 @@
       "score": 0
     },
     {
-      "bytes": 1998,
+      "bytes": 4890,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -2904,7 +2904,7 @@
       "score": 0
     },
     {
-      "bytes": 5171,
+      "bytes": 5173,
       "controls_fired": [
         "injection.override_resistance",
         "injection.prompt_confidentiality"
@@ -2941,7 +2941,7 @@
       "score": 0
     },
     {
-      "bytes": 8121,
+      "bytes": 8126,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -2975,7 +2975,7 @@
       "score": 0
     },
     {
-      "bytes": 4987,
+      "bytes": 4995,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -2992,7 +2992,7 @@
       "score": 0
     },
     {
-      "bytes": 1139,
+      "bytes": 1141,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -3060,7 +3060,7 @@
       "score": 0
     },
     {
-      "bytes": 3033,
+      "bytes": 3035,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -3099,7 +3099,7 @@
       "score": 16
     },
     {
-      "bytes": 4155,
+      "bytes": 4161,
       "controls_fired": [
         "citation.require",
         "hallucination.no_fabrication",
@@ -3139,7 +3139,7 @@
       "score": 4
     },
     {
-      "bytes": 5654,
+      "bytes": 5676,
       "controls_fired": [
         "citation.require"
       ],
@@ -3158,7 +3158,7 @@
       "score": 4
     },
     {
-      "bytes": 1633,
+      "bytes": 1637,
       "controls_fired": [
         "injection.prompt_confidentiality"
       ],
@@ -3177,7 +3177,7 @@
       "score": 4
     },
     {
-      "bytes": 5483,
+      "bytes": 5484,
       "controls_fired": [
         "injection.named_defense",
         "safe_stop.stop_condition"
@@ -3197,7 +3197,7 @@
       "score": 8
     },
     {
-      "bytes": 3953,
+      "bytes": 3965,
       "controls_fired": [
         "hallucination.no_fabrication",
         "injection.named_defense",
@@ -3218,7 +3218,7 @@
       "score": 11
     },
     {
-      "bytes": 2557,
+      "bytes": 2559,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -3254,7 +3254,7 @@
       "score": 4
     },
     {
-      "bytes": 2691,
+      "bytes": 2700,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -3288,7 +3288,7 @@
       "score": 0
     },
     {
-      "bytes": 3979,
+      "bytes": 3991,
       "controls_fired": [
         "injection.named_defense",
         "safe_stop.stop_condition"
@@ -3308,7 +3308,7 @@
       "score": 8
     },
     {
-      "bytes": 8199,
+      "bytes": 8205,
       "controls_fired": [
         "hallucination.admit_uncertainty",
         "injection.prompt_confidentiality"
@@ -3345,7 +3345,7 @@
       "score": 0
     },
     {
-      "bytes": 8483,
+      "bytes": 8485,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -3379,7 +3379,7 @@
       "score": 0
     },
     {
-      "bytes": 2803,
+      "bytes": 2807,
       "controls_fired": [
         "safe_stop.stop_condition"
       ],
@@ -3398,7 +3398,7 @@
       "score": 4
     },
     {
-      "bytes": 6406,
+      "bytes": 6408,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -3415,7 +3415,7 @@
       "score": 0
     },
     {
-      "bytes": 5126,
+      "bytes": 5138,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -3432,7 +3432,7 @@
       "score": 0
     },
     {
-      "bytes": 4501,
+      "bytes": 4515,
       "controls_fired": [
         "injection.named_defense",
         "safe_stop.stop_condition"
@@ -3469,7 +3469,7 @@
       "score": 0
     },
     {
-      "bytes": 2286,
+      "bytes": 2318,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -3520,7 +3520,7 @@
       "score": 0
     },
     {
-      "bytes": 4819,
+      "bytes": 4841,
       "controls_fired": [
         "safe_stop.stop_condition"
       ],
@@ -3539,7 +3539,7 @@
       "score": 4
     },
     {
-      "bytes": 1993,
+      "bytes": 2001,
       "controls_fired": [
         "safe_stop.stop_condition"
       ],
@@ -3558,7 +3558,7 @@
       "score": 4
     },
     {
-      "bytes": 4365,
+      "bytes": 4371,
       "controls_fired": [
         "citation.require"
       ],
@@ -3631,7 +3631,7 @@
       "score": 0
     },
     {
-      "bytes": 3840,
+      "bytes": 3842,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -3682,7 +3682,7 @@
       "score": 0
     },
     {
-      "bytes": 8688,
+      "bytes": 8724,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -3716,7 +3716,7 @@
       "score": 0
     },
     {
-      "bytes": 854,
+      "bytes": 856,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -3752,7 +3752,7 @@
       "score": 4
     },
     {
-      "bytes": 4999,
+      "bytes": 5003,
       "controls_fired": [
         "citation.require",
         "safe_stop.escalate",
@@ -3793,7 +3793,7 @@
       "score": 7
     },
     {
-      "bytes": 3484,
+      "bytes": 3486,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -3861,7 +3861,7 @@
       "score": 0
     },
     {
-      "bytes": 5474,
+      "bytes": 5508,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -3878,7 +3878,7 @@
       "score": 0
     },
     {
-      "bytes": 2802,
+      "bytes": 5388,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -3895,7 +3895,7 @@
       "score": 0
     },
     {
-      "bytes": 1459,
+      "bytes": 1461,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -3912,7 +3912,7 @@
       "score": 0
     },
     {
-      "bytes": 3360,
+      "bytes": 6948,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -3929,7 +3929,7 @@
       "score": 0
     },
     {
-      "bytes": 5027,
+      "bytes": 5033,
       "controls_fired": [
         "citation.require",
         "safe_stop.stop_condition"
@@ -3966,7 +3966,7 @@
       "score": 0
     },
     {
-      "bytes": 6523,
+      "bytes": 6527,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -3983,7 +3983,7 @@
       "score": 0
     },
     {
-      "bytes": 5082,
+      "bytes": 5231,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -4017,7 +4017,7 @@
       "score": 0
     },
     {
-      "bytes": 3095,
+      "bytes": 3949,
       "controls_fired": [
         "injection.named_defense",
         "safe_stop.stop_condition"
@@ -4037,7 +4037,7 @@
       "score": 8
     },
     {
-      "bytes": 2451,
+      "bytes": 2455,
       "controls_fired": [
         "safe_stop.stop_condition"
       ],
@@ -4056,7 +4056,7 @@
       "score": 4
     },
     {
-      "bytes": 1344,
+      "bytes": 1447,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -4160,7 +4160,7 @@
       "score": 4
     },
     {
-      "bytes": 4719,
+      "bytes": 4723,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -4177,7 +4177,7 @@
       "score": 0
     },
     {
-      "bytes": 1659,
+      "bytes": 1661,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -4194,7 +4194,7 @@
       "score": 0
     },
     {
-      "bytes": 9799,
+      "bytes": 9822,
       "controls_fired": [
         "injection.named_defense",
         "safe_stop.stop_condition"
@@ -4248,7 +4248,7 @@
       "score": 0
     },
     {
-      "bytes": 3030,
+      "bytes": 3031,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -4265,7 +4265,7 @@
       "score": 0
     },
     {
-      "bytes": 3029,
+      "bytes": 3030,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -4299,7 +4299,7 @@
       "score": 0
     },
     {
-      "bytes": 3858,
+      "bytes": 6310,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -4316,7 +4316,7 @@
       "score": 0
     },
     {
-      "bytes": 509,
+      "bytes": 514,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -4353,7 +4353,7 @@
       "score": 8
     },
     {
-      "bytes": 3249,
+      "bytes": 3370,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -4370,7 +4370,7 @@
       "score": 0
     },
     {
-      "bytes": 1713,
+      "bytes": 1878,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -4404,7 +4404,7 @@
       "score": 0
     },
     {
-      "bytes": 9725,
+      "bytes": 9779,
       "controls_fired": [
         "hallucination.defer_to_expert"
       ],
@@ -4442,7 +4442,7 @@
       "score": 4
     },
     {
-      "bytes": 6860,
+      "bytes": 6880,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -4459,7 +4459,7 @@
       "score": 0
     },
     {
-      "bytes": 2096,
+      "bytes": 2156,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -4476,7 +4476,7 @@
       "score": 0
     },
     {
-      "bytes": 4859,
+      "bytes": 4863,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -4493,7 +4493,7 @@
       "score": 0
     },
     {
-      "bytes": 1418,
+      "bytes": 1420,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -4510,7 +4510,7 @@
       "score": 0
     },
     {
-      "bytes": 3221,
+      "bytes": 3231,
       "controls_fired": [
         "citation.require"
       ],
@@ -4529,7 +4529,7 @@
       "score": 4
     },
     {
-      "bytes": 2164,
+      "bytes": 2180,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -4563,7 +4563,7 @@
       "score": 0
     },
     {
-      "bytes": 5752,
+      "bytes": 5809,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -4597,7 +4597,7 @@
       "score": 0
     },
     {
-      "bytes": 845,
+      "bytes": 847,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -4631,7 +4631,7 @@
       "score": 0
     },
     {
-      "bytes": 8691,
+      "bytes": 8713,
       "controls_fired": [
         "injection.named_defense",
         "safe_stop.stop_condition"
@@ -4651,7 +4651,7 @@
       "score": 8
     },
     {
-      "bytes": 2035,
+      "bytes": 2037,
       "controls_fired": [
         "injection.named_defense"
       ],
@@ -4738,7 +4738,7 @@
       "score": 0
     },
     {
-      "bytes": 1134,
+      "bytes": 1136,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -4755,7 +4755,7 @@
       "score": 0
     },
     {
-      "bytes": 816,
+      "bytes": 820,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -4772,7 +4772,7 @@
       "score": 0
     },
     {
-      "bytes": 6743,
+      "bytes": 6749,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -4789,7 +4789,7 @@
       "score": 0
     },
     {
-      "bytes": 2197,
+      "bytes": 2215,
       "controls_fired": [
         "safe_stop.stop_condition"
       ],
@@ -4825,7 +4825,7 @@
       "score": 0
     },
     {
-      "bytes": 5580,
+      "bytes": 5594,
       "controls_fired": [
         "injection.prompt_confidentiality"
       ],
@@ -4844,7 +4844,7 @@
       "score": 4
     },
     {
-      "bytes": 8991,
+      "bytes": 9033,
       "controls_fired": [
         "citation.require",
         "injection.named_defense",
@@ -4865,7 +4865,7 @@
       "score": 12
     },
     {
-      "bytes": 1435,
+      "bytes": 3119,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -4882,7 +4882,7 @@
       "score": 0
     },
     {
-      "bytes": 2068,
+      "bytes": 2069,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -4899,7 +4899,7 @@
       "score": 0
     },
     {
-      "bytes": 4663,
+      "bytes": 4885,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -4933,7 +4933,7 @@
       "score": 0
     },
     {
-      "bytes": 2251,
+      "bytes": 2253,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -4984,7 +4984,7 @@
       "score": 0
     },
     {
-      "bytes": 5062,
+      "bytes": 5072,
       "controls_fired": [
         "citation.require"
       ],
@@ -5003,7 +5003,7 @@
       "score": 4
     },
     {
-      "bytes": 9505,
+      "bytes": 9511,
       "controls_fired": [
         "injection.prompt_confidentiality"
       ],
@@ -5056,7 +5056,7 @@
       "score": 0
     },
     {
-      "bytes": 2879,
+      "bytes": 2899,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5090,7 +5090,7 @@
       "score": 0
     },
     {
-      "bytes": 4886,
+      "bytes": 4896,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5107,7 +5107,7 @@
       "score": 0
     },
     {
-      "bytes": 1784,
+      "bytes": 1786,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5124,7 +5124,7 @@
       "score": 0
     },
     {
-      "bytes": 2037,
+      "bytes": 2039,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5158,7 +5158,7 @@
       "score": 0
     },
     {
-      "bytes": 3192,
+      "bytes": 3214,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5192,7 +5192,7 @@
       "score": 0
     },
     {
-      "bytes": 2835,
+      "bytes": 2841,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5226,7 +5226,7 @@
       "score": 0
     },
     {
-      "bytes": 1185,
+      "bytes": 1187,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5243,7 +5243,7 @@
       "score": 0
     },
     {
-      "bytes": 2905,
+      "bytes": 2907,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5260,7 +5260,7 @@
       "score": 0
     },
     {
-      "bytes": 3601,
+      "bytes": 3603,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5277,7 +5277,7 @@
       "score": 0
     },
     {
-      "bytes": 2060,
+      "bytes": 2072,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5311,7 +5311,7 @@
       "score": 0
     },
     {
-      "bytes": 2360,
+      "bytes": 2368,
       "controls_fired": [
         "injection.named_defense",
         "safe_stop.stop_condition"
@@ -5348,7 +5348,7 @@
       "score": 0
     },
     {
-      "bytes": 3215,
+      "bytes": 3218,
       "controls_fired": [
         "safe_stop.stop_condition"
       ],
@@ -5420,7 +5420,7 @@
       "score": 0
     },
     {
-      "bytes": 13959,
+      "bytes": 13966,
       "controls_fired": [
         "injection.override_resistance",
         "injection.prompt_confidentiality"
@@ -5440,7 +5440,7 @@
       "score": 8
     },
     {
-      "bytes": 2028,
+      "bytes": 2032,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5457,7 +5457,7 @@
       "score": 0
     },
     {
-      "bytes": 3091,
+      "bytes": 3115,
       "controls_fired": [
         "safe_stop.stop_condition"
       ],
@@ -5493,7 +5493,7 @@
       "score": 0
     },
     {
-      "bytes": 848,
+      "bytes": 2208,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5561,7 +5561,7 @@
       "score": 0
     },
     {
-      "bytes": 7125,
+      "bytes": 7253,
       "controls_fired": [
         "injection.prompt_confidentiality",
         "safe_stop.stop_condition"
@@ -5615,7 +5615,7 @@
       "score": 0
     },
     {
-      "bytes": 2087,
+      "bytes": 2090,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5666,7 +5666,7 @@
       "score": 0
     },
     {
-      "bytes": 4120,
+      "bytes": 4124,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5683,7 +5683,7 @@
       "score": 0
     },
     {
-      "bytes": 4040,
+      "bytes": 4053,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5700,7 +5700,7 @@
       "score": 0
     },
     {
-      "bytes": 609,
+      "bytes": 612,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5734,7 +5734,7 @@
       "score": 0
     },
     {
-      "bytes": 1348,
+      "bytes": 1350,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5751,7 +5751,7 @@
       "score": 0
     },
     {
-      "bytes": 775,
+      "bytes": 785,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5768,7 +5768,7 @@
       "score": 0
     },
     {
-      "bytes": 2062,
+      "bytes": 4914,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5785,7 +5785,7 @@
       "score": 0
     },
     {
-      "bytes": 1131,
+      "bytes": 1213,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5802,7 +5802,7 @@
       "score": 0
     },
     {
-      "bytes": 3874,
+      "bytes": 7300,
       "controls_fired": [
         "safe_stop.stop_condition"
       ],
@@ -5821,7 +5821,7 @@
       "score": 4
     },
     {
-      "bytes": 3236,
+      "bytes": 5014,
       "controls_fired": [
         "injection.named_defense",
         "safe_stop.stop_condition"
@@ -5841,7 +5841,7 @@
       "score": 8
     },
     {
-      "bytes": 466,
+      "bytes": 1184,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5858,7 +5858,7 @@
       "score": 0
     },
     {
-      "bytes": 2704,
+      "bytes": 7476,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5875,7 +5875,7 @@
       "score": 0
     },
     {
-      "bytes": 5957,
+      "bytes": 17197,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5892,7 +5892,7 @@
       "score": 0
     },
     {
-      "bytes": 498,
+      "bytes": 1222,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5909,7 +5909,7 @@
       "score": 0
     },
     {
-      "bytes": 3154,
+      "bytes": 7124,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5926,7 +5926,7 @@
       "score": 0
     },
     {
-      "bytes": 853,
+      "bytes": 1766,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5943,7 +5943,7 @@
       "score": 0
     },
     {
-      "bytes": 1213,
+      "bytes": 2115,
       "controls_fired": [
         "safe_stop.stop_condition"
       ],
@@ -5962,7 +5962,7 @@
       "score": 4
     },
     {
-      "bytes": 628,
+      "bytes": 1452,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -5979,7 +5979,7 @@
       "score": 0
     },
     {
-      "bytes": 1612,
+      "bytes": 3022,
       "controls_fired": [
         "safe_stop.stop_condition"
       ],
@@ -5998,7 +5998,7 @@
       "score": 4
     },
     {
-      "bytes": 4302,
+      "bytes": 4971,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -6015,7 +6015,7 @@
       "score": 0
     },
     {
-      "bytes": 743,
+      "bytes": 1773,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -6032,7 +6032,7 @@
       "score": 0
     },
     {
-      "bytes": 2599,
+      "bytes": 4131,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -6049,7 +6049,7 @@
       "score": 0
     },
     {
-      "bytes": 809,
+      "bytes": 1271,
       "controls_fired": [
         "safe_stop.stop_condition"
       ],
@@ -6068,7 +6068,7 @@
       "score": 4
     },
     {
-      "bytes": 2867,
+      "bytes": 7353,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -6085,7 +6085,7 @@
       "score": 0
     },
     {
-      "bytes": 6471,
+      "bytes": 7682,
       "controls_fired": [
         "injection.named_defense",
         "safe_stop.stop_condition"
@@ -6105,7 +6105,7 @@
       "score": 8
     },
     {
-      "bytes": 2782,
+      "bytes": 3146,
       "controls_fired": [
         "injection.prompt_confidentiality"
       ],
@@ -6124,7 +6124,7 @@
       "score": 4
     },
     {
-      "bytes": 2684,
+      "bytes": 3652,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -6141,7 +6141,7 @@
       "score": 0
     },
     {
-      "bytes": 937,
+      "bytes": 2487,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -6158,7 +6158,7 @@
       "score": 0
     },
     {
-      "bytes": 1200,
+      "bytes": 1238,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -6175,7 +6175,7 @@
       "score": 0
     },
     {
-      "bytes": 2099,
+      "bytes": 2931,
       "controls_fired": [
         "citation.inline_marker"
       ],
@@ -6194,7 +6194,7 @@
       "score": 4
     },
     {
-      "bytes": 478,
+      "bytes": 1129,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -6211,7 +6211,7 @@
       "score": 0
     },
     {
-      "bytes": 555,
+      "bytes": 1237,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -6228,7 +6228,7 @@
       "score": 0
     },
     {
-      "bytes": 1184,
+      "bytes": 2506,
       "controls_fired": [
         "citation.inline_marker"
       ],
@@ -6247,7 +6247,7 @@
       "score": 4
     },
     {
-      "bytes": 1952,
+      "bytes": 4984,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -6264,7 +6264,7 @@
       "score": 0
     },
     {
-      "bytes": 2094,
+      "bytes": 5000,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -6281,7 +6281,7 @@
       "score": 0
     },
     {
-      "bytes": 624,
+      "bytes": 1560,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -6298,7 +6298,7 @@
       "score": 0
     },
     {
-      "bytes": 1104,
+      "bytes": 1254,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -6315,7 +6315,7 @@
       "score": 0
     },
     {
-      "bytes": 1442,
+      "bytes": 3106,
       "controls_fired": [
         "safe_stop.stop_condition"
       ],
@@ -6334,7 +6334,7 @@
       "score": 4
     },
     {
-      "bytes": 404,
+      "bytes": 926,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -6351,7 +6351,7 @@
       "score": 0
     },
     {
-      "bytes": 3466,
+      "bytes": 4304,
       "controls_fired": [
         "safe_stop.stop_condition"
       ],
@@ -6370,7 +6370,7 @@
       "score": 4
     },
     {
-      "bytes": 1649,
+      "bytes": 3579,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -6387,7 +6387,7 @@
       "score": 0
     },
     {
-      "bytes": 1070,
+      "bytes": 2484,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -6404,7 +6404,7 @@
       "score": 0
     },
     {
-      "bytes": 1748,
+      "bytes": 3562,
       "controls_fired": [
         "safe_stop.stop_condition"
       ],
@@ -6423,7 +6423,7 @@
       "score": 4
     },
     {
-      "bytes": 3237,
+      "bytes": 4543,
       "controls_fired": [
         "safe_stop.stop_condition"
       ],
@@ -6442,7 +6442,7 @@
       "score": 4
     },
     {
-      "bytes": 1597,
+      "bytes": 2915,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -6459,7 +6459,7 @@
       "score": 0
     },
     {
-      "bytes": 1251,
+      "bytes": 1270,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -6476,7 +6476,7 @@
       "score": 0
     },
     {
-      "bytes": 8506,
+      "bytes": 8512,
       "controls_fired": [],
       "corpus": "gpt_store",
       "dimensions": {
@@ -6493,7 +6493,7 @@
       "score": 0
     },
     {
-      "bytes": 1274,
+      "bytes": 1308,
       "controls_fired": [
         "safe_stop.stop_condition"
       ],
@@ -6522,7 +6522,7 @@
       "url": "https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools"
     }
   },
-  "package_version": "0.6.11",
+  "package_version": "0.6.12",
   "ruleset": "crewscore-hygiene@0.6.0",
   "schema_version": "1.0"
 }

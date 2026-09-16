@@ -72,6 +72,51 @@ ALPHA = 0.05
 LEAK_WINDOW = 40
 
 
+def _rolling_window_hashes(text: str, width: int):
+    """Yield ``(start, hash)`` for every exact-width character window.
+
+    The previous leak guard advanced by ``LEAK_WINDOW`` characters and stopped
+    before the final possible start. That sampled the input; it did not prove
+    the output was prompt-free. A rolling hash keeps an exhaustive scan linear
+    without allocating every candidate substring. Hash matches are verified
+    against the output bytes below, so collisions can only add work, never
+    hide a leak.
+    """
+    if width <= 0 or len(text) < width:
+        return
+    base = 257
+    mask = (1 << 64) - 1
+    lead = pow(base, width - 1, 1 << 64)
+    value = 0
+    for char in text[:width]:
+        value = ((value * base) + ord(char)) & mask
+    yield 0, value
+    for start in range(1, len(text) - width + 1):
+        value = (
+            ((value - ord(text[start - 1]) * lead) * base)
+            + ord(text[start + width - 1])
+        ) & mask
+        yield start, value
+
+
+def _first_leaked_window(blob: str, texts: list[str]) -> str | None:
+    """Return the first exact prompt-text window present in ``blob``."""
+    output_hashes = {
+        value for _start, value in _rolling_window_hashes(blob, LEAK_WINDOW)
+    }
+    if not output_hashes:
+        return None
+    for text in texts:
+        squeezed = " ".join(text.split())
+        for start, value in _rolling_window_hashes(squeezed, LEAK_WINDOW):
+            if value not in output_hashes:
+                continue
+            window = squeezed[start : start + LEAK_WINDOW]
+            if window in blob:
+                return window
+    return None
+
+
 @dataclass(frozen=True)
 class Corpus:
     key: str
@@ -399,7 +444,7 @@ def score_corpus(files: list[tuple[str, str]]) -> dict:
             {
                 "file_id": hashlib.sha256(path.encode("utf-8")).hexdigest()[:16],
                 "score": score,
-                "bytes": len(text),
+                "bytes": len(text.encode("utf-8")),
                 "dimensions": dict(dims),
                 "controls_fired": sorted(fired),
             }
@@ -532,16 +577,12 @@ def self_check(payload: dict, texts: list[str], extra: dict | None = None) -> li
     #    artifact written in the same run (the per-file scores), so a new
     #    output cannot quietly escape this scan.
     blob = json.dumps(payload) + ("" if extra is None else json.dumps(extra))
-    for text in texts:
-        squeezed = " ".join(text.split())
-        for i in range(0, max(0, len(squeezed) - LEAK_WINDOW), LEAK_WINDOW):
-            window = squeezed[i : i + LEAK_WINDOW]
-            if window and window in blob:
-                errs.append(
-                    f"output contains {LEAK_WINDOW}+ chars of input text: "
-                    f"{window!r}"
-                )
-                return errs
+    leaked_window = _first_leaked_window(blob, texts)
+    if leaked_window is not None:
+        errs.append(
+            f"output contains {LEAK_WINDOW}+ chars of input text: "
+            f"{leaked_window!r}"
+        )
     return errs
 
 

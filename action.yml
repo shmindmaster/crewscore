@@ -61,7 +61,7 @@ inputs:
     required: false
     default: ""
   include-snippets:
-    description: 'DEPRECATED: set to "true" to also copy matched prompt substrings into the JSON log, summary, and sticky PR comment. The default keeps every machine output prompt-free (rule IDs, dimensions, status, control labels). This escape hatch will be removed after one release.'
+    description: 'DEPRECATED: set to "true" to also copy matched prompt substrings into the JSON log, summary, and sticky PR comment. SARIF remains prompt-free. This escape hatch will be removed after one release.'
     required: false
     default: "false"
 

@@ -30,6 +30,7 @@ from validate_corpus import (  # noqa: E402
     bootstrap_ci,
     cliffs_delta,
     permutation_p,
+    score_corpus,
     self_check,
 )
 
@@ -147,6 +148,29 @@ def test_self_check_catches_leaked_prompt_text():
     leaky["controls"][0]["label"] = secret
     errs = self_check(leaky, [secret])
     assert any("input text" in e for e in errs), errs
+
+
+@pytest.mark.parametrize(
+    ("text", "leak"),
+    [
+        ("e" * LEAK_WINDOW, "e" * LEAK_WINDOW),
+        ("prefix7" + "u" * LEAK_WINDOW + "suffix", "u" * LEAK_WINDOW),
+        ("start" + "f" * LEAK_WINDOW, "f" * LEAK_WINDOW),
+    ],
+    ids=("exact-length", "unaligned", "final-window"),
+)
+def test_leak_guard_scans_every_possible_window(text: str, leak: str):
+    payload = _payload()
+    payload["controls"][0]["label"] = leak
+    errs = self_check(payload, [text])
+    assert any("input text" in error for error in errs), errs
+
+
+def test_corpus_score_bytes_are_utf8_bytes_not_python_characters():
+    text = "guardrail café ☕"
+    row = score_corpus([("prompt.md", text)])["per_file"][0]
+    assert row["bytes"] == len(text.encode("utf-8"))
+    assert row["bytes"] > len(text)
 
 
 def test_leak_guard_tolerates_ordinary_short_overlap():

@@ -13,7 +13,18 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from click.testing import CliRunner
+import pytest
+from click.testing import CliRunner as _ClickCliRunner
+
+
+class CliRunner(_ClickCliRunner):
+    """Keep stderr separate across the declared Click support range."""
+
+    def __init__(self):
+        try:
+            super().__init__(mix_stderr=False)
+        except TypeError:
+            super().__init__()
 
 from crewscore.cli import main
 from crewscore.metrics import CAPTURE_FORBIDDEN_PROP_KEYS
@@ -165,6 +176,25 @@ def test_include_snippets_opt_in_restores_snippets(tmp_path: Path):
     assert _leaks(" ".join(snippets))
     assert _leaks(summary.read_text(encoding="utf-8"))
     assert "deprecated" in result.stderr.lower()
+
+
+@pytest.mark.parametrize("command", ["test", "scan"])
+def test_include_snippets_never_applies_to_sarif(tmp_path: Path, command: str):
+    prompt = _write_prompt(tmp_path)
+    sarif = tmp_path / f"{command}.sarif"
+    args = [command]
+    if command == "test":
+        args.extend(["--prompt-file", str(prompt)])
+    else:
+        args.append(str(tmp_path))
+    result = CliRunner().invoke(
+        main,
+        [*args, "--json", "--include-snippets", "--sarif", str(sarif)],
+    )
+    assert result.exit_code == 0, result.output
+    body = sarif.read_text(encoding="utf-8")
+    assert not _leaks(body)
+    assert '"snippet"' not in body
 
 
 def test_opt_in_changes_serialization_only(tmp_path: Path):

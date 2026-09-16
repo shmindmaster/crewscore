@@ -101,7 +101,7 @@ snippets), so it is safe to upload to code scanning:
 | `fail-on-regression` | no | `false` | Fail only if a baseline control disappears |
 | `config` | no | `""` | Optional `.crewscore.yml` control-policy file |
 | `sarif` | no | `""` | Optional destination for prompt-free SARIF 2.1.0 findings |
-| `include-snippets` | no | `false` | **Deprecated.** `"true"` re-admits matched prompt substrings into the JSON log, summary, and sticky PR comment. Default keeps every machine output prompt-free; removed after one release |
+| `include-snippets` | no | `false` | **Deprecated.** `"true"` re-admits matched prompt substrings into the JSON log, summary, and sticky PR comment; SARIF remains prompt-free. Removed after one release |
 
 Provide **either** `prompt-file` **or** `scan-path`. In scan mode the outputs
 use the minimum overall across governed files only — coding-agent config is

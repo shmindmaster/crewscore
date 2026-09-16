@@ -87,6 +87,15 @@ def test_every_supported_python_version_is_validated():
     assert matrix["python-version"] == ["3.11", "3.12", "3.13"]
 
 
+def test_minimum_dependency_job_exercises_cli_privacy_contracts():
+    job = _workflow("pytest.yml")["jobs"]["minimum-dependencies"]
+    assert job["runs-on"] == "ubuntu-latest"
+    rendered = str(job["steps"])
+    assert 'click==8.0.0' in rendered
+    assert 'rich==13.0.0' in rendered
+    assert "pytest -q tests/test_prompt_free_outputs.py" in rendered
+
+
 def test_consumer_example_uses_a_runner_available_in_a_new_repository():
     assert _workflow("example-ci.yml")["jobs"]["score"]["runs-on"] == "ubuntu-latest"
 

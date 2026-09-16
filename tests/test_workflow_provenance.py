@@ -78,7 +78,20 @@ def _is_privileged(permissions: dict) -> bool:
 
 
 def _job_uses(job: dict) -> list[str]:
-    return [step.get("uses") for step in job.get("steps", []) or []]
+    """Return reusable-workflow and step-level action references for a job."""
+    uses = []
+    if job.get("uses"):
+        uses.append(job["uses"])
+    uses.extend(step.get("uses") for step in job.get("steps", []) or [])
+    return uses
+
+
+def test_job_uses_includes_reusable_workflow_references():
+    job = {
+        "uses": "example/ci/.github/workflows/test.yml@" + "a" * 40,
+        "steps": [{"uses": "actions/checkout@" + "b" * 40}],
+    }
+    assert _job_uses(job) == [job["uses"], job["steps"][0]["uses"]]
 
 
 def _controller_step(workflow: dict):
@@ -254,12 +267,32 @@ def test_automerge_keeps_its_existing_mitigations():
     ]
     assert len(script_steps) == 1
     script = script_steps[0]["with"]["script"]
-    assert "optOut:" in script and "no-automerge" in script
     assert "trustedSender:" in script and "github.event.sender.login == github.repository_owner" in script
+    # The wrapper must remain fail-closed when the protected-base controller
+    # is one revision behind during a controller rollout. The current
+    # controller still queries fresh draft and label state before acting.
+    assert "optOut:" in script and "github.event.pull_request.labels" in script
+    assert "github.event.pull_request.draft == false" in script
+    assert "repositoryOwner: context.repo.owner" in script
+    assert "repositoryNameWithOwner:" in script
+
+    rendered_script = re.sub(r"\$\{\{.*?\}\}", "false", script)
+    rendered_script = f"async function __githubScript() {{\n{rendered_script}\n}}\n"
+    syntax = subprocess.run(
+        [NODE, "--check", "-"],
+        input=rendered_script,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert syntax.returncode == 0, syntax.stderr
 
     controller = (ROOT / CONTROLLER_REL).read_text(encoding="utf-8")
     assert "expectedHeadOid" in controller
-    assert "pr.head.sha" in controller
+    assert "headRefOid" in controller
+    assert "isDraft" in controller
+    assert "labels(first: 100)" in controller
+    assert "author { login }" in controller
     assert "mergeMethod: SQUASH" in controller
     assert "disablePullRequestAutoMerge" in controller
     assert "trustedSender" in controller

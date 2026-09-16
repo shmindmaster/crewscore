@@ -20,7 +20,18 @@ function buildGithub(calls) {
       calls.push(text.trim().split("\n")[0].trim());
 
       if (text.includes("OwnerAutoMergeState")) {
-        return { node: { autoMergeRequest: null, mergeStateStatus: "BLOCKED" } };
+        return {
+          node: {
+            autoMergeRequest: null,
+            mergeStateStatus: "BLOCKED",
+            headRefOid: "1111111111111111111111111111111111111111",
+            isDraft: false,
+            author: { login: "shmindmaster" },
+            headRepository: { nameWithOwner: "shmindmaster/crewscore" },
+            baseRepository: { nameWithOwner: "shmindmaster/crewscore" },
+            labels: { nodes: [], pageInfo: { hasNextPage: false } },
+          },
+        };
       }
       if (text.includes("EnableOwnerAutoMerge")) {
         // What a branch ruleset returns when required checks have not passed.
@@ -50,7 +61,12 @@ async function main() {
   const pr = {
     number: 2709,
     node_id: "PR_kwDO_fixture",
-    head: { sha: "1111111111111111111111111111111111111111" },
+    user: { login: "shmindmaster" },
+    head: {
+      sha: "1111111111111111111111111111111111111111",
+      repo: { full_name: "shmindmaster/crewscore" },
+    },
+    base: { repo: { full_name: "shmindmaster/crewscore" } },
   };
 
   let outcome;
@@ -59,6 +75,8 @@ async function main() {
       github: buildGithub(calls),
       core,
       pr,
+      repositoryOwner: "shmindmaster",
+      repositoryNameWithOwner: "shmindmaster/crewscore",
       sleep: async () => {},
       maxAttempts: 1,
       retryDelayMs: 0,

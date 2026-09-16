@@ -1,3 +1,7 @@
 # Generated release artifacts are byte-pinned and must survive Windows checkout unchanged.
 score-engine.js text eol=lf
 docs/demo.svg text eol=lf
+
+# Historical corpus harness bytes are CRLF; do not report the carriage return
+# itself as trailing whitespace when reviewing real line changes.
+scripts/validate_corpus.py whitespace=cr-at-eol

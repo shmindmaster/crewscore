@@ -74,6 +74,12 @@ jobs:
               github,
               core,
               pr: context.payload.pull_request,
+              // Rollout compatibility: the protected-base controller can be
+              // one revision behind this wrapper. These fail-closed event
+              // inputs keep that controller safe; the current controller
+              // ignores optOut and independently queries fresh state.
               optOut: ${{ contains(github.event.pull_request.labels.*.name, 'no-automerge') }},
+              repositoryOwner: context.repo.owner,
+              repositoryNameWithOwner: `${context.repo.owner}/${context.repo.repo}`,
               trustedSender: ${{ github.event.sender.login == github.repository_owner && github.event.pull_request.draft == false }},
             });

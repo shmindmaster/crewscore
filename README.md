@@ -137,7 +137,8 @@ moves on). Failed gates surface as `::error` annotations naming the control.
 CI output is **prompt-free by default**: rule IDs, dimensions, status, and
 control labels — never the matched text of the prompt that was scanned, because
 that build log is more public than the prompt is. `include-snippets: "true"`
-re-admits it and is deprecated; it will be removed after one release.
+re-admits it to JSON and Markdown output and is deprecated; it will be removed
+after one release. SARIF remains prompt-free regardless of that input.
 Guard downstream steps on the `scored` output, not on `score` — an empty
 score casts to `0`.
 
