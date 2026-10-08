@@ -459,7 +459,7 @@ def test_word_boundaries_agree_across_engines_on_non_ascii_text():
 
     JS treats every CJK/Greek/Cyrillic character as a non-word character, so
     `\bhipaa\b` fires inside "确保hipaa合规性" in the browser and does not in
-    the CLI. A user pastes a Chinese prompt on crewscore.ai, gets one score,
+    the CLI. A user pastes a Chinese prompt on the CrewScore website, gets one score,
     puts the CLI in CI, and gets another. The `u` flag does NOT fix this --
     JS `\w` stays ASCII-only in unicode mode -- so the patterns have to be
     rewritten with explicit Unicode lookarounds.

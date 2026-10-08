@@ -285,7 +285,7 @@
       if (url.protocol !== "http:" && url.protocol !== "https:") return "direct";
       const host = url.hostname.toLowerCase();
       const matches = (domain) => host === domain || host.endsWith("." + domain);
-      if (matches("crewscore.ai")) return "internal";
+      if (matches("shmindmaster.github.io")) return "internal";
       if (matches("github.com")) return "github";
       if (["google.com", "bing.com", "duckduckgo.com", "search.brave.com", "search.yahoo.com"].some(matches)) return "search";
       if (["linkedin.com", "x.com", "twitter.com", "facebook.com", "reddit.com", "bsky.app"].some(matches)) return "social";
@@ -307,7 +307,7 @@
 
   function capture(event, properties) {
     if (!ALLOWED_EVENTS.has(event)) return;
-    if (location.hostname !== "crewscore.ai" || isOptedOut()) return;
+    if (location.hostname !== "shmindmaster.github.io" || isOptedOut()) return;
 
     const safe = safeProperties(event, properties);
     if (!safe) return;

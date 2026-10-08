@@ -21,7 +21,7 @@ reproduce or independently review.
 **We scanned 356 publicly collected agent prompts: 83 production-labeled prompts and 273
 general-purpose prompts. Among the production-labeled subset, median coverage was 10
 of 100.** GPT-Store median: 0 of 100.
-[Numbers →](docs/validation-corpus.md) · [Shareable card →](docs/corpus-card.svg) · [Live checker →](https://crewscore.ai)
+[Numbers →](docs/validation-corpus.md) · [Shareable card →](docs/corpus-card.svg) · [Live checker →](https://shmindmaster.github.io/crewscore/)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11+-green.svg)](https://python.org)
@@ -33,7 +33,7 @@ of 100.** GPT-Store median: 0 of 100.
 > Example: **control coverage 8/23 written** · first gap to review: *A human must approve*.
 > CrewScore checks whether controls are written down, not whether an agent obeys them.
 
-**Try it live, no install:** [crewscore.ai](https://crewscore.ai)
+**Try it live, no install:** [shmindmaster.github.io/crewscore](https://shmindmaster.github.io/crewscore/)
 
 <img src="docs/demo.svg" alt="Before and after: the fictional Northstar Clinic demo fixture covers 8 of 23 written controls, with 'a human must approve' as the first gap to review; after adding the selected wording it covers 9 of 23. Coverage is not runtime proof." width="720">
 

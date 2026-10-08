@@ -132,7 +132,7 @@ def composite_banner(mood_path: Path, out: Path, w: int, h: int) -> None:
         d.text((px0 + 28, py0 + 200), "Not a quality ranking.", font=f_small, fill=DIM)
 
     d.line([(56, h - 70), (w - 56, h - 70)], fill=(64, 81, 71), width=1)
-    d.text((56, h - 52), "crewscore.ai", font=f_foot, fill=DIM)
+    d.text((56, h - 52), "github.io/crewscore", font=f_foot, fill=DIM)
     d.text((240, h - 52), "pip install crewscore", font=f_foot, fill=DIM)
     d.text((520, h - 52), "offline · no API key · local browser", font=f_foot, fill=DIM)
 

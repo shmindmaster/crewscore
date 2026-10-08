@@ -67,7 +67,7 @@ def _policy_lines(results: list[dict[str, Any]]) -> list[str]:
         lines.extend(failures)
         lines.append(
             "  - Add the missing wording (the web checker at "
-            "[crewscore.ai](https://crewscore.ai) suggests copy-ready text), "
+            "[CrewScore](https://shmindmaster.github.io/crewscore/) suggests copy-ready text), "
             "or adjust `required_controls` if the gate is wrong."
         )
     else:

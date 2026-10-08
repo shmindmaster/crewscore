@@ -132,7 +132,7 @@ const context = {{
   window: {{}},
   localStorage: storage,
   sessionStorage,
-  location: {{ hostname: "crewscore.ai" }},
+  location: {{ hostname: "shmindmaster.github.io" }},
   crypto: {{ randomUUID: () => "test-session" }},
   fetch: () => Promise.reject(new Error("transport down")),
 }};
@@ -195,7 +195,7 @@ const context = {{
   window: {{}},
   localStorage: storage(local),
   sessionStorage: storage(session),
-  location: {{ hostname: "crewscore.ai" }},
+  location: {{ hostname: "shmindmaster.github.io" }},
   crypto: {{ randomUUID: () => "test-session" }},
   fetch: (...args) => {{ calls.push(args); return Promise.resolve(); }},
 }};
@@ -250,7 +250,7 @@ const context = {{
     setItem: () => undefined,
   }},
   sessionStorage,
-  location: {{ hostname: "crewscore.ai" }},
+  location: {{ hostname: "shmindmaster.github.io" }},
   crypto: {{ randomUUID: () => "test-session" }},
   fetch: (...args) => {{ calls.push(args); return Promise.resolve(); }},
 }};
@@ -306,7 +306,7 @@ const context = {{
   window: {{}},
   localStorage: storage,
   sessionStorage: storage,
-  location: {{ hostname: "crewscore.ai", search: "" }},
+  location: {{ hostname: "shmindmaster.github.io", search: "" }},
   URLSearchParams,
   crypto: {{ randomUUID: () => "test-session" }},
   fetch: (...args) => {{ calls.push(args); return Promise.resolve(); }},
@@ -386,8 +386,8 @@ function run(location) {{
   context.window.CrewScoreAnalytics.capture("cs_rules_expand", {{}});
   return calls.map((call) => JSON.parse(call[1].body));
 }}
-const production = run({{ hostname: "crewscore.ai", search: "" }});
-const qa = run({{ hostname: "crewscore.ai", search: "?crewscore_test_traffic=true" }});
+const production = run({{ hostname: "shmindmaster.github.io", search: "" }});
+const qa = run({{ hostname: "shmindmaster.github.io", search: "?crewscore_test_traffic=true" }});
 const suppressed = run({{ hostname: "localhost", search: "?crewscore_test_traffic=true" }});
 process.stdout.write(JSON.stringify({{ production, qa, suppressed }}));
 """
@@ -421,9 +421,9 @@ const source = fs.readFileSync({json.dumps(str(ANALYTICS))}, "utf8");
 const calls = [];
 const storage = {{ getItem: () => null, setItem: () => undefined }};
 const location = {{
-  hostname: "crewscore.ai",
+  hostname: "shmindmaster.github.io",
   search: "?utm_source=qa&crewscore_test_traffic=true&keep=1",
-  href: "https://crewscore.ai/?utm_source=qa&crewscore_test_traffic=true&keep=1#cs-result=sentinel",
+  href: "https://shmindmaster.github.io/crewscore/?utm_source=qa&crewscore_test_traffic=true&keep=1#cs-result=sentinel",
 }};
 const context = {{
   window: {{}}, document: {{ referrer: "" }}, localStorage: storage, sessionStorage: storage,
@@ -447,7 +447,7 @@ process.stdout.write(JSON.stringify({{
         check=True,
     )
     result = json.loads(proc.stdout)
-    assert result["shareUrl"] == "https://crewscore.ai/?utm_source=qa&keep=1#cs-result=sentinel"
+    assert result["shareUrl"] == "https://shmindmaster.github.io/crewscore/?utm_source=qa&keep=1#cs-result=sentinel"
     assert result["trafficClasses"] == ["synthetic_qa", "synthetic_qa"]
 
 
@@ -472,7 +472,7 @@ const context = {{
     getItem: (key) => session.get(key) || null,
     setItem: (key, value) => session.set(key, String(value)),
   }},
-  location: {{ hostname: "crewscore.ai" }},
+  location: {{ hostname: "shmindmaster.github.io" }},
   crypto: {{ randomUUID: () => "test-session" }},
   fetch: (...args) => {{ calls.push(args); return Promise.resolve(); }},
 }};
@@ -501,7 +501,7 @@ process.stdout.write(JSON.stringify({{ before, after: calls.length, optedOut: an
         ("https://www.google.com/search?q=private+terms", "search"),
         ("https://www.linkedin.com/feed/update/private-id", "social"),
         ("https://github.com/private-org/private-repo", "github"),
-        ("https://crewscore.ai/privacy.html", "internal"),
+        ("https://shmindmaster.github.io/crewscore/privacy.html", "internal"),
         ("https://example.org/private/path?token=secret", "referral"),
         ("not a url", "direct"),
     ],
@@ -524,7 +524,7 @@ const context = {{
   document: {{ referrer: {json.dumps(referrer)} }},
   localStorage: storage,
   sessionStorage: storage,
-  location: {{ hostname: "crewscore.ai", href: "https://crewscore.ai/?utm_source=secret" }},
+  location: {{ hostname: "shmindmaster.github.io", href: "https://shmindmaster.github.io/crewscore/?utm_source=secret" }},
   URL,
   crypto: {{ randomUUID: () => "test-session" }},
   fetch: (...args) => {{ calls.push(args); return Promise.resolve(); }},
@@ -589,7 +589,7 @@ def _site_view_calls_on_production(hash_value: str) -> int:
     """Load analytics.js on the production hostname and count events sent at init.
 
     The browser suite runs on localhost, where capture() returns early on the
-    hostname guard, so it cannot observe this at all. Simulating crewscore.ai
+    hostname guard, so it cannot observe this at all. Simulating the GitHub Pages host
     is the only way the claim is actually tested.
     """
     script = f"""
@@ -606,7 +606,7 @@ const context = {{
     getItem: (key) => session.get(key) || null,
     setItem: (key, value) => session.set(key, String(value)),
   }},
-  location: {{ hostname: "crewscore.ai", hash: {json.dumps(hash_value)} }},
+  location: {{ hostname: "shmindmaster.github.io", hash: {json.dumps(hash_value)} }},
   crypto: {{ randomUUID: () => "test-session" }},
   fetch: (...args) => {{ calls.push(args); return Promise.resolve(); }},
 }};
@@ -624,7 +624,7 @@ def test_opening_a_shared_link_records_no_usage_event_on_production():
     """The share failure panel says so in as many words; make it true.
 
     cs_site_view fires during analytics init, before the decoder renders
-    anything. On crewscore.ai that reached the wire, so "no usage event was
+    anything. On GitHub Pages that reached the wire, so "no usage event was
     recorded for it" was false exactly where it mattered.
     """
     if not shutil.which("node"):

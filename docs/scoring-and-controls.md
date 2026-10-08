@@ -1,6 +1,6 @@
 # Scoring and controls
 
-**One engine.** The Python CLI and [crewscore.ai](https://crewscore.ai) use the
+**One engine.** The Python CLI and [CrewScore site](https://shmindmaster.github.io/crewscore/) use the
 same patterns. The browser loads `score-engine.js`, generated from Python by
 `scripts/export_web_engine.py`; CI fails if the two drift apart.
 

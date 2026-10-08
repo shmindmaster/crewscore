@@ -26,7 +26,7 @@ from crewscore.scoring import RULESET_ID  # noqa: E402
 DEFAULT_MD = ROOT / "docs" / "validation-corpus.md"
 DEFAULT_SVG = ROOT / "docs" / "corpus-card.svg"
 DEFAULT_JSON = ROOT / "docs" / "corpus-card.json"
-HOMEPAGE = "https://crewscore.ai"
+HOMEPAGE = "https://shmindmaster.github.io/crewscore/"
 
 
 def main(argv: list[str] | None = None) -> int:

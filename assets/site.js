@@ -832,7 +832,7 @@
     if (!opened) toast("Your browser blocked the share window - copy the result link instead.");
     track("cs_share", { kind: target });
   }
-  function badgeMarkdown() { return `[![Checked with CrewScore](https://crewscore.ai/assets/brand/checked-badge.svg)](${shareUrl()})\n<!-- Personalized N/23 badge: use "Download badge SVG" and commit it as crewscore-result.svg next to this README -->`; }
+  function badgeMarkdown() { return `[![Checked with CrewScore](https://shmindmaster.github.io/crewscore/assets/brand/checked-badge.svg)](${shareUrl()})\n<!-- Personalized N/23 badge: use "Download badge SVG" and commit it as crewscore-result.svg next to this README -->`; }
   const CARD_DIMENSIONS = { linkedin: [1200, 627], x: [1200, 675], facebook: [1200, 630], square: [1080, 1080], badge: [760, 180] };
   function svgCard(kind) {
     const [width, height] = CARD_DIMENSIONS[kind] || [1200, 627];

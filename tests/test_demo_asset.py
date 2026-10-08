@@ -21,7 +21,7 @@ from typing import Any
 
 import pytest
 
-EXPECTED_DEMO_SHA256 = "9e274ac414f89ed210edc2d5266ddf8a2ff7d712652f01bf8609fce648c8ec8b"
+EXPECTED_DEMO_SHA256 = "b0d65092725e5baaa327968c8f408c742a62e7c78982c37a12f8f002c49483f8"
 
 REPO = Path(__file__).resolve().parents[1]
 DEMO_SVG = REPO / "docs" / "demo.svg"

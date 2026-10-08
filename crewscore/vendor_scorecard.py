@@ -19,7 +19,7 @@ from rich.panel import Panel
 console = Console()
 err_console = Console(stderr=True)
 
-HOMEPAGE = "https://crewscore.ai"
+HOMEPAGE = "https://shmindmaster.github.io/crewscore/"
 REPO = "https://github.com/shmindmaster/crewscore"
 
 # Bump when the JSON answer shape changes in a breaking way.

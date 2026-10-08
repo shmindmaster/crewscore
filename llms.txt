@@ -4,12 +4,12 @@
 
 ## CrewScore
 
-- [CrewScore](https://crewscore.ai/): prompt-hygiene checker and scoring tool
-- [Documentation](https://crewscore.ai/docs/): usage, rules, and configuration
-- [Validation study](https://crewscore.ai/docs/validation-corpus.md): reproducible corpus report
-- [Vendor checklist](https://crewscore.ai/vendor-checklist/): vendor prompt-hygiene checklist
-- [Security](https://crewscore.ai/security.html): security posture
-- [Privacy](https://crewscore.ai/privacy.html): analytics and privacy boundary
+- [CrewScore](https://shmindmaster.github.io/crewscore/): prompt-hygiene checker and scoring tool
+- [Documentation](https://shmindmaster.github.io/crewscore/docs/): usage, rules, and configuration
+- [Validation study](https://shmindmaster.github.io/crewscore/docs/validation-corpus.md): reproducible corpus report
+- [Vendor checklist](https://shmindmaster.github.io/crewscore/vendor-checklist/): vendor prompt-hygiene checklist
+- [Security](https://shmindmaster.github.io/crewscore/security.html): security posture
+- [Privacy](https://shmindmaster.github.io/crewscore/privacy.html): analytics and privacy boundary
 - [Repository](https://github.com/shmindmaster/crewscore): source code
 - [PyPI package](https://pypi.org/project/crewscore/): installable package
 

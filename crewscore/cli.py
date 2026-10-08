@@ -109,7 +109,7 @@ console = Console()
 err_console = Console(stderr=True, soft_wrap=True)
 
 BRAND = "CrewScore"
-HOMEPAGE = "https://crewscore.ai"
+HOMEPAGE = "https://shmindmaster.github.io/crewscore/"
 REPO = "https://github.com/shmindmaster/crewscore"
 
 # Shared help text for the opt-in that re-admits prompt text into machine
