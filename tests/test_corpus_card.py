@@ -23,7 +23,7 @@ def test_render_corpus_card_svg_includes_key_numbers_and_honesty():
         gpt_store_median=0,
         cliffs_delta=0.672,
         ruleset="crewscore-hygiene@0.6.0",
-        homepage="https://crewscore.ai",
+        homepage="https://shmindmaster.github.io/crewscore/",
     )
 
     assert svg.lstrip().startswith("<svg")
@@ -34,7 +34,7 @@ def test_render_corpus_card_svg_includes_key_numbers_and_honesty():
     assert "273" in svg
     assert "0.672" in svg or "0.67" in svg
     assert "crewscore-hygiene@0.6.0" in svg
-    assert "https://crewscore.ai" in svg
+    assert "https://shmindmaster.github.io/crewscore/" in svg
     assert "written-control coverage" in svg.lower() or "not runtime proof" in svg.lower()
     # Honesty: must not overclaim
     lowered = svg.lower()

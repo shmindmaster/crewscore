@@ -155,7 +155,7 @@ def _render_svg(before: int, after: int, total: int, gap: str) -> str:
   <rect x="516" y="340" width="{before_bar}" height="12" rx="6" fill="#202B24"/>
   <rect x="516" y="340" width="{after_fill}" height="12" rx="6" fill="#6FDAA6"/>
   <text class="t muted" x="516" y="390" font-size="15">Text is present. Still not proof the agent obeys it.</text>
-  <text class="t muted" x="516" y="416" font-size="13">crewscore.ai · pip install crewscore</text>
+  <text class="t muted" x="516" y="416" font-size="13">github.io/crewscore · pip install crewscore</text>
 
   <text class="t muted" x="48" y="500" font-size="14">{total} public controls · offline · no API key · open rules</text>
 </svg>

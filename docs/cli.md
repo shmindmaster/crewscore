@@ -265,7 +265,7 @@ crewscore test --prompt-file ./odd-name.md --profile coding_agent_config
 
 ## Browser
 
-[crewscore.ai](https://crewscore.ai) runs the same rules with no install. The
+[CrewScore site](https://shmindmaster.github.io/crewscore/) runs the same rules with no install. The
 browser loads `score-engine.js`, generated from the Python engine by
 `scripts/export_web_engine.py`; CI fails if the two drift apart.
 

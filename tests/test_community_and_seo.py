@@ -14,8 +14,8 @@ def test_static_discovery_has_robots_sitemap_and_structured_data():
     robots = (ROOT / "robots.txt").read_text(encoding="utf-8")
     sitemap = (ROOT / "sitemap.xml").read_text(encoding="utf-8")
     index = (ROOT / "index.html").read_text(encoding="utf-8")
-    assert "Sitemap: https://crewscore.ai/sitemap.xml" in robots
-    for route in ("https://crewscore.ai/", "https://crewscore.ai/security.html", "https://crewscore.ai/rules/", "https://crewscore.ai/docs/"):
+    assert "Sitemap: https://shmindmaster.github.io/crewscore/sitemap.xml" in robots
+    for route in ("https://shmindmaster.github.io/crewscore/", "https://shmindmaster.github.io/crewscore/security.html", "https://shmindmaster.github.io/crewscore/rules/", "https://shmindmaster.github.io/crewscore/docs/"):
         assert route in sitemap
     assert '"@type":"SoftwareApplication"' in index
     assert '"@type":"FAQPage"' in index

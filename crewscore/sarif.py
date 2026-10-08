@@ -79,7 +79,7 @@ def render_sarif(
                 "tool": {
                     "driver": {
                         "name": "CrewScore",
-                        "informationUri": "https://crewscore.ai",
+                        "informationUri": "https://shmindmaster.github.io/crewscore/",
                         "rules": _rules(),
                     }
                 },

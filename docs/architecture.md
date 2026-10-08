@@ -79,7 +79,7 @@ there is a second real implementation that needs them.
 | --- | --- |
 | Primary | `test`, `scan`, `fix`, `rules`, `baseline`, `init` |
 | CI | Action + policy + SARIF + summary |
-| Browser | Static checker at crewscore.ai |
+| Browser | Static checker at shmindmaster.github.io/crewscore/ |
 | Secondary | `export-eval` (live-tool handoff), `assess-vendor` (self-attest) |
 | Compatibility | `agent-guard` console script alias (do not document as install name) |
 

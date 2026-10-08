@@ -235,7 +235,7 @@ def paint_social(path: Path, *, w: int, h: int) -> None:
         fill=BORDER,
         width=1,
     )
-    d.text((lx, h - margin - 42), "crewscore.ai", font=f_foot, fill=DIM)
+    d.text((lx, h - margin - 42), "github.io/crewscore", font=f_foot, fill=DIM)
     d.text((lx + 200, h - margin - 42), "pip install crewscore", font=f_foot, fill=DIM)
     d.text(
         (lx + 480, h - margin - 42),
