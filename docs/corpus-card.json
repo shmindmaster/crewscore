@@ -5,6 +5,6 @@
   "gpt_store_median": 0,
   "cliffs_delta": 0.614,
   "ruleset": "crewscore-hygiene@0.6.0",
-  "homepage": "https://crewscore.ai",
+  "homepage": "https://shmindmaster.github.io/crewscore/",
   "source": "docs/validation-corpus.md"
 }

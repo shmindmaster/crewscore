@@ -58,7 +58,7 @@ def test_html_contains_score_and_disclaimer():
     html = render_html_report(_result())
     assert "0/100" in html
     assert "Structural" in html or "structural" in html or "hygiene" in html.lower()
-    assert "crewscore.ai" in html
+    assert "shmindmaster.github.io/crewscore" in html
     assert "black box" in html.lower() or "ruleset" in html.lower()
     assert "<script" not in html.lower()  # no external/runtime scripts required
     # Self-contained: inline CSS present, no external stylesheet link
@@ -111,7 +111,7 @@ def test_badge_svg_contains_score():
 def test_share_text_includes_score_and_url():
     text = share_text(_result())
     assert "0/100" in text
-    assert "crewscore.ai" in text
+    assert "shmindmaster.github.io/crewscore" in text
     assert "Control coverage" in text
     assert "not runtime proof" in text
 

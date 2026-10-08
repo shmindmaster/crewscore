@@ -65,7 +65,7 @@ crewscore = "crewscore.cli:main"
 agent-guard = "crewscore.cli:main"
 
 [project.urls]
-Homepage = "https://crewscore.ai"
+Homepage = "https://shmindmaster.github.io/crewscore/"
 Repository = "https://github.com/shmindmaster/crewscore"
 Issues = "https://github.com/shmindmaster/crewscore/issues"
 Documentation = "https://github.com/shmindmaster/crewscore#readme"

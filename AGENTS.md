@@ -9,7 +9,7 @@ Offline CLI that classifies an agent-instruction file by name and judges it one 
 
 It also applies fix patterns (system-prompt profile only — `fix` refuses to write governance templates into coding-agent config) and optionally runs a non-technical AI vendor checklist (self-attest only).
 
-Public brand: **CrewScore** · Domain: **https://crewscore.ai** · PyPI: **`crewscore`** · Repo: **shmindmaster/crewscore**
+Public brand: **CrewScore** · Website: **https://shmindmaster.github.io/crewscore/** · PyPI: **`crewscore`** · Repo: **shmindmaster/crewscore**
 
 It does **not** (yet) run live adversarial LLM attacks or parse LangGraph/CrewAI runtimes. For live testing, hand off to Promptfoo / garak — see `docs/next-steps-eval.md`.
 

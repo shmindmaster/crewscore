@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://crewscore.ai/sitemap.xml
+Sitemap: https://shmindmaster.github.io/crewscore/sitemap.xml

@@ -192,7 +192,7 @@ def test_share_text_governance_default_uses_control_coverage_language():
     assert "Control coverage" in text
     assert "0/100" in text
     assert "not runtime proof" in text
-    assert "crewscore.ai" in text
+    assert "shmindmaster.github.io/crewscore" in text
     # Vanity "quality score" framing is gone.
     assert "My AI agent scored" not in text
 
@@ -210,7 +210,7 @@ def test_share_text_with_matched_total_and_hero():
     assert "missing:" in text
     assert "A human must approve" in text
     assert "not runtime" in text
-    assert "crewscore.ai" in text
+    assert "shmindmaster.github.io/crewscore" in text
 
 
 def test_share_text_with_matched_total_omits_missing_when_no_hero():

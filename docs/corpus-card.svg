@@ -38,5 +38,5 @@
   <rect class="bar-gpt" x="420" y="296" width="2" height="10" rx="4"/>
 
   <text class="t muted" x="56" y="350" font-size="14">Cliff's delta = 0.614  ·  n=83 vs n=273</text>
-  <text class="t dim" x="56" y="382" font-size="12">crewscore-hygiene@0.6.0  ·  https://crewscore.ai</text>
+  <text class="t dim" x="56" y="382" font-size="12">crewscore-hygiene@0.6.0  ·  https://shmindmaster.github.io/crewscore/</text>
 </svg>
