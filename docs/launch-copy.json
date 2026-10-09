@@ -11,7 +11,7 @@
         "I keep reviewing AI agent prompts, and the gap keeps coming back: the guardrails were never written down. So I built CrewScore ({package_version}). It checks agent instructions against {concept_count} public controls across {dimension_count} dimensions — browser or CI. https://shmindmaster.github.io/crewscore/",
         "What it found on a public corpus of {total_prompts} prompts: among the {production_n} production-labeled prompts, median written-control coverage is {production_median}/100. Coverage, not a safety grade — the number says which controls the text is missing, not whether the agent behaves.",
         "Try it: paste instructions at shmindmaster.github.io/crewscore/ (your text never leaves the browser), or run `crewscore scan .` in CI with the GitHub Action. Missing controls show up as explainable findings with suggested wording you review. pip install crewscore",
-        "What CrewScore is not: not a certification, not a red team, not a quality ranking, not proof of runtime behavior. Every rule, regex, and the validation corpus are public: https://github.com/shmindmaster/crewscore — built and maintained by me; Pendoah is my company context."
+        "What CrewScore is not: not a certification, not a red team, not a quality ranking, not proof of runtime behavior. Every rule, regex, and the validation corpus are public: https://github.com/shmindmaster/crewscore — built and maintained by me as an independent open-source project."
       ]
     },
     "linkedin": {

@@ -8,17 +8,15 @@ __pycache__/
 dist/
 build/
 .venv/
-.env
 *.sqlite3
 agent-guard-report-*.html
 .DS_Store
 
 # Local / agent-only (never publish)
-.tmp-pendoah-scans/
+.tmp-*-scans/
 .grok/
 .pytest_cache/
 .superpowers/
-.vscode/
 .worktrees/
 _product-experience/
 _production/
@@ -56,3 +54,4 @@ test-results/
 # RepoWise generated index state
 .repowise/
 .claude/CLAUDE.md
+config.bat

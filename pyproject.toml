@@ -11,10 +11,10 @@ license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.11"
 authors = [
-    { name = "Sarosh Hussain", email = "sarosh@pendoah.ai" },
+    { name = "Sarosh Hussain", email = "sarosh.hussain@gmail.com" },
 ]
 maintainers = [
-    { name = "Sarosh Hussain", email = "sarosh@pendoah.ai" },
+    { name = "Sarosh Hussain", email = "sarosh.hussain@gmail.com" },
 ]
 keywords = [
     "ai-agents",
