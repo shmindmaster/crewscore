@@ -5,14 +5,14 @@ issues privately rather than opening a public issue, especially if they could
 expose prompt text, source URLs, analytics data, Action consumers, or a supply
 chain dependency.
 
-The project is created and maintained by **Sarosh Hussain**. **Pendoah** is the
-company operating context; the repository's code and security process define
+The project is created and maintained by **Sarosh Hussain**, an independent
+open-source maintainer; the repository's code and security process define
 the technical claims and safeguards.
 
 ## Report privately
 
 Use GitHub's [private vulnerability reporting flow](https://github.com/shmindmaster/crewscore/security/advisories/new).
-If GitHub is unavailable to you, email [sarosh@pendoah.ai](mailto:sarosh@pendoah.ai)
+If GitHub is unavailable to you, email [sarosh.hussain@gmail.com](mailto:sarosh.hussain@gmail.com)
 with `CrewScore security report` in the subject line. Do not include secrets,
 customer prompts, or exploit payloads in a public GitHub issue.
 
