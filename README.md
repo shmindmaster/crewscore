@@ -39,8 +39,8 @@ of 100.** GPT-Store median: 0 of 100.
 
 </div>
 
-> Created and maintained by **Sarosh Hussain**. **Pendoah** is the company
-> operating context for this project. Technical claims are grounded in the
+> Created and maintained by **Sarosh Hussain**, an independent open-source
+> maintainer. Technical claims are grounded in the
 > code, tests, and cited validation material.
 
 [Roadmap](ROADMAP.md) · [Governance](GOVERNANCE.md) ·

@@ -416,7 +416,7 @@ No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
 
 ### Fixed
 
-- **Internal scan dumps removed from the public tree** (`.tmp-pendoah-scans/`,
+- **Internal scan dumps removed from the public tree** (`.tmp-*-scans/`,
   now gitignored) — they were CrewScore self-scan output over unrelated local
   repositories and should never have been published.
 - `scan` no longer drops files over 500KB silently; it now says which file it

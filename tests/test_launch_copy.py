@@ -21,8 +21,8 @@ SOURCE = REPO / "docs" / "launch-copy.json"
 DATA = REPO / "docs" / "validation-corpus.json"
 GENERATOR = REPO / "scripts" / "generate_dist_pack.py"
 GIT_TRACKED_SOURCE = "docs/launch-copy.json"
-EXPECTED_CHECKSUM_FILE_SHA256 = "f36f50cb1844bdc0fc3bf299c809ea691817c34f06305a1daa9e1d0f4acd6669"
-EXPECTED_MANIFEST_SHA256 = "05bdb0780c52886df9391e1ecac1784ea91e03d88cbfdbbc8808a8e86f3a2759"
+EXPECTED_CHECKSUM_FILE_SHA256 = "71f3827a6acf8b270656e43f2e3416dae548aa3135d1b8676639800968511541"
+EXPECTED_MANIFEST_SHA256 = "11faea3334b9190e380db48acc356fcc5bfc47a83f4ae92e25f45657f6cb5b6b"
 REQUIRED_ARTIFACTS = (
     "show-hn-title.txt",
     "show-hn-first-comment.md",
@@ -161,7 +161,7 @@ def _x_facts() -> dict:
         "validation_report_url": "https://github.com/shmindmaster/crewscore/blob/main/docs/validation-corpus.md",
         "validation_markdown": "https://github.com/shmindmaster/crewscore/blob/main/docs/validation.md",
         "created_by": "CrewScore is created and maintained by Sarosh Hussain.",
-        "operating_context": "Pendoah is the company operating context for this project.",
+        "operating_context": "CrewScore is an independent open-source project.",
         "oneliner": readme_line,
     }
 

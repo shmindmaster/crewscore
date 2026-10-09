@@ -207,7 +207,7 @@ def _build_pack() -> tuple[dict[str, Any], bytes]:
         "validation_report_url": "https://github.com/shmindmaster/crewscore/blob/main/docs/validation-corpus.md",
         "validation_markdown": "https://github.com/shmindmaster/crewscore/blob/main/docs/validation.md",
         "created_by": "CrewScore is created and maintained by Sarosh Hussain.",
-        "operating_context": "Pendoah is the company operating context for this project.",
+        "operating_context": "CrewScore is an independent open-source project.",
         "oneliner": _readme_oneliner(),
     }
 

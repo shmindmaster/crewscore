@@ -14,7 +14,7 @@ agent-guard-report-*.html
 .DS_Store
 
 # Local / agent-only (never publish)
-.tmp-pendoah-scans/
+.tmp-*-scans/
 .grok/
 .pytest_cache/
 .superpowers/

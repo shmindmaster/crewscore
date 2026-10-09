@@ -43,12 +43,12 @@ officially representing the project in public spaces.
 ## Enforcement
 
 Report unacceptable behavior privately at
-[sarosh@pendoah.ai](mailto:sarosh@pendoah.ai). Reports will be reviewed and
+[sarosh.hussain@gmail.com](mailto:sarosh.hussain@gmail.com). Reports will be reviewed and
 handled confidentially. Responses may include a correction, warning, temporary
 or permanent ban, or another action appropriate to the circumstances.
 
-CrewScore is created and maintained by **Sarosh Hussain**. **Pendoah** is the
-company operating context for the project.
+CrewScore is created and maintained by **Sarosh Hussain**, an independent
+open-source maintainer.
 
 ## Attribution
 
