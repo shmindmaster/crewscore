@@ -21,7 +21,7 @@ from typing import Any
 
 import pytest
 
-EXPECTED_DEMO_SHA256 = "b0d65092725e5baaa327968c8f408c742a62e7c78982c37a12f8f002c49483f8"
+EXPECTED_DEMO_SHA256 = "9e274ac414f89ed210edc2d5266ddf8a2ff7d712652f01bf8609fce648c8ec8b"
 
 REPO = Path(__file__).resolve().parents[1]
 DEMO_SVG = REPO / "docs" / "demo.svg"
@@ -131,6 +131,7 @@ def test_demo_svg_is_source_generated(measured, tmp_path):
     _generate_demo_svg(generated)
     assert generated.exists()
     assert generated.read_text(encoding="utf-8") == DEMO_SVG.read_text(encoding="utf-8")
+    assert "crewscore.ai" in generated.read_text(encoding="utf-8")
 
 
 def test_demo_svg_before_number_is_reproducible(measured):

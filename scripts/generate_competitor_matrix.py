@@ -56,7 +56,7 @@ def crewscore_side() -> dict:
     return {
         "name": "CrewScore",
         "repo": "shmindmaster/crewscore",
-        "homepage": "https://shmindmaster.github.io/crewscore/",
+        "homepage": "https://crewscore.ai/",
         "install": "pip install crewscore",
         "package_version": __version__,
         "ruleset": RULESET_ID,

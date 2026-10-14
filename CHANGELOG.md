@@ -14,9 +14,15 @@ install them, and do not compare their numbers to these.
 
 ## [Unreleased]
 
+## [0.6.14] — 2026-10-14 — canonical package homepage
+
 ### Changed
 
-- The public site canonical, OpenGraph, sitemap, robots and llms.txt URLs now name https://crewscore.ai (HTTPS is enforced on the Pages custom domain; the github.io URL redirects there).
+- Package metadata, CLI output, reports, corpus cards, and public documentation
+  now link to https://crewscore.ai rather than the redirecting github.io URL.
+- The public site canonical, OpenGraph, sitemap, robots and llms.txt URLs now
+  name https://crewscore.ai (HTTPS is enforced on the Pages custom domain; the
+  github.io URL redirects there).
 
 ### Added
 

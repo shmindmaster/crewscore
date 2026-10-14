@@ -26,7 +26,7 @@ from crewscore.scoring import RULESET_ID  # noqa: E402
 DEFAULT_MD = ROOT / "docs" / "validation-corpus.md"
 DEFAULT_SVG = ROOT / "docs" / "corpus-card.svg"
 DEFAULT_JSON = ROOT / "docs" / "corpus-card.json"
-HOMEPAGE = "https://shmindmaster.github.io/crewscore/"
+HOMEPAGE = "https://crewscore.ai/"
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -102,8 +102,10 @@ def main(argv: list[str] | None = None) -> int:
     svg_path.parent.mkdir(parents=True, exist_ok=True)
     json_path.parent.mkdir(parents=True, exist_ok=True)
 
-    svg_path.write_text(svg, encoding="utf-8")
-    json_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    svg_path.write_text(svg, encoding="utf-8", newline="\n")
+    json_path.write_text(
+        json.dumps(payload, indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
 
     print(f"Wrote {svg_path} ({svg_path.stat().st_size} bytes)")
     print(f"Wrote {json_path}")

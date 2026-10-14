@@ -99,6 +99,7 @@ def test_scan_markdown_names_the_failed_control_in_the_policy_section():
     assert "### Control policy" in md
     assert "required control `human_gate.approval_required` not found" in md
     assert "`safe_stop.stop_condition` was in the baseline" in md
+    assert "https://crewscore.ai/" in md
 
 
 def test_scan_markdown_confirms_a_passing_policy():

@@ -87,6 +87,7 @@ def test_assess_vendor_report_writes_html(tmp_path: Path):
     assert "crewscore" in html.lower()
     assert "not an independent audit, certification, or vendor verdict" in html
     assert "Suggested CrewScore follow-ups" in html or "crewscore" in html.lower()
+    assert "https://crewscore.ai/" in html
 
 
 def test_next_crewscore_checks_use_published_control_ids():

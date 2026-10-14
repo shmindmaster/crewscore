@@ -808,7 +808,14 @@ def test_version_matches_release():
     """
     from crewscore import __version__
 
-    assert __version__ == "0.6.13"
+    assert __version__ == "0.6.14"
+
+
+def test_cli_user_facing_homepage_uses_canonical_site():
+    result = CliRunner().invoke(main, ["test", "--prompt", BARE])
+    assert result.exit_code == 0, result.output
+    assert "https://crewscore.ai/" in result.output
+    assert "shmindmaster.github.io/crewscore" not in result.output
 
 
 def test_fix_plan_json_lists_dimensions_without_writing(tmp_path: Path):

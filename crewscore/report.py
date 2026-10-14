@@ -10,7 +10,7 @@ from crewscore import __version__
 from crewscore.findings_export import finding_detail
 from crewscore.scoring import DIMENSIONS, RULESET_ID, ScoreResult
 
-HOMEPAGE = "https://shmindmaster.github.io/crewscore/"
+HOMEPAGE = "https://crewscore.ai/"
 
 # Tier colors aligned with index.html score classes
 _TIER_HEX = {
