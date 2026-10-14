@@ -388,8 +388,9 @@ function run(location) {{
 }}
 const production = run({{ hostname: "shmindmaster.github.io", search: "" }});
 const qa = run({{ hostname: "shmindmaster.github.io", search: "?crewscore_test_traffic=true" }});
+const custom = run({{ hostname: "crewscore.ai", search: "" }});
 const suppressed = run({{ hostname: "localhost", search: "?crewscore_test_traffic=true" }});
-process.stdout.write(JSON.stringify({{ production, qa, suppressed }}));
+process.stdout.write(JSON.stringify({{ production, qa, custom, suppressed }}));
 """
     proc = subprocess.run(
         ["node", "-e", script],
@@ -405,6 +406,10 @@ process.stdout.write(JSON.stringify({{ production, qa, suppressed }}));
     assert [body["properties"]["traffic_class"] for body in result["qa"]] == [
         "synthetic_qa",
         "synthetic_qa",
+    ]
+    assert [body["properties"]["traffic_class"] for body in result["custom"]] == [
+        "production",
+        "production",
     ]
     assert result["suppressed"] == []
 
