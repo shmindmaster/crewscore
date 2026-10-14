@@ -16,7 +16,7 @@ from crewscore.pathsafe import (
 from crewscore.scoring import build_result
 from crewscore.scorers import structural_analysis
 from crewscore.smells import detect_smells, find_repo_root
-from crewscore.profiles import classify_path
+from crewscore.profiles import classify_path, governance_applies
 
 # Exact basenames always treated as agent instruction files.
 KNOWN_NAMES = frozenset(
@@ -241,7 +241,12 @@ def score_paths(
             # scan is the CI mode the README recommends.
             prompt_text=text,
             source=str(path),
-            smells=detect_smells(text, path=path, repo_root=repo_roots[parent]),
+            smells=detect_smells(
+                text,
+                path=path,
+                repo_root=repo_roots[parent],
+                governance=governance_applies(profile or classify_path(path)),
+            ),
             profile=profile or classify_path(path),
         )
         item: dict[str, Any] = {
@@ -323,7 +328,12 @@ def score_inline_prompts(
             mode="structural",
             prompt_text=text,
             source=source,
-            smells=detect_smells(text, path=inline.path, repo_root=repo_roots[parent]),
+            smells=detect_smells(
+                text,
+                path=inline.path,
+                repo_root=repo_roots[parent],
+                governance=governance_applies(profile or "system_prompt"),
+            ),
             # Inline literals live in app source, not AGENTS.md-class config.
             # Force system_prompt unless the caller overrides via profile=.
             profile=profile or "system_prompt",
