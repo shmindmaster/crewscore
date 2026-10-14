@@ -21,8 +21,8 @@ SOURCE = REPO / "docs" / "launch-copy.json"
 DATA = REPO / "docs" / "validation-corpus.json"
 GENERATOR = REPO / "scripts" / "generate_dist_pack.py"
 GIT_TRACKED_SOURCE = "docs/launch-copy.json"
-EXPECTED_CHECKSUM_FILE_SHA256 = "71f3827a6acf8b270656e43f2e3416dae548aa3135d1b8676639800968511541"
-EXPECTED_MANIFEST_SHA256 = "11faea3334b9190e380db48acc356fcc5bfc47a83f4ae92e25f45657f6cb5b6b"
+EXPECTED_CHECKSUM_FILE_SHA256 = "556b3b0494ba83ccf8621b37ff9e719db86940e71b0a190128ba13654db672fe"
+EXPECTED_MANIFEST_SHA256 = "f66e032fd0a53aa25443b9b0046a500bf74bae613cc4324bebc28b57d693cf73"
 REQUIRED_ARTIFACTS = (
     "show-hn-title.txt",
     "show-hn-first-comment.md",
@@ -400,6 +400,9 @@ def test_launch_copy_generated_pack_matches_repository_facts(tmp_path: Path):
     assert f"{production_median}/100" in artifacts_text
     assert str(corpus["analysis"]["delta"]) in artifacts_text
     assert str(corpus["analysis"]["p_value"]) in artifacts_text
+    assert not re.search(r"\{[a-z_][a-z0-9_]*\}", artifacts_text), (
+        "launch-copy placeholder survived post-substitution rendering"
+    )
     _assert_no_unsupported_claims(artifacts_text)
 
     for stale in ("0.6.2", "0.6.3", "0.6.8", "0.6.9"):

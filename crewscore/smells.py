@@ -305,19 +305,25 @@ def detect_smells(
     *,
     path: str | Path | None = None,
     repo_root: str | Path | None = None,
+    governance: bool = False,
 ) -> list[dict]:
     """Run every offline smell detector that has enough context to run.
+
+    ``governance=True`` marks an agent system prompt, not coding-agent config.
+    Init Fossilization (an init-generated AGENTS.md that never changed) and
+    Lint Leakage (style rules a linter already enforces) describe config files
+    only, so a system prompt gets just the size check.
 
     Detectors that need context they weren't given stay silent rather than
     guessing: Context Bloat needs only the text, Init Fossilization needs a
     real path inside a git repo, Lint Leakage needs a repo root.
     """
     findings: list[dict] = []
-    for finding in (
-        detect_context_bloat(text),
-        detect_init_fossilization(path),
-        detect_lint_leakage(text, repo_root),
-    ):
+    detectors = [detect_context_bloat(text)]
+    if not governance:
+        detectors.append(detect_init_fossilization(path))
+        detectors.append(detect_lint_leakage(text, repo_root))
+    for finding in detectors:
         if finding:
             findings.append(finding)
     return findings

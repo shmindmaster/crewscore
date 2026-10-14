@@ -390,13 +390,14 @@ def test(
     # Always compute findings so JSON is never a black box.
     dimensions, findings = structural_analysis.analyze_with_findings(system_prompt)
     # Smells need file context; a --prompt string only supports Context Bloat.
+    resolved_profile = (
+        classify_path(prompt_path) if profile == "auto" else profile.lower()
+    )
     smells = detect_smells(
         system_prompt,
         path=prompt_path,
         repo_root=find_repo_root(prompt_path),
-    )
-    resolved_profile = (
-        classify_path(prompt_path) if profile == "auto" else profile.lower()
+        governance=governance_applies(resolved_profile),
     )
     result = build_result(
         dimensions,
@@ -575,6 +576,13 @@ def test(
                         "  [dim]Score may be inflated by pasted CrewScore fix "
                         "templates — text coverage is not runtime safety.[/dim]"
                     )
+
+        for control in policy_result.get("covered_required_controls") or []:
+            console.print()
+            console.print(
+                f"  [bold green]REQUIRED CONTROL COVERED:[/bold green] {control}"
+                " [dim](the text states it; not proof the agent obeys it)[/dim]"
+            )
 
         _render_smells(result.smells)
 

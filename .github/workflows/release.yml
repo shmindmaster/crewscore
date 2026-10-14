@@ -131,6 +131,10 @@ jobs:
           python -m build
           twine check dist/*
 
+      - name: Package descriptions must use portable links
+        if: runner.os == 'Linux'
+        run: python scripts/check_dist_metadata.py dist
+
       # Install the built artifact somewhere the source tree cannot rescue it.
       - name: Smoke-test the built wheel in a clean environment
         if: runner.os == 'Linux'
