@@ -14,7 +14,9 @@ install them, and do not compare their numbers to these.
 
 ## [Unreleased]
 
-No changes yet.
+### Added
+
+- `scripts/build_demo_workspace.py <dir>` builds a deterministic synthetic workspace (a routine hardened prompt, an exception prompt that fails `--require human_gate.approval_required`, and the finished file after one added sentence) so the hero sequence is reproducible from the repo. Covered by `tests/test_demo_workspace.py`.
 
 ---
 
