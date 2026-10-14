@@ -78,3 +78,18 @@ def test_dev_extra_exists_and_carries_pytest():
     data = tomllib.loads((REPO / "pyproject.toml").read_text(encoding="utf-8"))
     dev = data["project"]["optional-dependencies"]["dev"]
     assert any(s.lower().startswith("pytest") for s in dev), dev
+
+
+def test_package_homepage_uses_the_canonical_site():
+    data = tomllib.loads((REPO / "pyproject.toml").read_text(encoding="utf-8"))
+    assert data["project"]["urls"]["Homepage"] == "https://crewscore.ai/"
+
+    readme = (REPO / "README.md").read_text(encoding="utf-8")
+    assert "https://crewscore.ai/" in readme
+    assert "shmindmaster.github.io/crewscore" not in readme
+    assert "crewscore.ai" in (
+        REPO / "scripts" / "compose_imagine_brand.py"
+    ).read_text(encoding="utf-8")
+    assert "crewscore.ai" in (
+        REPO / "scripts" / "make_social_card.py"
+    ).read_text(encoding="utf-8")

@@ -23,7 +23,7 @@ HERO_PRIORITY: list[str] = [
     "compliance.named_regime",
 ]
 
-_HOMEPAGE = "https://shmindmaster.github.io/crewscore/"
+_HOMEPAGE = "https://crewscore.ai/"
 
 
 def coverage_from_findings(findings: list[dict]) -> tuple[int, int]:

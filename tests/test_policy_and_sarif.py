@@ -123,6 +123,10 @@ def test_sarif_is_prompt_free_and_reports_missing_controls(tmp_path: Path):
     serialized = json.dumps(report)
     assert sentinel not in serialized
     assert report["version"] == "2.1.0"
+    assert (
+        report["runs"][0]["tool"]["driver"]["informationUri"]
+        == "https://crewscore.ai/"
+    )
     results = report["runs"][0]["results"]
     assert any(row["ruleId"] == "crewscore.human_gate.approval_required" for row in results)
     assert all("snippet" not in row for row in results)
