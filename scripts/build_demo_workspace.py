@@ -34,11 +34,11 @@ Built by `python scripts/build_demo_workspace.py <dir>`. Every file is invented 
 
 1. Routine: the hardened prompt clears the CI threshold.
 
-       crewscore test hardened-ops.md --no-explain --threshold 50     # exit 0
+       crewscore test -f hardened-ops.md --no-explain --threshold 50     # exit 0
 
 2. Exception: a new prompt that never says a person approves anything.
 
-       crewscore test ines-support-assistant.md --no-explain --require {CONTROL}   # exit 2
+       crewscore test -f ines-support-assistant.md --no-explain --require {CONTROL}   # exit 2
 
 3. Needs approval: CrewScore proposes wording, writes nothing.
 
@@ -47,7 +47,7 @@ Built by `python scripts/build_demo_workspace.py <dir>`. Every file is invented 
 4. Hero: add one sentence, run the same gate again.
 
        echo "{SENTENCE.strip()}" >> ines-support-assistant.md
-       crewscore test ines-support-assistant.md --no-explain --require {CONTROL}   # exit 0
+       crewscore test -f ines-support-assistant.md --no-explain --require {CONTROL}   # exit 0
 
 `ines-support-assistant.approved.md` is the finished file, for resetting between takes.
 Coverage means the words are present, not that the assistant obeys them.
@@ -69,18 +69,28 @@ def build(target: Path) -> dict[str, str]:
     return files
 
 
+def _ascii(path: Path) -> str:
+    """Console output must survive a cp1252 stdout on Windows."""
+    return str(path).encode("ascii", "backslashreplace").decode("ascii")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("directory", type=Path, help="target directory")
     parser.add_argument("--force", action="store_true", help="replace a non-empty target")
     args = parser.parse_args(argv)
-    if args.directory.exists() and any(args.directory.iterdir()):
+    target = args.directory.resolve()
+    if target.exists() and any(target.iterdir()):
         if not args.force:
-            print(f"{args.directory} is not empty; pass --force to rebuild it.", file=sys.stderr)
+            print(f"{_ascii(target)} is not empty; pass --force to rebuild it.", file=sys.stderr)
             return 1
-        shutil.rmtree(args.directory)
-    files = build(args.directory)
-    print(f"built {len(files)} files in {args.directory}")
+        cwd = Path.cwd().resolve()
+        if target == cwd or target in cwd.parents:
+            print("Refusing --force on the current directory or one of its parents.", file=sys.stderr)
+            return 1
+        shutil.rmtree(target)
+    files = build(target)
+    print(f"built {len(files)} files in {_ascii(target)}")
     return 0
 
 

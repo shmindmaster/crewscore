@@ -51,3 +51,34 @@ def test_three_cases_and_the_hero_edit(tmp_path):
     assert after.exit_code == 0
     assert f"REQUIRED CONTROL COVERED: {bdw.CONTROL}" in after.output
     assert ines.read_bytes() == (ws / "ines-support-assistant.approved.md").read_bytes()
+
+
+def test_documented_commands_run_verbatim(tmp_path):
+    """Every `crewscore test` line in the workspace README is a command that parses."""
+    import re
+    import shlex
+
+    ws = tmp_path / "ws"
+    bdw.build(ws)
+    commands = re.findall(r"^\s+(crewscore test .+?)\s+#", (ws / "README.md").read_text("utf-8"), re.M)
+    assert len(commands) == 3
+    run = CliRunner()
+    for command in commands:
+        argv = shlex.split(command)[1:]
+        argv[argv.index("-f") + 1] = str(ws / argv[argv.index("-f") + 1])
+        assert run.invoke(main, argv).exit_code != 1  # 1 would be a usage error
+
+
+def test_force_refuses_the_current_directory(tmp_path, monkeypatch, capsys):
+    bdw.build(tmp_path)
+    monkeypatch.chdir(tmp_path)
+    assert bdw.main([".", "--force"]) == 1
+    assert (tmp_path / "README.md").exists()
+
+
+def test_non_cp1252_path_does_not_break_output(tmp_path, capsys):
+    target = tmp_path / "demo-\U0001f600"
+    assert bdw.main([str(target)]) == 0
+    out = capsys.readouterr().out
+    assert chr(92) + "U0001f600" in out
+    out.encode("cp1252")
