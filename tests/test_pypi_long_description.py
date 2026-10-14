@@ -101,3 +101,37 @@ def test_repository_readme_is_the_portable_package_description():
     assert project["readme"] == "README.md"
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     assert find_nonportable_targets(readme) == []
+
+
+def test_short_or_trailing_text_fence_lines_do_not_close_a_code_block():
+    description = (
+        "```\n"
+        "```not-a-closer\n"
+        "````\n"  # longer than the opener but still a valid closer
+        "[bad](docs/missing.md)\n"
+    )
+    # Opener is three backticks; "```not-a-closer" has trailing text so it stays
+    # inside the block, and the four-backtick line closes it.
+    assert find_nonportable_targets(description) == [
+        ("markdown link", "docs/missing.md")
+    ]
+
+    shorter = "````\n```\n[hidden](docs/inside.md)\n````\n[bad](docs/after.md)\n"
+    assert find_nonportable_targets(shorter) == [("markdown link", "docs/after.md")]
+
+
+def test_backtick_fence_with_backtick_in_info_string_is_not_a_fence():
+    description = "``` `info`\n[bad](docs/missing.md)\n"
+    assert find_nonportable_targets(description) == [
+        ("markdown link", "docs/missing.md")
+    ]
+
+
+def test_inline_code_spans_are_not_links():
+    description = (
+        "Use `[doc](docs/guide.md)` to link, or ``[x](y.md) with ` inside``.\n"
+        "[real](docs/real.md)\n"
+    )
+    assert find_nonportable_targets(description) == [
+        ("markdown link", "docs/real.md")
+    ]

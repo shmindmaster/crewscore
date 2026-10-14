@@ -32,27 +32,53 @@ HTML_TARGET_RE = re.compile(
     r")[^>]*>",
     re.IGNORECASE | re.DOTALL,
 )
-FENCE_RE = re.compile(r"^\s*(`{3,}|~{3,})")
+FENCE_RE = re.compile(r"^ {0,3}(?P<marker>`{3,}|~{3,})(?P<rest>.*)$")
+INLINE_CODE_RE = re.compile(r"(?<!`)(?P<ticks>`+)(?!`)(?P<body>.+?)(?<!`)(?P=ticks)(?!`)", re.DOTALL)
 ALLOWED_SCHEMES = {"data", "http", "https", "mailto"}
 
 
+def _blank(text: str) -> str:
+    """Replace a span with blanks, keeping newlines so line structure survives."""
+    return "".join(char if char == "\n" else " " for char in text)
+
+
 def _without_fenced_code(text: str) -> str:
+    """Blank fenced code blocks using CommonMark opener/closer rules.
+
+    A closing fence uses the opener's character, is at least as long as the
+    opener, and carries nothing after it but whitespace. A fence-like line that
+    is shorter, a different character, or has trailing text stays inside the
+    block. A backtick opener cannot carry backticks in its info string.
+    """
     rendered: list[str] = []
-    fence: str | None = None
+    opener: tuple[str, int] | None = None
     for line in text.splitlines(keepends=True):
-        match = FENCE_RE.match(line)
-        if match:
-            marker = match.group(1)
-            if fence is None:
-                fence = marker[0]
-            elif marker[0] == fence:
-                fence = None
-            rendered.append("\n" if line.endswith("\n") else "")
-        elif fence is None:
-            rendered.append(line)
-        else:
-            rendered.append("\n" if line.endswith("\n") else "")
+        newline = "\n" if line.endswith("\n") else ""
+        match = FENCE_RE.match(line.rstrip("\r\n"))
+        if opener is None:
+            if match and not (
+                match.group("marker")[0] == "`" and "`" in match.group("rest")
+            ):
+                marker = match.group("marker")
+                opener = (marker[0], len(marker))
+                rendered.append(newline)
+            else:
+                rendered.append(line)
+            continue
+        rendered.append(newline)
+        if (
+            match
+            and match.group("marker")[0] == opener[0]
+            and len(match.group("marker")) >= opener[1]
+            and not match.group("rest").strip()
+        ):
+            opener = None
     return "".join(rendered)
+
+
+def _without_inline_code(text: str) -> str:
+    """Blank inline code spans: PyPI shows them as code, not as links."""
+    return INLINE_CODE_RE.sub(lambda match: _blank(match.group(0)), text)
 
 
 def _is_portable_target(target: str) -> bool:
@@ -70,7 +96,7 @@ def _is_portable_target(target: str) -> bool:
 
 def find_nonportable_targets(description: str) -> list[tuple[str, str]]:
     """Return relative or unsupported rendered link targets in stable order."""
-    text = _without_fenced_code(description)
+    text = _without_inline_code(_without_fenced_code(description))
     violations: list[tuple[str, str]] = []
 
     for match in MARKDOWN_LINK_RE.finditer(text):
