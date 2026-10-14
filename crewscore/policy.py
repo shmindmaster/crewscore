@@ -287,6 +287,7 @@ def evaluate_policy(
         "required_controls": list(settings.required_controls),
         "forbidden_missing_controls": list(settings.forbidden_missing_controls),
         "missing_required_controls": missing,
+        "covered_required_controls": sorted(must_have.intersection(detected)),
         "regressed_controls": [],
         "baseline_missing_for_path": False,
         "failed": bool(missing),

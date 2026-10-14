@@ -6522,7 +6522,7 @@
       "url": "https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools"
     }
   },
-  "package_version": "0.6.12",
+  "package_version": "0.6.13",
   "ruleset": "crewscore-hygiene@0.6.0",
   "schema_version": "1.0"
 }

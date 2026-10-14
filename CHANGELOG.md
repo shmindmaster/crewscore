@@ -18,6 +18,35 @@ No changes yet.
 
 ---
 
+## [0.6.13] — 2026-09-16 — PyPI long-description link repair
+
+No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
+
+### Fixed
+
+- The package long description now uses absolute GitHub and raw-content URLs,
+  so its documentation, license, validation, corpus-card, banner, and demo
+  links resolve on PyPI as well as GitHub. PyPI package artifacts are
+  immutable, so this repair ships as `0.6.13` rather than modifying `0.6.12`.
+- Release verification now inspects the long description embedded in the built
+  wheel `METADATA` and sdist `PKG-INFO`, failing on repository-relative
+  Markdown links, Markdown images, reference links, or HTML `href`/`src`
+  targets. Launch-pack tests also reject unexpanded template placeholders.
+
+### Changed
+
+- `crewscore test --require CONTROL` now prints `REQUIRED CONTROL COVERED: CONTROL`
+  on a pass, and `--json` policy records list `covered_required_controls`, so a
+  passing gate names what it checked instead of exiting silently. The
+  pass line says the text states the control; it is not proof the agent obeys it.
+- Agent system prompts no longer receive the Init Fossilization or Lint Leakage
+  smells. Both describe coding-agent config files (an init-generated
+  `AGENTS.md`, style rules a linter owns); a one-commit repo holding a system
+  prompt was shown a "configuration smell" that did not apply. Context Bloat
+  (size) still applies to every file, and config files are unchanged.
+
+---
+
 ## [0.6.12] — 2026-09-16 — machine-output privacy and release hardening
 
 No scoring change. Ruleset remains `crewscore-hygiene@0.6.0`.
