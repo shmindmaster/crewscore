@@ -34,3 +34,31 @@ crewscore test -f prompts/<prompt>.md --no-explain --require human_gate.approval
 - The browser checker at crewscore.ai: it is on the site, but no film covers it.
 - The GitHub Action on a real PR (sticky comment, SARIF upload).
 - `export-eval` handoff to Promptfoo or garak.
+
+## Production plan: the next two assets
+
+Both reuse the r2 footage. Heavy work (capture, TTS, render) waits for an assigned slot.
+
+**C. Technical deep dive, "How CrewScore decides" (about 6 min, developer education).** Planned, not made.
+- **Hook (0:00–0:15).** The same prompt is scored by the CLI (`--json`) and by the browser checker side by side, and both show the same coverage. This is a measured result, and it is enforced by `tests/test_web_engine.py`.
+- **Axes (0:15–0:45).** Written coverage versus runtime behaviour. Deterministic regex versus an LLM judge. Prompt-free machine output.
+- **Behaviour, then diagram (0:45–3:00).**
+  - Show `test --require human_gate.approval_required` failing at exit 2 and passing at exit 0. Reuse r2 takes S04 and S05.
+  - Walk the trace in [TECHNICAL.md](TECHNICAL.md#critical-feature-trace) on the code stage: `cli.py` → `analyze_with_findings` → `covered_concepts` → `evaluate_policy` → exit code.
+  - Show the Mermaid architecture diagram only after the behaviour has been seen.
+- **Validation (3:00–4:00).** The generated corpus report, [docs/validation-corpus.md](../validation-corpus.md): 356 pinned prompts and the published effect size with its confidence interval, read from the file on screen.
+- **Trade-off (4:00–4:40).** `export-eval` writes Promptfoo and garak starters and says it does not run them. The tool checks written coverage; it is not runtime proof.
+- **Failure and recovery (4:40–5:30).** A real `pathsafe` refusal of a symlinked prompt, or a `--fail-on-regression` baseline failure, then the fix.
+- **Payoff (5:30–6:00).** `pip install crewscore` and the Action snippet. One call to action.
+- **New captures needed:** browser-checker parity, `export-eval`, the refusal or regression run, and `--json`/SARIF output.
+- **Voice:** the local Qwen3-TTS narrator (no ElevenLabs spend), with WER checked by local ASR.
+
+**Vertical short (≤ 45 s, 1080x1920).** Planned, not made.
+- Reframed from film 01's hero beat: `--require` exits 2, one sentence is added, it exits 0, and the result reads "not proof the agent obeys it".
+- The Recast takes are 2880x1620, so a 9:16 crop of each punch-in stays sharp; no letterboxing.
+- Burned-in captions. It reuses the existing Bella lines L06–L10, so there is no new TTS.
+
+**ElevenLabs usage to date (film 01):**
+- 17 `eleven_v4` lines, 1,047 characters as shipped. The API's `character-cost` headers total 459 for the current lines.
+- Superseded re-renders of L03, L11, L13, L15 and L16 added roughly 300 more characters (estimated).
+- No new music bed: the CrewScore bed was reused.
