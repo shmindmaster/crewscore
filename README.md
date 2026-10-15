@@ -42,7 +42,7 @@ of 100.** GPT-Store median: 0 of 100.
 CrewScore makes the written part cheap to check. It reads prompt files, and
 `SYSTEM_PROMPT` / `system_prompt` string literals in `.py`, `.ts` and `.js`
 source, and reports which of 23 published controls are written down. It
-proposes wording for each gap and never edits your file. In CI you name the
+plans fixes without touching your file unless you pass `--apply`. In CI you name the
 controls your workflow needs, and the build fails only when one of those is
 missing.
 
@@ -54,18 +54,20 @@ reproduce or independently review.
 
 ```bash
 pip install crewscore
+mkdir crewscore-try && cd crewscore-try          # a fresh folder, so scan . sees only this prompt
 mkdir -p prompts && echo "You are a friendly support assistant for an online store." > prompts/support.md
 
 crewscore test --prompt-file prompts/support.md            # coverage N/23 and the first gap to review
-crewscore fix --prompt-file prompts/support.md --plan      # proposed wording for each gap; writes nothing
+crewscore fix --prompt-file prompts/support.md --plan      # which dimensions need wording; writes nothing
 crewscore scan . --require human_gate.approval_required    # exit 2: the required control is missing
 
 echo "A human must approve any refund or account change before it happens." >> prompts/support.md
 crewscore scan . --require human_gate.approval_required    # exit 0: the control is written down
 ```
 
-Python 3.11 or later. Everything runs locally: no account, no network call, no
-LLM.
+Python 3.11 or later. The CLI scores locally: no account, no network call, no
+LLM. Inside an existing project, `scan . --require` checks every prompt it
+finds, so use `test --prompt-file <file> --require <control>` to gate one file.
 
 ## See it run
 
@@ -103,10 +105,10 @@ the gate checks controls by name rather than an average.
 
 ## Guardrails
 
-- **Offline and deterministic.** No model, no API key, no network; the same input always gives the same findings.
-- **Writes nothing by default.** `fix --plan` proposes wording; a person decides what goes in the prompt.
+- **Offline, deterministic scoring.** The CLI and Action score with no model, no API key and no network call, and the same prompt text always gets the same governance findings. Configuration-smell checks also read the file's Git history and neighboring linter config. The browser checker scores locally too; the site itself sends anonymous, opt-out usage telemetry, described in its [privacy page](https://crewscore.ai/privacy.html).
+- **Writes nothing unless asked.** `fix --plan` lists what is missing; only `fix --apply` writes template text, and a person decides what stays in the prompt.
 - **Gate on named controls, never the average.** `--require` and `required-controls` fail only on the controls you name.
-- **CI output is prompt-free.** Logs, JSON, Markdown and SARIF carry rule IDs and control labels, never the matched prompt text.
+- **CI output is prompt-free by default.** Logs, JSON, Markdown and SARIF carry rule IDs and control labels, not the matched prompt text. The deprecated `include-snippets: "true"` input re-admits snippets to JSON and Markdown; SARIF stays prompt-free.
 - **Config files are not scored as prompts.** `AGENTS.md` and similar files get a smell verdict, not a governance grade.
 - **Every scoring change is measured.** The [CHANGELOG](https://github.com/shmindmaster/crewscore/blob/main/CHANGELOG.md) records each change and its corpus delta.
 
