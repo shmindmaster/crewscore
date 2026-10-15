@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Squash auto-merge is enabled with GITHUB_TOKEN, and pushes made with that
+  # token do not start workflows, so `push: main` never fires after an
+  # auto-merged PR. Dispatch this workflow on main to test the exact merged SHA.
+  workflow_dispatch:
 
 # Everything runs on ephemeral GitHub-hosted runners. This repository is
 # public, so hosted minutes are free and unmetered, and an ephemeral machine
