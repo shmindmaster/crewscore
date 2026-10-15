@@ -6,36 +6,17 @@
 
 ### Find missing written safeguards before your AI assistant goes live.
 
-CrewScore finds **missing written guardrails** in agent system prompts —
-injection defense, human approval, cost limits, stop conditions — **offline,
-no API key, open rules**.
+**An offline linter that checks an AI agent's system prompt against 23 published controls (injection defense, human approval, cost limits, stop conditions) and fails CI when a control you require is missing. No model, no API key, open rules.**
 
-It is a **checklist of 23 published controls**, not a quality ranking and not
-runtime red-teaming. Low coverage is actionable; high coverage only means the
-text is present.
-
-**Public-good thesis:** written safeguards should be inspectable with an
-offline, open ruleset before teams depend on runtime claims that are harder to
-reproduce or independently review.
-
-**We scanned 356 publicly collected agent prompts: 83 production-labeled prompts and 273
-general-purpose prompts. Among the production-labeled subset, median coverage was 10
-of 100.** GPT-Store median: 0 of 100.
-[Numbers →](https://github.com/shmindmaster/crewscore/blob/main/docs/validation-corpus.md) · [Shareable card →](https://raw.githubusercontent.com/shmindmaster/crewscore/main/docs/corpus-card.svg) · [Live checker →](https://crewscore.ai/)
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/shmindmaster/crewscore/blob/main/LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.11+-green.svg)](https://python.org)
-[![PyPI](https://img.shields.io/badge/PyPI-crewscore-blue.svg)](https://pypi.org/project/crewscore/)
+[![PyPI](https://img.shields.io/pypi/v/crewscore.svg)](https://pypi.org/project/crewscore/)
+[![Python](https://img.shields.io/pypi/pyversions/crewscore.svg)](https://pypi.org/project/crewscore/)
+[![Tests](https://github.com/shmindmaster/crewscore/actions/workflows/pytest.yml/badge.svg)](https://github.com/shmindmaster/crewscore/actions/workflows/pytest.yml)
 [![GitHub Action](https://img.shields.io/badge/Action-shmindmaster%2Fcrewscore%40v2-blue.svg)](https://github.com/marketplace/actions/crewscore)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/shmindmaster/crewscore/blob/main/LICENSE)
 
-<br/>
+**[Try it live in your browser, no install →](https://crewscore.ai/)**
 
-> Example: **control coverage 8/23 written** · first gap to review: *A human must approve*.
-> CrewScore checks whether controls are written down, not whether an agent obeys them.
-
-**Try it live, no install:** [crewscore.ai](https://crewscore.ai/)
-
-<img src="https://raw.githubusercontent.com/shmindmaster/crewscore/main/docs/demo.svg" alt="Before and after: the fictional Northstar Clinic demo fixture covers 8 of 23 written controls, with 'a human must approve' as the first gap to review; after adding the selected wording it covers 9 of 23. Coverage is not runtime proof." width="720">
+[Quickstart](#quickstart-30-seconds) · [Watch the film](#see-it-run) · [How it works](#how-it-works) · [CI](#ci) · [Guardrails](#guardrails) · [Status and limits](#status-and-limits)
 
 </div>
 
@@ -43,18 +24,91 @@ of 100.** GPT-Store median: 0 of 100.
 > maintainer. Technical claims are grounded in the
 > code, tests, and cited validation material.
 
-[Roadmap](https://github.com/shmindmaster/crewscore/blob/main/ROADMAP.md) · [Governance](https://github.com/shmindmaster/crewscore/blob/main/GOVERNANCE.md) ·
-[Contributing](https://github.com/shmindmaster/crewscore/blob/main/CONTRIBUTING.md) · [Security](https://github.com/shmindmaster/crewscore/blob/main/SECURITY.md)
+---
+
+## Why it exists
+
+A support assistant ships on Friday. Does its prompt say a human approves a
+refund? Does it say what to do with instructions hidden in a customer's
+message, or when to stop? Usually nobody checks, because checking means reading
+every prompt by hand, and runtime red-teaming is slow, paid and hard to
+reproduce.
+
+**We scanned 356 publicly collected agent prompts: 83 production-labeled prompts and 273
+general-purpose prompts. Among the production-labeled subset, median coverage was 10
+of 100.** GPT-Store median: 0 of 100.
+[Numbers →](https://github.com/shmindmaster/crewscore/blob/main/docs/validation-corpus.md) · [Shareable card →](https://raw.githubusercontent.com/shmindmaster/crewscore/main/docs/corpus-card.svg)
+
+CrewScore makes the written part cheap to check. It reads prompt files, and
+`SYSTEM_PROMPT` / `system_prompt` string literals in `.py`, `.ts` and `.js`
+source, and reports which of 23 published controls are written down. It
+proposes wording for each gap and never edits your file. In CI you name the
+controls your workflow needs, and the build fails only when one of those is
+missing.
+
+**Public-good thesis:** written safeguards should be inspectable with an
+offline, open ruleset before teams depend on runtime claims that are harder to
+reproduce or independently review.
+
+## Quickstart (30 seconds)
 
 ```bash
 pip install crewscore
-crewscore scan .
-# Gate the one control that matters:
-crewscore scan . --require human_gate.approval_required
+mkdir -p prompts && echo "You are a friendly support assistant for an online store." > prompts/support.md
+
+crewscore test --prompt-file prompts/support.md            # coverage N/23 and the first gap to review
+crewscore fix --prompt-file prompts/support.md --plan      # proposed wording for each gap; writes nothing
+crewscore scan . --require human_gate.approval_required    # exit 2: the required control is missing
+
+echo "A human must approve any refund or account change before it happens." >> prompts/support.md
+crewscore scan . --require human_gate.approval_required    # exit 0: the control is written down
 ```
 
-Deterministic regex over prompt text **and** `SYSTEM_PROMPT` / `system_prompt`
-string literals in `.py` / `.ts` / `.js` source. **Offline, no API key, no LLM.**
+Python 3.11 or later. Everything runs locally: no account, no network call, no
+LLM.
+
+## See it run
+
+<a href="https://saroshhussain.com/films/crewscore-one-sentence.mp4">
+  <img src="https://raw.githubusercontent.com/shmindmaster/crewscore/main/docs/media/crewscore-demo.gif" alt="CrewScore demo: a one-line support prompt covers 0 of 23 controls, the required human-approval gate fails with exit 2, one sentence is added, and the gate passes with exit 0." width="100%">
+</a>
+
+**[Watch the 90-second film →](https://saroshhussain.com/films/crewscore-one-sentence.mp4)**
+A one-line support prompt covers 0 of 23 controls. The release gate requires a
+human-approval rule and fails with exit 2. One sentence, written by a person,
+turns it to exit 0, and the film ends in the rule source that matched it.
+
+<img src="https://raw.githubusercontent.com/shmindmaster/crewscore/main/docs/demo.svg" alt="Before and after: the fictional Northstar Clinic demo fixture covers 8 of 23 written controls, with 'a human must approve' as the first gap to review; after adding the selected wording it covers 9 of 23. Coverage is not runtime proof." width="720">
+
+## How it works
+
+```mermaid
+flowchart LR
+  SRC["Prompt files, AGENTS.md,<br/>SYSTEM_PROMPT literals in .py / .ts / .js"] --> KIND{"Artifact type<br/>by filename and path"}
+  KIND -- "coding-agent config<br/>AGENTS.md, CLAUDE.md, .cursorrules" --> SMELL["Configuration smells<br/>never change the score"]
+  KIND -- "agent system prompt" --> RULES["Open ruleset<br/>deterministic patterns + negation guards"]
+  RULES --> CTRL["23 controls<br/>across 8 dimensions"]
+  CTRL --> OUT1["coverage N/23,<br/>first gap, fix plan"]
+  CTRL --> GATE{"--require control"}
+  GATE -- missing --> FAIL(["exit 2: CI fails and names the control"])
+  GATE -- written --> PASS(["exit 0"])
+  CTRL --> CI["Prompt-free JSON, SARIF,<br/>sticky PR comment"]
+```
+
+Each rule is a deterministic pattern with guards, so "do not ask permission"
+never counts as a human-approval rule. Several rules roll up to one control, and
+the gate checks controls by name rather than an average.
+[How scoring works →](https://github.com/shmindmaster/crewscore/blob/main/docs/scoring-and-controls.md) ·
+[Architecture →](https://github.com/shmindmaster/crewscore/blob/main/docs/architecture.md)
+
+## Guardrails
+
+- **Offline and deterministic.** No model, no API key, no network; the same input always gives the same findings.
+- **Writes nothing by default.** `fix --plan` proposes wording; a person decides what goes in the prompt.
+- **Gate on named controls, never the average.** `--require` and `required-controls` fail only on the controls you name.
+- **CI output is prompt-free.** Logs, JSON, Markdown and SARIF carry rule IDs and control labels, never the matched prompt text.
+- **Config files are not scored as prompts.** `AGENTS.md` and similar files get a smell verdict, not a governance grade.
+- **Every scoring change is measured.** The [CHANGELOG](https://github.com/shmindmaster/crewscore/blob/main/CHANGELOG.md) records each change and its corpus delta.
 
 ---
 
@@ -198,20 +252,6 @@ every existing `--threshold` means.
 
 ---
 
-## Development
-
-```bash
-git clone https://github.com/shmindmaster/crewscore.git
-cd crewscore
-pip install -e ".[dev]"
-pytest
-```
-
-**[Development guide →](https://github.com/shmindmaster/crewscore/blob/main/docs/development.md)** · [AGENTS.md](https://github.com/shmindmaster/crewscore/blob/main/AGENTS.md) ·
-[CONTRIBUTING.md](https://github.com/shmindmaster/crewscore/blob/main/CONTRIBUTING.md)
-
----
-
 ## Docs
 
 | | |
@@ -231,13 +271,52 @@ pytest
 | [Comparison](https://github.com/shmindmaster/crewscore/blob/main/docs/comparison.md) | Other tools, and what to use after this one |
 | [CHANGELOG](https://github.com/shmindmaster/crewscore/blob/main/CHANGELOG.md) | Including every scoring change and its measured delta |
 
-## What this is not
+---
 
-Live adversarial red-teaming · runtime tool-gate enforcement · a security or
-compliance certification · proof the model will obey the text.
+## Status and limits
 
-**Roadmap:** framework adapters that extract prompts from LangGraph / CrewAI /
-AutoGen graphs; optional live adversarial testing (post-traction, not the
-default path).
+**Current release:** see [PyPI](https://pypi.org/project/crewscore/) and the
+[CHANGELOG](https://github.com/shmindmaster/crewscore/blob/main/CHANGELOG.md).
+Ruleset `0.6.0`. The GitHub Action is `shmindmaster/crewscore@v2`, and the
+checker at [crewscore.ai](https://crewscore.ai/) runs the same engine locally
+in your browser. The project is **Alpha**: the JSON payload and exit codes can
+still change between releases, and every change is recorded.
 
-MIT licensed.
+What this is not: live adversarial red-teaming, runtime tool-gate enforcement,
+a security or compliance certification, or proof that the model will obey the
+text. Three dimensions (Cost, Compliance, Audit) ship with disclosed thin
+construct validity. For runtime testing after the structural gate, see the
+[live eval handoff](https://github.com/shmindmaster/crewscore/blob/main/docs/next-steps-eval.md)
+to Promptfoo or garak.
+
+**Roadmap:** framework adapters that extract prompts from LangGraph, CrewAI and
+AutoGen graphs, and optional live adversarial testing (not the default path).
+See the [roadmap](https://github.com/shmindmaster/crewscore/blob/main/docs/roadmap.md).
+
+## Contributing, security and license
+
+- **Contributing:** read [CONTRIBUTING.md](https://github.com/shmindmaster/crewscore/blob/main/CONTRIBUTING.md)
+  and the [development guide](https://github.com/shmindmaster/crewscore/blob/main/docs/development.md).
+  A new rule needs a corpus measurement and a negative test. Good first issues are labelled
+  [`good first issue`](https://github.com/shmindmaster/crewscore/labels/good%20first%20issue);
+  questions go to [Discussions](https://github.com/shmindmaster/crewscore/discussions).
+
+  ```bash
+  git clone https://github.com/shmindmaster/crewscore.git
+  cd crewscore
+  pip install -e ".[dev]"
+  pytest
+  ```
+
+- **Security:** report vulnerabilities privately through a
+  [GitHub security advisory](https://github.com/shmindmaster/crewscore/security/advisories/new),
+  as described in [SECURITY.md](https://github.com/shmindmaster/crewscore/blob/main/SECURITY.md).
+- **License:** [MIT](https://github.com/shmindmaster/crewscore/blob/main/LICENSE) ·
+  [Governance](https://github.com/shmindmaster/crewscore/blob/main/GOVERNANCE.md) ·
+  [Roadmap](https://github.com/shmindmaster/crewscore/blob/main/ROADMAP.md)
+
+Related open source by the same maintainer: [Assay](https://github.com/shmindmaster/assay)
+keeps an agent's decision out of its side effects, and
+[GitPin](https://github.com/shmindmaster/gitpin) makes agent-authored pull
+requests carry exact, re-checkable evidence. More at
+[saroshhussain.com](https://saroshhussain.com).
