@@ -100,10 +100,18 @@ def test_consumer_example_uses_a_runner_available_in_a_new_repository():
     assert _workflow("example-ci.yml")["jobs"]["score"]["runs-on"] == "ubuntu-latest"
 
 
-def test_selftest_only_runs_on_main_pushes_or_pull_requests():
+def test_selftest_only_runs_on_main_pushes_pull_requests_or_dispatch():
     workflow = _workflow("crewscore-selftest.yml")
+    assert set(workflow[True]) == {"push", "pull_request", "workflow_dispatch"}
     assert workflow[True]["push"]["branches"] == ["main"]
     assert workflow[True]["pull_request"] is None
+
+
+def test_main_validation_can_be_dispatched_on_the_merged_sha():
+    # Auto-merge pushes to main with GITHUB_TOKEN, which does not start
+    # workflows, so `push: main` alone never tests an auto-merged commit.
+    for name in ("pytest.yml", "crewscore-selftest.yml"):
+        assert "workflow_dispatch" in _workflow(name)[True], name
 
 
 def test_release_verifies_on_all_three_platforms_and_publishes_ephemerally():
