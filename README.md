@@ -1,3 +1,8 @@
+> [!IMPORTANT]
+> **Archived 2026-10-15.** Superseded by [Assay](https://github.com/shmindmaster/assay), a reference architecture for deterministic agent control.
+> Why: a sentence in a system prompt is not an enforced control. CrewScore measures written coverage only, so the lasting value is the [356-prompt corpus study](https://github.com/shmindmaster/crewscore/blob/main/docs/validation-corpus.md) and the control taxonomy, kept here as the record.
+> The last release, 0.6.14, stays on PyPI. The rest of this README is unchanged.
+
 <div align="center">
 
 <img src="https://raw.githubusercontent.com/shmindmaster/crewscore/main/docs/github-banner.png" alt="CrewScore — find the safety rules your AI agent prompt forgot. 23 public controls. Offline. No API key." width="100%">
