@@ -8,10 +8,9 @@ Planned, Implemented, Integrated, Tested, Demonstrated, Production-Verified.
 
 Facts that matter before reading further:
 
-- PyPI publishes **0.6.13**. Main is **0.6.14**, which is not released (the
-  packaged homepage changed to crewscore.ai).
-- Nothing was executed to write this pack: no pytest, npm, Playwright or
-  build. Test results live in [TESTS.md](TESTS.md), not here.
+- PyPI publishes **0.6.14** (released 2026-10-15; its homepage is crewscore.ai). Main is `16b9e36`.
+- Test evidence is in [TESTS.md](TESTS.md): the full suites ran on main's exact SHA, plus a smoke test of the published package.
+  The verdict is in [READINESS.md](READINESS.md).
 - The existing read-only assessment is reused, not rewritten:
   `AgentHub\runtime\coding-agent-dispatch\reports\showcase\crewscore.md`
   (2026-10-14, verdict ENHANCE_THEN_SHOWCASE).

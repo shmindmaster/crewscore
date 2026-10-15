@@ -101,8 +101,8 @@ package has no model SDK and makes no network call on the scoring path.
   `.github/workflows/release.yml`: the `publish` job runs in environment
   `pypi` with `id-token: write`, uses `pypa/gh-action-pypi-publish` with
   `attestations: true`, and the file states there is deliberately no
-  `PYPI_TOKEN` secret. The PyPI-side trusted-publisher registration is a
-  one-time manual step and was **not checked**.
+  `PYPI_TOKEN` secret. The PyPI-side registration works: release run
+  38735565259 published 0.6.14 through it on 2026-10-15.
 - The Action takes the default `github.token` for the sticky PR comment only.
   User inputs reach the shell through `env:` variables, never interpolated into
   command text (`action.yml`); a test covers the manifest
@@ -156,8 +156,8 @@ checked**.
 - `--include-snippets` is a deprecated flag scheduled for removal.
 - `docs/` has overlapping pages (`scoring.md`, `scoring-governance.md`,
   `scoring-and-controls.md`); not audited for drift in this pass.
-- Package 0.6.14 is on main but unreleased; PyPI still shows the old
-  github.io homepage.
+- Auto-merge pushes to main with `GITHUB_TOKEN`, which does not start workflows. Main is
+  now validated by `workflow_dispatch` (#79) rather than automatically on every merge.
 
 ## Critical feature trace
 
@@ -201,7 +201,7 @@ checker is a separate local engine (`score-engine.js`), not part of this trace;
 its parity with the Python path is a test-enforced property, not a shared
 code path.
 
-**What was not checked:** that this trace executes as read. No command was run
-in this pass. The recorded film ran the same command against a synthetic
-workspace at `e9a1c9b` (see [DEMOS.md](DEMOS.md)); test results are in
-[TESTS.md](TESTS.md).
+**Executed:** the same command ran against the published 0.6.14 from PyPI on
+2026-10-15 (exit 2, then 0 after the sentence) and in the film at `e9a1c9b`.
+The suites covering every hop passed at `16b9e36`. See [TESTS.md](TESTS.md) and
+[DEMOS.md](DEMOS.md).
